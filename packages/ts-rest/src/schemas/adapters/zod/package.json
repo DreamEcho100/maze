@@ -1,0 +1,9 @@
+{
+  "name": "@acme/ts-rest-zod-adapter",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}
