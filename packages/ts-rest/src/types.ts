@@ -2,6 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * TODO, the following code is a work in progress.
+ * - TO_SEARCH: baseResponses` and `basePathParams` or `baseHeaders` only
+ * - ISSUE: Fix the issue with the `response` field in `ExtractRouteMetadata`.
+ * - ISSUE: Fix the issue with the `createOnePostComment.response.result` type.
+ * - ISSUE: Fix the issue with the excessive nesting of `ContractDefinition` type properties on the recursive `RouteTree` type.
+ *
+ *
+ */
+
 // -----------------------------
 // Core Type Definitions
 // -----------------------------
@@ -559,6 +569,9 @@ const routeExample = c.router(
                 };
               },
               responses: {
+                path: "/",
+                // ISSUE: Fix the issue here
+                // There seem to be an issue with the recursive type `RouteTree`, which leads to the `ContractDefinition` type properties to be able to have a `ContractDefinition` type properties???
                 200: (val) => {
                   return val as Comment[];
                 },
