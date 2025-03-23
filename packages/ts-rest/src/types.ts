@@ -28,6 +28,8 @@ type ContractDefinitionMeta = {
   [internalMetaKey]?: object;
 } & Record<string, any>;
 
+type IfUndefinedThen<Item, Fallback> = Item extends undefined ? Fallback : Item;
+
 // -----------------------------
 // TODO: Schema Adapter
 // -----------------------------
@@ -221,27 +223,58 @@ type RouteResponseUnion<ResponsesMap> = {
 // Route Metadata Extraction
 // -----------------------------
 
+type GetOptionalSchemaValue<T> = T extends undefined
+  ? undefined
+  : GetSchemaResolverValue<T>;
 /**
  * Extracts structured route metadata including inferred fields.
  */
+/*
+export interface ExtractRouteMetadata<
+  RouteDefinition extends ContractDefinition,
+> {
+  method: RouteDefinition["method"];
+  path: RouteDefinition["path"];
+  pathParams: GetOptionalSchemaValue<RouteDefinition["pathParams"]>;
+  queryParams: GetOptionalSchemaValue<RouteDefinition["queryParams"]>;
+  requestBody: GetOptionalSchemaValue<RouteDefinition["requestBody"]>;
+  headers: GetOptionalSchemaValue<RouteDefinition["headers"]>;
+  responses: GetOptionalSchemaValue<RouteDefinition["responses"]>;
+  response:
+    | RouteResponseUnion<NonNullable<RouteDefinition["responses"]>>
+    | NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"];
+}
+*/
 type ExtractRouteMetadata<RouteDefinition> =
   RouteDefinition extends ContractDefinition
     ? Omit<RouteDefinition, "pathParams" | "queryParams" | "requestBody"> & {
-        pathParams: GetSchemaResolverValue<
-          NonNullable<RouteDefinition["pathParams"]>
-        >;
-        queryParams: GetSchemaResolverValue<
-          NonNullable<RouteDefinition["queryParams"]>
-        >;
-        requestBody: GetSchemaResolverValue<
-          NonNullable<RouteDefinition["requestBody"]>
-        >;
-        headers: GetSchemaResolverValue<
-          NonNullable<RouteDefinition["headers"]>
-        >;
-        response:
-          | RouteResponseUnion<NonNullable<RouteDefinition["responses"]>>
-          | NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"];
+        pathParams: RouteDefinition["pathParams"] extends undefined
+          ? undefined
+          : GetSchemaResolverValue<RouteDefinition["pathParams"]>;
+        queryParams: RouteDefinition["queryParams"] extends undefined
+          ? undefined
+          : GetSchemaResolverValue<RouteDefinition["queryParams"]>;
+        requestBody: RouteDefinition["requestBody"] extends undefined
+          ? undefined
+          : GetSchemaResolverValue<RouteDefinition["requestBody"]>;
+        headers: RouteDefinition["headers"] extends undefined
+          ? undefined
+          : GetSchemaResolverValue<RouteDefinition["headers"]>;
+        response: RouteDefinition["responses"] extends undefined
+          ? NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"]
+          :
+              | RouteResponseUnion<NonNullable<RouteDefinition["responses"]>>
+              | NonNullable<
+                  RouteDefinition[InternalInferredKey]
+                >["baseResponses"];
+        // ISSUE: Fix the issue here
+        // There is a need for away to exclude the keys on the original route
+        // {
+        // 	[Key in Exclude<NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"], keyof NonNullable<RouteDefinition["responses"]>>]: {
+        // 		status: Key;
+        // 		result: GetSchemaResolverValue<NonNullable<RouteDefinition["responses"]>[Key]>;
+        // 	};
+        // }
       }
     : never;
 
@@ -287,14 +320,12 @@ type RouteKeyPathToInfoMap<
 /**
  * Extracts a union of all key path strings from a route tree.
  */
-type AllRoutesUnion<Tree extends Record<string, any>> =
+type RoutesChainedPaths<Tree extends Record<string, any>> =
   keyof RouteKeyPathToInfoMap<Tree, GetAllRouteKeyPaths<Tree>>;
 
 // -----------------------------
 // Contract Enhancer Types
 // -----------------------------
-type IfUndefinedThen<Item, Fallback> = Item extends undefined ? Fallback : Item;
-
 /**
  * Merges base path params and base responses into a route contract.
  */
@@ -425,13 +456,6 @@ function defineRouterContract<
   },
 ) {
   if (options) {
-    for (const key in routeTree) {
-      if (options.pathPrefix) {
-        const route = routeTree[key] as ContractDefinition;
-        route.path = options.pathPrefix + route.path;
-      }
-    }
-
     mutateRoutesRecursively(routeTree, options);
   }
 
@@ -605,20 +629,26 @@ const routeExample = c.router(
     },
   },
 );
-type AllRouteKeys = AllRoutesUnion<typeof routeExample>;
+type AllAppRouteKeys = RoutesChainedPaths<typeof routeExample>;
 type AppRoutesKeysPaths = GetAllRouteKeyPaths<typeof routeExample>;
 type AppRouteKeyPathToValue = RouteKeyPathToInfoMap<
   typeof routeExample,
   AppRoutesKeysPaths
 >;
-const routeKeyPath = "posts.comments.getMany" satisfies AllRouteKeys;
+const routeKeyPath = "posts.comments.getMany" satisfies AllAppRouteKeys;
 const routeKeyPathToValue = {} as AppRouteKeyPathToValue;
 
 const createOnePostComment = routeKeyPathToValue[routeKeyPath];
 
+console.log(createOnePostComment.queryParams);
 if (createOnePostComment.response.status === 200) {
   console.log(createOnePostComment.response.result[0]?.commentId);
 } else if (createOnePostComment.response.status === 500) {
   console.log(createOnePostComment.response.result.error);
+  /*
+ISSUE:
+The type of `createOnePostComment.response.result` is `Record<string, any> & { error: string; }`
+It should be `{ error: string; }` only
+*/
 }
 console.log(createOnePostComment.responses);
