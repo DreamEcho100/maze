@@ -2,8 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// Core types
-type AllowedStatusesCodes = number;
+// -----------------------------
+// Core Type Definitions
+// -----------------------------
+type AllowedHttpStatusCode = number;
 type HttpMethod =
   | "GET"
   | "POST"
@@ -13,25 +15,65 @@ type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
-type SchemaResolver<T> = (val?: unknown) => T;
-type inferSchema<T> = T extends SchemaResolver<infer U> ? U : never;
-
-const internalInferredKey = "~inferredKey";
+// Internal keys used for type inference and metadata tagging
+const internalInferredKey: unique symbol = Symbol("~internalInferredKey");
 type InternalInferredKey = typeof internalInferredKey;
-const internalMetaKey = "~meta";
+const internalMetaKey: unique symbol = Symbol("~internalMeta");
 type InternalMetaKey = typeof internalMetaKey;
 
+/**
+ * Metadata structure for a contract route definition.
+ */
 type ContractDefinitionMeta = {
-  [internalMetaKey]?: {
-    pathPrefix?: string;
-  };
+  [internalMetaKey]?: object;
 } & Record<string, any>;
 
-type ContractDefinitionResponse<
-  Status extends AllowedStatusesCodes = AllowedStatusesCodes,
+// -----------------------------
+// TODO: Schema Adapter
+// -----------------------------
+/**
+ * Generic schema resolver for validation/parsing.
+ * @template T The resolved data type.
+ */
+type SchemaResolver<T> = (val?: unknown) => T;
+/**
+ * Extract the resolved type from a schema resolver.
+ */
+type inferSchema<T> = T extends SchemaResolver<infer U> ? U : never;
+/** Utility to extract value from SchemaResolver */
+type GetSchemaResolverValue<TSchemaResolver> =
+  TSchemaResolver extends SchemaResolver<infer Value> ? Value : never;
+function SchemaResolverMerger<Schema extends SchemaResolver<any>>(
+  base: Schema,
+  override?: Schema,
+): SchemaResolver<any> {
+  // return (val) => {
+  // 	return {
+  // 		...base(val),
+  // 		...override(val),
+  // 	};
+  // };
+
+  // TODO: Needs to pay attention here when working on the schema stuff
+  return override as SchemaResolver<any>;
+}
+
+// -----------------------------
+// Contract Definition Interface
+// -----------------------------
+
+/**
+ * Defines possible HTTP responses for a contract.
+ * Maps status codes to response schema resolvers.
+ */
+type RouteResponses<
+  Status extends AllowedHttpStatusCode = AllowedHttpStatusCode,
   ResponseBody = Record<string, any>,
 > = Record<Status, SchemaResolver<ResponseBody>>;
 
+/**
+ * Represents a fully-typed REST API contract for a single endpoint.
+ */
 /**
  * The core contract definition for a REST API endpoint.
  *
@@ -51,7 +93,7 @@ type ContractDefinitionResponse<
  */
 interface ContractDefinition<
   PathSegment extends string = string,
-  Responses extends ContractDefinitionResponse = ContractDefinitionResponse,
+  Responses extends RouteResponses = RouteResponses,
   THttpMethod extends HttpMethod = HttpMethod,
   PathParams extends Record<string, any> = Record<string, any>,
   QueryParams extends Record<string, any> = Record<string, any>,
@@ -124,45 +166,64 @@ interface ContractDefinition<
    * This enables enhanced type inference and composition during contract processing,
    * such as inside a `routeContract()` helper.
    *
+   * ⚠️ Runtime logic must ignore this.
    * ⚠️ This field exists purely for typing purposes and is erased at runtime.
    * It should never be serialized or used in runtime logic.
    */
   [internalInferredKey]?: Record<string, any>;
 }
 
-type Route = ContractDefinition | { [Key: string]: Route };
+// -----------------------------
+// Route Tree Types
+// -----------------------------
+type RouteTree = ContractDefinition | { [Key: string]: RouteTree };
 
-type GetRoutesKeysPaths<
-  Item extends Record<string, any>,
-  BasePath extends string = "",
+/**
+ * Recursively computes all valid key paths in a nested route tree.
+ * Produces dot-separated key paths, e.g., "posts.getOne".
+ */
+type GetAllRouteKeyPaths<
+  Tree extends Record<string, any>,
+  Prefix extends string = "",
 > = {
-  [Key in keyof Item]: Item[Key] extends Record<string, any>
-    ? Item[Key] extends { responses: any } | { method: any }
-      ? `${BasePath}${Key & string}`
-      : GetRoutesKeysPaths<Item[Key], `${BasePath}${Key & string}.`>
+  [Key in keyof Tree]: Tree[Key] extends Record<string, any>
+    ? Tree[Key] extends { responses: any } | { method: any }
+      ? `${Prefix}${Key & string}`
+      : GetAllRouteKeyPaths<Tree[Key], `${Prefix}${Key & string}.`>
     : never;
-}[keyof Item];
+}[keyof Tree];
 
-/********************************+********************************/
-/********************************+********************************/
-/********************************+********************************/
-interface ExtractResponseMapEntry<
-  Key extends AllowedStatusesCodes,
+// -----------------------------
+// Response Extraction Types
+// -----------------------------
+
+/**
+ * Represents a single extracted response entry with status and result.
+ */
+interface RouteResponseEntry<
+  Key extends AllowedHttpStatusCode,
   Resolver extends SchemaResolver<any>,
 > {
   status: Key;
   result: ReturnType<Resolver>;
 }
-type ExtractResponseUnion<ResponsesMap> = {
+
+/**
+ * Extracts a union of all response entries from a response map.
+ */
+type RouteResponseUnion<ResponsesMap> = {
   [Key in keyof ResponsesMap]: ResponsesMap[Key] extends SchemaResolver<any>
-    ? ExtractResponseMapEntry<Key & AllowedStatusesCodes, ResponsesMap[Key]>
+    ? RouteResponseEntry<Key & AllowedHttpStatusCode, ResponsesMap[Key]>
     : never;
 }[keyof ResponsesMap];
 
-type GetSchemaResolverValue<TSchemaResolver> =
-  TSchemaResolver extends SchemaResolver<infer Value> ? Value : never;
+// -----------------------------
+// Route Metadata Extraction
+// -----------------------------
 
-// Extract relevant fields from a Route definition into a structured type
+/**
+ * Extracts structured route metadata including inferred fields.
+ */
 type ExtractRouteMetadata<RouteDefinition> =
   RouteDefinition extends ContractDefinition
     ? Omit<RouteDefinition, "pathParams" | "queryParams" | "requestBody"> & {
@@ -179,122 +240,119 @@ type ExtractRouteMetadata<RouteDefinition> =
           NonNullable<RouteDefinition["headers"]>
         >;
         response:
-          | ExtractResponseUnion<NonNullable<RouteDefinition["responses"]>>
+          | RouteResponseUnion<NonNullable<RouteDefinition["responses"]>>
           | NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"];
       }
     : never;
 
-type TraverseRouteDefinition<
-  Item extends Record<string, any>,
-  PathChain extends string,
+// -----------------------------
+// Route Traversal by Key Path
+// -----------------------------
+
+type TraverseRouteTree<
+  Tree extends Record<string, any>,
+  Prefix extends string,
 > =
   // If the path chain extends further, continue traversing
-  PathChain extends `${infer Key}.${infer Rest}`
+  Prefix extends `${infer Key}.${infer Rest}`
     ? // If the current key is a record, continue traversing
-      Key extends keyof Item
-      ? TraverseRouteDefinition<Item[Key], Rest>
+      Key extends keyof Tree
+      ? TraverseRouteTree<Tree[Key], Rest>
       : never
     : // If the path chain is at the end, extract the metadata
-      PathChain extends keyof Item
-      ? Item[PathChain]
+      Prefix extends keyof Tree
+      ? Tree[Prefix]
       : never;
 
-// Get RouteInfo by a dot-notated path string
-type RouteInfo<
-  Item extends Record<string, any>,
-  PathChain extends string,
-> = ExtractRouteMetadata<TraverseRouteDefinition<Item, PathChain>>;
-// Get all valid route key paths
-type RouteKeyPathToValue<
-  Item extends Record<string, any>,
+/**
+ * Given a dot-separated route key path, returns enriched route info.
+ */
+type RouteInfoByPath<
+  Tree extends Record<string, any>,
+  KeyPath extends string,
+> = ExtractRouteMetadata<TraverseRouteTree<Tree, KeyPath>>;
+
+/**
+ * Maps all route key paths to their enriched route info.
+ */
+type RouteKeyPathToInfoMap<
+  Tree extends Record<string, any>,
   Paths extends string,
 > = {
-  [PathChain in Paths & string]: RouteInfo<Item, PathChain> & {
-    pathChain: PathChain;
+  [KeyPath in Paths & string]: RouteInfoByPath<Tree, KeyPath> & {
+    pathChain: KeyPath;
   };
 };
 
-type KeysToUnion<T> = T extends any ? keyof T : never;
-type AllRoutesUnion<Item extends Record<string, any>> = KeysToUnion<
-  RouteKeyPathToValue<Item, GetRoutesKeysPaths<Item>>
->;
+/**
+ * Extracts a union of all key path strings from a route tree.
+ */
+type AllRoutesUnion<Tree extends Record<string, any>> =
+  keyof RouteKeyPathToInfoMap<Tree, GetAllRouteKeyPaths<Tree>>;
 
-/********************************+********************************/
-/********************************+********************************/
-/********************************+********************************/
+// -----------------------------
+// Contract Enhancer Types
+// -----------------------------
+type IfUndefinedThen<Item, Fallback> = Item extends undefined ? Fallback : Item;
 
-type IfUndefinedThen<T, Default> = T extends undefined ? Default : T;
-
-type RouteAndBaseToInheritMerger<
-  TRoute extends Route,
+/**
+ * Merges base path params and base responses into a route contract.
+ */
+type EnhanceRouteWithBase<
+  RouteDef extends RouteTree,
   BasePathParams extends
     | SchemaResolver<Record<string, any>>
     | undefined = undefined,
   BaseResponses extends
-    | Record<AllowedStatusesCodes, SchemaResolver<any>>
+    | Record<AllowedHttpStatusCode, SchemaResolver<any>>
     | undefined = undefined,
-> =
-  TRoute extends ContractDefinition<
-    infer Path,
-    infer Responses,
-    infer Method,
-    infer PathParams,
-    infer QueryParams,
-    infer RequestBody,
-    infer HeadersSchema,
-    infer Meta
-  >
-    ? ContractDefinition<
-        Path,
-        Responses,
-        Method,
-        PathParams,
-        QueryParams,
-        RequestBody,
-        HeadersSchema,
-        Meta
-      > & {
-        [internalInferredKey]?: {
-          baseResponses: IfUndefinedThen<
-            {
-              [K in keyof BaseResponses]: {
-                status: K;
-                result: BaseResponses[K] extends SchemaResolver<infer T>
-                  ? T
-                  : never;
-              };
-            }[keyof BaseResponses],
-            BaseResponses
-          >;
-          basePathParams: IfUndefinedThen<
-            {
-              [K in keyof BasePathParams]: {
-                status: K;
-                result: BasePathParams[K] extends SchemaResolver<infer T>
-                  ? T
-                  : never;
-              };
-            }[keyof BasePathParams],
-            BasePathParams
-          >;
-        } & TRoute[InternalInferredKey];
+> = RouteDef extends ContractDefinition
+  ? RouteDef & {
+      [internalInferredKey]?: {
+        baseResponses: IfUndefinedThen<
+          {
+            [Key in keyof BaseResponses]: {
+              status: Key;
+              result: BaseResponses[Key] extends SchemaResolver<infer T>
+                ? T
+                : never;
+            };
+          }[keyof BaseResponses],
+          BaseResponses
+        >;
+        basePathParams: IfUndefinedThen<
+          {
+            [Key in keyof BasePathParams]: {
+              status: Key;
+              result: BasePathParams[Key] extends SchemaResolver<infer T>
+                ? T
+                : never;
+            };
+          }[keyof BasePathParams],
+          BasePathParams
+        >;
+      } & RouteDef[InternalInferredKey];
+    }
+  : RouteDef extends Record<string, any>
+    ? {
+        [Key in keyof RouteDef]: EnhanceRouteWithBase<
+          RouteDef[Key],
+          BasePathParams,
+          BaseResponses
+        >;
       }
-    : TRoute extends Record<string, any>
-      ? {
-          [Key in keyof TRoute]: RouteAndBaseToInheritMerger<
-            TRoute[Key],
-            BasePathParams,
-            BaseResponses
-          >;
-        }
-      : never;
+    : never;
+
+// -----------------------------
+// Recursive Mutator
+// -----------------------------
 
 function mutateRoutesRecursively<
-  TRoute extends Route,
+  Tree extends RouteTree,
   BasePathParams extends SchemaResolver<Record<string, any>>,
-  BaseResponses extends ContractDefinitionResponse,
+  BaseResponses extends RouteResponses,
 >(
-  route: TRoute,
+  routeTree: Tree,
   options: {
     pathPrefix?: string;
     baseHeaders?: SchemaResolver<Record<string, any>>;
@@ -302,43 +360,63 @@ function mutateRoutesRecursively<
     baseResponses?: BaseResponses;
   },
 ) {
-  if (!("method" in route) && typeof route !== "string") {
-    for (const key in route) {
-      if (key === "path" || !route[key]) {
-        continue;
-      }
-      mutateRoutesRecursively(route[key], options);
+  for (const key in routeTree) {
+    if (!routeTree[key]) {
+      continue;
     }
-    return;
-  }
 
-  if (options.baseResponses) {
-    route.responses = {
-      ...options.baseResponses,
-      ...route.responses,
-    };
-  }
+    // If Not a contract definition
+    if (!("method" in routeTree) && !("responses" in routeTree)) {
+      // Recurse on it's children
+      mutateRoutesRecursively(routeTree[key], {
+        baseHeaders: options.baseHeaders,
+        baseResponses: options.baseResponses,
+      });
+      continue;
+    }
 
-  if (options.baseHeaders) {
-    route.headers = {
-      ...options.baseHeaders,
-      ...route.headers,
-    };
-  }
+    // If it's a contract definition
+    const route = routeTree[key] as unknown as ContractDefinition;
 
-  if (options.basePathParams) {
-    route.pathParams = {
-      ...options.basePathParams,
-      ...route.pathParams,
-    };
+    if (options.pathPrefix) {
+      route.path = options.pathPrefix + route.path;
+    }
+
+    if (options.baseResponses) {
+      route.responses = {
+        ...options.baseResponses,
+        ...route.responses,
+      };
+    }
+
+    if (options.baseHeaders) {
+      route.headers = SchemaResolverMerger(options.baseHeaders, route.headers);
+    }
+
+    if (options.basePathParams) {
+      route.pathParams = SchemaResolverMerger(
+        options.basePathParams,
+        route.pathParams,
+      );
+    }
   }
 }
-function routerContractDefinition<
-  TRoute extends Route,
+
+// -----------------------------
+// Main Router Contract Definition
+// -----------------------------
+
+/**
+ * Defines a contract for nested API routes with optional shared configuration.
+ * @param routeTree Route tree definition.
+ * @param options Optional base config (headers, params, prefix, etc).
+ */
+function defineRouterContract<
+  Tree extends RouteTree,
   BasePathParams extends SchemaResolver<Record<string, any>>,
-  BaseResponses extends ContractDefinitionResponse,
+  BaseResponses extends RouteResponses,
 >(
-  config: TRoute,
+  routeTree: Tree,
   options?: {
     pathPrefix?: string;
     baseHeaders?: SchemaResolver<Record<string, any>>;
@@ -347,33 +425,25 @@ function routerContractDefinition<
   },
 ) {
   if (options) {
-    for (const key in config) {
+    for (const key in routeTree) {
       if (options.pathPrefix) {
-        const route = config[key] as ContractDefinition;
+        const route = routeTree[key] as ContractDefinition;
         route.path = options.pathPrefix + route.path;
-
-        // route.meta = {
-        //   ...(route.meta ?? {}),
-        //   [internalMetaKey]: {
-        //     ...(route.meta?.[internalMetaKey] ?? {}),
-        //     pathPrefix: options.pathPrefix,
-        //   },
-        // };
       }
     }
 
-    mutateRoutesRecursively(config, options);
+    mutateRoutesRecursively(routeTree, options);
   }
 
-  return config as unknown as RouteAndBaseToInheritMerger<
-    TRoute,
+  return routeTree as unknown as EnhanceRouteWithBase<
+    Tree,
     BasePathParams,
     BaseResponses
   >;
 }
 
 const c = {
-  router: routerContractDefinition,
+  router: defineRouterContract,
 };
 
 // The following code is only for demonstration purposes
@@ -536,8 +606,8 @@ const routeExample = c.router(
   },
 );
 type AllRouteKeys = AllRoutesUnion<typeof routeExample>;
-type AppRoutesKeysPaths = GetRoutesKeysPaths<typeof routeExample>;
-type AppRouteKeyPathToValue = RouteKeyPathToValue<
+type AppRoutesKeysPaths = GetAllRouteKeyPaths<typeof routeExample>;
+type AppRouteKeyPathToValue = RouteKeyPathToInfoMap<
   typeof routeExample,
   AppRoutesKeysPaths
 >;
