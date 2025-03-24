@@ -1,4 +1,4 @@
-import { auth, signIn, signOut } from "@de100/auth";
+import { auth, signIn, signOut } from "@de100/next-auth";
 import { Button } from "@de100/ui/button";
 
 export async function AuthShowcase() {

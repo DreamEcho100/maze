@@ -1,8 +1,8 @@
-import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets-zod";
 import { z } from "zod";
 
-import { env as authEnv } from "@de100/auth/env";
+import { createEnv } from "@de100/env";
+import { env as authEnv } from "@de100/next-auth/env";
 
 export const env = createEnv({
   extends: [authEnv, vercel()],
@@ -19,6 +19,7 @@ export const env = createEnv({
     POSTGRES_URL: z.string().url(),
   },
 
+  // clientPrefix: 'NEXT_PUBLIC_',
   /**
    * Specify your client-side environment variables schema here.
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.

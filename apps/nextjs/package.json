@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@de100/api": "workspace:*",
-    "@de100/auth": "workspace:*",
     "@de100/db": "workspace:*",
     "@de100/env": "workspace:^",
+    "@de100/next-auth": "workspace:*",
     "@de100/ts-rest": "workspace:^",
     "@de100/ui": "workspace:*",
     "@de100/validators": "workspace:*",

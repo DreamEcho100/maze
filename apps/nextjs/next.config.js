@@ -9,7 +9,7 @@ const config = {
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@de100/api",
-    "@de100/auth",
+    "@de100/next-auth",
     "@de100/db",
     "@de100/ui",
     "@de100/validators",

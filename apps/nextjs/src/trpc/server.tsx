@@ -6,7 +6,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import type { AppRouter } from "@de100/api";
 import { appRouter, createTRPCContext } from "@de100/api";
-import { auth } from "@de100/auth";
+import { auth } from "@de100/next-auth";
 
 import { createQueryClient } from "./query-client";
 

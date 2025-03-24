@@ -1,7 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@de100/api";
-import { auth } from "@de100/auth";
+import { auth } from "@de100/next-auth";
 
 /**
  * Configure basic CORS headers

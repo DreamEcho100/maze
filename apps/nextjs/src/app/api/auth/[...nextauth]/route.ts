@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { handlers, isSecureContext } from "@de100/auth";
+import { handlers, isSecureContext } from "@de100/next-auth";
 
 const EXPO_COOKIE_NAME = "__de100-expo-redirect-state";
 const AUTH_COOKIE_PATTERN = /authjs\.session-token=([^;]+)/;

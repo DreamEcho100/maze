@@ -19,8 +19,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@de100/auth": "workspace:*",
     "@de100/db": "workspace:*",
+    "@de100/next-auth": "workspace:*",
     "@de100/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "superjson": "2.2.2",

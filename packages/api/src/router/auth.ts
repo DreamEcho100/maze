@@ -1,6 +1,6 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 
-import { invalidateSessionToken } from "@de100/auth";
+import { invalidateSessionToken } from "@de100/next-auth";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 

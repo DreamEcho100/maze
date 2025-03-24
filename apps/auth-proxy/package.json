@@ -1,5 +1,5 @@
 {
-  "name": "@de100/auth-proxy",
+  "name": "@de100/next-auth-proxy",
   "private": true,
   "type": "module",
   "scripts": {

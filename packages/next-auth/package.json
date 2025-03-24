@@ -1,5 +1,5 @@
 {
-  "name": "@de100/auth",
+  "name": "@de100/next-auth",
   "version": "0.1.0",
   "private": true,
   "type": "module",
