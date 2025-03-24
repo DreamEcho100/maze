@@ -1,32 +1,30 @@
 {
-  "name": "@de100/tailwind-config",
-  "version": "0.1.0",
+  "name": "@de100/standard-schema",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "exports": {
-    "./native": "./native.ts",
-    "./web": "./web.ts"
+    ".": "./src/index.ts"
   },
   "license": "MIT",
   "scripts": {
-    "clean": "git clean -xdf .cache .turbo node_modules",
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "postcss": "^8.5.1",
-    "tailwindcss": "catalog:",
-    "tailwindcss-animate": "^1.0.7"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
     "@de100/eslint-config": "workspace:*",
     "@de100/prettier-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
-    "@types/node": "^22.10.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@de100/prettier-config"
+  "prettier": "@de100/prettier-config",
+  "dependencies": {
+    "@standard-schema/spec": "^1.0.0"
+  }
 }

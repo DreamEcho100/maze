@@ -8,11 +8,11 @@ createJiti(fileURLToPath(import.meta.url))("./src/env");
 const config = {
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
-    "@acme/api",
-    "@acme/auth",
-    "@acme/db",
-    "@acme/ui",
-    "@acme/validators",
+    "@de100/api",
+    "@de100/auth",
+    "@de100/db",
+    "@de100/ui",
+    "@de100/validators",
   ],
 
   /** We already do linting and typechecking as separate tasks in CI */

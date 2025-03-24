@@ -6,10 +6,10 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 
-import type { RouterOutputs } from "@acme/api";
-import { CreatePostSchema } from "@acme/db/schema";
-import { cn } from "@acme/ui";
-import { Button } from "@acme/ui/button";
+import type { RouterOutputs } from "@de100/api";
+import { CreatePostSchema } from "@de100/db/schema";
+import { cn } from "@de100/ui";
+import { Button } from "@de100/ui/button";
 import {
   Form,
   FormControl,
@@ -17,9 +17,9 @@ import {
   FormItem,
   FormMessage,
   useForm,
-} from "@acme/ui/form";
-import { Input } from "@acme/ui/input";
-import { toast } from "@acme/ui/toast";
+} from "@de100/ui/form";
+import { Input } from "@de100/ui/input";
+import { toast } from "@de100/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
 

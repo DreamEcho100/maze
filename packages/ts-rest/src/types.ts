@@ -1,4 +1,5 @@
-// https://claude.ai/chat/a8d1bb21-ca32-458d-b6f1-4fc613b2db00
+// http://chatgpt.com/c/67dee916-e8c0-8013-9b41-17b9a86257cb
+// https://gemini.google.com/app/ffa819362ef5c276
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
