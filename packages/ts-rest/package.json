@@ -3,12 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "imports": {
+    "#*": "./src/*"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schemas/adapters/zod": "./src/schemas/adapters/zod/index.ts"
-  },
-  "imports": {
-    "#*": "./src/*"
   },
   "license": "MIT",
   "scripts": {

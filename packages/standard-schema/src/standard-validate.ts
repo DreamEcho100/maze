@@ -12,7 +12,17 @@ function checkIsAsync<IsAsync extends boolean>(
   isAsync?: IsAsync,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): result is Promise<any> {
-  return !!isAsync && result instanceof Promise;
+  if (isAsync) {
+    return true;
+  }
+
+  if (result instanceof Promise) {
+    throw new Error(
+      "Expected a synchronous validation, but got an asynchronous one.",
+    );
+  }
+
+  return false;
 }
 
 export function standardValidate<
@@ -21,13 +31,13 @@ export function standardValidate<
 >(
   schema: T,
   input: StandardSchemaV1.InferInput<T>,
-  isAsync?: IsAsync,
+  options?: { isAsync?: IsAsync },
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 ): SchemaReturnType<T, IsAsync> {
   const result = schema["~standard"].validate(input);
 
-  if (checkIsAsync(result, isAsync)) {
+  if (checkIsAsync(result, options?.isAsync)) {
     return result.then((result) => {
       // if the `issues` field exists, the validation failed
       if (result.issues) {
