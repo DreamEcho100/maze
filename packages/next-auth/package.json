@@ -22,7 +22,7 @@
     "@auth/drizzle-adapter": "catalog:",
     "@de100/db": "workspace:*",
     "@t3-oss/env-nextjs": "^0.12.0",
-    "next": "^15.2.1",
+    "next": "catalog:",
     "next-auth": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

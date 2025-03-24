@@ -1,0 +1,46 @@
+{
+  "name": "nextjs-ai-note-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.12.9",
+    "@clerk/themes": "^2.2.23",
+    "@de100/env": "workspace:^",
+    "@de100/ui": "workspace:*",
+    "@hookform/resolvers": "catalog:",
+    "@pinecone-database/pinecone": "^5.1.1",
+    "@prisma/client": "^6.5.0",
+    "ai": "^4.2.0",
+    "lucide-react": "^0.483.0",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "openai": "^4.89.0",
+    "prisma": "^6.5.0",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-hook-form": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@de100/eslint-config": "workspace:*",
+    "@de100/prettier-config": "workspace:*",
+    "@de100/tailwind-config": "workspace:*",
+    "@de100/tsconfig": "workspace:*",
+    "@types/node": "^22.10.10",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "dotenv-cli": "^8.0.0",
+    "eslint": "catalog:",
+    "jiti": "^1.21.7",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@de100/prettier-config"
+}
