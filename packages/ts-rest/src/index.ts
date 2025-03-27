@@ -341,13 +341,13 @@ type RoutesChainedPaths<Tree extends Record<string, any>> =
 // Contract Enhancer Types
 // -----------------------------
 
-type MergeTypes<Global, Local> = {
-  [Key in keyof Global | keyof Local]: Key extends keyof Local
-    ? Local[Key]
-    : Key extends keyof Global
-      ? Global[Key]
-      : never;
-};
+// type MergeTypes<Global, Local> = {
+//   [Key in keyof Global | keyof Local]: Key extends keyof Local
+//     ? Local[Key]
+//     : Key extends keyof Global
+//       ? Global[Key]
+//       : never;
+// };
 
 /**
  * Merges base path params and base responses into a route contract.
@@ -378,62 +378,115 @@ type MergeTypes<Global, Local> = {
 //         >;
 //       }
 // 	: never;
+
+/**
+ * Merge two header types.
+ * For any key, if the key exists in Local then use Local's type; otherwise use Global's type.
+ */
+type MergeHeaders<Global, Local> = {
+  [K in keyof Global | keyof Local]: K extends keyof Local
+    ? Local[K]
+    : K extends keyof Global
+      ? Global[K]
+      : never;
+};
+
+/**
+ * Merge two types. If Existing is undefined, return New.
+ */
+type MergeInternal<Existing, New> = [Existing] extends [undefined]
+  ? New
+  : [New] extends [undefined]
+    ? Existing
+    : MergeTypes<Existing, New>;
+
+/**
+ * A simple merge utility: keys from Local override keys from Global.
+ */
+type MergeTypes<Global, Local> = {
+  [K in keyof Global | keyof Local]: K extends keyof Local
+    ? Local[K]
+    : K extends keyof Global
+      ? Global[K]
+      : never;
+};
+
 type EnhanceRouteWithBase<
   RouteDef extends RouteTree,
   BaseHeaders extends SchemaShape | undefined = undefined,
 > = RouteDef extends ContractDefinition
   ? Omit<RouteDef, InternalInferredKey> & {
       [internalInferredKey]: NonNullable<RouteDef[InternalInferredKey]> & {
-        baseHeaders: NonNullable<
-          RouteDef[InternalInferredKey]
-        >["baseHeaders"] extends infer RouteDefBaseHeaders
-          ? RouteDefBaseHeaders extends SchemaShape
-            ? Omit<RouteDefBaseHeaders, keyof BaseHeaders> & BaseHeaders
+        // baseHeaders: NonNullable<
+        //   RouteDef[InternalInferredKey]
+        // >["baseHeaders"] extends infer RouteDefBaseHeaders
+        //   ? RouteDefBaseHeaders extends SchemaShape
+        //     ? Omit<RouteDefBaseHeaders, keyof BaseHeaders> & BaseHeaders
+        //     : BaseHeaders
+        //   : BaseHeaders;
+        // For shared headers, if BaseHeaders is defined then merge it with any local shared headers.
+        baseHeaders: BaseHeaders extends SchemaShape
+          ? RouteDef[InternalInferredKey] extends { baseHeaders: infer Local }
+            ? Local extends SchemaShape
+              ? MergeHeaders<BaseHeaders, Local>
+              : BaseHeaders
             : BaseHeaders
-          : BaseHeaders;
-        testCurrentHeadersIO: // 1. NonNullable<RouteDef[InternalInferredKey]>["testCurrentHeadersIO"]
-        NonNullable<
-          RouteDef[InternalInferredKey]
-        >["testCurrentHeadersIO"] extends Record<string, any>
-          ? // 1.1
-            BaseHeaders extends SchemaShape
-            ? // 1.1.1
-              RouteDef["headers"] extends SchemaShape
-              ? // 1.1.2
-                SchemaIO<
-                  NonNullable<
-                    RouteDef[InternalInferredKey]
-                  >["testCurrentHeadersIO"]
-                > &
-                  SchemaIO<BaseHeaders> &
-                  SchemaIO<RouteDef["headers"]>
-              : // 1.1.3
-                SchemaIO<
-                  NonNullable<
-                    RouteDef[InternalInferredKey]
-                  >["testCurrentHeadersIO"]
-                > &
-                  SchemaIO<BaseHeaders>
-            : // 1.2
-              SchemaIO<
-                NonNullable<
-                  RouteDef[InternalInferredKey]
-                >["testCurrentHeadersIO"]
-              >
-          : // 2
-            BaseHeaders extends SchemaShape
-            ? // 2.1
-              RouteDef["headers"] extends SchemaShape
-              ? // 2.1.1
-                SchemaIO<BaseHeaders> & SchemaIO<RouteDef["headers"]>
-              : // 2.1.2
-                SchemaIO<BaseHeaders>
-            : // 2.2
-              RouteDef["headers"] extends SchemaShape
-              ? // 2.2.1
-                SchemaIO<RouteDef["headers"]>
-              : // 2.2.2
-                undefined;
+          : undefined;
+        // For debugging: if testCurrentHeadersIO exists already, preserve it; otherwise, produce a combined SchemaIO.
+        testCurrentHeadersIO: RouteDef[InternalInferredKey] extends {
+          testCurrentHeadersIO: infer T;
+        }
+          ? T
+          : BaseHeaders extends SchemaShape
+            ? RouteDef["headers"] extends SchemaShape
+              ? SchemaIO<BaseHeaders> & SchemaIO<RouteDef["headers"]>
+              : SchemaIO<BaseHeaders>
+            : RouteDef["headers"] extends SchemaShape
+              ? SchemaIO<RouteDef["headers"]>
+              : undefined;
+        // testCurrentHeadersIO: // 1.
+        // NonNullable<
+        //   RouteDef[InternalInferredKey]
+        // >["testCurrentHeadersIO"] extends Record<string, any>
+        //   ? // 1.1
+        //     BaseHeaders extends SchemaShape
+        //     ? // 1.1.1
+        //       RouteDef["headers"] extends SchemaShape
+        //       ? // 1.1.2
+        //         SchemaIO<
+        //           NonNullable<
+        //             RouteDef[InternalInferredKey]
+        //           >["testCurrentHeadersIO"]
+        //         > &
+        //           SchemaIO<BaseHeaders> &
+        //           SchemaIO<RouteDef["headers"]>
+        //       : // 1.1.3
+        //         SchemaIO<
+        //           NonNullable<
+        //             RouteDef[InternalInferredKey]
+        //           >["testCurrentHeadersIO"]
+        //         > &
+        //           SchemaIO<BaseHeaders>
+        //     : // 1.2
+        //       SchemaIO<
+        //         NonNullable<
+        //           RouteDef[InternalInferredKey]
+        //         >["testCurrentHeadersIO"]
+        //       >
+        //   : // 2
+        //     BaseHeaders extends SchemaShape
+        //     ? // 2.1
+        //       RouteDef["headers"] extends SchemaShape
+        //       ? // 2.1.1
+        //         SchemaIO<BaseHeaders> & SchemaIO<RouteDef["headers"]>
+        //       : // 2.1.2
+        //         SchemaIO<BaseHeaders>
+        //     : // 2.2
+        //       RouteDef["headers"] extends SchemaShape
+        //       ? // 2.2.1
+        //         SchemaIO<RouteDef["headers"]>
+        //       : // 2.2.2
+        //         undefined;
       };
       // headers: NonNullable<RouteDef[InternalInferredKey]>["baseHeaders"] extends infer RouteDefBaseHeaders
       // 	? RouteDefBaseHeaders extends SchemaShape
@@ -733,9 +786,6 @@ const commentsRouter = c.router(
 type CommentsRouterBaseHeaders = NonNullable<
   (typeof commentsRouter.createOne)[InternalInferredKey]
 >["testCurrentHeadersIO"]["output"]["x-test-2"];
-type CommentsRouterBaseHeaders2 = NonNullable<
-  (typeof commentsRouter.createOne)[InternalInferredKey]
->["testCurrentHeadersIO"]["output"]["x-test-2"];
 /*
 testCurrentHeadersIO: {
     input: {
@@ -805,7 +855,7 @@ const postsRouter = c.router(
 );
 type PostsRouterBaseHeaders = NonNullable<
   (typeof postsRouter.createOne)[InternalInferredKey]
->["testCurrentHeadersIO"]["input"]["x-test"];
+>["testCurrentHeadersIO"]["output"]["x-test"];
 /*
 testCurrentHeadersIO: {
     input: {
