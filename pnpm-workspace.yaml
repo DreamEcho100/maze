@@ -23,6 +23,7 @@ catalog:
   next-themes: ^0.4.6
   zod: ^3.24.2
   next: 15.2.3
+  "@standard-schema/spec": ^1.0.0
 
   # Tanstack & tRPC
   "@tanstack/react-query": ^5.67.1

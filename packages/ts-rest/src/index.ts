@@ -5,13 +5,16 @@
 
 /**
  * TODO, the following code is a work in progress.
- * - TO_SEARCH: baseResponses` and `basePathParams` or `baseHeaders` only
- * - ISSUE: Fix the issue with the `response` field in `ExtractRouteMetadata`.
- * - ISSUE: Fix the issue with the `createOnePostComment.response.result` type.
+ * - TO_SEARCH: baseResponses` and `basePathParams` or `sharedHeaders` only
  * - ISSUE: Fix the issue with the excessive nesting of `ContractDefinition` type properties on the recursive `RouteTree` type.
+ * - ISSUE: The Inner shared headers are not being merged with the outer shared headers, if there is an outer shared headers defined it takes precedence over the inner shared headers, the issue could be on the `EnhanceRouteWithBase` type utility.
  *
  *
  */
+
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+// The following code is only for demonstration purposes
+import { z } from "zod";
 
 // -----------------------------
 // Core Type Definitions
@@ -27,9 +30,11 @@ type HttpMethod =
   | "OPTIONS";
 
 // Internal keys used for type inference and metadata tagging
-const internalInferredKey: unique symbol = Symbol("~internalInferredKey");
+const internalInferredKey: unique symbol = Symbol(
+  "~@de100/ts-rest-internalInferredKey",
+);
 type InternalInferredKey = typeof internalInferredKey;
-const internalMetaKey: unique symbol = Symbol("~internalMeta");
+const internalMetaKey: unique symbol = Symbol("~@de100/ts-rest-internalMeta");
 type InternalMetaKey = typeof internalMetaKey;
 
 /**
@@ -46,30 +51,16 @@ type IfUndefinedThen<Item, Fallback> = Item extends undefined ? Fallback : Item;
 // -----------------------------
 /**
  * Generic schema resolver for validation/parsing.
- * @template T The resolved data type.
+ * @template TSchema The resolved data type.
  */
-type SchemaResolver<T> = (val?: unknown) => T;
-/**
- * Extract the resolved type from a schema resolver.
- */
-type inferSchema<T> = T extends SchemaResolver<infer U> ? U : never;
-/** Utility to extract value from SchemaResolver */
-type GetSchemaResolverValue<TSchemaResolver> =
-  TSchemaResolver extends SchemaResolver<infer Value> ? Value : never;
-function SchemaResolverMerger<Schema extends SchemaResolver<any>>(
-  base: Schema,
-  override?: Schema,
-): SchemaResolver<any> {
-  // return (val) => {
-  // 	return {
-  // 		...base(val),
-  // 		...override(val),
-  // 	};
-  // };
-
-  // TODO: Needs to pay attention here when working on the schema stuff
-  return override as SchemaResolver<any>;
-}
+type SchemaShape<Input = unknown, Output = Input> = StandardSchemaV1<
+  Input,
+  Output
+>;
+type InferSchemaOutput<TSchema extends SchemaShape> =
+  StandardSchemaV1.InferOutput<TSchema>;
+type InferSchemaInput<TSchema extends SchemaShape> =
+  StandardSchemaV1.InferInput<TSchema>;
 
 // -----------------------------
 // Contract Definition Interface
@@ -81,8 +72,8 @@ function SchemaResolverMerger<Schema extends SchemaResolver<any>>(
  */
 type RouteResponses<
   Status extends AllowedHttpStatusCode = AllowedHttpStatusCode,
-  ResponseBody = Record<string, any>,
-> = Record<Status, SchemaResolver<ResponseBody>>;
+  ResponseBody = SchemaShape,
+> = Record<Status, ResponseBody>;
 
 /**
  * Represents a fully-typed REST API contract for a single endpoint.
@@ -108,10 +99,10 @@ interface ContractDefinition<
   PathSegment extends string = string,
   Responses extends RouteResponses = RouteResponses,
   THttpMethod extends HttpMethod = HttpMethod,
-  PathParams extends Record<string, any> = Record<string, any>,
-  QueryParams extends Record<string, any> = Record<string, any>,
-  RequestBody extends Record<string, any> = Record<string, any>,
-  Headers extends Record<string, any> = Record<string, any>,
+  PathParams extends SchemaShape = SchemaShape,
+  QueryParams extends SchemaShape = SchemaShape,
+  RequestBody extends SchemaShape = SchemaShape,
+  Headers extends SchemaShape = SchemaShape,
   Meta extends ContractDefinitionMeta = ContractDefinitionMeta,
 > {
   /**
@@ -129,19 +120,19 @@ interface ContractDefinition<
    * The schema for validating and typing dynamic route path parameters.
    * Optional. If omitted, no path params are expected.
    */
-  pathParams?: SchemaResolver<PathParams>;
+  pathParams?: PathParams;
 
   /**
    * The schema for validating and typing query string parameters.
    * Optional. If omitted, no query parameters are expected.
    */
-  queryParams?: SchemaResolver<QueryParams>;
+  queryParams?: QueryParams;
 
   /**
    * The schema for validating and typing HTTP headers.
    * Optional. If omitted, no custom headers are expected.
    */
-  headers?: SchemaResolver<Headers>;
+  headers?: Headers;
 
   /**
    * The response schemas keyed by HTTP status code.
@@ -153,7 +144,7 @@ interface ContractDefinition<
    * The schema for validating and typing the request body payload.
    * Optional. Required for methods like POST or PUT that include body data.
    */
-  requestBody?: SchemaResolver<RequestBody>;
+  requestBody?: RequestBody;
 
   /**
    * Optional metadata used for route documentation or internal tooling.
@@ -210,33 +201,9 @@ type GetAllRouteKeyPaths<
 // Response Extraction Types
 // -----------------------------
 
-/**
- * Represents a single extracted response entry with status and result.
- */
-interface RouteResponseEntry<
-  Key extends AllowedHttpStatusCode,
-  Resolver extends SchemaResolver<any>,
-> {
-  status: Key;
-  result: ReturnType<Resolver>;
-}
-
-/**
- * Extracts a union of all response entries from a response map.
- */
-type RouteResponseUnion<ResponsesMap> = {
-  [Key in keyof ResponsesMap]: ResponsesMap[Key] extends SchemaResolver<any>
-    ? RouteResponseEntry<Key & AllowedHttpStatusCode, ResponsesMap[Key]>
-    : never;
-}[keyof ResponsesMap];
-
 // -----------------------------
 // Route Metadata Extraction
 // -----------------------------
-
-type GetOptionalSchemaValue<T> = T extends undefined
-  ? undefined
-  : GetSchemaResolverValue<T>;
 /**
  * Extracts structured route metadata including inferred fields.
  */
@@ -256,36 +223,72 @@ export interface ExtractRouteMetadata<
     | NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"];
 }
 */
+type SchemaIO<TSchema> =
+  TSchema extends SchemaShape<infer TInput, infer TOutput>
+    ? {
+        input: TInput;
+        output: TOutput;
+      }
+    : {
+        input: undefined;
+        output: undefined;
+      };
+
+type MereSchemaIO<
+  RouteDefinition extends ContractDefinition,
+  MainKey extends keyof RouteDefinition,
+  MetaKey extends keyof NonNullable<RouteDefinition[InternalInferredKey]>,
+  TargetKey extends "input" | "output",
+> = SchemaIO<RouteDefinition[MainKey]>[TargetKey] extends undefined
+  ? SchemaIO<
+      NonNullable<RouteDefinition[InternalInferredKey]>[MetaKey]
+    >[TargetKey]
+  : SchemaIO<RouteDefinition[MainKey]>[TargetKey] &
+      Omit<
+        SchemaIO<
+          NonNullable<RouteDefinition[InternalInferredKey]>[MetaKey]
+        >[TargetKey],
+        keyof SchemaIO<RouteDefinition[MainKey]>[TargetKey]
+      >;
+
 type ExtractRouteMetadata<RouteDefinition> =
   RouteDefinition extends ContractDefinition
-    ? Omit<RouteDefinition, "pathParams" | "queryParams" | "requestBody"> & {
-        pathParams: RouteDefinition["pathParams"] extends undefined
-          ? undefined
-          : GetSchemaResolverValue<RouteDefinition["pathParams"]>;
-        queryParams: RouteDefinition["queryParams"] extends undefined
-          ? undefined
-          : GetSchemaResolverValue<RouteDefinition["queryParams"]>;
-        requestBody: RouteDefinition["requestBody"] extends undefined
-          ? undefined
-          : GetSchemaResolverValue<RouteDefinition["requestBody"]>;
-        headers: RouteDefinition["headers"] extends undefined
-          ? undefined
-          : GetSchemaResolverValue<RouteDefinition["headers"]>;
-        response: RouteDefinition["responses"] extends undefined
-          ? NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"]
-          :
-              | RouteResponseUnion<NonNullable<RouteDefinition["responses"]>>
-              | NonNullable<
-                  RouteDefinition[InternalInferredKey]
-                >["baseResponses"];
-        // ISSUE: Fix the issue here
-        // There is a need for away to exclude the keys on the original route
-        // {
-        // 	[Key in Exclude<NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"], keyof NonNullable<RouteDefinition["responses"]>>]: {
-        // 		status: Key;
-        // 		result: GetSchemaResolverValue<NonNullable<RouteDefinition["responses"]>[Key]>;
-        // 	};
-        // }
+    ? Omit<
+        RouteDefinition,
+        "pathParams" | "queryParams" | "requestBody" | "headers" | "responses"
+      > & {
+        pathParams: SchemaIO<RouteDefinition["pathParams"]>;
+        queryParams: SchemaIO<RouteDefinition["queryParams"]>;
+        requestBody: SchemaIO<RouteDefinition["requestBody"]>;
+        ___: SchemaIO<
+          NonNullable<RouteDefinition[InternalInferredKey]>["baseHeader"]
+        >;
+        headers: SchemaIO<RouteDefinition["headers"]> extends undefined
+          ? SchemaIO<
+              NonNullable<RouteDefinition[InternalInferredKey]>["baseHeaders"]
+            >
+          : {
+              input: MereSchemaIO<
+                RouteDefinition,
+                "headers",
+                "baseHeaders",
+                "input"
+              >;
+              output: MereSchemaIO<
+                RouteDefinition,
+                "headers",
+                "baseHeaders",
+                "output"
+              >;
+            };
+
+        response: {
+          [Key in keyof NonNullable<RouteDefinition["responses"]>]: NonNullable<
+            RouteDefinition["responses"]
+          >[Key] extends SchemaShape
+            ? SchemaIO<NonNullable<RouteDefinition["responses"]>[Key]>
+            : never;
+        }[keyof NonNullable<RouteDefinition["responses"]>];
       }
     : never;
 
@@ -337,70 +340,173 @@ type RoutesChainedPaths<Tree extends Record<string, any>> =
 // -----------------------------
 // Contract Enhancer Types
 // -----------------------------
+
+type MergeTypes<Global, Local> = {
+  [Key in keyof Global | keyof Local]: Key extends keyof Local
+    ? Local[Key]
+    : Key extends keyof Global
+      ? Global[Key]
+      : never;
+};
+
 /**
  * Merges base path params and base responses into a route contract.
  */
+// type EnhanceRouteWithBase<
+//   RouteDef extends RouteTree,
+//   BaseHeaders extends SchemaShape | undefined = undefined,
+// > = RouteDef extends ContractDefinition
+//   ? NonNullable<RouteDef[InternalInferredKey]>['baseHeader'] extends Record<string, any>
+//     ? Omit<RouteDef, InternalInferredKey> & {
+//         [internalInferredKey]?: {
+//           baseHeaders: MergeTypes<
+//             BaseHeaders,
+//             NonNullable<RouteDef[InternalInferredKey]>["baseHeaders"]
+//           >;
+//         };
+//       }
+//     : RouteDef & {
+//         [internalInferredKey]?: {
+//           baseHeaders: BaseHeaders;
+//         };
+//       }
+//   : RouteDef extends Record<string, any>
+//     ? {
+//         [Key in keyof RouteDef]: EnhanceRouteWithBase<
+//           RouteDef[Key],
+//           BaseHeaders
+//         >;
+//       }
+// 	: never;
 type EnhanceRouteWithBase<
   RouteDef extends RouteTree,
-  BasePathParams extends
-    | SchemaResolver<Record<string, any>>
-    | undefined = undefined,
-  BaseResponses extends
-    | Record<AllowedHttpStatusCode, SchemaResolver<any>>
-    | undefined = undefined,
+  BaseHeaders extends SchemaShape | undefined = undefined,
 > = RouteDef extends ContractDefinition
-  ? RouteDef & {
-      [internalInferredKey]?: {
-        baseResponses: IfUndefinedThen<
-          {
-            [Key in keyof BaseResponses]: {
-              status: Key;
-              result: BaseResponses[Key] extends SchemaResolver<infer T>
-                ? T
-                : never;
-            };
-          }[keyof BaseResponses],
-          BaseResponses
-        >;
-        basePathParams: IfUndefinedThen<
-          {
-            [Key in keyof BasePathParams]: {
-              status: Key;
-              result: BasePathParams[Key] extends SchemaResolver<infer T>
-                ? T
-                : never;
-            };
-          }[keyof BasePathParams],
-          BasePathParams
-        >;
-      } & RouteDef[InternalInferredKey];
+  ? Omit<RouteDef, InternalInferredKey> & {
+      [internalInferredKey]: NonNullable<RouteDef[InternalInferredKey]> & {
+        baseHeaders: NonNullable<
+          RouteDef[InternalInferredKey]
+        >["baseHeaders"] extends infer RouteDefBaseHeaders
+          ? RouteDefBaseHeaders extends SchemaShape
+            ? Omit<RouteDefBaseHeaders, keyof BaseHeaders> & BaseHeaders
+            : BaseHeaders
+          : BaseHeaders;
+        testCurrentHeadersIO: // 1. NonNullable<RouteDef[InternalInferredKey]>["testCurrentHeadersIO"]
+        NonNullable<
+          RouteDef[InternalInferredKey]
+        >["testCurrentHeadersIO"] extends Record<string, any>
+          ? // 1.1
+            BaseHeaders extends SchemaShape
+            ? // 1.1.1
+              RouteDef["headers"] extends SchemaShape
+              ? // 1.1.2
+                SchemaIO<
+                  NonNullable<
+                    RouteDef[InternalInferredKey]
+                  >["testCurrentHeadersIO"]
+                > &
+                  SchemaIO<BaseHeaders> &
+                  SchemaIO<RouteDef["headers"]>
+              : // 1.1.3
+                SchemaIO<
+                  NonNullable<
+                    RouteDef[InternalInferredKey]
+                  >["testCurrentHeadersIO"]
+                > &
+                  SchemaIO<BaseHeaders>
+            : // 1.2
+              SchemaIO<
+                NonNullable<
+                  RouteDef[InternalInferredKey]
+                >["testCurrentHeadersIO"]
+              >
+          : // 2
+            BaseHeaders extends SchemaShape
+            ? // 2.1
+              RouteDef["headers"] extends SchemaShape
+              ? // 2.1.1
+                SchemaIO<BaseHeaders> & SchemaIO<RouteDef["headers"]>
+              : // 2.1.2
+                SchemaIO<BaseHeaders>
+            : // 2.2
+              RouteDef["headers"] extends SchemaShape
+              ? // 2.2.1
+                SchemaIO<RouteDef["headers"]>
+              : // 2.2.2
+                undefined;
+      };
+      // headers: NonNullable<RouteDef[InternalInferredKey]>["baseHeaders"] extends infer RouteDefBaseHeaders
+      // 	? RouteDefBaseHeaders extends SchemaShape
+      // 		? Omit<RouteDefBaseHeaders, keyof BaseHeaders> & BaseHeaders
+      // 		: BaseHeaders
+      // 	: BaseHeaders;
     }
   : RouteDef extends Record<string, any>
     ? {
         [Key in keyof RouteDef]: EnhanceRouteWithBase<
           RouteDef[Key],
-          BasePathParams,
-          BaseResponses
+          BaseHeaders
         >;
       }
     : never;
+// Omit<RouteDef, InternalInferredKey> & {
+//     [internalInferredKey]: (RouteDef[InternalInferredKey] extends Record<
+//       string,
+//       any
+//     >
+//       ? RouteDef[InternalInferredKey]
+//       : "never") & {
+//       baseHeaders: NonNullable<
+//         RouteDef[InternalInferredKey]
+//       >["baseHeaders"] extends infer RouteDefBaseHeaders
+//         ? RouteDefBaseHeaders extends SchemaShape
+//           ? MergeTypes<BaseHeaders, RouteDefBaseHeaders>
+//           : BaseHeaders
+//         : NonNullable<RouteDef[InternalInferredKey]>["baseHeaders"];
+//     };
+//   }
+// : RouteDef extends Record<string, any>
+//   ? {
+//       [Key in keyof RouteDef]: EnhanceRouteWithBase<
+//         RouteDef[Key],
+//         BaseHeaders
+//       >;
+//     }
+//   : never;
 
 // -----------------------------
 // Recursive Mutator
 // -----------------------------
 
+function isContractDefinition(routeTree: any): routeTree is ContractDefinition {
+  return (
+    typeof routeTree === "object" &&
+    !!routeTree &&
+    !("method" in routeTree) &&
+    !("responses" in routeTree)
+  );
+}
+
 function mutateRoutesRecursively<
   Tree extends RouteTree,
-  BasePathParams extends SchemaResolver<Record<string, any>>,
-  BaseResponses extends RouteResponses,
+  SharedHeaders extends SchemaShape,
 >(
   routeTree: Tree,
   options: {
     pathPrefix?: string;
-    baseHeaders?: SchemaResolver<Record<string, any>>;
-    basePathParams?: BasePathParams;
-    baseResponses?: BaseResponses;
+    sharedHeaders?: SharedHeaders;
+    schemaResolverMerger?: (base: any, override?: any) => SchemaShape;
   },
+  // (
+  // 	| {
+  // 			sharedHeaders?: undefined;
+  // 			schemaResolverMerger?: undefined;
+  // 		}
+  // 	| {
+  // 			sharedHeaders: SharedHeaders;
+  // 			schemaResolverMerger: (base: any, override?: any) => SchemaShape;
+  // 		}
+  // ),
 ) {
   for (const key in routeTree) {
     if (!routeTree[key]) {
@@ -408,11 +514,11 @@ function mutateRoutesRecursively<
     }
 
     // If Not a contract definition
-    if (!("method" in routeTree) && !("responses" in routeTree)) {
+    if (!isContractDefinition(routeTree[key])) {
       // Recurse on it's children
       mutateRoutesRecursively(routeTree[key], {
-        baseHeaders: options.baseHeaders,
-        baseResponses: options.baseResponses,
+        sharedHeaders: options.sharedHeaders,
+        schemaResolverMerger: options.schemaResolverMerger,
       });
       continue;
     }
@@ -420,25 +526,19 @@ function mutateRoutesRecursively<
     // If it's a contract definition
     const route = routeTree[key] as unknown as ContractDefinition;
 
+    // Apply path prefix
     if (options.pathPrefix) {
-      route.path = options.pathPrefix + route.path;
+      route.path = `${options.pathPrefix}${route.path}`;
     }
 
-    if (options.baseResponses) {
-      route.responses = {
-        ...options.baseResponses,
-        ...route.responses,
-      };
-    }
+    if (options.sharedHeaders && route.headers) {
+      if (!options.schemaResolverMerger) {
+        throw new Error("Missing `schemaResolverMerger` function in options.");
+      }
 
-    if (options.baseHeaders) {
-      route.headers = SchemaResolverMerger(options.baseHeaders, route.headers);
-    }
-
-    if (options.basePathParams) {
-      route.pathParams = SchemaResolverMerger(
-        options.basePathParams,
-        route.pathParams,
+      route.headers = options.schemaResolverMerger(
+        options.sharedHeaders,
+        route.headers,
       );
     }
   }
@@ -455,214 +555,351 @@ function mutateRoutesRecursively<
  */
 function defineRouterContract<
   Tree extends RouteTree,
-  BasePathParams extends SchemaResolver<Record<string, any>>,
-  BaseResponses extends RouteResponses,
+  SharedHeaders extends SchemaShape,
 >(
   routeTree: Tree,
   options?: {
     pathPrefix?: string;
-    baseHeaders?: SchemaResolver<Record<string, any>>;
-    basePathParams?: BasePathParams;
-    baseResponses?: BaseResponses;
+    sharedHeaders?: SharedHeaders;
+    schemaResolverMerger?: (base: any, override?: any) => SchemaShape;
   },
 ) {
   if (options) {
     mutateRoutesRecursively(routeTree, options);
   }
 
-  return routeTree as unknown as EnhanceRouteWithBase<
-    Tree,
-    BasePathParams,
-    BaseResponses
-  >;
+  return routeTree as unknown as EnhanceRouteWithBase<Tree, SharedHeaders>;
 }
 
 const c = {
   router: defineRouterContract,
 };
 
-// The following code is only for demonstration purposes
-interface Post {
-  commentId: number;
-  title: string;
-  body: string;
+const errorSchemaBuilder = <StatusNumber extends number>(param: {
+  statusNumber: StatusNumber;
+}) =>
+  z.object({
+    type: z.literal("error"),
+    statusNumber: z.literal(param.statusNumber),
+    message: z.string(),
+  });
+const successSchemaBuilder = <
+  StatusNumber extends number,
+  TDataSchema extends z.ZodTypeAny,
+>(param: {
+  statusNumber: StatusNumber;
+  data: TDataSchema;
+}) =>
+  z.object({
+    type: z.literal("success"),
+    statusNumber: z.literal(param.statusNumber),
+    data: param.data,
+  });
+const baseResponses = {
+  500: errorSchemaBuilder({ statusNumber: 500 }),
+  503: errorSchemaBuilder({ statusNumber: 503 }),
+  504: errorSchemaBuilder({ statusNumber: 504 }),
+};
+const baseResponsesBuilder = <TSchemaMap extends Record<number, z.ZodTypeAny>>(
+  schemaMap: TSchemaMap,
+) => {
+  type CorrectedSchemaMap = {
+    [Key in keyof TSchemaMap]: TSchemaMap[Key] extends z.ZodTypeAny
+      ? ReturnType<typeof successSchemaBuilder<Key & number, TSchemaMap[Key]>>
+      : never;
+  };
+  type SatisfiedCorrectedSchemaMap = Record<
+    number,
+    ReturnType<typeof successSchemaBuilder<number, any>>
+  >;
+
+  const correctedSchemaMap: Partial<SatisfiedCorrectedSchemaMap> = {};
+
+  for (const key in schemaMap) {
+    const statusNumber = Number(key);
+    const data = schemaMap[statusNumber];
+
+    if (!data) {
+      continue;
+    }
+
+    correctedSchemaMap[statusNumber] = successSchemaBuilder({
+      statusNumber: statusNumber,
+      data,
+    });
+  }
+
+  return {
+    ...baseResponses,
+    ...(correctedSchemaMap as CorrectedSchemaMap),
+  };
+};
+
+const postSchema = z.object({
+  commentId: z.number(),
+  title: z.string(),
+  body: z.string(),
+});
+const commentSchema = z.object({
+  commentId: z.number(),
+  postId: z.coerce.number(),
+  body: z.string(),
+});
+const basePageParamsSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+});
+const authHeadersSchema = z.object({
+  authorization: z.string(),
+});
+
+/** Utility to extract value from SchemaResolver */
+function schemaResolverMerger<Schema extends SchemaShape>(
+  base: Schema,
+  override: Schema,
+): SchemaShape {
+  if (
+    base["~standard"].vendor === "zod" &&
+    override["~standard"].vendor === "zod"
+  ) {
+    return (base as unknown as z.ZodObject<any>).merge(
+      override as unknown as z.ZodObject<any>,
+    ) as SchemaShape;
+  }
+
+  throw new Error("Unsupported schema vendor.");
 }
-interface Comment {
-  commentId: number;
-  postId: number;
-  body: string;
+
+const commentsRouter = c.router(
+  {
+    // path: "/comments",
+    getMany: {
+      path: "/",
+      method: "GET",
+      queryParams: basePageParamsSchema,
+      responses: {
+        path: "/",
+        // ISSUE: Fix the issue here
+        // There seem to be an issue with the recursive type `RouteTree`, which leads to the `ContractDefinition` type properties to be able to have a `ContractDefinition` type properties???
+        ...baseResponsesBuilder({
+          200: z.array(commentSchema),
+        }),
+      },
+    },
+    getOne: {
+      path: "/:commentId",
+      method: "GET",
+      pathParams: z.object({
+        postId: z.coerce.number(),
+        commentId: z.coerce.number(),
+      }),
+      responses: baseResponsesBuilder({ 200: commentSchema }),
+    },
+    createOne: {
+      method: "POST",
+      path: "/",
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 201: commentSchema }),
+    },
+    updateOne: {
+      method: "PUT",
+      path: "/:commentId",
+      pathParams: z.object({
+        postId: z.coerce.number(),
+        commentId: z.coerce.number(),
+      }),
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 200: commentSchema }),
+    },
+    deleteOne: {
+      method: "DELETE",
+      path: "/:commentId",
+      pathParams: z.object({
+        commentId: z.number(),
+      }),
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 204: z.undefined() }),
+    },
+  },
+  {
+    pathPrefix: "/comments",
+    sharedHeaders: z.object({
+      "content-type": z.literal("application/text"),
+      "x-test-2": z.coerce.number(),
+    }),
+    schemaResolverMerger,
+  },
+);
+type CommentsRouterBaseHeaders = NonNullable<
+  (typeof commentsRouter.createOne)[InternalInferredKey]
+>["testCurrentHeadersIO"]["output"]["x-test-2"];
+type CommentsRouterBaseHeaders2 = NonNullable<
+  (typeof commentsRouter.createOne)[InternalInferredKey]
+>["testCurrentHeadersIO"]["output"]["x-test-2"];
+/*
+testCurrentHeadersIO: {
+    input: {
+        "content-type": "application/text";
+        "x-test-2": number;
+    };
+    output: {
+        "content-type": "application/text";
+        "x-test-2": number;
+    };
+} & {
+    input: {
+        authorization: string;
+    };
+    output: {
+        authorization: string;
+    };
 }
+*/
+
+const postsRouter = c.router(
+  {
+    // path: "/posts",
+    getMany: {
+      path: "/",
+      method: "GET",
+      queryParams: basePageParamsSchema,
+      responses: baseResponsesBuilder({ 200: z.array(postSchema) }),
+    },
+    getOne: {
+      path: "/:postId",
+      method: "GET",
+      pathParams: z.object({ postId: z.coerce.number() }),
+      responses: baseResponsesBuilder({ 200: postSchema }),
+    },
+    createOne: {
+      path: "/",
+      method: "POST",
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 201: postSchema }),
+    },
+    updateOne: {
+      path: "/:postId",
+      method: "PUT",
+      pathParams: z.object({ postId: z.coerce.number() }),
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 201: postSchema }),
+    },
+    deleteOne: {
+      path: "/:postId",
+      method: "DELETE",
+      pathParams: z.object({ postId: z.coerce.number() }),
+      headers: authHeadersSchema,
+      responses: baseResponsesBuilder({ 204: z.undefined() }),
+    },
+    comments: commentsRouter,
+  },
+  {
+    pathPrefix: "/posts",
+    sharedHeaders: z.object({
+      "content-type": z.literal("application/text"),
+      "x-test": z.coerce.number(),
+    }),
+    schemaResolverMerger,
+    // ISSUE: The Inner shared headers are not being merged with the outer shared headers, if there is an outer shared headers defined it takes precedence over the inner shared headers, the issue could be on the `EnhanceRouteWithBase` type utility.
+  },
+);
+type PostsRouterBaseHeaders = NonNullable<
+  (typeof postsRouter.createOne)[InternalInferredKey]
+>["testCurrentHeadersIO"]["input"]["x-test"];
+/*
+testCurrentHeadersIO: {
+    input: {
+        "content-type": "application/text";
+        "x-test": number;
+    };
+    output: {
+        "content-type": "application/text";
+        "x-test": number;
+    };
+} & {
+    input: {
+        authorization: string;
+    };
+    output: {
+        authorization: string;
+    };
+}
+*/
+
 const routeExample = c.router(
   {
-    posts: c.router(
-      {
-        // path: "/posts",
-        getMany: {
-          path: "/",
-          method: "GET",
-          queryParams: () => {
-            return {
-              page: 1,
-              limit: 10,
-            };
-          },
-          responses: {
-            200: (val) => {
-              return val as Post[];
-            },
-          },
-        },
-        getOne: {
-          path: "/:postId",
-          method: "GET",
-          pathParams: () => {
-            return {} as { postId: number };
-          },
-          responses: {
-            200: (val) => {
-              return val as Post;
-            },
-          },
-        },
-        createOne: {
-          path: "/",
-          method: "POST",
-          responses: {
-            201: (val) => {
-              return val as Post;
-            },
-          },
-        },
-        updateOne: {
-          path: "/:postId",
-          method: "PUT",
-          pathParams: () => {
-            return {} as { postId: number };
-          },
-          responses: {
-            201: (val) => {
-              return val as Post;
-            },
-          },
-        },
-        deleteOne: {
-          path: "/:postId",
-          method: "DELETE",
-          pathParams: () => {
-            return {} as { postId: number };
-          },
-          responses: {
-            204: () => {
-              return {};
-            },
-          },
-        },
-        comments: c.router(
-          {
-            // path: "/comments",
-            getMany: {
-              path: "/",
-              method: "GET",
-              queryParams: () => {
-                return {
-                  page: 1,
-                  limit: 10,
-                };
-              },
-              responses: {
-                path: "/",
-                // ISSUE: Fix the issue here
-                // There seem to be an issue with the recursive type `RouteTree`, which leads to the `ContractDefinition` type properties to be able to have a `ContractDefinition` type properties???
-                200: (val) => {
-                  return val as Comment[];
-                },
-              },
-            },
-            getOne: {
-              path: "/:commentId",
-              method: "GET",
-              pathParams: () => {
-                return {} as { commentId: number };
-              },
-              responses: {
-                200: (val) => {
-                  return val as Comment;
-                },
-              },
-            },
-            createOne: {
-              method: "POST",
-              path: "/",
-              responses: {
-                201: (val) => {
-                  return val as Comment;
-                },
-              },
-            },
-            updateOne: {
-              method: "PUT",
-              path: "/:commentId",
-              pathParams: () => {
-                return {} as { commentId: number };
-              },
-              responses: {
-                200: (val) => {
-                  return val as Comment;
-                },
-              },
-            },
-            deleteOne: {
-              method: "DELETE",
-              path: "/:commentId",
-              pathParams: () => {
-                return {} as { commentId: number };
-              },
-              responses: {
-                204: () => {
-                  return {};
-                },
-              },
-            },
-          },
-          {
-            pathPrefix: "/comments",
-          },
-        ),
-      },
-      {
-        pathPrefix: "/posts",
-      },
-    ),
+    posts: postsRouter,
   },
   {
     pathPrefix: "/api/v1",
-    baseResponses: {
-      // 200: (val) => val as { error: string },
-      500: (val) => val as { error: string },
-      503: (val) => val as { error: string },
-    },
+    sharedHeaders: z.object({ "content-type": z.literal("application/json") }), // baseResponses:
+    schemaResolverMerger,
   },
 );
+type RouteExampleBaseHeaders = InferSchemaOutput<
+  (typeof routeExample.posts.createOne)[InternalInferredKey]
+>; // ["testCurrentHeadersIO"];
+/*
+unknown
+*/
+
 type AllAppRouteKeys = RoutesChainedPaths<typeof routeExample>;
 type AppRoutesKeysPaths = GetAllRouteKeyPaths<typeof routeExample>;
 type AppRouteKeyPathToValue = RouteKeyPathToInfoMap<
   typeof routeExample,
   AppRoutesKeysPaths
 >;
-const routeKeyPath = "posts.comments.getMany" satisfies AllAppRouteKeys;
-const routeKeyPathToValue = {} as AppRouteKeyPathToValue;
 
-const createOnePostComment = routeKeyPathToValue[routeKeyPath];
-
-console.log(createOnePostComment.queryParams);
-if (createOnePostComment.response.status === 200) {
-  console.log(createOnePostComment.response.result[0]?.commentId);
-} else if (createOnePostComment.response.status === 500) {
-  console.log(createOnePostComment.response.result.error);
-  /*
-ISSUE:
-The type of `createOnePostComment.response.result` is `Record<string, any> & { error: string; }`
-It should be `{ error: string; }` only
-*/
+{
+  const routeKeyPath = "posts.comments.getMany" satisfies AllAppRouteKeys;
+  const routeKeyPathToValue = {} as AppRouteKeyPathToValue;
+  const createOnePostComment = routeKeyPathToValue[routeKeyPath];
+  console.log(createOnePostComment.queryParams);
+  console.log(createOnePostComment.___.output);
+  console.log(createOnePostComment.pathChain);
+  console.log(createOnePostComment.headers.output);
+  console.log(createOnePostComment.headers.output["content-type"]);
+  console.log(createOnePostComment.headers.output["x-test"]);
+  console.log(createOnePostComment.headers.output["x-test-2"]);
+  console.log(createOnePostComment.method);
+  switch (createOnePostComment.response.output.type) {
+    case "success": {
+      console.log(createOnePostComment.response.output.data);
+      break;
+    }
+    case "error": {
+      console.log(createOnePostComment.response.output.message);
+      break;
+    }
+  }
+  console.log(createOnePostComment.pathParams);
+  console.log(createOnePostComment.path);
+  console.log(createOnePostComment.requestBody);
 }
-console.log(createOnePostComment.responses);
+
+{
+  const routeKeyPath = "posts.comments.createOne" satisfies AllAppRouteKeys;
+  const routeKeyPathToValue = {} as AppRouteKeyPathToValue;
+  const createOnePostComment = routeKeyPathToValue[routeKeyPath];
+  console.log(createOnePostComment.headers.output);
+  console.log(createOnePostComment.headers.output.authorization);
+  console.log(createOnePostComment.headers.output["x-test"]);
+  console.log(createOnePostComment.headers.output["x-test-2"]);
+  console.log(createOnePostComment.headers.output["content-type"]);
+  console.log(createOnePostComment.pathChain);
+  console.log(createOnePostComment.method);
+  switch (createOnePostComment.response.output.type) {
+    case "success": {
+      console.log(createOnePostComment.response.output.data);
+      break;
+    }
+    case "error": {
+      console.log(createOnePostComment.response.output.message);
+      break;
+    }
+  }
+  console.log(createOnePostComment.queryParams);
+  console.log(createOnePostComment.pathParams);
+  console.log(createOnePostComment.path);
+  console.log(createOnePostComment.requestBody);
+}

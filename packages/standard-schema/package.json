@@ -19,12 +19,10 @@
     "@de100/eslint-config": "workspace:*",
     "@de100/prettier-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
+    "@standard-schema/spec": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@de100/prettier-config",
-  "dependencies": {
-    "@standard-schema/spec": "^1.0.0"
-  }
+  "prettier": "@de100/prettier-config"
 }

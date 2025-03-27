@@ -15,6 +15,9 @@ catalogs:
     '@hookform/resolvers':
       specifier: ^4.1.3
       version: 4.1.3
+    '@standard-schema/spec':
+      specifier: ^1.0.0
+      version: 1.0.0
     '@tanstack/react-query':
       specifier: ^5.67.1
       version: 5.69.0
@@ -501,10 +504,6 @@ importers:
         version: 5.8.2
 
   packages/standard-schema:
-    dependencies:
-      '@standard-schema/spec':
-        specifier: ^1.0.0
-        version: 1.0.0
     devDependencies:
       '@de100/eslint-config':
         specifier: workspace:*
@@ -515,6 +514,9 @@ importers:
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@standard-schema/spec':
+        specifier: 'catalog:'
+        version: 1.0.0
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
@@ -536,6 +538,9 @@ importers:
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@standard-schema/spec':
+        specifier: 'catalog:'
+        version: 1.0.0
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
@@ -742,7 +747,7 @@ importers:
         version: 7.37.4(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react-compiler:
         specifier: beta
-        version: 19.0.0-beta-3229e95-20250315(eslint@9.23.0(jiti@2.4.2))
+        version: 19.0.0-beta-aeaed83-20250323(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react-hooks:
         specifier: ^5.1.0
         version: 5.2.0(eslint@9.23.0(jiti@2.4.2))
@@ -5109,8 +5114,8 @@ packages:
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9
 
-  eslint-plugin-react-compiler@19.0.0-beta-3229e95-20250315:
-    resolution: {integrity: sha512-cJL+A3P3nIBAugbZ/RroaixQ6ygnKYMVM1sRnAE26dqHZRVRfqT8+PCyGtB2tgLmQWZhv6glQ+PRoiXqLMcRug==}
+  eslint-plugin-react-compiler@19.0.0-beta-aeaed83-20250323:
+    resolution: {integrity: sha512-zkz1RlYTt3zzo7u/O1+5GCXFf75Qwo6guOJQVqjANagc+UoiV4RHyH+HGHQ39h7Nq/QsZG8atCiUS81RMre0UQ==}
     engines: {node: ^14.17.0 || ^16.0.0 || >= 18.0.0}
     peerDependencies:
       eslint: '>=7'
@@ -13574,7 +13579,7 @@ snapshots:
       safe-regex-test: 1.1.0
       string.prototype.includes: 2.0.1
 
-  eslint-plugin-react-compiler@19.0.0-beta-3229e95-20250315(eslint@9.23.0(jiti@2.4.2)):
+  eslint-plugin-react-compiler@19.0.0-beta-aeaed83-20250323(eslint@9.23.0(jiti@2.4.2)):
     dependencies:
       '@babel/core': 7.26.10
       '@babel/parser': 7.26.10

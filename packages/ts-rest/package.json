@@ -23,6 +23,7 @@
     "@de100/eslint-config": "workspace:*",
     "@de100/prettier-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
+    "@standard-schema/spec": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
