@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { StandardSchemaV1 } from "@de100/standard-schema";
 
 type ErrorMessage<T extends string> = T;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TExtendsItem = Record<string, any>;
 
 type MergeUnion<T> = {
@@ -9,51 +9,51 @@ type MergeUnion<T> = {
     ? V
     : never;
 };
+type CompositeRecord<
+  TClient = unknown,
+  TServer = unknown,
+  TShared = unknown,
+  TExtends = unknown,
+> = {
+  [Key in
+    | (TClient extends Record<string, any> ? keyof TClient : never)
+    | (TServer extends Record<string, any> ? keyof TServer : never)
+    | (TShared extends Record<string, any> ? keyof TShared : never)
+    | (TExtends extends Record<string, any> ? keyof TExtends : never)]:
+    | (Key extends keyof TClient ? TClient[Key] : never)
+    | (Key extends keyof TServer ? TServer[Key] : never)
+    | (Key extends keyof TShared ? TShared[Key] : never)
+    | (Key extends keyof TExtends ? TExtends[Key] : never);
+};
 
-type ExtractObject<Item> =
-  Item extends Readonly<infer internal_TExtends>
-    ? internal_TExtends extends Record<string, StandardSchemaV1>
-      ? {
-          [Key in keyof internal_TExtends]: StandardSchemaV1.InferOutput<
-            internal_TExtends[Key]
-          >;
-        }
-      : {
-          [Key in keyof internal_TExtends]: internal_TExtends[Key];
-        }
-    : Item extends Record<string, StandardSchemaV1>
-      ? {
-          [Key in keyof Item]: StandardSchemaV1.InferOutput<Item[Key]>;
-        }
-      : Item extends Record<string, unknown>
-        ? {
-            [Key in keyof Item]: Item[Key];
-          }
-        : never;
 type CreateEnvOutput<
   TClientPrefix extends string,
-  TClient extends Record<`${TClientPrefix}${string}`, StandardSchemaV1>,
-  TServer extends Record<string, StandardSchemaV1> = Record<
-    string,
-    StandardSchemaV1
-  >,
-  TShared extends Record<string, StandardSchemaV1> = Record<
-    string,
-    StandardSchemaV1
-  >,
-  TExtends extends TExtendsItem[] = TExtendsItem[],
-> = ExtractObject<TClient> &
-  ExtractObject<TServer> &
-  (
-    | {
-        [Key in keyof TShared]: StandardSchemaV1.InferOutput<TShared[Key]>;
+  TClient extends
+    | Record<`${TClientPrefix}${string}`, StandardSchemaV1>
+    | undefined = undefined,
+  TServer extends Record<string, StandardSchemaV1> | undefined = undefined,
+  TShared extends Record<string, StandardSchemaV1> | undefined = undefined,
+  TExtends extends TExtendsItem[] | undefined = undefined,
+> = CompositeRecord<
+  TClient,
+  TServer extends Record<string, StandardSchemaV1>
+    ? {
+        [K in keyof TServer]: StandardSchemaV1.InferOutput<TServer[K]>;
       }
-    | {
-        [Key in keyof ExtractObject<
-          MergeUnion<TExtends[number]>
-        >]: ExtractObject<MergeUnion<TExtends[number]>>[Key];
+    : never,
+  TShared extends Record<string, StandardSchemaV1>
+    ? {
+        [K in keyof TShared]: StandardSchemaV1.InferOutput<TShared[K]>;
       }
-  );
+    : never,
+  TExtends extends TExtendsItem[]
+    ? {
+        [K in keyof MergeUnion<TExtends[number]>]: MergeUnion<
+          TExtends[number]
+        >[K];
+      }
+    : never
+>;
 
 /** The Standard Schema interface. */ function parseWithDictionary(
   dictionary: Readonly<Record<string, StandardSchemaV1>>,
@@ -100,28 +100,20 @@ type CreateEnvOutput<
 
 export function createEnv<
   TClientPrefix extends string,
-  TServer extends Record<string, StandardSchemaV1> = Record<
-    string,
-    StandardSchemaV1
-  >,
-  TClient extends Record<
-    `${TClientPrefix}${string}`,
-    StandardSchemaV1
-  > = Record<`${TClientPrefix}${string}`, StandardSchemaV1>,
-  TShared extends Record<string, StandardSchemaV1> = Record<
-    string,
-    StandardSchemaV1
-  >,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TExtends extends TExtendsItem[] = TExtendsItem[],
+  TClient extends
+    | Record<`${TClientPrefix}${string}`, StandardSchemaV1>
+    | undefined = undefined,
+  TServer extends Record<string, StandardSchemaV1> | undefined = undefined,
+  TShared extends Record<string, StandardSchemaV1> | undefined = undefined,
+  TExtends extends TExtendsItem[] | undefined = undefined,
 >(options: {
   server?: TServer;
   clientPrefix?: TClientPrefix;
-  client?: Partial<{
+  client?: {
     [TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
       ? TClient[TKey]
       : ErrorMessage<`${TKey extends string ? TKey : never} is not prefixed with ${TClientPrefix}.`>;
-  }>;
+  };
   shared?: TShared;
   extends?: TExtends;
   skipValidation?: boolean;
@@ -134,22 +126,24 @@ export function createEnv<
    * Can be used for Next.js ^13.4.4 since they stopped static analysis of server side `process.env`.
    * Only client side `process.env` is statically analyzed and needs to be manually destructured.
    */
-  experimental__runtimeEnv?: Record<
-    | {
-        [TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
-          ? TKey
-          : never;
-      }[keyof TClient]
-    | {
-        [TKey in keyof TShared]: TKey extends string ? TKey : never;
-      }[keyof TShared],
-    string | boolean | number | undefined
+  experimental__runtimeEnv: Partial<
+    Record<
+      | {
+          [TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
+            ? TKey
+            : never;
+        }[keyof TClient]
+      | {
+          [TKey in keyof TShared]: TKey extends string ? TKey : never;
+        }[keyof TShared],
+      string | boolean | number | undefined
+    >
   >;
-}): CreateEnvOutput<TClientPrefix, TServer, TClient, TShared, TExtends> {
+}): CreateEnvOutput<TClientPrefix, TClient, TServer, TShared, TExtends> {
   type EnvOutput = CreateEnvOutput<
     TClientPrefix,
-    TServer,
     TClient,
+    TServer,
     TShared,
     TExtends
   >;
