@@ -55,7 +55,8 @@ type CreateEnvOutput<
     : never
 >;
 
-/** The Standard Schema interface. */ function parseWithDictionary(
+/** The Standard Schema interface. */
+function parseWithDictionary(
   dictionary: Readonly<Record<string, StandardSchemaV1>>,
   value: Record<string, unknown>,
 ) {

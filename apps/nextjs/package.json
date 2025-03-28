@@ -38,6 +38,7 @@
     "@de100/prettier-config": "workspace:*",
     "@de100/tailwind-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
     "@types/node": "^22.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
