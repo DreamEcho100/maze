@@ -2,10 +2,10 @@
   "name": "create-t3-turbo",
   "private": true,
   "engines": {
-    "node": ">=22.11.0",
-    "pnpm": "^9.15.4"
+    "node": ">=23.7.0",
+    "pnpm": "^10.6.5"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.6.5",
   "scripts": {
     "build": "turbo run build",
     "clean": "git clean -xdf node_modules",
@@ -18,9 +18,10 @@
     "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
     "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
     "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
-    "lint:ws": "pnpm dlx sherif@latest",
+    "lint:ws": "pnpm dlx sherif@latest -p \"./playground/*\"",
     "typecheck": "turbo run typecheck",
-    "ui-add": "turbo run ui-add"
+    "ui-add": "turbo run ui-add",
+    "postinstall": "pnpm lint:ws"
   },
   "devDependencies": {
     "@de100/prettier-config": "workspace:*",

@@ -127,18 +127,16 @@ export function createEnv<
    * Can be used for Next.js ^13.4.4 since they stopped static analysis of server side `process.env`.
    * Only client side `process.env` is statically analyzed and needs to be manually destructured.
    */
-  experimental__runtimeEnv: Partial<
-    Record<
-      | {
-          [TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
-            ? TKey
-            : never;
-        }[keyof TClient]
-      | {
-          [TKey in keyof TShared]: TKey extends string ? TKey : never;
-        }[keyof TShared],
-      string | boolean | number | undefined
-    >
+  experimental__runtimeEnv?: Record<
+    | {
+        [TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
+          ? TKey
+          : never;
+      }[keyof TClient]
+    | {
+        [TKey in keyof TShared]: TKey extends string ? TKey : never;
+      }[keyof TShared],
+    string | boolean | number | undefined
   >;
 }): CreateEnvOutput<TClientPrefix, TClient, TServer, TShared, TExtends> {
   type EnvOutput = CreateEnvOutput<

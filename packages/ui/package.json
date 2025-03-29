@@ -9,6 +9,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./button": "./src/button.tsx",
+    "./card": "./src/card.tsx",
+    "./dialog": "./src/dialog.tsx",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
     "./form": "./src/form.tsx",
     "./input": "./src/input.tsx",
@@ -26,8 +28,9 @@
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
-    "@radix-ui/react-icons": "^1.3.2",
+    "@radix-ui/react-dialog": "^1.1.6",
     "class-variance-authority": "^0.7.1",
+    "lucide-react": "^0.485.0",
     "next-themes": "catalog:",
     "radix-ui": "^1.1.3",
     "react-hook-form": "catalog:",

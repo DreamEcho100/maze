@@ -1,11 +1,7 @@
 "use client";
 
 import type { ComponentProps, HTMLAttributes } from "react";
-import {
-  CheckIcon,
-  ChevronRightIcon,
-  DotFilledIcon,
-} from "@radix-ui/react-icons";
+import { CheckIcon, ChevronRightIcon, Dot } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 
 import { cn } from "@de100/ui";
@@ -134,7 +130,7 @@ function DropdownMenuRadioItem({
     >
       <span className="absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <DotFilledIcon className="size-4 fill-current" />
+          <Dot className="size-4 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
