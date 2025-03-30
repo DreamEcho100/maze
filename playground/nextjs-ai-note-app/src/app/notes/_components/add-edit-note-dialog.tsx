@@ -61,12 +61,25 @@ export default function AddEditNoteDialog({
           }),
         });
         if (!response.ok) throw Error("Status code: " + response.status);
+
+        const result = (await response.json()) as {
+          type: string;
+          message: string;
+        };
+        if (result.type === "error") throw Error(result.message);
       } else {
         const response = await fetch("/api/notes", {
           method: "POST",
           body: JSON.stringify(input),
         });
         if (!response.ok) throw Error("Status code: " + response.status);
+
+        const result = (await response.json()) as {
+          type: string;
+          message: string;
+        };
+        if (result.type === "error") throw Error(result.message);
+
         form.reset();
       }
       router.refresh();
@@ -88,6 +101,13 @@ export default function AddEditNoteDialog({
         }),
       });
       if (!response.ok) throw Error("Status code: " + response.status);
+
+      const result = (await response.json()) as {
+        type: string;
+        message: string;
+      };
+      if (result.type === "error") throw Error(result.message);
+
       router.refresh();
       setOpen(false);
     } catch (error) {
