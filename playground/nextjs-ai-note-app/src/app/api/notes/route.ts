@@ -1,69 +1,15 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
-import { auth } from "@clerk/nextjs/server";
-
 import {
   createNoteSchema,
   deleteNoteSchema,
   updateNoteSchema,
 } from "~/libs/schemas/note";
+import { protectedRoute } from "~/libs/server";
 import { notesIndex } from "~/libs/server/db/pinecone";
 import { prisma } from "~/libs/server/db/prisma";
 import { getEmbedding } from "~/libs/server/openai";
 
 async function getEmbeddingForNote(title: string, content?: string) {
   return getEmbedding(title + "\n\n" + (content ?? ""));
-}
-
-interface ProtectedRouteRequest<
-  RequestBodySchema extends StandardSchemaV1 | undefined = undefined,
-> extends Request {
-  ctx: {
-    user: { userId: string };
-    requestBody: RequestBodySchema extends StandardSchemaV1
-      ? StandardSchemaV1.InferOutput<RequestBodySchema>
-      : undefined;
-  };
-}
-
-function protectedRoute<
-  RequestBodySchema extends StandardSchemaV1 | undefined = undefined,
->(param: {
-  handler: (req: ProtectedRouteRequest<RequestBodySchema>) => Promise<Response>;
-  requestBodySchema?: RequestBodySchema;
-}) {
-  return async (req: ProtectedRouteRequest<RequestBodySchema>) => {
-    try {
-      const user = await auth();
-
-      if (!user.userId) {
-        return Response.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      req.ctx = req.ctx ?? {};
-
-      req.ctx.user = {
-        userId: user.userId,
-      };
-
-      if (param.requestBodySchema) {
-        const body = await param.requestBodySchema["~standard"].validate(
-          await req.json(),
-        );
-        if (body.issues) {
-          console.error(body.issues);
-          return Response.json({ error: "Invalid input" }, { status: 400 });
-        }
-        req.ctx.requestBody =
-          body.value as ProtectedRouteRequest<RequestBodySchema>["ctx"]["requestBody"];
-      }
-
-      return param.handler(req);
-    } catch (error) {
-      console.error(error);
-      return Response.json({ error: "Internal server error" }, { status: 500 });
-    }
-  };
 }
 
 export const POST = protectedRoute({
@@ -89,7 +35,7 @@ export const POST = protectedRoute({
       },
     ]);
 
-    return Response.json({ note }, { status: 201 });
+    return { status: 201, json: { note } };
   },
 });
 
@@ -104,7 +50,7 @@ export const PUT = protectedRoute({
     });
 
     if (!note) {
-      return Response.json({ error: "Note not found" }, { status: 404 });
+      return { type: "error", statusNum: 404, message: "Note not found" };
     }
 
     const embedding = await getEmbeddingForNote(body.title, body.content);
@@ -129,7 +75,7 @@ export const PUT = protectedRoute({
       return updatedNote;
     });
 
-    return Response.json({ updatedNote }, { status: 200 });
+    return { json: { updatedNote } };
   },
 });
 
@@ -144,7 +90,7 @@ export const DELETE = protectedRoute({
     });
 
     if (!note) {
-      return Response.json({ error: "Note not found" }, { status: 404 });
+      return { type: "error", statusNum: 404, message: "Note not found" };
     }
 
     await prisma.$transaction(async (tx) => {
@@ -152,6 +98,6 @@ export const DELETE = protectedRoute({
       await notesIndex.deleteOne(body.id);
     });
 
-    return Response.json({ message: "Note deleted" }, { status: 200 });
+    return { json: { message: "Note deleted" } };
   },
 });

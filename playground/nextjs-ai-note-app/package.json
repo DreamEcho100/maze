@@ -33,6 +33,7 @@
     "@de100/tailwind-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
     "@eslint/eslintrc": "^3",
+    "@standard-schema/spec": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
