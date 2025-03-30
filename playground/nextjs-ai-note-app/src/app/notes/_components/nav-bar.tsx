@@ -14,6 +14,8 @@ import { useTheme } from "next-themes";
 import { Button } from "@de100/ui/button";
 
 import logo from "~/assets/logo.png";
+import ThemeToggleButton from "~/components/toggle-theme-button";
+import AddEditNoteDialog from "./add-edit-note-dialog";
 
 export default function NavBar() {
   const { theme } = useTheme();
@@ -36,7 +38,7 @@ export default function NavBar() {
                 elements: { avatarBox: { width: "2.5rem", height: "2.5rem" } },
               }}
             />
-            {/* <ThemeToggleButton /> */}
+            <ThemeToggleButton />
             <Button onClick={() => setShowAddEditNoteDialog(true)}>
               <Plus size={20} className="mr-2" />
               Add Note
@@ -45,10 +47,10 @@ export default function NavBar() {
           </div>
         </div>
       </div>
-      {/* <AddEditNoteDialog
+      <AddEditNoteDialog
         open={showAddEditNoteDialog}
         setOpen={setShowAddEditNoteDialog}
-      /> */}
+      />
     </>
   );
 }
