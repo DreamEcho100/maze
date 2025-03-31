@@ -1,0 +1,794 @@
+/* 
+#	Design System Variables
+
+## Objectives
+
+- Consistency Across the App:
+	All UI components share the same spacing, typography, and color values, ensuring a cohesive look and feel throughout the application.
+
+- Rapid Iteration and Maintenance:
+	With variables defined in one place, designers and developers can quickly adjust the entire design system without having to hunt down individual styles, streamlining updates and iterations.
+
+- Responsive Design:
+	Breakpoints and grid-related values provide a solid framework for responsive layouts, ensuring the application adapts smoothly across various devices and screen sizes.
+
+- Theming & Dark Mode Support:
+	The inclusion of both light and dark mode color overrides (using media queries and a .dark class) makes it easy to implement theme switching and support user preferences.
+
+- Layered Component Management:
+	The z-index variables, defined using an exponential scale from -6 to 6, allow precise control over stacking contexts, which is critical for complex interactive elements like modals, tooltips, and overlays.
+
+- Design Scalability:
+	By using a modular approach (with clear variable names and structured scales), the system can be extended with additional component-specific variables or even integrated into a larger design system, accommodating growth and evolving design needs.
+
+## Notes:
+	- It will be used mostly for TailwindCSS, so utilities like grid, padding, and margin don't need to be explicitly defined here.
+	- The following will not be implemented:
+		- Durations & Easing
+		- State-Based Colors
+		- Component-Specific Variables
+		- Backgrounds & Gradients
+*/
+
+/*
+## Breakpoints
+
+Breakpoints in pixels
+*/
+:root {
+  --breakpoint-xs: 320px; /* Extra small devices (e.g., small phones) */
+  --breakpoint-sm: 480px; /* Small devices */
+  --breakpoint-md: 768px; /* Medium devices (tablets) */
+  --breakpoint-lg: 1024px; /* Large devices (small laptops) */
+  --breakpoint-xl: 1280px; /* Extra large devices (desktops) */
+  --breakpoint-xxl: 1440px; /* Larger desktops */
+  --breakpoint-xxxl: 1920px; /* Ultra HD screens */
+}
+
+/*
+## Font Sizes (rem) (base)
+*/
+:root {
+  --de100-fs-size-0: 0rem; /* 0px */
+  --de100-fs-size-0-25: 0.0625rem; /* 1px */
+  --de100-fs-size-0-5: 0.125rem; /* 2px */
+  --de100-fs-size-0-75: 0.1875rem; /* 3px */
+  --de100-fs-size-1: 0.25rem; /* 4px */
+  --de100-fs-size-1-25: 0.3125rem; /* 5px */
+  --de100-fs-size-1-5: 0.375rem; /* 6px */
+  --de100-fs-size-1-75: 0.4375rem; /* 7px */
+  --de100-fs-size-2: 0.5rem; /* 8px */
+  --de100-fs-size-2-25: 0.5625rem; /* 9px */
+  --de100-fs-size-2-5: 0.625rem; /* 10px */
+  --de100-fs-size-2-75: 0.6875rem; /* 11px */
+  --de100-fs-size-3: 0.75rem; /* 12px */
+  --de100-fs-size-3-25: 0.8125rem; /* 13px */
+  --de100-fs-size-3-5: 0.875rem; /* 14px */
+  --de100-fs-size-3-75: 0.9375rem; /* 15px */
+  --de100-fs-size-4: 1rem; /* 16px */
+  --de100-fs-size-4-25: 1.0625rem; /* 17px */
+  --de100-fs-size-4-5: 1.125rem; /* 18px */
+  --de100-fs-size-4-75: 1.1875rem; /* 19px */
+  --de100-fs-size-5: 1.25rem; /* 20px */
+  --de100-fs-size-4-25: 1.3125rem; /* 21px */
+  --de100-fs-size-4-5: 1.375rem; /* 22px */
+  --de100-fs-size-4-75: 1.4375rem; /* 23px */
+  --de100-fs-size-6: 1.5rem; /* 24px */
+  --de100-fs-size-7: 1.75rem; /* 28px */
+  --de100-fs-size-8: 2rem; /* 32px */
+  --de100-fs-size-9: 2.25rem; /* 36px */
+  --de100-fs-size-10: 2.5rem; /* 40px */
+  --de100-fs-size-11: 2.75rem; /* 44px */
+  --de100-fs-size-12: 3rem; /* 48px */
+  --de100-fs-size-13: 3.25rem; /* 52px */
+  --de100-fs-size-14: 3.5rem; /* 56px */
+  --de100-fs-size-15: 3.75rem; /* 60px */
+  --de100-fs-size-16: 4rem; /* 64px */
+  --de100-fs-size-17: 4.25rem; /* 68px */
+  --de100-fs-size-18: 4.5rem; /* 72px */
+  --de100-fs-size-19: 4.75rem; /* 76px */
+  --de100-fs-size-20: 5rem; /* 80px */
+  --de100-fs-size-21: 5.25rem; /* 84px */
+  --de100-fs-size-22: 5.5rem; /* 88px */
+  --de100-fs-size-23: 5.75rem; /* 92px */
+  --de100-fs-size-24: 6rem; /* 96px */
+  --de100-fs-size-25: 6.25rem; /* 100px */
+  --de100-fs-size-26: 6.5rem; /* 104px */
+  --de100-fs-size-27: 6.75rem; /* 108px */
+  --de100-fs-size-28: 7rem; /* 112px */
+  --de100-fs-size-29: 7.25rem; /* 116px */
+  --de100-fs-size-30: 7.5rem; /* 120px */
+  --de100-fs-size-31: 7.75rem; /* 124px */
+  --de100-fs-size-32: 8rem; /* 128px */
+}
+
+/*
+## Spacing (px) (base)
+*/
+:root {
+  --de100-spacing-0: 0;
+  --de100-fs-size-0-25: 1px;
+  --de100-fs-size-0-5: 2px;
+  --de100-fs-size-0-75: 3px;
+  --de100-fs-size-1: 4px;
+  --de100-fs-size-1-25: 5px;
+  --de100-fs-size-1-5: 6px;
+  --de100-fs-size-1-75: 7px;
+  --de100-fs-size-2: 8px;
+  --de100-fs-size-2-25: 9px;
+  --de100-fs-size-2-5: 10px;
+  --de100-fs-size-2-75: 11px;
+  --de100-fs-size-3: 12px;
+  --de100-fs-size-3-25: 13px;
+  --de100-fs-size-3-5: 14px;
+  --de100-fs-size-3-75: 15px;
+  --de100-fs-size-4: 16px;
+  --de100-fs-size-4-25: 17px;
+  --de100-fs-size-4-5: 18px;
+  --de100-fs-size-4-75: 19px;
+  --de100-spacing-5: 20px;
+  --de100-fs-size-5-25: 21px;
+  --de100-fs-size-5-5: 22px;
+  --de100-fs-size-5-75: 23px;
+  --de100-spacing-6: 24px;
+  --de100-spacing-7: 28px;
+  --de100-spacing-8: 32px;
+  --de100-spacing-9: 36px;
+  --de100-spacing-10: 40px;
+  --de100-spacing-11: 44px;
+  --de100-spacing-12: 48px;
+  --de100-spacing-13: 52px;
+  --de100-spacing-14: 56px;
+  --de100-spacing-15: 60px;
+  --de100-spacing-16: 64px;
+  --de100-spacing-17: 68px;
+  --de100-spacing-18: 72px;
+  --de100-spacing-19: 76px;
+  --de100-spacing-20: 80px;
+  --de100-spacing-21: 84px;
+  --de100-spacing-22: 88px;
+  --de100-spacing-23: 92px;
+  --de100-spacing-24: 96px;
+  --de100-spacing-25: 100px;
+  --de100-spacing-26: 104px;
+  --de100-spacing-27: 108px;
+  --de100-spacing-28: 112px;
+  --de100-spacing-29: 116px;
+  --de100-spacing-30: 120px;
+  --de100-spacing-31: 124px;
+  --de100-spacing-32: 128px;
+}
+
+/*
+## Font Weights
+*/
+:root {
+  --de100-font-weight-thin: 100;
+  --de100-font-weight-lighter: 200;
+  --de100-font-weight-light: 300;
+  --de100-font-weight-normal: 400;
+  --de100-font-weight-medium: 500;
+  --de100-font-weight-semibold: 600;
+  --de100-font-weight-bold: 700;
+  --de100-font-weight-extrabold: 800;
+  --de100-font-weight-black: 900;
+}
+
+/* 
+## Fonts (typography)
+
+- Font Sizes: uses the base font sizes.
+- Font line heights: normal numbers (the bigger the font, the smaller the ratio).
+- Font letter spacing: using base spacing vars (the bigger the font, the smaller the spacing).
+*/
+
+:root {
+  /* Display */
+  --de100-display-fs-xl: var(--de100-fs-size-20); /* 5rem */ /* 80px */
+  --de100-display-line_h-xl: 1.1;
+  --de100-display-letter_spacing-xl: var(
+    --de100-spacing-0
+  ); /* 0rem */ /* 0px */
+
+  --de100-display-fs-lg: var(--de100-fs-size-16); /* 4rem */ /* 64px */
+  --de100-display-line_h-lg: 1.12;
+  --de100-display-letter_spacing-lg: var(--de100-spacing-0); /* 0px */
+
+  --de100-display-fs-md: var(--de100-fs-size-14); /* 3.5rem */ /* 56px */
+  --de100-display-line_h-md: 1.15;
+  --de100-display-letter_spacing-md: var(--de100-spacing-0); /* 0px */
+
+  /* Headings */
+  --de100-fs-h1: var(--de100-fs-size-12); /* 3rem */ /* 48px */
+  --de100-line_h-h1: 1.25;
+  --de100-letter_spacing-h1: var(--de100-spacing-0); /* 0px */
+
+  --de100-fs-h2: var(--de100-fs-size-10); /* 2.5rem */ /* 40px */
+  --de100-line_h-h2: 1.3;
+  --de100-letter_spacing-h2: var(--de100-spacing-0); /* 0px */
+
+  --de100-fs-h3: var(--de100-fs-size-8); /* 2rem */ /* 32px */
+  --de100-line_h-h3: 1.35;
+  --de100-letter_spacing-h3: var(--de100-spacing-1); /* 4px */
+
+  --de100-fs-h4: var(--de100-fs-size-7); /* 1.75rem */ /* 28px */
+  --de100-line_h-h4: 1.4;
+  --de100-letter_spacing-h4: var(--de100-spacing-1); /* 4px */
+
+  --de100-fs-h5: var(--de100-fs-size-6); /* 1.5rem */ /* 24px */
+  --de100-line_h-h5: 1.45;
+  --de100-letter_spacing-h5: var(--de100-spacing-2); /* 8px */
+
+  --de100-fs-h6: var(--de100-fs-size-5); /* 1.25rem */ /* 20px */
+  --de100-line_h-h6: 1.5;
+  --de100-letter_spacing-h6: var(--de100-spacing-2); /* 8px */
+
+  /* Body Text */
+  --de100-fs-body-lg: var(--de100-fs-size-4-5); /* 1.125rem */ /* 18px */
+  --de100-line_h-body-lg: 1.6;
+  --de100-letter_spacing-body-lg: var(--de100-spacing-1); /* 4px */
+
+  --de100-fs-body-md: var(--de100-fs-size-4); /* 1rem */ /* 16px */
+  --de100-line_h-body-md: 1.6;
+  --de100-letter_spacing-body-md: var(--de100-spacing-2); /* 8px */
+
+  --de100-fs-body-sm: var(--de100-fs-size-3); /* 0.75rem */ /* 12px */
+  --de100-line_h-body-sm: 1.7;
+  --de100-letter_spacing-body-sm: var(--de100-spacing-3); /* 12px */ /* 12px */
+
+  /* Labels */
+  --de100-fs-label-lg: var(--de100-fs-size-3-5); /* 0.875rem */ /* 14px */
+  --de100-line_h-label-lg: 1.2;
+  --de100-letter_spacing-label-lg: var(--de100-spacing-2); /* 8px */
+
+  --de100-fs-label-md: var(--de100-fs-size-3); /* 0.75rem */ /* 12px */
+  --de100-line_h-label-md: 1.2;
+  --de100-letter_spacing-label-md: var(--de100-spacing-3); /* 12px */
+
+  --de100-fs-label-sm: var(--de100-fs-size-2-5); /* 0.625rem */ /* 10px */
+  --de100-line_h-label-sm: 1.2;
+  --de100-letter_spacing-label-sm: var(--de100-spacing-4); /* 16px */ /* 16px */
+}
+
+/* 
+## Z-Index Layers
+
+Z-Index Layers (Layer Levels from -6 to 6) and the values will be exponentially increased until 9999.
+*/
+
+:root {
+  --de100-z-layer-6-negative: -9999;
+  --de100-z-layer-5-negative: -729;
+  --de100-z-layer-4-negative: -243;
+  --de100-z-layer-3-negative: -81;
+  --de100-z-layer-2-negative: -27;
+  --de100-z-layer-1-negative: -9;
+  --de100-z-layer-0: 0;
+  --de100-z-layer-1: 9;
+  --de100-z-layer-2: 27;
+  --de100-z-layer-3: 81;
+  --de100-z-layer-4: 243;
+  --de100-z-layer-5: 729;
+  --de100-z-layer-6: 9999;
+}
+
+/*
+## Borders
+*/
+
+/* 
+### Border widths
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-border-w-0: var(--de100-spacing-0);
+  --de100-border-w-0-25: var(--de100-spacing-0-25);
+  --de100-border-w-0-50: var(--de100-spacing-0-50);
+  --de100-border-w-0-75: var(--de100-spacing-0-75);
+  --de100-border-w-1: var(--de100-spacing-1);
+  --de100-border-w-1-25: var(--de100-spacing-1-25);
+  --de100-border-w-1-50: var(--de100-spacing-1-50);
+  --de100-border-w-1-75: var(--de100-spacing-1-75);
+  --de100-border-w-2: var(--de100-spacing-2);
+  --de100-border-w-2-25: var(--de100-spacing-2-25);
+  --de100-border-w-2-50: var(--de100-spacing-2-50);
+  --de100-border-w-2-75: var(--de100-spacing-2-75);
+  --de100-border-w-3: var(--de100-spacing-3);
+  --de100-border-w-3-25: var(--de100-spacing-3-25);
+  --de100-border-w-3-50: var(--de100-spacing-3-50);
+  --de100-border-w-3-75: var(--de100-spacing-3-75);
+  --de100-border-w-4: var(--de100-spacing-4);
+  --de100-border-w-4-25: var(--de100-spacing-4-25);
+  --de100-border-w-4-50: var(--de100-spacing-4-50);
+  --de100-border-w-4-75: var(--de100-spacing-4-75);
+  --de100-border-w-5: var(--de100-spacing-5);
+  --de100-border-w-5-25: var(--de100-spacing-5-25);
+  --de100-border-w-5-50: var(--de100-spacing-5-50);
+  --de100-border-w-5-75: var(--de100-spacing-5-75);
+  --de100-border-w-6: var(--de100-spacing-6);
+}
+
+/* 
+### Border radiuses
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-border-radius-0: var(--de100-spacing-0);
+  --de100-border-radius-0-25: var(--de100-spacing-0-25);
+  --de100-border-radius-0-50: var(--de100-spacing-0-50);
+  --de100-border-radius-0-75: var(--de100-spacing-0-75);
+  --de100-border-radius-1: var(--de100-spacing-1);
+  --de100-border-radius-1-25: var(--de100-spacing-1-25);
+  --de100-border-radius-1-50: var(--de100-spacing-1-50);
+  --de100-border-radius-1-75: var(--de100-spacing-1-75);
+  --de100-border-radius-2: var(--de100-spacing-2);
+  --de100-border-radius-2-25: var(--de100-spacing-2-25);
+  --de100-border-radius-2-50: var(--de100-spacing-2-50);
+  --de100-border-radius-2-75: var(--de100-spacing-2-75);
+  --de100-border-radius-3: var(--de100-spacing-3);
+  --de100-border-radius-3-25: var(--de100-spacing-3-25);
+  --de100-border-radius-3-50: var(--de100-spacing-3-50);
+  --de100-border-radius-3-75: var(--de100-spacing-3-75);
+  --de100-border-radius-4: var(--de100-spacing-4);
+  --de100-border-radius-4-25: var(--de100-spacing-4-25);
+  --de100-border-radius-4-50: var(--de100-spacing-4-50);
+  --de100-border-radius-4-75: var(--de100-spacing-4-75);
+  --de100-border-radius-5: var(--de100-spacing-5);
+  --de100-border-radius-5-25: var(--de100-spacing-5-25);
+  --de100-border-radius-5-50: var(--de100-spacing-5-50);
+  --de100-border-radius-5-75: var(--de100-spacing-5-75);
+  --de100-border-radius-6: var(--de100-spacing-6);
+}
+
+/* 
+## Shadows
+
+Will be used to handle:
+
+- `text-shadow`: on the s `color | offset-x | offset-y | blur-radius`
+- `filter: drop-shadow( ... )`: on the format `drop-shadow( <color> <offset-x> <offset-y> <blur-radius/standard-deviation> )`
+- `box-shadow`: on the format `<inset> | <offset-x> | <offset-y> | <blur-radius> | <spread> | <color>`
+*/
+
+/* 
+### Shadow Offsets _(Offset X)_
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-shadow-x-0: var(--de100-spacing-0);
+  --de100-shadow-x-25-0: var(--de100-spacing-0-25);
+  --de100-shadow-x-50-0: var(--de100-spacing-0-50);
+  --de100-shadow-x-75-0: var(--de100-spacing-0-75);
+  --de100-shadow-x-1: var(--de100-spacing-1);
+  --de100-shadow-1-25-0: var(--de100-spacing-1-0-25);
+  --de100-shadow-1-50-0: var(--de100-spacing-1-50);
+  --de100-shadow-1-75-0: var(--de100-spacing-1-75);
+  --de100-shadow-x-2: var(--de100-spacing-2);
+  --de100-shadow-2-25-0: var(--de100-spacing-2-25);
+  --de100-shadow-2-50-0: var(--de100-spacing-2-50);
+  --de100-shadow-2-75-0: var(--de100-spacing-2-75);
+  --de100-shadow-x-3: var(--de100-spacing-3);
+  --de100-shadow-3-25-0: var(--de100-spacing-3-25);
+  --de100-shadow-3-50-0: var(--de100-spacing-3-50);
+  --de100-shadow-3-75-0: var(--de100-spacing-3-75);
+  --de100-shadow-x-4: var(--de100-spacing-4);
+  --de100-shadow-4-25-0: var(--de100-spacing-4-25);
+  --de100-shadow-4-50-0: var(--de100-spacing-4-50);
+  --de100-shadow-4-75-0: var(--de100-spacing-4-75);
+  --de100-shadow-x-5: var(--de100-spacing-5);
+  --de100-shadow-5-25-0: var(--de100-spacing-5-25);
+  --de100-shadow-5-50-0: var(--de100-spacing-5-50);
+  --de100-shadow-5-75-0: var(--de100-spacing-5-75);
+  --de100-shadow-x-6: var(--de100-spacing-6);
+}
+
+/* 
+### Shadow Offsets _(Offset Y)_
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-shadow-y-0: var(--de100-spacing-0);
+  --de100-shadow-y-25-0: var(--de100-spacing-0-25);
+  --de100-shadow-y-50-0: var(--de100-spacing-0-50);
+  --de100-shadow-y-75-0: var(--de100-spacing-0-75);
+  --de100-shadow-y-1: var(--de100-spacing-1);
+  --de100-shadow-1-25-0: var(--de100-spacing-1-25);
+  --de100-shadow-1-50-0: var(--de100-spacing-1-50);
+  --de100-shadow-1-75-0: var(--de100-spacing-1-75);
+  --de100-shadow-y-2: var(--de100-spacing-2);
+  --de100-shadow-2-25-0: var(--de100-spacing-2-25);
+  --de100-shadow-2-50-0: var(--de100-spacing-2-50);
+  --de100-shadow-2-75-0: var(--de100-spacing-2-75);
+  --de100-shadow-y-3: var(--de100-spacing-3);
+  --de100-shadow-3-25-0: var(--de100-spacing-3-25);
+  --de100-shadow-3-50-0: var(--de100-spacing-3-50);
+  --de100-shadow-3-75-0: var(--de100-spacing-3-75);
+  --de100-shadow-y-4: var(--de100-spacing-4);
+  --de100-shadow-4-25-0: var(--de100-spacing-4-25);
+  --de100-shadow-4-50-0: var(--de100-spacing-4-50);
+  --de100-shadow-4-75-0: var(--de100-spacing-4-75);
+  --de100-shadow-y-5: var(--de100-spacing-5);
+  --de100-shadow-5-25-0: var(--de100-spacing-5-25);
+  --de100-shadow-5-50-0: var(--de100-spacing-5-50);
+  --de100-shadow-5-75-0: var(--de100-spacing-5-75);
+  --de100-shadow-y-6: var(--de100-spacing-6);
+}
+
+/* 
+### Shadow Blur Radius _(Offset X)_
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-shadow-blur-0: var(--de100-spacing-0);
+  --de100-shadow-blur-0-25: var(--de100-spacing-0-25);
+  --de100-shadow-blur-0-50: var(--de100-spacing-0-50);
+  --de100-shadow-blur-0-75: var(--de100-spacing-0-75);
+  --de100-shadow-blur-1: var(--de100-spacing-1);
+  --de100-shadow-blur-1-25: var(--de100-spacing-1-25);
+  --de100-shadow-blur-1-50: var(--de100-spacing-1-50);
+  --de100-shadow-blur-1-75: var(--de100-spacing-1-75);
+  --de100-shadow-blur-2: var(--de100-spacing-2);
+  --de100-shadow-blur-2-25: var(--de100-spacing-2-25);
+  --de100-shadow-blur-2-50: var(--de100-spacing-2-50);
+  --de100-shadow-blur-2-75: var(--de100-spacing-2-75);
+  --de100-shadow-blur-3: var(--de100-spacing-3);
+  --de100-shadow-blur-3-25: var(--de100-spacing-3-25);
+  --de100-shadow-blur-3-50: var(--de100-spacing-3-50);
+  --de100-shadow-blur-3-75: var(--de100-spacing-3-75);
+  --de100-shadow-blur-4: var(--de100-spacing-4);
+  --de100-shadow-blur-4-25: var(--de100-spacing-4-25);
+  --de100-shadow-blur-4-50: var(--de100-spacing-4-50);
+  --de100-shadow-blur-4-75: var(--de100-spacing-4-75);
+  --de100-shadow-blur-5: var(--de100-spacing-5);
+  --de100-shadow-blur-5-25: var(--de100-spacing-5-25);
+  --de100-shadow-blur-5-50: var(--de100-spacing-5-50);
+  --de100-shadow-blur-5-75: var(--de100-spacing-5-75);
+  --de100-shadow-blur-6: var(--de100-spacing-6);
+}
+
+/* 
+### Shadow Spread _(Offset X)_
+
+Uses the base spacing vars, from 0 to 6.
+*/
+:root {
+  --de100-shadow-spread-0: var(--de100-spacing-0);
+  --de100-shadow-spread-0-25: var(--de100-spacing-0-25);
+  --de100-shadow-spread-0-50: var(--de100-spacing-0-50);
+  --de100-shadow-spread-0-75: var(--de100-spacing-0-75);
+  --de100-shadow-spread-1: var(--de100-spacing-1);
+  --de100-shadow-spread-1-25: var(--de100-spacing-1-25);
+  --de100-shadow-spread-1-50: var(--de100-spacing-1-50);
+  --de100-shadow-spread-1-75: var(--de100-spacing-1-75);
+  --de100-shadow-spread-2: var(--de100-spacing-2);
+  --de100-shadow-spread-2-25: var(--de100-spacing-2-25);
+  --de100-shadow-spread-2-50: var(--de100-spacing-2-50);
+  --de100-shadow-spread-2-75: var(--de100-spacing-2-75);
+  --de100-shadow-spread-3: var(--de100-spacing-3);
+  --de100-shadow-spread-3-25: var(--de100-spacing-3-25);
+  --de100-shadow-spread-3-50: var(--de100-spacing-3-50);
+  --de100-shadow-spread-3-75: var(--de100-spacing-3-75);
+  --de100-shadow-spread-4: var(--de100-spacing-4);
+  --de100-shadow-spread-4-25: var(--de100-spacing-4-25);
+  --de100-shadow-spread-4-50: var(--de100-spacing-4-50);
+  --de100-shadow-spread-4-75: var(--de100-spacing-4-75);
+  --de100-shadow-spread-5: var(--de100-spacing-5);
+  --de100-shadow-spread-5-25: var(--de100-spacing-5-25);
+  --de100-shadow-spread-5-50: var(--de100-spacing-5-50);
+  --de100-shadow-spread-5-75: var(--de100-spacing-5-75);
+  --de100-shadow-spread-6: var(--de100-spacing-6);
+}
+
+/* ============================================
+	 Colors & Dark Mode Overrides
+	 ============================================ */
+
+/* Opacity */
+:root {
+  --de100-opacity-00: 0;
+  --de100-opacity-05: 0.05;
+  --de100-opacity-10: 0.1;
+  --de100-opacity-15: 0.15;
+  --de100-opacity-20: 0.2;
+  --de100-opacity-25: 0.25;
+  --de100-opacity-30: 0.3;
+  --de100-opacity-35: 0.35;
+  --de100-opacity-40: 0.4;
+  --de100-opacity-45: 0.45;
+  --de100-opacity-50: 0.5;
+  --de100-opacity-55: 0.55;
+  --de100-opacity-60: 0.6;
+  --de100-opacity-65: 0.65;
+  --de100-opacity-70: 0.7;
+  --de100-opacity-75: 0.75;
+  --de100-opacity-80: 0.8;
+  --de100-opacity-85: 0.85;
+  --de100-opacity-90: 0.9;
+  --de100-opacity-95: 0.95;
+  --de100-opacity-100: 1;
+}
+
+/* ============================================
+   Colors & Dark Mode Overrides
+   ============================================ */
+
+/* Base Colors in HSL */
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 3.9%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 3.9%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 3.9%);
+
+  --primary: hsl(327 66% 69%);
+  --primary-foreground: hsl(337 65.5% 17.1%);
+
+  --secondary: hsl(240 4.8% 95.9%);
+  --secondary-foreground: hsl(240 5.9% 10%);
+
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
+
+  --accent: hsl(240 4.8% 95.9%);
+  --accent-foreground: hsl(240 5.9% 10%);
+
+  --destructive: hsl(0 72.22% 50.59%);
+  --destructive-foreground: hsl(0 0% 98%);
+}
+
+/* Dark Mode Overrides via media query */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: hsl(240 10% 3.9%);
+    --foreground: hsl(0 0% 98%);
+
+    --card: hsl(240 10% 3.9%);
+    --card-foreground: hsl(0 0% 98%);
+
+    --popover: hsl(240 10% 3.9%);
+    --popover-foreground: hsl(0 0% 98%);
+
+    --primary: hsl(327 66% 69%);
+    --primary-foreground: hsl(337 65.5% 17.1%);
+
+    --secondary: hsl(240 3.7% 15.9%);
+    --secondary-foreground: hsl(0 0% 98%);
+
+    --muted: hsl(240 3.7% 15.9%);
+    --muted-foreground: hsl(240 5% 64.9%);
+
+    --accent: hsl(240 3.7% 15.9%);
+    --accent-foreground: hsl(0 0% 98%);
+
+    --destructive: hsl(0 62.8% 30.6%);
+    --destructive-foreground: hsl(0 85.7% 97.3%);
+  }
+}
+
+/* Dark Mode Overrides via .dark class */
+.dark {
+  --background: hsl(240 10% 3.9%);
+  --foreground: hsl(0 0% 98%);
+
+  --card: hsl(240 10% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+
+  --popover: hsl(240 10% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+
+  --primary: hsl(327 66% 69%);
+  --primary-foreground: hsl(337 65.5% 17.1%);
+
+  --secondary: hsl(240 3.7% 15.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+
+  --muted: hsl(240 3.7% 15.9%);
+  --muted-foreground: hsl(240 5% 64.9%);
+
+  --accent: hsl(240 3.7% 15.9%);
+  --accent-foreground: hsl(0 0% 98%);
+
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 85.7% 97.3%);
+
+  --de100-color-accent: 340, 82%, 60%;
+  --de100-color-muted: 210, 10%, 30%;
+  --de100-color-background: 210, 17%, 10%;
+  --de100-color-surface: 210, 17%, 15%;
+}
+
+/*
+@import "tailwindcss"
+## Tailwind CSS v4
+
+
+Namespace	Utility classes
+--color-*	Color utilities like bg-red-500, text-sky-300, and many more
+--font-*	Font family utilities like font-sans
+--text-*	Font size utilities like text-xl
+--font-weight-*	Font weight utilities like font-bold
+--tracking-*	Letter spacing utilities like tracking-wide
+--leading-*	Line height utilities like leading-tight
+--breakpoint-*	Responsive breakpoint variants like sm:*
+--container-*	Container query variants like @sm:* and size utilities like max-w-md
+--spacing-*	Spacing and sizing utilities like px-4, max-h-16, and many more
+--radius-*	Border radius utilities like rounded-sm
+--shadow-*	Box shadow utilities like shadow-md
+--inset-shadow-*	Inset box shadow utilities like inset-shadow-xs
+--drop-shadow-*	Drop shadow filter utilities like drop-shadow-md
+--blur-*	Blur filter utilities like blur-md
+--perspective-*	Perspective utilities like perspective-near
+--aspect-*	Aspect ratio utilities like aspect-video
+--ease-*	Transition timing function utilities like ease-out
+--animate-*	Animation utilities like animate-spin
+*/
+/*
+@theme {
+  /* Colors */ /*
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive);
+
+	/* Spacing */ /*
+	--spacing-0: var(--de100-spacing-0);
+	--spacing-0\.25: var(--de100-spacing-0-25);
+	--spacing-0\.5: var(--de100-spacing-0-50);
+	--spacing-0\.75: var(--de100-spacing-0-75);
+	--spacing-1: var(--de100-spacing-1);
+	--spacing-1\.25: var(--de100-spacing-1-25);
+	--spacing-1\.5: var(--de100-spacing-1-50);
+	--spacing-1\.75: var(--de100-spacing-1-75);
+	--spacing-2: var(--de100-spacing-2);
+	--spacing-2\.25: var(--de100-spacing-2-25);
+	--spacing-2\.5: var(--de100-spacing-2-50);
+	--spacing-2\.75: var(--de100-spacing-2-75);
+	--spacing-3: var(--de100-spacing-3);
+	--spacing-3\.25: var(--de100-spacing-3-25);
+	--spacing-3\.5: var(--de100-spacing-3-50);
+	--spacing-3\.75: var(--de100-spacing-3-75);
+	--spacing-4: var(--de100-spacing-4);
+	--spacing-4\.25: var(--de100-spacing-4-25);
+	--spacing-4\.5: var(--de100-spacing-4-50);
+	--spacing-4\.75: var(--de100-spacing-4-75);
+	--spacing-5: var(--de100-spacing-5);
+	--spacing-5\.25: var(--de100-spacing-5-25);
+	--spacing-5\.5: var(--de100-spacing-5-50);
+	--spacing-5\.75: var(--de100-spacing-5-75);
+	--spacing-6: var(--de100-spacing-6);
+	--spacing-7: var(--de100-spacing-7);
+	--spacing-8: var(--de100-spacing-8);
+	--spacing-9: var(--de100-spacing-9);
+	--spacing-10: var(--de100-spacing-10);
+  --spacing-11: var(de100-spacing-11);
+  --spacing-12: var(de100-spacing-12);
+  --spacing-13: var(de100-spacing-13);
+  --spacing-14: var(de100-spacing-14);
+  --spacing-15: var(de100-spacing-15);
+  --spacing-16: var(de100-spacing-16);
+  --spacing-17: var(de100-spacing-17);
+  --spacing-18: var(de100-spacing-18);
+  --spacing-19: var(de100-spacing-19);
+  --spacing-20: var(de100-spacing-20);
+  --spacing-21: var(de100-spacing-21);
+  --spacing-22: var(de100-spacing-22);
+  --spacing-23: var(de100-spacing-23);
+  --spacing-24: var(de100-spacing-24);
+  --spacing-25: var(de100-spacing-25);
+  --spacing-26: var(de100-spacing-26);
+  --spacing-27: var(de100-spacing-27);
+  --spacing-28: var(de100-spacing-28);
+  --spacing-29: var(de100-spacing-29);
+  --spacing-30: var(de100-spacing-30);
+  --spacing-31: var(de100-spacing-31);
+  --spacing-32: var(de100-spacing-32);
+
+	/* Font Sizes */ /*
+	--font-display-xl: var(--de100-display-fs-xl);
+	--font-display-lg: var(--de100-display-fs-lg);
+	--font-display-md: var(--de100-display-fs-md);
+	--font-h1: var(--de100-fs-h1);
+	--font-h2: var(--de100-fs-h2);
+	--font-h3: var(--de100-fs-h3);
+	--font-h4: var(--de100-fs-h4);
+	--font-h5: var(--de100-fs-h5);
+	--font-h6: var(--de100-fs-h6);
+	--font-body-lg: var(--de100-fs-body-lg);
+	--font-body-md: var(--de100-fs-body-md);
+	--font-body-sm: var(--de100-fs-body-sm);
+	--font-label-lg: var(--de100-fs-label-lg);
+	--font-label-md: var(--de100-fs-label-md);
+	--font-label-sm: var(--de100-fs-label-sm);
+
+	/* line heights */ /*
+	--leading-display-xl: var(--de100-display-line_h-xl);
+	--leading-display-lg: var(--de100-display-line_h-lg);
+	--leading-display-md: var(--de100-display-line_h-md);
+	--leading-h1: var(--de100-line_h-h1);
+	--leading-h2: var(--de100-line_h-h2);
+	--leading-h3: var(--de100-line_h-h3);
+	--leading-h4: var(--de100-line_h-h4);
+	--leading-h5: var(--de100-line_h-h5);
+	--leading-h6: var(--de100-line_h-h6);
+	--leading-body-lg: var(--de100-line_h-body-lg);
+	--leading-body-md: var(--de100-line_h-body-md);
+	--leading-body-sm: var(--de100-line_h-body-sm);
+	--leading-label-lg: var(--de100-line_h-label-lg);
+	--leading-label-md: var(--de100-line_h-label-md);
+	--leading-label-sm: var(--de100-line_h-label-sm);
+
+	/* Border Radius */ /*
+	--radius-0: var(--de100-border-radius-0);
+	--radius-0\.25: var(--de100-border-radius-0-25);
+	--radius-0\.5: var(--de100-border-radius-0-50);
+	--radius-0\.75: var(--de100-border-radius-0-75);
+	--radius-1: var(--de100-border-radius-1);
+	--radius-1\.25: var(--de100-border-radius-1-25);
+	--radius-1\.5: var(--de100-border-radius-1-50);
+	--radius-1\.75: var(--de100-border-radius-1-75);
+	--radius-2: var(--de100-border-radius-2);
+	--radius-2\.25: var(--de100-border-radius-2-25);
+	--radius-2\.5: var(--de100-border-radius-2-50);
+	--radius-2\.75: var(--de100-border-radius-2-75);
+	--radius-3: var(--de100-border-radius-3);
+	--radius-3\.25: var(--de100-border-radius-3-25);
+	--radius-3\.5: var(--de100-border-radius-3-50);
+	--radius-3\.75: var(--de100-border-radius-3-75);
+	--radius-4: var(--de100-border-radius-4);
+	--radius-4\.25: var(--de100-border-radius-4-25);
+	--radius-4\.5: var(--de100-border-radius-4-50);
+	--radius-4\.75: var(--de100-border-radius-4-75);
+	--radius-5: var(--de100-border-radius-5);
+	--radius-5\.25: var(--de100-border-radius-5-25);
+	--radius-5\.5: var(--de100-border-radius-5-50);
+	--radius-5\.75: var(--de100-border-radius-5-75);
+	--radius-6: var(--de100-border-radius-6);
+
+	/* Border Width */ /*
+	--border-0: var(--de100-border-w-0);
+	--border-0\.25: var(--de100-border-w-0-25);
+	--border-0\.5: var(--de100-border-w-0-50);
+	--border-0\.75: var(--de100-border-w-0-75);
+	--border-1: var(--de100-border-w-1);
+	--border-1\.25: var(--de100-border-w-1-25);
+	--border-1\.5: var(--de100-border-w-1-50);
+	--border-1\.75: var(--de100-border-w-1-75);
+	--border-2: var(--de100-border-w-2);
+	--border-2\.25: var(--de100-border-w-2-25);
+	--border-2\.5: var(--de100-border-w-2-50);
+	--border-2\.75: var(--de100-border-w-2-75);
+	--border-3: var(--de100-border-w-3);
+	--border-3\.25: var(--de100-border-w-3-25);
+	--border-3\.5: var(--de100-border-w-3-50);
+	--border-3\.75: var(--de100-border-w-3-75);
+	--border-4: var(--de100-border-w-4);
+	--border-4\.25: var(--de100-border-w-4-25);
+	--border-4\.5: var(--de100-border-w-4-50);
+	--border-4\.75: var(--de100-border-w-4-75);
+	--border-5: var(--de100-border-w-5);
+	--border-5\.25: var(--de100-border-w-5-25);
+	--border-5\.5: var(--de100-border-w-5-50);
+	--border-5\.75: var(--de100-border-w-5-75);
+	--border-6: var(--de100-border-w-6);
+}
+*/
