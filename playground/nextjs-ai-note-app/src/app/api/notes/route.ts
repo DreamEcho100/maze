@@ -19,21 +19,25 @@ export const POST = protectedRoute({
 
     const embedding = await getEmbedding(body.title);
 
-    const note = await prisma.note.create({
-      data: {
-        title: body.title,
-        content: body.content,
-        userId: req.ctx.user.userId,
-      },
-    });
+    const note = await prisma.$transaction(async (tx) => {
+      const note = await tx.note.create({
+        data: {
+          title: body.title,
+          content: body.content,
+          userId: req.ctx.user.userId,
+        },
+      });
 
-    await notesIndex.upsert([
-      {
-        id: note.id,
-        values: embedding,
-        metadata: { userId: req.ctx.user.userId },
-      },
-    ]);
+      await notesIndex.upsert([
+        {
+          id: note.id,
+          values: embedding,
+          metadata: { userId: req.ctx.user.userId },
+        },
+      ]);
+
+      return note;
+    });
 
     return { status: 201, json: { note } };
   },
