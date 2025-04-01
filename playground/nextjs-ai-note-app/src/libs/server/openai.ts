@@ -1,3 +1,5 @@
+// https://ai.google.dev/gemini-api/docs/openai
+
 import { OpenAI } from "openai";
 
 import { env } from "../env";
