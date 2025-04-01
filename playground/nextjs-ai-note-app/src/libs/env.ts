@@ -18,7 +18,8 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     PINECONE_API_KEY: z.string(),
     CLERK_SECRET_KEY: z.string(),
-    OPENAI_API_KEY: z.string(),
+    // OPENAI_API_KEY: z.string(),
+    GEMINI_API_KEY: z.string(),
   },
 
   clientPrefix: "NEXT_PUBLIC_",

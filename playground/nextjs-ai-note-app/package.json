@@ -14,6 +14,7 @@
     "@clerk/themes": "^2.2.26",
     "@de100/env": "workspace:^",
     "@de100/ui": "workspace:*",
+    "@google/genai": "^0.7.0",
     "@hookform/resolvers": "^4.1.3",
     "@pinecone-database/pinecone": "^5.1.1",
     "@prisma/client": "^6.5.0",

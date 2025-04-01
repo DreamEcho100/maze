@@ -2,11 +2,15 @@ import { OpenAI } from "openai";
 
 import { env } from "../env";
 
-export const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+export const openai = new OpenAI({
+  // apiKey: env.OPENAI_API_KEY
+  apiKey: env.GEMINI_API_KEY,
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+});
 
 export async function getEmbedding(text: string) {
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: "text-embedding-004", // "text-embedding-005", // "text-embedding-3-small",
     input: text,
   });
 
