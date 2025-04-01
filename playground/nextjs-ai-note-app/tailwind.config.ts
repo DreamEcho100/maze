@@ -8,6 +8,7 @@ export default {
   // those classes are included correctly.
   content: [...baseConfig.content, "../../packages/ui/src/*.{js,jsx,ts,tsx}"],
   presets: [baseConfig],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {

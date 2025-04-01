@@ -227,5 +227,5 @@ export function createEnv<
     },
   });
 
-  return Object.freeze(env) as unknown as EnvOutput;
+  return Object.freeze({ ...env }) as unknown as EnvOutput;
 }

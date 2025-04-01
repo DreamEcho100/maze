@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import logo from "@/assets/logo.png";
 import { auth } from "@clerk/nextjs/server";
 
 import { Button } from "@de100/ui/button";
+
+import logo from "~/assets/logo.png";
 
 export default async function Home() {
   const { userId } = await auth();

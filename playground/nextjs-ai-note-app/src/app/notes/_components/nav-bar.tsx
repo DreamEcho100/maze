@@ -8,9 +8,9 @@ import { dark } from "@clerk/themes";
 import { Plus } from "lucide-react";
 import { useTheme } from "next-themes";
 
-// import AIChatButton from "@/components/AIChatButton";
-// import AddEditNoteDialog from "@/components/AddEditNoteDialog";
-// import ThemeToggleButton from "@/components/ThemeToggleButton";
+// import AIChatButton from "~/components/AIChatButton";
+// import AddEditNoteDialog from "~/components/AddEditNoteDialog";
+// import ThemeToggleButton from "~/components/ThemeToggleButton";
 import { Button } from "@de100/ui/button";
 
 import logo from "~/assets/logo.png";
