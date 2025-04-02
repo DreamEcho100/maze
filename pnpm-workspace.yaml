@@ -12,6 +12,7 @@ catalog:
 
   # Dev tooling
   eslint: ^9.19.0
+  eslint-config-next: 15.2.4
   prettier: ^3.4.2
   tailwindcss: ^4
   "@tailwindcss/postcss": ^4
@@ -39,4 +40,4 @@ catalogs:
     "@types/react": ^19.0.12
     "@types/react-dom": ^19.0.4
   next@latest:
-    next: 15.2.3
+    next: 15.2.4
