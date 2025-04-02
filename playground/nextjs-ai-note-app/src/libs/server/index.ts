@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
 import type { ProtectedRouteRequest } from "./types";
@@ -7,10 +8,13 @@ export const protectedRoute = <
   RequestBodySchema extends StandardSchemaV1 | undefined = undefined,
   Result = unknown,
 >(param: {
-  handler: (
-    req: ProtectedRouteRequest<RequestBodySchema>,
-  ) => Promise<
-    | { type?: "success"; statusNum?: number; json: Result }
+  handler: (req: ProtectedRouteRequest<RequestBodySchema>) => Promise<
+    | ({
+        type?: "success";
+      } & (
+        | { json: Result; stream?: never; statusNum?: number }
+        | { json?: never; stream: ReadableStream }
+      ))
     | { type: "error"; statusNum?: number; message: string }
   >;
   requestBodySchema?: RequestBodySchema;
@@ -53,6 +57,18 @@ export const protectedRoute = <
           },
           { status: result.statusNum ?? 500 },
         );
+      }
+
+      if (result.stream) {
+        return new NextResponse(result.stream, {
+          headers: {
+            // "Content-Type": "text/plain",
+            "Transfer-Encoding": "chunked",
+            "Content-Type": "text/html; charset=utf-8",
+            Connection: "keep-alive",
+            "Cache-Control": "no-cache, no-transform",
+          },
+        });
       }
 
       return Response.json(

@@ -16,6 +16,7 @@ import { Button } from "@de100/ui/button";
 import logo from "~/assets/logo.png";
 import ThemeToggleButton from "~/components/toggle-theme-button";
 import AddEditNoteDialog from "./add-edit-note-dialog";
+import AIChatButton from "./ai-chat/button";
 
 export default function NavBar() {
   const { theme } = useTheme();
@@ -43,7 +44,7 @@ export default function NavBar() {
               <Plus size={20} className="mr-2" />
               Add Note
             </Button>
-            {/* <AIChatButton /> */}
+            <AIChatButton />
           </div>
         </div>
       </div>

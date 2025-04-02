@@ -40,7 +40,9 @@ export default function Note(props: NoteProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-line">{props.note.content}</p>
+          <p className="max-h-[10.5lh] overflow-y-auto break-all whitespace-pre-line">
+            {props.note.content}
+          </p>
         </CardContent>
       </Card>
       <AddEditNoteDialog

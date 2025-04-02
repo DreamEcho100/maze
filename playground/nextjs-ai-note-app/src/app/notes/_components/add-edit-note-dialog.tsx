@@ -146,7 +146,11 @@ export default function AddEditNoteDialog({
                 <FormItem>
                   <FormLabel>Note content</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Note content" {...field} />
+                    <Textarea
+                      placeholder="Note content"
+                      {...field}
+                      className="h-[10.5lh]"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -1,6 +1,11 @@
+import type { DetailedHTMLProps, TextareaHTMLAttributes } from "react";
+
 import { cn } from "@de100/ui";
 
-type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+export type TextareaProps = DetailedHTMLProps<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  HTMLTextAreaElement
+>;
 
 function Textarea({ className, ...props }: TextareaProps) {
   return (

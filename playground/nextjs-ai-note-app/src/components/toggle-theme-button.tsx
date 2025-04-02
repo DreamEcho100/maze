@@ -5,7 +5,6 @@ import { Button } from "@de100/ui/button";
 
 export default function ThemeToggleButton() {
   const { theme, setTheme } = useTheme();
-  console.log("___ theme", theme);
 
   return (
     <Button
