@@ -34,7 +34,7 @@ Uses the base spacing vars, from 0 to 7.
   --de100-shadow-x-0-50: var(--de100-spacing-0-50);
   --de100-shadow-x-0-75: var(--de100-spacing-0-75);
   --de100-shadow-x-1: var(--de100-spacing-1);
-  --de100-shadow-x-1-25: var(--de100-spacing-1-0-25);
+  --de100-shadow-x-1-25: var(--de100-spacing-1-25);
   --de100-shadow-x-1-50: var(--de100-spacing-1-50);
   --de100-shadow-x-1-75: var(--de100-spacing-1-75);
   --de100-shadow-x-2: var(--de100-spacing-2);

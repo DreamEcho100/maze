@@ -1,6 +1,7 @@
 {
   "name": "nextjs-deep-research-ai-agent",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -17,6 +18,7 @@
     "@hookform/resolvers": "catalog:",
     "@openrouter/ai-sdk-provider": "^0.4.5",
     "@opentelemetry/api": "^1.9.0",
+    "@de100/tailwindcss-utils": "workspace:*",
     "ai": "^4.2.8",
     "date-fns": "^4.1.0",
     "exa-js": "^1.5.12",
@@ -53,5 +55,5 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@de100/prettier-config"
+  "prettier": "./prettier.config.mjs"
 }

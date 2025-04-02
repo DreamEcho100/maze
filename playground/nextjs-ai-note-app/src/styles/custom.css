@@ -1,0 +1,4 @@
+@theme {
+  --font-geist-sans: vae(--font-geist-sans);
+  --font-geist-mono: vae(--font-geist-mono);
+}

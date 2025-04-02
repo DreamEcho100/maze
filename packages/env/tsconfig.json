@@ -3,6 +3,6 @@
   "compilerOptions": {
     "lib": ["ESNext", "DOM"]
   },
-  "include": ["*.ts", "src"],
+  "include": ["*.js", "*.ts", "src"],
   "exclude": ["node_modules"]
 }

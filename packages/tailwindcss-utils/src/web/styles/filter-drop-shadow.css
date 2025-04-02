@@ -1,0 +1,274 @@
+@theme {
+  --shadow-*: initial;
+}
+
+@utility drop-shadow-x-0 {
+  --de100-filter-drop-shadow-x-0: var(--de100-shadow-x-0);
+}
+@utility drop-shadow-x-0-25 {
+  --de100-filter-drop-shadow-x-0-25: var(--de100-shadow-x-0-25);
+}
+@utility drop-shadow-x-0-50 {
+  --de100-filter-drop-shadow-x-0-50: var(--de100-shadow-x-0-50);
+}
+@utility drop-shadow-x-0-75 {
+  --de100-filter-drop-shadow-x-0-75: var(--de100-shadow-x-0-75);
+}
+@utility drop-shadow-x-1 {
+  --de100-filter-drop-shadow-x-1: var(--de100-shadow-x-1);
+}
+@utility drop-shadow-x-1-25 {
+  --de100-filter-drop-shadow-x-1-25: var(--de100-shadow-x-1-25);
+}
+@utility drop-shadow-x-1-50 {
+  --de100-filter-drop-shadow-x-1-50: var(--de100-shadow-x-1-50);
+}
+@utility drop-shadow-x-1-75 {
+  --de100-filter-drop-shadow-x-1-75: var(--de100-shadow-x-1-75);
+}
+@utility drop-shadow-x-2 {
+  --de100-filter-drop-shadow-x-2: var(--de100-shadow-x-2);
+}
+@utility drop-shadow-x-2-25 {
+  --de100-filter-drop-shadow-x-2-25: var(--de100-shadow-x-2-25);
+}
+@utility drop-shadow-x-2-50 {
+  --de100-filter-drop-shadow-x-2-50: var(--de100-shadow-x-2-50);
+}
+@utility drop-shadow-x-2-75 {
+  --de100-filter-drop-shadow-x-2-75: var(--de100-shadow-x-2-75);
+}
+@utility drop-shadow-x-3 {
+  --de100-filter-drop-shadow-x-3: var(--de100-shadow-x-3);
+}
+@utility drop-shadow-x-3-25 {
+  --de100-filter-drop-shadow-x-3-25: var(--de100-shadow-x-3-25);
+}
+@utility drop-shadow-x-3-50 {
+  --de100-filter-drop-shadow-x-3-50: var(--de100-shadow-x-3-50);
+}
+@utility drop-shadow-x-3-75 {
+  --de100-filter-drop-shadow-x-3-75: var(--de100-shadow-x-3-75);
+}
+@utility drop-shadow-x-4 {
+  --de100-filter-drop-shadow-x-4: var(--de100-shadow-x-4);
+}
+@utility drop-shadow-x-4-25 {
+  --de100-filter-drop-shadow-x-4-25: var(--de100-shadow-x-4-25);
+}
+@utility drop-shadow-x-4-50 {
+  --de100-filter-drop-shadow-x-4-50: var(--de100-shadow-x-4-50);
+}
+@utility drop-shadow-x-4-75 {
+  --de100-filter-drop-shadow-x-4-75: var(--de100-shadow-x-4-75);
+}
+@utility drop-shadow-x-5 {
+  --de100-filter-drop-shadow-x-5: var(--de100-shadow-x-5);
+}
+@utility drop-shadow-x-5-25 {
+  --de100-filter-drop-shadow-x-5-25: var(--de100-shadow-x-5-25);
+}
+@utility drop-shadow-x-5-50 {
+  --de100-filter-drop-shadow-x-5-50: var(--de100-shadow-x-5-50);
+}
+@utility drop-shadow-x-5-75 {
+  --de100-filter-drop-shadow-x-5-75: var(--de100-shadow-x-5-75);
+}
+@utility drop-shadow-x-6 {
+  --de100-filter-drop-shadow-x-6: var(--de100-shadow-x-6);
+}
+@utility drop-shadow-y-6-25 {
+  --de100-filter-drop-shadow-y-6-25: var(--de100-shadow-y-6-25);
+}
+@utility drop-shadow-y-6-50 {
+  --de100-filter-drop-shadow-y-6-50: var(--de100-shadow-y-6-50);
+}
+@utility drop-shadow-y-6-75 {
+  --de100-filter-drop-shadow-y-6-75: var(--de100-shadow-y-6-75);
+}
+@utility drop-shadow-y-7 {
+  --de100-filter-drop-shadow-y-7: var(--de100-shadow-blur-7);
+}
+
+@utility drop-shadow-y-0 {
+  --de100-filter-drop-shadow-y-0: var(--de100-shadow-y-0);
+}
+@utility drop-shadow-y-0-25 {
+  --de100-filter-drop-shadow-y-0-25: var(--de100-shadow-y-0-25);
+}
+@utility drop-shadow-y-0-50 {
+  --de100-filter-drop-shadow-y-0-50: var(--de100-shadow-y-0-50);
+}
+@utility drop-shadow-y-0-75 {
+  --de100-filter-drop-shadow-y-0-75: var(--de100-shadow-y-0-75);
+}
+@utility drop-shadow-y-1 {
+  --de100-filter-drop-shadow-y-1: var(--de100-shadow-y-1);
+}
+@utility drop-shadow-y-1-25 {
+  --de100-filter-drop-shadow-y-1-25: var(--de100-shadow-y-1-25);
+}
+@utility drop-shadow-y-1-50 {
+  --de100-filter-drop-shadow-y-1-50: var(--de100-shadow-y-1-50);
+}
+@utility drop-shadow-y-1-75 {
+  --de100-filter-drop-shadow-y-1-75: var(--de100-shadow-y-1-75);
+}
+@utility drop-shadow-y-2 {
+  --de100-filter-drop-shadow-y-2: var(--de100-shadow-y-2);
+}
+@utility drop-shadow-y-2-25 {
+  --de100-filter-drop-shadow-y-2-25: var(--de100-shadow-y-2-25);
+}
+@utility drop-shadow-y-2-50 {
+  --de100-filter-drop-shadow-y-2-50: var(--de100-shadow-y-2-50);
+}
+@utility drop-shadow-y-2-75 {
+  --de100-filter-drop-shadow-y-2-75: var(--de100-shadow-y-2-75);
+}
+@utility drop-shadow-y-3 {
+  --de100-filter-drop-shadow-y-3: var(--de100-shadow-y-3);
+}
+@utility drop-shadow-y-3-25 {
+  --de100-filter-drop-shadow-y-3-25: var(--de100-shadow-y-3-25);
+}
+@utility drop-shadow-y-3-50 {
+  --de100-filter-drop-shadow-y-3-50: var(--de100-shadow-y-3-50);
+}
+@utility drop-shadow-y-3-75 {
+  --de100-filter-drop-shadow-y-3-75: var(--de100-shadow-y-3-75);
+}
+@utility drop-shadow-y-4 {
+  --de100-filter-drop-shadow-y-4: var(--de100-shadow-y-4);
+}
+@utility drop-shadow-y-4-25 {
+  --de100-filter-drop-shadow-y-4-25: var(--de100-shadow-y-4-25);
+}
+@utility drop-shadow-y-4-50 {
+  --de100-filter-drop-shadow-y-4-50: var(--de100-shadow-y-4-50);
+}
+@utility drop-shadow-y-4-75 {
+  --de100-filter-drop-shadow-y-4-75: var(--de100-shadow-y-4-75);
+}
+@utility drop-shadow-y-5 {
+  --de100-filter-drop-shadow-y-5: var(--de100-shadow-y-5);
+}
+@utility drop-shadow-y-5-25 {
+  --de100-filter-drop-shadow-y-5-25: var(--de100-shadow-y-5-25);
+}
+@utility drop-shadow-y-5-50 {
+  --de100-filter-drop-shadow-y-5-50: var(--de100-shadow-y-5-50);
+}
+@utility drop-shadow-y-5-75 {
+  --de100-filter-drop-shadow-y-5-75: var(--de100-shadow-y-5-75);
+}
+@utility drop-shadow-y-6 {
+  --de100-filter-drop-shadow-y-6: var(--de100-shadow-y-6);
+}
+@utility drop-shadow-y-6-25 {
+  --de100-filter-drop-shadow-y-6-25: var(--de100-shadow-y-6-25);
+}
+@utility drop-shadow-y-6-50 {
+  --de100-filter-drop-shadow-y-6-50: var(--de100-shadow-y-6-50);
+}
+@utility drop-shadow-y-6-75 {
+  --de100-filter-drop-shadow-y-6-75: var(--de100-shadow-y-6-75);
+}
+@utility drop-shadow-y-7 {
+  --de100-filter-drop-shadow-y-7: var(--de100-shadow-blur-7);
+}
+
+@utility drop-shadow-blur-0 {
+  --de100-filter-drop-shadow-blur-0: var(--de100-shadow-blur-0);
+}
+@utility drop-shadow-blur-0-25 {
+  --de100-filter-drop-shadow-blur-0-25: var(--de100-shadow-blur-0-25);
+}
+@utility drop-shadow-blur-0-50 {
+  --de100-filter-drop-shadow-blur-0-50: var(--de100-shadow-blur-0-50);
+}
+@utility drop-shadow-blur-0-75 {
+  --de100-filter-drop-shadow-blur-0-75: var(--de100-shadow-blur-0-75);
+}
+@utility drop-shadow-blur-1 {
+  --de100-filter-drop-shadow-blur-1: var(--de100-shadow-blur-1);
+}
+@utility drop-shadow-blur-1-25 {
+  --de100-filter-drop-shadow-blur-1-25: var(--de100-shadow-blur-1-25);
+}
+@utility drop-shadow-blur-1-50 {
+  --de100-filter-drop-shadow-blur-1-50: var(--de100-shadow-blur-1-50);
+}
+@utility drop-shadow-blur-1-75 {
+  --de100-filter-drop-shadow-blur-1-75: var(--de100-shadow-blur-1-75);
+}
+@utility drop-shadow-blur-2 {
+  --de100-filter-drop-shadow-blur-2: var(--de100-shadow-blur-2);
+}
+@utility drop-shadow-blur-2-25 {
+  --de100-filter-drop-shadow-blur-2-25: var(--de100-shadow-blur-2-25);
+}
+@utility drop-shadow-blur-2-50 {
+  --de100-filter-drop-shadow-blur-2-50: var(--de100-shadow-blur-2-50);
+}
+@utility drop-shadow-blur-2-75 {
+  --de100-filter-drop-shadow-blur-2-75: var(--de100-shadow-blur-2-75);
+}
+@utility drop-shadow-blur-3 {
+  --de100-filter-drop-shadow-blur-3: var(--de100-shadow-blur-3);
+}
+@utility drop-shadow-blur-3-25 {
+  --de100-filter-drop-shadow-blur-3-25: var(--de100-shadow-blur-3-25);
+}
+@utility drop-shadow-blur-3-50 {
+  --de100-filter-drop-shadow-blur-3-50: var(--de100-shadow-blur-3-50);
+}
+@utility drop-shadow-blur-3-75 {
+  --de100-filter-drop-shadow-blur-3-75: var(--de100-shadow-blur-3-75);
+}
+@utility drop-shadow-blur-4 {
+  --de100-filter-drop-shadow-blur-4: var(--de100-shadow-blur-4);
+}
+@utility drop-shadow-blur-4-25 {
+  --de100-filter-drop-shadow-blur-4-25: var(--de100-shadow-blur-4-25);
+}
+@utility drop-shadow-blur-4-50 {
+  --de100-filter-drop-shadow-blur-4-50: var(--de100-shadow-blur-4-50);
+}
+@utility drop-shadow-blur-4-75 {
+  --de100-filter-drop-shadow-blur-4-75: var(--de100-shadow-blur-4-75);
+}
+@utility drop-shadow-blur-5 {
+  --de100-filter-drop-shadow-blur-5: var(--de100-shadow-blur-5);
+}
+@utility drop-shadow-blur-5-25 {
+  --de100-filter-drop-shadow-blur-5-25: var(--de100-shadow-blur-5-25);
+}
+@utility drop-shadow-blur-5-50 {
+  --de100-filter-drop-shadow-blur-5-50: var(--de100-shadow-blur-5-50);
+}
+@utility drop-shadow-blur-5-75 {
+  --de100-filter-drop-shadow-blur-5-75: var(--de100-shadow-blur-5-75);
+}
+@utility drop-shadow-blur-6 {
+  --de100-filter-drop-shadow-blur-6: var(--de100-shadow-blur-6);
+}
+@utility drop-shadow-blur-6-25 {
+  --de100-filter-drop-shadow-blur-6-25: var(--de100-shadow-blur-6-25);
+}
+@utility drop-shadow-blur-6-50 {
+  --de100-filter-drop-shadow-blur-6-50: var(--de100-shadow-blur-6-50);
+}
+@utility drop-shadow-blur-6-75 {
+  --de100-filter-drop-shadow-blur-6-75: var(--de100-shadow-blur-6-75);
+}
+@utility drop-shadow-blur-7 {
+  --de100-filter-drop-shadow-blur-7: var(--de100-shadow-blur-7);
+}
+
+/* @utility drop-shadow-xl {
+  @apply drop-shadow-xl;
+  --tw-drop-shadow-size: drop-shadow(
+    0 20px 7px var(--tw-drop-shadow-color, rgb(0 0 0 / 0.1))
+  ) !important;
+} */

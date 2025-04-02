@@ -20,6 +20,7 @@
     "@hookform/resolvers": "^4.1.3",
     "@pinecone-database/pinecone": "^5.1.1",
     "@prisma/client": "^6.5.0",
+    "@de100/tailwindcss-utils": "catalog:",
     "@t3-oss/env-nextjs": "^0.12.0",
     "ai": "^4.2.8",
     "lucide-react": "^0.485.0",

@@ -3,7 +3,7 @@
   "private": true,
   "engines": {
     "node": ">=23.7.0",
-    "pnpm": "^10.6.5"
+    "pnpm": "^10.7.1"
   },
   "packageManager": "pnpm@10.7.1",
   "scripts": {
@@ -27,6 +27,7 @@
     "@de100/prettier-config": "workspace:*",
     "@turbo/gen": "^2.3.4",
     "prettier": "catalog:",
+    "tailwindcss": "catalog:",
     "turbo": "^2.3.4",
     "typescript": "catalog:"
   },

@@ -84,6 +84,18 @@
 @utility shadow-x-6 {
   --de100-box-shadow-x: var(--de100-shadow-x-6);
 }
+@utility shadow-x-6-25 {
+  --de100-box-shadow-x: var(--de100-shadow-blur-6-25);
+}
+@utility shadow-x-6-50 {
+  --de100-box-shadow-x: var(--de100-shadow-blur-6-50);
+}
+@utility shadow-x-6-75 {
+  --de100-box-shadow-x: var(--de100-shadow-blur-6-75);
+}
+@utility shadow-x-7 {
+  --de100-box-shadow-x: var(--de100-shadow-blur-7);
+}
 
 @utility shadow-y-0 {
   --de100-box-shadow-y: var(--de100-shadow-y-0);
@@ -159,6 +171,18 @@
 }
 @utility shadow-y-6 {
   --de100-box-shadow-y: var(--de100-shadow-y-6);
+}
+@utility shadow-y-6-25 {
+  --de100-box-shadow-y: var(--de100-shadow-blur-6-25);
+}
+@utility shadow-y-6-50 {
+  --de100-box-shadow-y: var(--de100-shadow-blur-6-50);
+}
+@utility shadow-y-6-75 {
+  --de100-box-shadow-y: var(--de100-shadow-blur-6-75);
+}
+@utility shadow-y-7 {
+  --de100-box-shadow-y: var(--de100-shadow-blur-7);
 }
 
 @utility shadow-blur-0 {
@@ -236,6 +260,18 @@
 @utility shadow-blur-6 {
   --de100-box-shadow-blur: var(--de100-shadow-blur-6);
 }
+@utility shadow-blur-6-25 {
+  --de100-box-shadow-blur: var(--de100-shadow-blur-6-25);
+}
+@utility shadow-blur-6-50 {
+  --de100-box-shadow-blur: var(--de100-shadow-blur-6-50);
+}
+@utility shadow-blur-6-75 {
+  --de100-box-shadow-blur: var(--de100-shadow-blur-6-75);
+}
+@utility shadow-blur-7 {
+  --de100-box-shadow-blur: var(--de100-shadow-blur-7);
+}
 
 @utility shadow-spread-0 {
   --de100-box-shadow-spread: var(--de100-shadow-spread-0);
@@ -311,6 +347,18 @@
 }
 @utility shadow-spread-6 {
   --de100-box-shadow-spread: var(--de100-shadow-spread-6);
+}
+@utility shadow-spread-6-25 {
+  --de100-box-shadow-spread: var(--de100-shadow-blur-6-25);
+}
+@utility shadow-spread-6-50 {
+  --de100-box-shadow-spread: var(--de100-shadow-blur-6-50);
+}
+@utility shadow-spread-6-75 {
+  --de100-box-shadow-spread: var(--de100-shadow-blur-6-75);
+}
+@utility shadow-spread-7 {
+  --de100-box-shadow-spread: var(--de100-shadow-blur-7);
 }
 
 @utility shadow-single {

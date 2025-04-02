@@ -28,7 +28,7 @@ export default function RootLayout(props: PropsWithChildren) {
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} font-geist-sans antialiased`}
         >
           <ThemeProvider attribute="class">{props.children}</ThemeProvider>
         </body>
