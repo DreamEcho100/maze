@@ -12,7 +12,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="flex flex-col items-center gap-4 drop-shadow-xl">
+      <div className="flex flex-col items-center gap-4 drop-shadow-xl drop-shadow-sky-500">
         <h1 className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text font-dancing-script text-5xl font-bold text-transparent italic sm:text-8xl">
           Deep Research
         </h1>
