@@ -15,7 +15,8 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    OPEN_ROUTER_API_KEY: z.string().url(),
+    OPEN_ROUTER_API_KEY: z.string().min(1),
+    EXA_SEARCH_API_KEY: z.string().min(1),
   },
 
   // clientPrefix: "NEXT_PUBLIC_",
