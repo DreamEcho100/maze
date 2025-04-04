@@ -42,6 +42,7 @@ export async function POST(req: Request) {
           processedUrl: new Set(),
           clarificationsText: JSON.stringify(clarifications),
         };
+
         await deepResearch(
           researchState,
           dataStream,
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
         error:
           error instanceof Error ? error.message : "Invalid message format!",
       }),
-      { status: 200 },
+      { status: 500 },
     );
   }
 }
