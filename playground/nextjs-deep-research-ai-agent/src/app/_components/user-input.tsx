@@ -17,6 +17,7 @@ import {
 } from "@de100/ui/components/form";
 import { Input } from "@de100/ui/components/input";
 
+import { isApiErrorResponse } from "~/libs/utils";
 import { deepResearchStore } from "~/stores/deep-research";
 
 const formSchema = z.object({
@@ -47,6 +48,12 @@ const UserInput = () => {
         body: JSON.stringify({ topic: values.input }),
       });
       const data = (await response.json()) as string[];
+
+      if (isApiErrorResponse(data)) {
+        alert(data.error);
+        return;
+      }
+
       setTopic(values.input);
       setQuestions(data);
       form.reset();
