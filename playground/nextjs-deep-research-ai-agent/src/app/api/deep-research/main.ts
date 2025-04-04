@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { DataStreamWriter, JSONValue } from "ai";
+
 import type { ResearchState, SearchResult } from "./types";
 import { createActivityTracker } from "./activity-tracker";
 import { MAX_ITERATIONS } from "./constants";
@@ -12,10 +13,7 @@ import {
 
 export async function deepResearch(
   researchState: ResearchState,
-  dataStream: {
-    writeData: (data: any) => void;
-    [key: string]: any;
-  },
+  dataStream: DataStreamWriter,
 ) {
   let iteration = 0;
 
@@ -86,11 +84,19 @@ export async function deepResearch(
 
   const report = await generateReport(researchState, activityTracker);
 
-  dataStream.writeData({
-    type: "report",
-    content: report,
-  });
-
+  if (!report) {
+    dataStream.writeData({
+      type: "report",
+      content: {
+        error: "Failed to generate report",
+      },
+    });
+  } else {
+    dataStream.writeData({
+      type: "report",
+      content: report as JSONValue,
+    });
+  }
   // console.log("REPORT: ", report)
 
   return initialQueries;

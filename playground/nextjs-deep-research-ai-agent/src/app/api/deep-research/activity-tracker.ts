@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { DataStreamWriter } from "ai";
+
 import type { Activity, ResearchState } from "./types";
 
 export const createActivityTracker = (
-  dataStream: {
-    writeData: (data: any) => void;
-    [key: string]: any;
-  },
+  dataStream: DataStreamWriter,
   researchState: ResearchState,
 ) => {
   return {

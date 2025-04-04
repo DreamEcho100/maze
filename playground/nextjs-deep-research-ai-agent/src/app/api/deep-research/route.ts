@@ -33,9 +33,6 @@ export async function POST(req: Request) {
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
-        // Write data
-        //   dataStream.writeData({ value: 'Hello' });
-
         const researchState: ResearchState = {
           topic: topic,
           completedSteps: 0,
