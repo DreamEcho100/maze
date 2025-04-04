@@ -292,18 +292,24 @@ export async function analyzeFindings(
 
     return result;
   } catch (error) {
-    return handleError(error, `Content analysis`, activityTracker, "analyze", {
-      sufficient: false,
-      gaps: ["Unable to analyze content"],
-      queries: [
-        {
-          query: `Please try a different search queries instead of "${currentQueries.join(" -*|*- ")}"`,
-          purpose: "To find more relevant content",
-          priority: "high",
-          expectedInsight: "To find more relevant content",
-        },
-      ],
-    });
+    return handleError(
+      error,
+      `Content analysis`,
+      activityTracker,
+      "analyze",
+      // {
+      // 	sufficient: false,
+      // 	gaps: [`Unable to analyze content, please try a different search queries instead of "${currentQueries.join(" -*|*- ")}"`],
+      // 	queries: [
+      // 		{
+      // 			query: `Please try a different search queries instead of "${currentQueries.join(" -*|*- ")}"`,
+      // 			purpose: "To find more relevant content",
+      // 			priority: "high",
+      // 			expectedInsight: "To find more relevant content",
+      // 		},
+      // 	],
+      // }
+    );
   }
 }
 

@@ -22,7 +22,7 @@ export const combineFindings = (findings: ResearchFindings[]): string => {
   return resultContent;
 };
 
-export const handleError = <T>(
+export const handleError = <T = undefined>(
   error: unknown,
   context: string,
   activityTracker?: ActivityTracker,

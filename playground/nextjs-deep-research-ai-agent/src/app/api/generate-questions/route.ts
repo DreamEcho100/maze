@@ -6,7 +6,7 @@ import { z } from "zod";
 import { env } from "~/libs/env";
 
 const MODELS = {
-  GENERATE_QUESTIONS: "meta-llama/llama-3.3-70b-instruct",
+  GENERATE_QUESTIONS: "openrouter/quasar-alpha", // "meta-llama/llama-3.3-70b-instruct",
 };
 
 const openRouter = createOpenRouter({
@@ -15,10 +15,17 @@ const openRouter = createOpenRouter({
 
 const clarifyResearchGoals = async (topic: string) => {
   const prompt = `
-    Given the research topic <topic>${topic}</topic>, generate 2-4 clarifying questions to help narrow down the research scope. Focus on identifying:
-    - Specific aspects of interest
-    - Required depth/complexity level
-    - Any particular perspective or excluded sources
+Given the research topic <topic>${topic}</topic>, generate 2-4 clarifying questions to help narrow down the research scope. Focus on identifying:
+- Specific aspects of interest
+- Required depth/complexity level
+- Any particular perspective or excluded sources
+
+The response should be a JSON object with a key "questions" containing an array of strings, each representing a question.
+\`\`\`json
+{
+    questions: string[];
+}
+\`\`\`
     `;
 
   try {
