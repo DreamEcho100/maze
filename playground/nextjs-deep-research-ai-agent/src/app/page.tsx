@@ -1,5 +1,8 @@
 import Image from "next/image";
 
+import QnA from "./_components/qna";
+import UserInput from "./_components/user-input";
+
 export default function Home() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-start gap-8 py-16">
@@ -22,8 +25,8 @@ export default function Home() {
         </p>
       </div>
 
-      {/* <UserInput />
-      <QnA /> */}
+      <UserInput />
+      <QnA />
     </main>
   );
 }

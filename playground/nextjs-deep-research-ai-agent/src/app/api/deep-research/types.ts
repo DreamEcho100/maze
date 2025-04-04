@@ -48,3 +48,15 @@ export interface Source {
   url: string;
   title: string;
 }
+
+export interface StreamedActivity {
+  type: string;
+  content: {
+    type: "search" | "extract" | "planning" | "analyze" | "generate";
+    status: "error" | "complete" | "pending" | "warning";
+    message: string;
+    timestamp: number;
+    completedSteps: number;
+    tokenUsed: number;
+  };
+}
