@@ -1,3 +1,4 @@
+// File: `types.ts`
 import type { z } from "zod";
 
 export interface ResearchFindings {

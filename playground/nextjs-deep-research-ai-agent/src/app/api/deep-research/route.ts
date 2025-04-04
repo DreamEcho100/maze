@@ -1,3 +1,4 @@
+// File: `route.ts`
 import { createDataStreamResponse } from "ai";
 
 import type { ResearchState } from "./types";
@@ -41,7 +42,11 @@ export async function POST(req: Request) {
           processedUrl: new Set(),
           clarificationsText: JSON.stringify(clarifications),
         };
-        await deepResearch(researchState, dataStream);
+        await deepResearch(
+          researchState,
+          dataStream,
+          // TODO: _upgrade-plan[1]
+        );
       },
       // onError: error => `Custom error: ${error.message}`,
     });

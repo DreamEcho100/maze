@@ -1,3 +1,5 @@
+// File: `constants.ts`
+
 // Research constants
 export const MAX_ITERATIONS = 3; // Maximum number of iterations
 export const MAX_SEARCH_RESULTS = 5; // Maximum number of search results
@@ -10,6 +12,6 @@ export const MODELS = {
   PLANNING: "openai/gpt-4o",
   EXTRACTION: "openai/gpt-4o-mini",
   ANALYSIS: "openai/gpt-4o",
-  REPORT: "google/gemini-2.0-flash-thinking-exp:free"
+  REPORT: "google/gemini-2.0-flash-thinking-exp:free",
   // REPORT: "anthropic/claude-3.7-sonnet:thinking",
-}; 
+};

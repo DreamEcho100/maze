@@ -1,3 +1,5 @@
+// File `research-utils.ts`
+
 import { z } from "zod";
 
 import type {
@@ -29,6 +31,7 @@ import { combineFindings, handleError } from "./utils";
 export async function generateSearchQueries(
   researchState: ResearchState,
   activityTracker: ActivityTracker,
+  // TODO: _upgrade-plan[1]
 ) {
   try {
     activityTracker.add("planning", "pending", "Planning the research");
@@ -82,6 +85,7 @@ export async function search(
   activityTracker.add("search", "pending", `Searching for ${query}`);
 
   try {
+    // TODO: _upgrade-plan[2]
     const searchResult = await exa.searchAndContents(query, {
       type: "keyword",
       numResults: MAX_SEARCH_RESULTS,
@@ -99,14 +103,21 @@ export async function search(
       },
     });
 
-    const filteredResults = searchResult.results
-      .filter((r) => r.title)
-      .map((r) => ({
-        title: r.title ?? "",
-        url: r.url,
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        content: r.text ?? "",
-      }));
+    const filteredResults: {
+      title: string;
+      url: string;
+      content: string;
+    }[] = [];
+
+    for (const item of searchResult.results) {
+      if (item.title) {
+        filteredResults.push({
+          title: item.title,
+          url: item.url,
+          content: item.text,
+        });
+      }
+    }
 
     researchState.completedSteps++;
 
@@ -182,30 +193,30 @@ export async function processSearchResults(
   researchState: ResearchState,
   activityTracker: ActivityTracker,
 ): Promise<ResearchFindings[]> {
-  const extractionPromises = searchResults.map((result) =>
-    extractContent(result.content, result.url, researchState, activityTracker),
+  const extractionResults = await Promise.allSettled(
+    searchResults.map((result) =>
+      extractContent(
+        result.content,
+        result.url,
+        researchState,
+        activityTracker,
+      ),
+    ),
   );
-  const extractionResults = await Promise.allSettled(extractionPromises);
 
-  interface ExtractionResult {
-    url: string;
+  const newFindings: {
     summary: string;
+    source: string;
+  }[] = [];
+  for (const item of extractionResults) {
+    if (
+      item.status === "fulfilled" &&
+      item.value !== null &&
+      item.value !== undefined
+    ) {
+      newFindings.push({ summary: item.value.summary, source: item.value.url });
+    }
   }
-
-  const newFindings = extractionResults
-    .filter(
-      (result): result is PromiseFulfilledResult<ExtractionResult> =>
-        result.status === "fulfilled" &&
-        result.value !== null &&
-        result.value !== undefined,
-    )
-    .map((result) => {
-      const { summary, url } = result.value;
-      return {
-        summary,
-        source: url,
-      };
-    });
 
   return newFindings;
 }
@@ -244,8 +255,25 @@ export async function analyzeFindings(
               "Whether the collected content is sufficient for a useful report",
             ),
           gaps: z.array(z.string()).describe("Identified gaps in the content"),
+          coverage: z
+            // .enum(["Excellent", "Strong", "Adequate", "Limited", "Deficient"])
+            .string()
+            .describe("Coverage rating of the content"),
           queries: z
-            .array(z.string())
+            .array(
+              z.object({
+                query: z.string().describe("A search query to fill the gaps"),
+                purpose: z
+                  .string()
+                  .describe("The purpose of this search query"),
+                priority: z
+                  .enum(["high", "medium", "low"])
+                  .describe("Priority of the search query"),
+                expectedInsight: z
+                  .string()
+                  .describe("Expected insight from this search query"),
+              }),
+            )
             .describe("Search queries for missing information. Max 3 queries."),
         }),
         activityType: "analyze",
@@ -267,7 +295,14 @@ export async function analyzeFindings(
     return handleError(error, `Content analysis`, activityTracker, "analyze", {
       sufficient: false,
       gaps: ["Unable to analyze content"],
-      queries: ["Please try a different search query"],
+      queries: [
+        {
+          query: `Please try a different search queries instead of "${currentQueries.join(" -*|*- ")}"`,
+          purpose: "To find more relevant content",
+          priority: "high",
+          expectedInsight: "To find more relevant content",
+        },
+      ],
     });
   }
 }
@@ -314,7 +349,7 @@ export async function generateReport(
       `Report Generation`,
       activityTracker,
       "generate",
-      "Error generating report. Please try again. ",
+      `Error generating report. Please try again. Total tokens used: ${researchState.tokenUsed}`,
     );
   }
 }

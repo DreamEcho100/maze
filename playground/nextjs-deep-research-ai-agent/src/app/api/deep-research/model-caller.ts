@@ -1,3 +1,5 @@
+// File: `model-caller.ts`
+
 import { generateObject, generateText } from "ai";
 
 import type { ActivityTracker, ModelCallOptions, ResearchState } from "./types";
@@ -5,7 +7,7 @@ import { delay } from "~/libs/utils";
 import { MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "./constants";
 import { openRouter } from "./services";
 
-export async function callModel<T>(
+export async function callModel<T = undefined>(
   {
     model,
     prompt,
@@ -15,7 +17,7 @@ export async function callModel<T>(
   }: ModelCallOptions<T>,
   researchState: ResearchState,
   activityTracker: ActivityTracker,
-): Promise<T | string> {
+): Promise<T extends undefined ? string : T> {
   let attempts = 0;
   let lastError: Error | null = null;
 
@@ -32,7 +34,7 @@ export async function callModel<T>(
         researchState.tokenUsed += usage.totalTokens;
         researchState.completedSteps++;
 
-        return object;
+        return object as T extends undefined ? string : T;
       } else {
         const { text, usage } = await generateText({
           model: openRouter(model),
@@ -43,7 +45,7 @@ export async function callModel<T>(
         researchState.tokenUsed += usage.totalTokens;
         researchState.completedSteps++;
 
-        return text;
+        return text as unknown as T extends undefined ? string : T;
       }
     } catch (error) {
       attempts++;
@@ -60,5 +62,5 @@ export async function callModel<T>(
     }
   }
 
-  throw lastError ?? new Error(`Failed after ${MAX_RETRY_ATTEMPTS} attempst!`);
+  throw lastError ?? new Error(`Failed after ${MAX_RETRY_ATTEMPTS} attempts!`);
 }

@@ -1,4 +1,6 @@
-import type { DataStreamWriter, JSONValue } from "ai";
+// File `main.ts`
+
+import type { DataStreamWriter } from "ai";
 
 import type { ResearchState, SearchResult } from "./types";
 import { createActivityTracker } from "./activity-tracker";
@@ -14,21 +16,20 @@ import {
 export async function deepResearch(
   researchState: ResearchState,
   dataStream: DataStreamWriter,
+  // TODO: _upgrade-plan[1]
 ) {
   let iteration = 0;
 
   const activityTracker = createActivityTracker(dataStream, researchState);
 
+  // Planning Phase
   const initialQueries = await generateSearchQueries(
     researchState,
     activityTracker,
+    // TODO: _upgrade-plan[1]
   );
-  let currentQueries: string[] | undefined =
-    typeof initialQueries === "string"
-      ? [initialQueries]
-      : typeof initialQueries === "undefined"
-        ? undefined
-        : initialQueries.searchQueries;
+  let currentQueries: string[] | undefined = initialQueries?.searchQueries;
+
   while (
     currentQueries &&
     currentQueries.length > 0 &&
@@ -38,10 +39,11 @@ export async function deepResearch(
 
     console.log("We are running on the iteration number: ", iteration);
 
-    const searchResults = currentQueries.map((query: string) =>
-      search(query, researchState, activityTracker),
+    const searchResultsResponses = await Promise.allSettled(
+      currentQueries.map((query) =>
+        search(query, researchState, activityTracker),
+      ),
     );
-    const searchResultsResponses = await Promise.allSettled(searchResults);
 
     const allSearchResults: SearchResult[] = [];
     for (const result of searchResultsResponses) {
@@ -71,13 +73,15 @@ export async function deepResearch(
 
     console.log("Analysis: ", analysis);
 
-    if (typeof analysis === "object" && analysis.sufficient) {
+    if (analysis?.sufficient) {
       break;
     }
 
-    currentQueries = (
-      typeof analysis === "string" ? [analysis] : (analysis?.queries ?? [])
-    ).filter((query) => !currentQueries?.includes(query));
+    const currentQueriesTmp = new Set<string>([]);
+    for (const query of analysis?.queries ?? []) {
+      currentQueriesTmp.add(query.query);
+    }
+    currentQueries = [...currentQueriesTmp];
   }
 
   console.log("We are outside of the loop with total iterations: ", iteration);
@@ -94,10 +98,9 @@ export async function deepResearch(
   } else {
     dataStream.writeData({
       type: "report",
-      content: report as JSONValue,
+      content: report,
     });
   }
-  // console.log("REPORT: ", report)
 
   return initialQueries;
 }

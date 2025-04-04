@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// File: `activity-tracker.ts`
+
 import type { DataStreamWriter } from "ai";
 
 import type { Activity, ResearchState } from "./types";
