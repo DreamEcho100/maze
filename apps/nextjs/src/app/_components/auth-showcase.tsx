@@ -1,5 +1,5 @@
 import { auth, signIn, signOut } from "@de100/next-auth";
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 
 export async function AuthShowcase() {
   const session = await auth();

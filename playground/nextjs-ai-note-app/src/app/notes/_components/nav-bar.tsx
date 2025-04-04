@@ -11,7 +11,7 @@ import { useTheme } from "next-themes";
 // import AIChatButton from "~/components/AIChatButton";
 // import AddEditNoteDialog from "~/components/AddEditNoteDialog";
 // import ThemeToggleButton from "~/components/ThemeToggleButton";
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 
 import logo from "~/assets/logo.png";
 import ThemeToggleButton from "~/components/toggle-theme-button";

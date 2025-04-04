@@ -6,7 +6,7 @@ import "~/styles/globals.css";
 
 import type { PropsWithChildren } from "react";
 
-import { ThemeProvider } from "@de100/ui/theme";
+import { ThemeProvider } from "@de100/ui/components/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

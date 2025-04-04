@@ -8,8 +8,7 @@ import {
 
 import type { RouterOutputs } from "@de100/api";
 import { CreatePostSchema } from "@de100/db/schema";
-import { cn } from "@de100/ui";
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 import {
   Form,
   FormControl,
@@ -17,9 +16,10 @@ import {
   FormItem,
   FormMessage,
   useForm,
-} from "@de100/ui/form";
-import { Input } from "@de100/ui/input";
-import { toast } from "@de100/ui/toast";
+} from "@de100/ui/components/form";
+import { Input } from "@de100/ui/components/input";
+import { toast } from "@de100/ui/components/toast";
+import { cn } from "@de100/ui/libs/utils";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -136,15 +136,15 @@ export function PostCard(props: {
   );
 
   return (
-    <div className="flex flex-row rounded-lg bg-muted p-4">
+    <div className="bg-muted flex flex-row rounded-lg p-4">
       <div className="flex-grow">
-        <h2 className="text-2xl font-bold text-primary">{props.post.title}</h2>
+        <h2 className="text-primary text-2xl font-bold">{props.post.title}</h2>
         <p className="mt-2 text-sm">{props.post.content}</p>
       </div>
       <div>
         <Button
           variant="ghost"
-          className="cursor-pointer text-sm font-bold uppercase text-primary hover:bg-transparent hover:text-white"
+          className="text-primary cursor-pointer text-sm font-bold uppercase hover:bg-transparent hover:text-white"
           onClick={() => deletePost.mutate(props.post.id)}
         >
           Delete
@@ -157,11 +157,11 @@ export function PostCard(props: {
 export function PostCardSkeleton(props: { pulse?: boolean }) {
   const { pulse = true } = props;
   return (
-    <div className="flex flex-row rounded-lg bg-muted p-4">
+    <div className="bg-muted flex flex-row rounded-lg p-4">
       <div className="flex-grow">
         <h2
           className={cn(
-            "w-1/4 rounded bg-primary text-2xl font-bold",
+            "bg-primary w-1/4 rounded text-2xl font-bold",
             pulse && "animate-pulse",
           )}
         >

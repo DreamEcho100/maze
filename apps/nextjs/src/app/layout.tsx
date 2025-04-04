@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
-import { cn } from "@de100/ui";
-import { ThemeProvider, ThemeToggle } from "@de100/ui/theme";
-import { Toaster } from "@de100/ui/toast";
+import { ThemeProvider, ThemeToggle } from "@de100/ui/components/theme";
+import { Toaster } from "@de100/ui/components/toast";
+import { cn } from "@de100/ui/libs/utils";
 
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -45,14 +45,14 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans text-foreground antialiased",
+          "bg-background text-foreground min-h-screen font-sans antialiased",
           GeistSans.variable,
           GeistMono.variable,
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TRPCReactProvider>{props.children}</TRPCReactProvider>
-          <div className="absolute bottom-4 right-4">
+          <div className="absolute right-4 bottom-4">
             <ThemeToggle />
           </div>
           <Toaster />

@@ -5,9 +5,9 @@ import { useChat } from "@ai-sdk/react";
 import { useUser } from "@clerk/nextjs";
 import { Bot, Trash, XCircle } from "lucide-react";
 
-import { cn } from "@de100/ui";
-import { Button } from "@de100/ui/button";
-import { Input } from "@de100/ui/input";
+import { Button } from "@de100/ui/components/button";
+import { Input } from "@de100/ui/components/input";
+import { cn } from "@de100/ui/libs/utils";
 
 interface AIChatBoxProps {
   open: boolean;

@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@de100/ui/card";
+} from "@de100/ui/components/card";
 
 import AddEditNoteDialog from "./add-edit-note-dialog";
 

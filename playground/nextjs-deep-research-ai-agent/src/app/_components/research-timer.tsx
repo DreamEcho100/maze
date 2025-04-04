@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "zustand";
 
-import { Card } from "@de100/ui/card";
+import { Card } from "@de100/ui/components/card";
 
 import { deepResearchStore } from "~/stores/deep-research";
 

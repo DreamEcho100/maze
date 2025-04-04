@@ -7,7 +7,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@de100/ui/accordion";
+} from "@de100/ui/components/accordion";
 
 import { deepResearchStore } from "~/stores/deep-research";
 

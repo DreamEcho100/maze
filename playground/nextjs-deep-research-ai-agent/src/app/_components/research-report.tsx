@@ -9,8 +9,8 @@ import { nightOwl } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
 import { useStore } from "zustand";
 
-import { Button } from "@de100/ui/button";
-import { Card } from "@de100/ui/card";
+import { Button } from "@de100/ui/components/button";
+import { Card } from "@de100/ui/components/card";
 
 import { deepResearchStore } from "~/stores/deep-research";
 

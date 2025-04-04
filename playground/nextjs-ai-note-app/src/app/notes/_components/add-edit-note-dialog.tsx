@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@de100/ui/dialog";
+} from "@de100/ui/components/dialog";
 import {
   Form,
   FormControl,
@@ -18,10 +18,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@de100/ui/form";
-import { Input } from "@de100/ui/input";
-// import LoadingButton from "@de100/ui/loading-button";
-import { Textarea } from "@de100/ui/textarea";
+} from "@de100/ui/components/form";
+import { Input } from "@de100/ui/components/input";
+// import LoadingButton from "@de100/ui/components/loading-button";
+import { Textarea } from "@de100/ui/components/textarea";
 
 import type { CreateNoteSchema } from "~/libs/schemas/note";
 import LoadingButton from "~/components/ui/loading-button";

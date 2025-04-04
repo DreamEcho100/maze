@@ -4,15 +4,20 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useStore } from "zustand";
 
-import { Button } from "@de100/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@de100/ui/card";
+import { Button } from "@de100/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@de100/ui/components/card";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@de100/ui/form";
+} from "@de100/ui/components/form";
 
 import { deepResearchStore } from "~/stores/deep-research";
 

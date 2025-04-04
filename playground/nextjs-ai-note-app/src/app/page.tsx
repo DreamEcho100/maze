@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 
 import logo from "~/assets/logo.png";
 

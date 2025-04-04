@@ -6,13 +6,18 @@ import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import { useStore } from "zustand";
 
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@de100/ui/collapsible";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@de100/ui/tabs";
+} from "@de100/ui/components/collapsible";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@de100/ui/components/tabs";
 
 import { deepResearchStore } from "~/stores/deep-research";
 

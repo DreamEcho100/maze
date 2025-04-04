@@ -7,15 +7,15 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useStore } from "zustand";
 
-import { Button } from "@de100/ui/button";
+import { Button } from "@de100/ui/components/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@de100/ui/form";
-import { Input } from "@de100/ui/input";
+} from "@de100/ui/components/form";
+import { Input } from "@de100/ui/components/input";
 
 import { deepResearchStore } from "~/stores/deep-research";
 
