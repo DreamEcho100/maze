@@ -7,10 +7,11 @@ export const MAX_CONTENT_CHARS = 20000; // Maximum number of characters in the c
 export const MAX_RETRY_ATTEMPTS = 3; // It is the number of times the model will try to call LLMs if it fails
 export const RETRY_DELAY_MS = 1000; // It is the delay in milliseconds between retries for the model to call LLMs
 
+// https://openrouter.ai/models?context=1000000&fmt=cards&max_price=0&order=top-weekly&supported_parameters=structured_outputs
 // Model names
 export const MODELS = {
   PLANNING: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
   EXTRACTION: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o-mini",
   ANALYSIS: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
-  REPORT: "google/gemini-2.0-flash-thinking-exp:free", // "anthropic/claude-3.7-sonnet:thinking"
+  REPORT: "openrouter/quasar-alpha", // "anthropic/claude-3.7-sonnet:thinking"
 };
