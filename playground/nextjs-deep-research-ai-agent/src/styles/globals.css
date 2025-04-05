@@ -1,6 +1,7 @@
-@import "tailwindcss" important;
-
-@config "../../tailwind.config.ts";
+@import "tailwindcss" important source(none);
+@source "../../src";
+@source "../../../../packages/ui/src";
+@config "@de100/tailwind-config/web";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @import "@de100/tailwindcss-utils/web/styles/filter-drop-shadow.css";
@@ -83,7 +84,7 @@
   }
 }
 
-@theme {
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

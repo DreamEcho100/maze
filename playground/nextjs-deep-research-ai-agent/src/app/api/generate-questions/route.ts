@@ -13,25 +13,27 @@ const openRouter = createOpenRouter({
   apiKey: env.OPEN_ROUTER_API_KEY,
 });
 
-const clarifyResearchGoals = async (topic: string) => {
-  const prompt = `
-Given the research topic <topic>${topic}</topic>, generate 2-4 clarifying questions to help narrow down the research scope. Focus on identifying:
-- Specific aspects of interest
-- Required depth/complexity level
-- Any particular perspective or excluded sources
+const CLARIFY_RESEARCH_GOALS = (topic: string) => `
+You are a **curious, methodical Socratic research assistant** on a mission-critical project. Your output impacts a high-stakes research report, so ensure precision and efficiency while avoiding vague queries that waste compute resources.
 
-The response should be a JSON object with a key "questions" containing an array of strings, each representing a question.
+Refine the research goals for:
+<topic>${topic}</topic>
+
+Ask 2-4 **targeted clarifying questions** that:
+- Isolate specific subtopics or objectives.
+- Define the required depth, technical level, and constraints.
+- Clearly state exclusions or preferred angles.
+
+Return as JSON:
 \`\`\`json
-{
-    questions: string[];
-}
+{"questions": string[]}
 \`\`\`
-    `;
-
+	`;
+const clarifyResearchGoals = async (topic: string) => {
   try {
     const { object } = await generateObject({
       model: openRouter(MODELS.GENERATE_QUESTIONS), // The model for the generation of the questions
-      prompt,
+      prompt: CLARIFY_RESEARCH_GOALS(topic),
       schema: z.object({
         questions: z.array(z.string()),
       }),
