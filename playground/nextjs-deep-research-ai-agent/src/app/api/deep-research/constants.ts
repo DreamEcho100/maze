@@ -10,8 +10,8 @@ export const RETRY_DELAY_MS = 1000; // It is the delay in milliseconds between r
 // https://openrouter.ai/models?context=1000000&fmt=cards&max_price=0&order=top-weekly&supported_parameters=structured_outputs
 // Model names
 export const MODELS = {
-  PLANNING: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
-  EXTRACTION: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o-mini",
-  ANALYSIS: "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
+  PLANNING: "openrouter/quasar-alpha", // "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
+  EXTRACTION: "openrouter/quasar-alpha", // "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o-mini",
+  ANALYSIS: "openrouter/quasar-alpha", // "google/gemini-2.5-pro-exp-03-25:free", // "openai/gpt-4o",
   REPORT: "openrouter/quasar-alpha", // "anthropic/claude-3.7-sonnet:thinking"
 };

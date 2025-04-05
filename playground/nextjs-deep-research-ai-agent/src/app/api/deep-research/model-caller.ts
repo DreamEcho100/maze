@@ -55,7 +55,7 @@ export async function callModel<T = undefined>(
         activityTracker.add(
           activityType,
           "warning",
-          `Model call failed, attempt ${attempts}/${MAX_RETRY_ATTEMPTS}. Retrying...`,
+          `Model _(${model})_ call failed, attempt ${attempts}/${MAX_RETRY_ATTEMPTS}. Retrying...`,
         );
       }
       await delay(RETRY_DELAY_MS * attempts);
