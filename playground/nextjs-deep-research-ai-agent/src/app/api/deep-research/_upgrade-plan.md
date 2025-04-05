@@ -18,4 +18,5 @@
    - ANALYSIS_MODEL
    - REPORT_MODEL
 4. [x] Use a better way ensure the uniqueness of the `currentQueries` instead of the filtering on each loop.
-5. Adding a fall back models that are used after the first model failed fallback retries exhausted.
+5. [ ] Adding a fall back models that are used after the first model failed fallback retries exhausted.
+6. [ ] The report should be saved per user.

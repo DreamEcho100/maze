@@ -30,6 +30,9 @@ const QnA = () => {
 
   const { append, data, status } = useChat({
     api: "/api/deep-research",
+    onError: (error) => {
+      console.error("Error:", error);
+    },
   });
 
   const isLoading = status === "submitted" || status === "streaming";
