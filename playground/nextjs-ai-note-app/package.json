@@ -15,7 +15,7 @@
     "@clerk/nextjs": "^6.12.12",
     "@clerk/themes": "^2.2.26",
     "@de100/env": "workspace:^",
-    "@de100/tailwindcss-utils": "catalog:",
+    "@de100/tailwindcss-utils": "workspace:*",
     "@de100/ui": "workspace:*",
     "@google/genai": "^0.7.0",
     "@hookform/resolvers": "^4.1.3",

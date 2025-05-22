@@ -1,0 +1,199 @@
+{
+  "name": "@de100/auth",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "imports": {
+    "#*": "./src/*"
+  },
+  "exports": {
+    "./env": {
+      "types": "./dist/src/src/env.d.ts",
+      "default": "./src/env.js"
+    },
+    "./repositories/sessions": {
+      "types": "./dist/src/repositories/sessions.d.ts",
+      "default": "./src/repositories/sessions.js"
+    },
+    "./repositories/users": {
+      "types": "./dist/src/repositories/users.d.ts",
+      "default": "./src/repositories/users.js"
+    },
+    "./repositories/email-verification": {
+      "types": "./dist/src/repositories/email-verification.d.ts",
+      "default": "./src/repositories/email-verification.js"
+    },
+    "./repositories/password-reset": {
+      "types": "./dist/src/repositories/password-reset.d.ts",
+      "default": "./src/repositories/password-reset.js"
+    },
+    "./services/login": {
+      "types": "./dist/src/services/login.d.ts",
+      "default": "./src/services/login.js"
+    },
+    "./services/resend-email-verification-code": {
+      "types": "./dist/src/services/resend-email-verification-code.d.ts",
+      "default": "./src/services/resend-email-verification-code.js"
+    },
+    "./services/verify-email": {
+      "types": "./dist/src/services/verify-email.d.ts",
+      "default": "./src/services/verify-email.js"
+    },
+    "./services/forgot-password": {
+      "types": "./dist/src/services/forgot-password.d.ts",
+      "default": "./src/services/forgot-password.js"
+    },
+    "./services/2fa/setup": {
+      "types": "./dist/src/services/2fa/setup.d.ts",
+      "default": "./src/services/2fa/setup.js"
+    },
+    "./services/2fa/verify": {
+      "types": "./dist/src/services/2fa/verify.d.ts",
+      "default": "./src/services/2fa/verify.js"
+    },
+    "./services/2fa/reset": {
+      "types": "./dist/src/services/2fa/reset.d.ts",
+      "default": "./src/services/2fa/reset.js"
+    },
+    "./services/logout": {
+      "types": "./dist/src/services/logout.d.ts",
+      "default": "./src/services/logout.js"
+    },
+    "./services/reset-password": {
+      "types": "./dist/src/services/reset-password/index.d.ts",
+      "default": "./src/services/reset-password/index.js"
+    },
+    "./services/reset-password/verify/email": {
+      "types": "./dist/src/services/reset-password/verify/email.d.ts",
+      "default": "./src/services/reset-password/verify/email.js"
+    },
+    "./services/reset-password/verify/2fa/totp": {
+      "types": "./dist/src/services/reset-password/verify/2fa/totp.d.ts",
+      "default": "./src/services/reset-password/verify/2fa/totp.js"
+    },
+    "./services/reset-password/verify/2fa/recovery-code": {
+      "types": "./dist/src/services/reset-password/verify/2fa/recovery-code.d.ts",
+      "default": "./src/services/reset-password/verify/2fa/recovery-code.js"
+    },
+    "./services/settings/update-password": {
+      "types": "./dist/src/services/settings/update-password.d.ts",
+      "default": "./src/services/settings/update-password.js"
+    },
+    "./services/settings/update-email": {
+      "types": "./dist/src/services/settings/update-email.d.ts",
+      "default": "./src/services/settings/update-email.js"
+    },
+    "./services/settings/regenerate-recovery-code": {
+      "types": "./dist/src/services/settings/regenerate-recovery-code.d.ts",
+      "default": "./src/services/settings/regenerate-recovery-code.js"
+    },
+    "./services/settings/update-is-two-factor": {
+      "types": "./dist/src/services/settings/update-is-2fa-enabled.d.ts",
+      "default": "./src/services/settings/update-is-2fa-enabled.js"
+    },
+    "./services/register": {
+      "types": "./dist/src/services/register.d.ts",
+      "default": "./src/services/register.js"
+    },
+    "./services/settings/admin/update-password": {
+      "types": "./dist/src/services/settings/admin/update-password.d.ts",
+      "default": "./src/services/settings/admin/update-password.js"
+    },
+    "./services/settings/admin/register": {
+      "types": "./dist/src/services/settings/admin/register.d.ts",
+      "default": "./src/services/settings/admin/register.js"
+    },
+    "./utils": {
+      "types": "./dist/src/utils/index.d.ts",
+      "default": "./src/utils/index.js"
+    },
+    "./utils/2fa": {
+      "types": "./dist/src/utils/2fa.d.ts",
+      "default": "./src/utils/2fa.js"
+    },
+    "./utils/constants": {
+      "types": "./dist/src/utils/constants.d.ts",
+      "default": "./src/utils/constants.js"
+    },
+    "./utils/csrf": {
+      "types": "./dist/src/utils/csrf.d.ts",
+      "default": "./src/utils/csrf.js"
+    },
+    "./utils/dates": {
+      "types": "./dist/src/utils/dates.d.ts",
+      "default": "./src/utils/dates.js"
+    },
+    "./utils/email-verification": {
+      "types": "./dist/src/utils/email-verification.d.ts",
+      "default": "./src/utils/email-verification.js"
+    },
+    "./utils/encryption": {
+      "types": "./dist/src/utils/encryption.d.ts",
+      "default": "./src/utils/encryption.js"
+    },
+    "./utils/generate-randomotp": {
+      "types": "./dist/src/utils/generate-randomotp.d.ts",
+      "default": "./src/utils/generate-randomotp.js"
+    },
+    "./utils/generate-random-recovery-code": {
+      "types": "./dist/src/utils/generate-random-recovery-code.d.ts",
+      "default": "./src/utils/generate-random-recovery-code.js"
+    },
+    "./utils/index": {
+      "types": "./dist/src/utils/index.d.ts",
+      "default": "./src/utils/index.js"
+    },
+    "./utils/password-reset": {
+      "types": "./dist/src/utils/password-reset.d.ts",
+      "default": "./src/utils/password-reset.js"
+    },
+    "./utils/passwords": {
+      "types": "./dist/src/utils/passwords.d.ts",
+      "default": "./src/utils/passwords.js"
+    },
+    "./utils/sessions": {
+      "types": "./dist/src/utils/sessions.d.ts",
+      "default": "./src/utils/sessions.js"
+    },
+    "./utils/transform": {
+      "types": "./dist/src/utils/transform.d.ts",
+      "default": "./src/utils/transform.js"
+    },
+    "./utils/users": {
+      "types": "./dist/src/utils/users.d.ts",
+      "default": "./src/utils/users.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "default": "./src/types.js"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc",
+    "clean": "rm -rf .turbo .cache .turbo dist node_modules",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@de100/env": "workspace:^",
+    "@node-rs/argon2": "^2.0.0",
+    "@oslojs/binary": "^1.0.0",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
+    "@oslojs/otp": "^1.0.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@de100/eslint-config": "workspace:*",
+    "@de100/prettier-config": "workspace:*",
+    "@de100/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@de100/prettier-config"
+}

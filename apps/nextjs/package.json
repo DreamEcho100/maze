@@ -39,7 +39,7 @@
     "@de100/tailwind-config": "workspace:*",
     "@de100/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
-    "@types/node": "^22.10.10",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "dotenv-cli": "^8.0.0",

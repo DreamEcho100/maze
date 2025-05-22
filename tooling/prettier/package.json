@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@de100/tsconfig": "workspace:*",
-    "@types/node": "^22.10.10",
+    "@types/node": "catalog:",
     "typescript": "catalog:"
   },
   "prettier": "@de100/prettier-config"
