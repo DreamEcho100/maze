@@ -19,7 +19,7 @@ import { cookiesProvider } from "#providers/cookies.js";
  */
 export async function getUserEmailVerificationRequest(userId, id) {
   // return await findOneUserEmailVerificationRequestRepository(userId, id);
-  return await userEmailVerificationRequestProvider.getOne(
+  return await userEmailVerificationRequestProvider.findOneByIdAndUserId(
     userId,
     id,
   );
@@ -54,7 +54,7 @@ export async function createEmailVerificationRequest(userId, email) {
  * @returns {Promise<void>} A promise that resolves when the requests have been deleted.
  */
 export async function deleteUserEmailVerificationRequest(userId) {
-  await userEmailVerificationRequestProvider.deleteOne(userId); 
+  await userEmailVerificationRequestProvider.deleteOneByUser(userId); 
 }
 
 /**

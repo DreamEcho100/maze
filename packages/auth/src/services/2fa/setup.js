@@ -75,7 +75,7 @@ export async function setup2FAService(data) {
     return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await getCurrentSession(cookiesProvider.get);
+  const { session, user } = await getCurrentSession();
   if (!session) {
     return SETUP_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }
@@ -105,8 +105,8 @@ export async function setup2FAService(data) {
 
   await Promise.all([
     updateUserTOTPKey(session.userId, key),
-    // setSessionAs2FAVerifiedRepository(session.id),
-    sessionProvider.setSessionAs2FAVerified(session.id),
+    // markOne2FAVerifiedRepository(session.id),
+    sessionProvider.markOne2FAVerified(session.id),
   ]);
 
   return SETUP_2FA_MESSAGES_SUCCESS.TWO_FA_SETUP_SUCCESS;

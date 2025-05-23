@@ -101,10 +101,10 @@ export function setPasswordResetSessionProvider(newPasswordResetSessionProvider)
 
 
 // export const passwordResetSessionRepository = {
-//   createOneSessionRepository: createOnePasswordResetSessionRepository,
-//   findOneSessionWithUserRepository: findOnePasswordResetSessionWithUserRepository,
-//   deleteOneSessionRepository: deleteOnePasswordResetSessionRepository,
-//   updateOneSessionAsEmailVerifiedRepository: updateOnePasswordResetSessionAsEmailVerifiedRepository,
-//   updateOneSessionAs2FAVerifiedRepository: updateOnePasswordResetSessionAs2FAVerifiedRepository,
-//   deleteAllSessionsForUserRepository: deleteAllPasswordResetSessionsForUserRepository,
+//   createOne: createOnePasswordResetSessionRepository,
+//   findOneWithUser: findOnePasswordResetSessionWithUserRepository,
+//   deleteOne: deleteOnePasswordResetSessionRepository,
+//   markEmailVerified: updateOnePasswordResetSessionAsEmailVerifiedRepository,
+//   mark2FAVerified: updateOnePasswordResetSessionAs2FAVerifiedRepository,
+//   deleteAllByUserId: deleteAllPasswordResetSessionsForUserRepository,
 // };

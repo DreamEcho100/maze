@@ -44,7 +44,7 @@ export async function resetUserRecoveryCode(userId) {
   const encryptedCode = encryptString(recoveryCode);
 
   // await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-  await userProvider.updateOneRecoveryCodeByUser(userId, encryptedCode);
+  await userProvider.updateOneRecoveryCodeByUserId(userId, encryptedCode);
 
   return recoveryCode;
 }
@@ -110,7 +110,7 @@ export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabled
     : null;
 
   // return await updateUserTwoFactorEnabledRepository(
-  return await userProvider.updateUserTwoFactorEnabled(
+  return await userProvider.updateOne2FAEnabled(
     {
       twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
       recoveryCode: encryptedRecoveryCode,

@@ -76,9 +76,9 @@ export async function verifyPasswordResetEmailVerificationService(code) {
 
   const [emailMatches] = await Promise.all([
     // setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-    userProvider.setUserAsEmailVerifiedIfEmailMatches(session.userId,session.email),
+    userProvider.verifyOneEmailIfMatches(session.userId,session.email),
     // updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-    passwordResetSessionProvider.updateOneSessionAsEmailVerified(session.id),
+    passwordResetSessionProvider.markEmailVerified(session.id),
   ]);
 
   if (!emailMatches) {

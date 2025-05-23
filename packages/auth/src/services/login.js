@@ -36,7 +36,7 @@ export async function loginUserService(data, options) {
     };
   }
 
-  const user = await userProvider.getOneByEmail(input.data.email);
+  const user = await userProvider.findOneByEmail(input.data.email);
   if (user === null) {
     return {
       type: "error",

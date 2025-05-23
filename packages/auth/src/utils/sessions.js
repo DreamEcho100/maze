@@ -139,7 +139,7 @@ export async function handleSessionMiddleware(param) {
  */
 export async function validateSessionToken(token) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-  const result = await sessionProvider.findOneById(sessionId).catch((error) =>
+  const result = await sessionProvider.findOneWithUser(sessionId).catch((error) =>
     console.error("Error:", error),
   );
 
@@ -150,13 +150,13 @@ export async function validateSessionToken(token) {
   const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
   if (Date.now() >= expiresAt) {
-    await sessionProvider.deleteSessionById(sessionId);
+    await sessionProvider.deleteById(sessionId);
     return { session: null, user: null };
   }
 
   if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
     result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-    await sessionProvider.updateSessionExpirationById(sessionId, new Date(result.session.expiresAt));
+    await sessionProvider.extendExpirationDate(sessionId, new Date(result.session.expiresAt));
   }
 
   return result;

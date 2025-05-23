@@ -18,7 +18,7 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, tx) {
   // Note: In Postgres and MySQL, these queries should be done in a transaction using SELECT FOR UPDATE
   // return await db.$transaction(async (tx) => {
     //
-    const userRecoveryCodeStored = await userProvider.getOneUserRecoveryCode(userId, tx);
+    const userRecoveryCodeStored = await userProvider.getOneRecoveryCodeRaw(userId, tx);
     if (!userRecoveryCodeStored) {
       return false;
     }
@@ -29,11 +29,11 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, tx) {
 
     const newRecoveryCode = generateRandomRecoveryCode();
     const encryptedNewRecoveryCode = encryptString(newRecoveryCode);
-    // await setAllSessionsAsNot2FAVerifiedRepository(userId, tx);
-    await sessionProvider.setAllSessionsAsNot2FAVerified(userId, tx);
+    // await unMarkOne2FAForUserRepository(userId, tx);
+    await sessionProvider.unMarkOne2FAForUser(userId, tx);
 
     // const updatedUserRecoveryCode = await updateUserRecoveryCodeRepository(
-    const updatedUserRecoveryCode = await userProvider.updateOneUserRecoveryCode(
+    const updatedUserRecoveryCode = await userProvider.updateOneRecoveryCode(
       userId,
       encryptedNewRecoveryCode,
       userRecoveryCodeStored,

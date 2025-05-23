@@ -76,8 +76,8 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
     return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_CODE;
   }
 
-  // await updateOnePasswordResetSessionAs2FAVerifiedRepository(session.id);
-  await passwordResetSessionProvider.updateOneSessionAs2FAVerified(session.id);
+  // await updateOnePasswordRemarkOne2FAVerifiedRepository(session.id);
+  await passwordResetSessionProvider.mark2FAVerified(session.id);
   return {
     ...VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS.PASSWORD_RESET_2FA_VERIFIED,
     data: { nextStep: "reset-password" },

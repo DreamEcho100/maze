@@ -77,7 +77,7 @@ export async function adminRegisterService(data) {
     return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const emailAvailable = await userProvider.getOneByEmail(input.data.email);
+  const emailAvailable = await userProvider.findOneByEmail(input.data.email);
 
   if (emailAvailable) {
     return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_USED;

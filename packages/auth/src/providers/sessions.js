@@ -76,7 +76,7 @@
 //  * @param {string} sessionId - The ID of the session to be deleted.
 //  * @returns {Promise<void>} A promise that resolves when the session is deleted.
 //  */
-// export async function deleteSessionByIdRepository(sessionId) {
+// export async function deleteByIdRepository(sessionId) {
 //   await db.session.delete({
 //     where: { id: sessionId },
 //   });
@@ -113,7 +113,7 @@
 //  * @param {import("@prisma/client").Prisma.TransactionClient} [tx] - Transaction client
 //  * @returns {Promise<void>}
 //  */
-// export async function setAllSessionsAsNot2FAVerifiedRepository(userId, tx) {
+// export async function unMarkOne2FAForUserRepository(userId, tx) {
 //   await (tx ?? db).session.updateMany({
 //     where: { userId },
 //     data: { twoFactorVerifiedAt: null },
@@ -132,10 +132,10 @@ export function setSessionProvider(newSessionProvider) {
 
 // export const sessionRepository = {
 //   createOne: createOneSessionRepository,
-//   findOneById: findOneSessionByIdRepository,
-//   updateSessionExpirationById: updateSessionExpirationByIdRepository,
-//   deleteSessionById: deleteSessionByIdRepository,
-//   invalidateUserSessions: invalidateUserSessionsRepository,
-//   setSessionAs2FAVerified: setSessionAs2FAVerifiedRepository,
-//   setAllSessionsAsNot2FAVerified: setAllSessionsAsNot2FAVerifiedRepository,
+//   findOneWithUser: findOneSessionByIdRepository,
+//   extendExpirationDate: updateSessionExpirationByIdRepository,
+//   deleteById: deleteByIdRepository,
+//   invalidateAllByUserId: invalidateUserSessionsRepository,
+//   markOne2FAVerified: setSessionAs2FAVerifiedRepository,
+//   unMarkOne2FAForUser: unMarkOne2FAForUserRepository,
 // };

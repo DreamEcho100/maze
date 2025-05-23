@@ -62,7 +62,7 @@ export function setUserEmailVerificationRequestProvider(
 
 
 // const userEmailVerificationRequestRepository = {
-//   deleteOneVerification: deleteOneUserEmailVerificationRequestRepository,
-//   findOneVerification: findOneUserEmailVerificationRequestRepository,
-//   createOneVerification: createOneEmailVerificationRequestRepository,
+//   deleteOneByUser: deleteOneUserEmailVerificationRequestRepository,
+//   findOneByIdAndUserId: findOneUserEmailVerificationRequestRepository,
+//   createOne: createOneEmailVerificationRequestRepository,
 // }

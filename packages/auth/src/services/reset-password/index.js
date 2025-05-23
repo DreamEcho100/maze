@@ -96,8 +96,8 @@ export async function resetPasswordService(password) {
 
       return /** @type {const} */ ([sessionToken, session]);
     })(),
-    passwordResetSessionProvider.deleteAllSessionsForUser(passwordResetSession.userId),
-    sessionProvider.invalidateUserSessions(passwordResetSession.userId),
+    passwordResetSessionProvider.deleteAllByUserId(passwordResetSession.userId),
+    sessionProvider.invalidateAllByUserId(passwordResetSession.userId),
     updateUserPassword(passwordResetSession.userId, password),
   ]);
 

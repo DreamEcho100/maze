@@ -65,7 +65,7 @@ export async function createPasswordResetSession(token, userId, email) {
 export async function validatePasswordResetSessionToken(token) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   // const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
-  const result = await passwordResetSessionProvider.getOneWithUser(sessionId);
+  const result = await passwordResetSessionProvider.findOneWithUser(sessionId);
 
   if (!result.session || Date.now() >= dateLikeToNumber(result.session.expiresAt)) {
     // await deleteOnePasswordResetSessionRepository(sessionId);

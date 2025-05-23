@@ -45,7 +45,7 @@ export async function verifyEmailUserService(data, options) {
     };
   }
 
-  const { session, user } = await getCurrentSession(cookiesProvider.get);
+  const { session, user } = await getCurrentSession();
   if (session === null) {
     return {
       message: "Not authenticated",
@@ -114,11 +114,11 @@ export async function verifyEmailUserService(data, options) {
 
   await Promise.all([
     deleteUserEmailVerificationRequest(user.id),
-    passwordResetSessionProvider.deleteAllSessionsForUser(user.id),
-    userProvider.updateOneEmailAndSetEmailAsVerified(user.id, verificationRequest.email),
+    passwordResetSessionProvider.deleteAllByUserId(user.id),
+    userProvider.updateEmailAndVerify(user.id, verificationRequest.email),
   ]);
 
-  deleteEmailVerificationRequestCookie(cookiesProvider.set);
+  deleteEmailVerificationRequestCookie();
 
   if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
     // return redirect("/2fa/setup");

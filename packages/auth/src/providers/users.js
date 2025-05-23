@@ -265,16 +265,16 @@ export function setUserProvider(newUserProvider) {
 
 // export const userRepository = {
 //   createOne: createUserRepository,
+//   findOneByEmail: getUserByEmailRepository,
 //   updateOnePassword: updateUserPasswordRepository,
-//   updateOneEmailAndSetEmailAsVerified: updateUserEmailAndSetEmailAsVerifiedRepository,
+//   updateEmailAndVerify: updateUserEmailAndSetEmailAsVerifiedRepository,
+//   verifyOneEmailIfMatches: setUserAsEmailVerifiedIfEmailMatchesRepository,
 //   getOnePasswordHash: getUserPasswordHashRepository,
+//   getOneRecoveryCodeRaw: getOneUserRecoveryCodeRepository,
 //   getOneRecoveryCode: getUserRecoveryCodeRepository,
+//   updateOneRecoveryCode: updateOneUserRecoveryCodeRepository,
+//   updateOneRecoveryCodeByUserId: updateUserRecoveryCodeRepository,
 //   getOneTOTPKey: getUserTOTPKeyRepository,
 //   updateOneTOTPKey: updateUserTOTPKeyRepository,
-//   updateOneRecoveryCode: updateOneUserRecoveryCodeRepository,
-//   getOneUserRecoveryCode: getOneUserRecoveryCodeRepository,
-//   updateOneUserRecoveryCode: updateUserRecoveryCodeRepository,
-//   setUserAsEmailVerifiedIfEmailMatches: setUserAsEmailVerifiedIfEmailMatchesRepository,
-//   getOneByEmail: getUserByEmailRepository,
-//   updateUserTwoFactorEnabled: updateUserTwoFactorEnabledRepository,
+//   updateOne2FAEnabled: updateUserTwoFactorEnabledRepository,
 // }

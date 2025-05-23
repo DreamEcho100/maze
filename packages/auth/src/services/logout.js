@@ -38,7 +38,7 @@ export async function logoutService() {
     return LOGOUT_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }
 
-  await sessionProvider.deleteSessionById(session.id);
+  await sessionProvider.deleteById(session.id);
 
   deleteSessionTokenCookie(cookiesProvider.set);
 

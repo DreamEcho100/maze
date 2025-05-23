@@ -68,7 +68,7 @@ export async function verify2FAService(data) {
   }
 
   // Get session and user details
-  const { session, user } = await getCurrentSession(cookiesProvider.get);
+  const { session, user } = await getCurrentSession();
   if (!session) {
     return VERIFY_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }
@@ -88,7 +88,7 @@ export async function verify2FAService(data) {
   }
 
   // Mark session as 2FA verified
-  await sessionProvider.setSessionAs2FAVerified(session.id);
+  await sessionProvider.markOne2FAVerified(session.id);
 
   // Return success message with optional redirect flag
   return VERIFY_2FA_MESSAGES_SUCCESS.TWO_FA_VERIFIED_SUCCESS;

@@ -66,7 +66,7 @@ export async function reset2FAService(data, tx) {
     return RESET_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await getCurrentSession(cookiesProvider.get);
+  const { session, user } = await getCurrentSession();
   if (!session) {
     return RESET_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }

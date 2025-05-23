@@ -62,7 +62,7 @@ export async function updateEmailService(email) {
   }
 
   // const emailAvailable = await getUserByEmailRepository(validatedEmail);
-  const emailAvailable = await userProvider.getOneByEmail(validatedEmail);
+  const emailAvailable = await userProvider.findOneByEmail(validatedEmail);
   if (emailAvailable) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_USED;
 
   const verificationRequest = await createEmailVerificationRequest(user.id, validatedEmail);

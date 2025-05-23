@@ -93,7 +93,7 @@ export async function updatePasswordService(currentPassword, newPassword) {
   if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.INCORRECT_PASSWORD;
 
   await Promise.all([
-    sessionProvider.invalidateUserSessions(user.id),
+    sessionProvider.invalidateAllByUserId(user.id),
     updateUserPassword(user.id, newPassword),
   ]);
 

@@ -53,7 +53,7 @@ export async function forgotPasswordService(data) {
     return FORGET_PASSWORD_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS;
   }
 
-  const user = await userProvider.getOneByEmail(input.data.email);
+  const user = await userProvider.findOneByEmail(input.data.email);
   if (user === null) {
     return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST;
   }
@@ -61,7 +61,7 @@ export async function forgotPasswordService(data) {
   const sessionToken = generateSessionToken();
   const [session] = await Promise.all([
     createPasswordResetSession(sessionToken, user.id, user.email),
-    passwordResetSessionProvider.deleteAllSessionsForUser(user.id),
+    passwordResetSessionProvider.deleteAllByUserId(user.id),
   ]);
 
   await sendPasswordResetEmail(session.email, session.code);

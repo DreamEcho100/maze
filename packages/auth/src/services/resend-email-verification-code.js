@@ -61,7 +61,7 @@ export async function resendEmailVerificationCodeService(options) {
     verificationRequest = await createEmailVerificationRequest(user.id, verificationRequest.email);
   }
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-  setEmailVerificationRequestCookie(verificationRequest, cookiesProvider.set);
+  setEmailVerificationRequestCookie(verificationRequest);
 
   return {
     message: "A new code was sent to your inbox.",
