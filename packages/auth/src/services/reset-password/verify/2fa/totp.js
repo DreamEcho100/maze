@@ -1,7 +1,7 @@
 /** @import { GetCookie, SetCookie } from "#types.ts"; */
 
-import { passwordResetSessionRepository } from "#providers/password-reset.js";
-import { userRepository } from "#providers/users.js";
+import { passwordResetSessionProvider } from "#providers/password-reset.js";
+import { userProvider } from "#providers/users.js";
 import { verifyTOTP } from "#utils/index.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
 
@@ -77,13 +77,13 @@ export async function verifyPasswordReset2FAViaTOTPService(code, options) {
   }
 
   // const totpKey = await getUserTOTPKeyRepository(session.userId);
-  const totpKey = await userRepository.getOneTOTPKey(user.id);
+  const totpKey = await userProvider.getOneTOTPKey(user.id);
   if (!totpKey || !verifyTOTP(totpKey, 30, 6, code)) {
     return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_CODE;
   }
 
   // await updateOnePasswordResetSessionAs2FAVerifiedRepository(session.id);
-  await passwordResetSessionRepository.updateOneSessionAs2FAVerified(session.id);
+  await passwordResetSessionProvider.updateOneSessionAs2FAVerified(session.id);
   return {
     ...VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS.PASSWORD_RESET_2FA_VERIFIED,
     data: { nextStep: "reset-password" },

@@ -3,7 +3,7 @@
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import {
-  sessionRepository
+  sessionProvider
 } from "#providers/sessions.js";
 import {
   COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
@@ -68,7 +68,7 @@ export async function createSession(token, userId, flags) {
     createdAt: new Date(),
   };
 
-  await sessionRepository.createOne(session);
+  await sessionProvider.createOne(session);
 
   return session;
 }
@@ -141,7 +141,7 @@ export async function handleSessionMiddleware(param) {
  */
 export async function validateSessionToken(token) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-  const result = await sessionRepository.findOneById(sessionId).catch((error) =>
+  const result = await sessionProvider.findOneById(sessionId).catch((error) =>
     console.error("Error:", error),
   );
 
@@ -152,13 +152,13 @@ export async function validateSessionToken(token) {
   const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
   if (Date.now() >= expiresAt) {
-    await sessionRepository.deleteSessionById(sessionId);
+    await sessionProvider.deleteSessionById(sessionId);
     return { session: null, user: null };
   }
 
   if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
     result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-    await sessionRepository.updateSessionExpirationById(sessionId, new Date(result.session.expiresAt));
+    await sessionProvider.updateSessionExpirationById(sessionId, new Date(result.session.expiresAt));
   }
 
   return result;

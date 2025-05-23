@@ -3,7 +3,7 @@
  */
 
 import {
-  userRepository
+  userProvider
 } from "#providers/users.js";
 import { encrypt, encryptString } from "#utils/encryption.js";
 import { generateRandomRecoveryCode } from "#utils/generate-random-recovery-code.js";
@@ -24,7 +24,7 @@ export async function createUser(email, name, password) {
   const encryptedRecoveryCode = encryptString(recoveryCode);
 
   // const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
-  const result = await userRepository.createOne(
+  const result = await userProvider.createOne(
     email,
     name,
     passwordHash,
@@ -44,7 +44,7 @@ export async function resetUserRecoveryCode(userId) {
   const encryptedCode = encryptString(recoveryCode);
 
   // await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-  await userRepository.updateOneRecoveryCodeByUser(userId, encryptedCode);
+  await userProvider.updateOneRecoveryCodeByUser(userId, encryptedCode);
 
   return recoveryCode;
 }
@@ -74,7 +74,7 @@ export async function resetUserRecoveryCode(userId) {
 export async function updateUserPassword(userId, password) {
   const passwordHash = await hashPassword(password);
   // const result = await updateUserPasswordRepository(userId, passwordHash);
-  const result = await userRepository.updateOnePassword(userId, passwordHash);
+  const result = await userProvider.updateOnePassword(userId, passwordHash);
 
   return result;
 }
@@ -88,7 +88,7 @@ export async function updateUserPassword(userId, password) {
 export async function updateUserTOTPKey(userId, key) {
   const encryptedKey = encrypt(key);
   // const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
-  const result = await userRepository.updateOneTOTPKey(userId, encryptedKey);
+  const result = await userProvider.updateOneTOTPKey(userId, encryptedKey);
 
   return result;
 }
@@ -110,7 +110,7 @@ export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabled
     : null;
 
   // return await updateUserTwoFactorEnabledRepository(
-  return await userRepository.updateUserTwoFactorEnabled(
+  return await userProvider.updateUserTwoFactorEnabled(
     {
       twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
       recoveryCode: encryptedRecoveryCode,

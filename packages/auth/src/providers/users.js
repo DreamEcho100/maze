@@ -255,11 +255,11 @@
 /** @import { UserProvider } from "#types.ts"; */
 
 
-export let userRepository = /** @type {UserProvider} */({});
+export let userProvider = /** @type {UserProvider} */({});
 
-/** @param {UserProvider} newUserRepository  */
-export function setUserRepository(newUserRepository) {
-  userRepository = newUserRepository;
+/** @param {UserProvider} newUserProvider  */
+export function setUserProvider(newUserProvider) {
+  userProvider = newUserProvider;
 }
 
 

@@ -1,7 +1,7 @@
 /** @import { SetCookie } from "#types.ts"; */
 
-import { passwordResetSessionRepository } from "#providers/password-reset.js";
-import { userRepository } from "#providers/users.js";
+import { passwordResetSessionProvider } from "#providers/password-reset.js";
+import { userProvider } from "#providers/users.js";
 import { dateLikeToISOString } from "#utils/dates.js";
 import {
   createPasswordResetSession,
@@ -56,7 +56,7 @@ export async function forgotPasswordService(data, options) {
     return FORGET_PASSWORD_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS;
   }
 
-  const user = await userRepository.getOneByEmail(input.data.email);
+  const user = await userProvider.getOneByEmail(input.data.email);
   if (user === null) {
     return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST;
   }
@@ -64,7 +64,7 @@ export async function forgotPasswordService(data, options) {
   const sessionToken = generateSessionToken();
   const [session] = await Promise.all([
     createPasswordResetSession(sessionToken, user.id, user.email),
-    passwordResetSessionRepository.deleteAllSessionsForUser(user.id),
+    passwordResetSessionProvider.deleteAllSessionsForUser(user.id),
   ]);
 
   await sendPasswordResetEmail(session.email, session.code);

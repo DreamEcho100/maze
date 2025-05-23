@@ -1,8 +1,8 @@
 /** @import { IdsProvider } from '#types.ts'; */
 
-export let ids = /** @type {IdsProvider} */({});
+export let idsProvider = /** @type {IdsProvider} */({});
 
-/** @param {IdsProvider} newIds */
-export function setIds(newIds) {
-	ids = newIds;
+/** @param {IdsProvider} newIdsProvider */
+export function setIdsProvider(newIdsProvider) {
+	idsProvider = newIdsProvider;
 }

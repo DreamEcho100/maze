@@ -2,7 +2,7 @@
 
 import { encodeBase32 } from "@oslojs/encoding";
 import {
-userEmailVerificationRequestRepository} from "#providers/email-verification.js";
+userEmailVerificationRequestProvider} from "#providers/email-verification.js";
 
 import {
   COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
@@ -18,7 +18,7 @@ import { generateRandomOTP } from "./generate-randomotp.js";
  */
 export async function getUserEmailVerificationRequest(userId, id) {
   // return await findOneUserEmailVerificationRequestRepository(userId, id);
-  return await userEmailVerificationRequestRepository.getOne(
+  return await userEmailVerificationRequestProvider.getOne(
     userId,
     id,
   );
@@ -38,7 +38,7 @@ export async function createEmailVerificationRequest(userId, email) {
 
   const code = generateRandomOTP();
   const expiresAt = new Date(Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION);
-  return await userEmailVerificationRequestRepository.createOne({
+  return await userEmailVerificationRequestProvider.createOne({
     id: id,
     userId: userId,
     code: code,
@@ -53,7 +53,7 @@ export async function createEmailVerificationRequest(userId, email) {
  * @returns {Promise<void>} A promise that resolves when the requests have been deleted.
  */
 export async function deleteUserEmailVerificationRequest(userId) {
-  await userEmailVerificationRequestRepository.deleteOne(userId); 
+  await userEmailVerificationRequestProvider.deleteOne(userId); 
 }
 
 /**

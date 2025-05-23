@@ -155,9 +155,9 @@
       "types": "./dist/src/utils/sessions.d.ts",
       "default": "./src/utils/sessions.js"
     },
-    "./utils/transform": {
-      "types": "./dist/src/utils/transform.d.ts",
-      "default": "./src/utils/transform.js"
+    "./providers": {
+      "types": "./dist/src/utils/providers/index.d.ts",
+      "default": "./src/utils/providers/index.js"
     },
     "./utils/users": {
       "types": "./dist/src/utils/users.d.ts",

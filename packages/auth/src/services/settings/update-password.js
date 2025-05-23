@@ -1,7 +1,7 @@
 /** @import { GetCookie, SetCookie } from "#types.ts"; */
 
-import { sessionRepository } from "#providers/sessions.js";
-import { userRepository } from "#providers/users.js";
+import { sessionProvider } from "#providers/sessions.js";
+import { userProvider } from "#providers/users.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
 import {
   createSession,
@@ -89,14 +89,14 @@ export async function updatePasswordService(currentPassword, newPassword, option
   const strongPassword = await verifyPasswordStrength(newPassword);
   if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.WEAK_PASSWORD;
 
-  const passwordHash = await userRepository.getOnePasswordHash(user.id);
+  const passwordHash = await userProvider.getOnePasswordHash(user.id);
   if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.USER_NOT_FOUND;
 
   const validPassword = await verifyPasswordHash(passwordHash, currentPassword);
   if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.INCORRECT_PASSWORD;
 
   await Promise.all([
-    sessionRepository.invalidateUserSessions(user.id),
+    sessionProvider.invalidateUserSessions(user.id),
     updateUserPassword(user.id, newPassword),
   ]);
 

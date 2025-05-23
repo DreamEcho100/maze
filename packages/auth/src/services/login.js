@@ -1,4 +1,4 @@
-import { userRepository } from "#providers/users.js";
+import { userProvider } from "#providers/users.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
@@ -36,7 +36,7 @@ export async function loginUserService(data, options) {
     };
   }
 
-  const user = await userRepository.getOneByEmail(input.data.email);
+  const user = await userProvider.getOneByEmail(input.data.email);
   if (user === null) {
     return {
       type: "error",
@@ -56,7 +56,7 @@ export async function loginUserService(data, options) {
     };
   }
 
-  const passwordHash = await userRepository.getOnePasswordHash(user.id);
+  const passwordHash = await userProvider.getOnePasswordHash(user.id);
   if (!passwordHash) {
     return {
       type: "error",

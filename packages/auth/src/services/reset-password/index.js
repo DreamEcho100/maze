@@ -1,6 +1,6 @@
 /** @import { GetCookie, SetCookie } from "#types.ts"; */
-import { passwordResetSessionRepository } from "#providers/password-reset.js";
-import { sessionRepository } from "#providers/sessions.js";
+import { passwordResetSessionProvider } from "#providers/password-reset.js";
+import { sessionProvider } from "#providers/sessions.js";
 import {
   deletePasswordResetSessionTokenCookie,
   validatePasswordResetSessionRequest,
@@ -101,8 +101,8 @@ export async function resetPasswordService(password, options) {
 
       return /** @type {const} */ ([sessionToken, session]);
     })(),
-    passwordResetSessionRepository.deleteAllSessionsForUser(passwordResetSession.userId),
-    sessionRepository.invalidateUserSessions(passwordResetSession.userId),
+    passwordResetSessionProvider.deleteAllSessionsForUser(passwordResetSession.userId),
+    sessionProvider.invalidateUserSessions(passwordResetSession.userId),
     updateUserPassword(passwordResetSession.userId, password),
   ]);
 

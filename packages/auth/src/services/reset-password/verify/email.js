@@ -1,7 +1,7 @@
 /** @import { GetCookie, SetCookie } from "#types.ts"; */
 
-import { passwordResetSessionRepository } from "#providers/password-reset.js";
-import { userRepository } from "#providers/users.js";
+import { passwordResetSessionProvider } from "#providers/password-reset.js";
+import { userProvider } from "#providers/users.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
 
 export const VERIFY_PASSWORD_RESET_MESSAGES_ERRORS = /** @type {const} */ ({
@@ -82,9 +82,9 @@ export async function verifyPasswordResetEmailVerificationService(code, options)
 
   const [emailMatches] = await Promise.all([
     // setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-    userRepository.setUserAsEmailVerifiedIfEmailMatches(session.userId,session.email),
+    userProvider.setUserAsEmailVerifiedIfEmailMatches(session.userId,session.email),
     // updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-    passwordResetSessionRepository.updateOneSessionAsEmailVerified(session.id),
+    passwordResetSessionProvider.updateOneSessionAsEmailVerified(session.id),
   ]);
 
   if (!emailMatches) {

@@ -1,6 +1,6 @@
 /** @import { SessionValidationResult, SetCookie, GetCookie } from "#types.ts"; */
-import { passwordResetSessionRepository } from "#providers/password-reset.js";
-import { userRepository } from "#providers/users.js";
+import { passwordResetSessionProvider } from "#providers/password-reset.js";
+import { userProvider } from "#providers/users.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToNumber } from "#utils/dates.js";
 import {
@@ -119,8 +119,8 @@ export async function verifyEmailUserService(data, options) {
 
   await Promise.all([
     deleteUserEmailVerificationRequest(user.id),
-    passwordResetSessionRepository.deleteAllSessionsForUser(user.id),
-    userRepository.updateOneEmailAndSetEmailAsVerified(user.id, verificationRequest.email),
+    passwordResetSessionProvider.deleteAllSessionsForUser(user.id),
+    userProvider.updateOneEmailAndSetEmailAsVerified(user.id, verificationRequest.email),
   ]);
 
   deleteEmailVerificationRequestCookie(options.setCookie);

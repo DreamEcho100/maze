@@ -1,6 +1,6 @@
 /** @import { GetCookie, SetCookie } from "#types.ts"; */
 
-import { userRepository } from "#providers/users.js";
+import { userProvider } from "#providers/users.js";
 import {
   createEmailVerificationRequest,
   sendVerificationEmail,
@@ -65,7 +65,7 @@ export async function updateEmailService(email, options) {
   }
 
   // const emailAvailable = await getUserByEmailRepository(validatedEmail);
-  const emailAvailable = await userRepository.getOneByEmail(validatedEmail);
+  const emailAvailable = await userProvider.getOneByEmail(validatedEmail);
   if (emailAvailable) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_USED;
 
   const verificationRequest = await createEmailVerificationRequest(user.id, validatedEmail);

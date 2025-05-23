@@ -51,13 +51,13 @@
 // }
 
 /** @import { UserEmailVerificationRequestProvider } from "#types.ts"; */
-export let userEmailVerificationRequestRepository = /** @type {UserEmailVerificationRequestProvider} */({})
+export let userEmailVerificationRequestProvider = /** @type {UserEmailVerificationRequestProvider} */({})
 
-/** @param {UserEmailVerificationRequestProvider} newUserEmailVerificationRequestRepository  */
-export function setUserEmailVerificationRequestRepository(
-  newUserEmailVerificationRequestRepository,
+/** @param {UserEmailVerificationRequestProvider} newUserEmailVerificationRequestProvider  */
+export function setUserEmailVerificationRequestProvider(
+  newUserEmailVerificationRequestProvider,
 ) {
-  userEmailVerificationRequestRepository = newUserEmailVerificationRequestRepository;
+  userEmailVerificationRequestProvider = newUserEmailVerificationRequestProvider;
 }
 
 

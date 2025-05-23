@@ -1,6 +1,6 @@
 /** @import { GetCookie } from '#types.ts'; */
 
-import { sessionRepository } from "#providers/sessions.js";
+import { sessionProvider } from "#providers/sessions.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { getCurrentSession } from "#utils/sessions.js";
 import { updateUserTOTPKey } from "#utils/users.js";
@@ -108,7 +108,7 @@ export async function setup2FAService(data, options) {
   await Promise.all([
     updateUserTOTPKey(session.userId, key),
     // setSessionAs2FAVerifiedRepository(session.id),
-    sessionRepository.setSessionAs2FAVerified(session.id),
+    sessionProvider.setSessionAs2FAVerified(session.id),
   ]);
 
   return SETUP_2FA_MESSAGES_SUCCESS.TWO_FA_SETUP_SUCCESS;

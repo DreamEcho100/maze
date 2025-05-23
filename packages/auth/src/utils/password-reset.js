@@ -7,7 +7,7 @@ import {
   // createOnePasswordResetSessionRepository,
   // deleteOnePasswordResetSessionRepository,
   // findOnePasswordResetSessionWithUserRepository,
-  passwordResetSessionRepository
+  passwordResetSessionProvider
 } from "#providers/password-reset.js";
 import {
   COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
@@ -38,7 +38,7 @@ export async function createPasswordResetSession(token, userId, email) {
   };
 
   // await createOnePasswordResetSessionRepository(session).then(
-  await passwordResetSessionRepository.createOne(session).then(
+  await passwordResetSessionProvider.createOne(session).then(
     /** @returns {PasswordResetSession} session */
     (result) => ({
       id: result.id,
@@ -64,11 +64,11 @@ export async function createPasswordResetSession(token, userId, email) {
 export async function validatePasswordResetSessionToken(token) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   // const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
-  const result = await passwordResetSessionRepository.getOneWithUser(sessionId);
+  const result = await passwordResetSessionProvider.getOneWithUser(sessionId);
 
   if (!result.session || Date.now() >= dateLikeToNumber(result.session.expiresAt)) {
     // await deleteOnePasswordResetSessionRepository(sessionId);
-    await passwordResetSessionRepository.deleteOne(sessionId);
+    await passwordResetSessionProvider.deleteOne(sessionId);
     return { session: null, user: null };
   }
 

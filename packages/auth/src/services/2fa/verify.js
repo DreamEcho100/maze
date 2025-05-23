@@ -1,7 +1,7 @@
 /** @import { GetCookie } from '#types.ts'; */
 
-import { sessionRepository } from "#providers/sessions.js";
-import { userRepository } from "#providers/users.js";
+import { sessionProvider } from "#providers/sessions.js";
+import { userProvider } from "#providers/users.js";
 import { verifyTOTP } from "#utils/index.js";
 import { getCurrentSession } from "#utils/sessions.js";
 import { z } from "zod";
@@ -84,13 +84,13 @@ export async function verify2FAService(data, options) {
   }
 
   // Get TOTP key for user and verify code
-  const totpKey = await userRepository.getOneTOTPKey(user.id);
+  const totpKey = await userProvider.getOneTOTPKey(user.id);
   if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
     return VERIFY_2FA_MESSAGES_ERRORS.INVALID_CODE;
   }
 
   // Mark session as 2FA verified
-  await sessionRepository.setSessionAs2FAVerified(session.id);
+  await sessionProvider.setSessionAs2FAVerified(session.id);
 
   // Return success message with optional redirect flag
   return VERIFY_2FA_MESSAGES_SUCCESS.TWO_FA_VERIFIED_SUCCESS;

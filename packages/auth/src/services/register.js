@@ -1,6 +1,6 @@
 /** @import { GetCookie, SetCookie, User } from "#types.ts"; */
 
-import { userRepository } from "#providers/users.js";
+import { userProvider } from "#providers/users.js";
 import {
   createEmailVerificationRequest,
   sendVerificationEmail,
@@ -80,7 +80,7 @@ export async function registerService(data, options) {
     return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const emailAvailable = await userRepository.getOneByEmail(input.data.email);
+  const emailAvailable = await userProvider.getOneByEmail(input.data.email);
 
   if (emailAvailable) {
     return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_USED;
