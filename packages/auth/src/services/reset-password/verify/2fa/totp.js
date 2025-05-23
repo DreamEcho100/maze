@@ -1,5 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
 import { verifyTOTP } from "#utils/index.js";
@@ -54,18 +52,14 @@ export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS = /** @type {co
  * Handles the 2FA verification for a password reset using TOTP.
  *
  * @param {unknown} code - The TOTP code.
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options - Cookie management utilities.
  * @returns {Promise<ActionResult>}
  */
-export async function verifyPasswordReset2FAViaTOTPService(code, options) {
+export async function verifyPasswordReset2FAViaTOTPService(code) {
   if (typeof code !== "string" || !code) {
     return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await validatePasswordResetSessionRequest(
-    options.getCookie,
-    options.setCookie,
-  );
+  const { session, user } = await validatePasswordResetSessionRequest();
   if (!session) return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   if (
     !user.twoFactorEnabledAt ||

@@ -8,8 +8,6 @@
 
 
 type DateLike = string | number | Date;
-type SetCookie = (name: string, value: string, options: object) => void;
-type GetCookie = (name: string) => string | null | undefined;
 type AsyncGetCookie = (name: string) => Promise<string | null | undefined>;
 
 
@@ -100,8 +98,6 @@ type PasswordResetSessionValidationResult =
 
 export type {
   DateLike,
-  SetCookie,
-  GetCookie,
   AsyncGetCookie,
   Organization,
   User,

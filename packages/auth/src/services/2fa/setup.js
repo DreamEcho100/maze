@@ -1,5 +1,4 @@
-/** @import { GetCookie } from '#types.ts'; */
-
+import { cookiesProvider } from "#providers/cookies.js";
 import { sessionProvider } from "#providers/sessions.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { getCurrentSession } from "#utils/sessions.js";
@@ -65,10 +64,9 @@ export const SETUP_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
  *
  * @param {unknown} data
- * @param {{ getCookie: GetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function setup2FAService(data, options) {
+export async function setup2FAService(data) {
   const input = z
     .object({ code: z.string().min(6), encodedKey: z.string().min(28) })
     .safeParse(data);
@@ -77,7 +75,7 @@ export async function setup2FAService(data, options) {
     return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await getCurrentSession(options.getCookie);
+  const { session, user } = await getCurrentSession(cookiesProvider.get);
   if (!session) {
     return SETUP_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }

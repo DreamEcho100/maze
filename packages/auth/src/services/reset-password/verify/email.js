@@ -1,5 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
@@ -57,18 +55,14 @@ export const VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles the password reset email verification process.
  *
  * @param {unknown} code - The verification code submitted by the user.
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options - Cookie management utilities.
  * @returns {Promise<ActionResult>}
  */
-export async function verifyPasswordResetEmailVerificationService(code, options) {
+export async function verifyPasswordResetEmailVerificationService(code) {
   if (typeof code !== "string" || !code) {
     return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await validatePasswordResetSessionRequest(
-    options.getCookie,
-    options.setCookie,
-  );
+  const { session, user } = await validatePasswordResetSessionRequest();
 
   if (!session) {
     return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.NOT_AUTHENTICATED;

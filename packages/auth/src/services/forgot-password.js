@@ -1,5 +1,3 @@
-/** @import { SetCookie } from "#types.ts"; */
-
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
 import { dateLikeToISOString } from "#utils/dates.js";
@@ -46,10 +44,9 @@ export const FORGET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
  * @param {unknown} data
- * @param {{ setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function forgotPasswordService(data, options) {
+export async function forgotPasswordService(data) {
   const input = z.object({ email: z.string().email() }).safeParse(data);
 
   if (!input.success) {
@@ -69,7 +66,7 @@ export async function forgotPasswordService(data, options) {
 
   await sendPasswordResetEmail(session.email, session.code);
 
-  setPasswordResetSessionTokenCookie(sessionToken, session.expiresAt, options.setCookie);
+  setPasswordResetSessionTokenCookie(sessionToken, session.expiresAt);
 
   return {
     ...FORGET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_EMAIL_SENT,

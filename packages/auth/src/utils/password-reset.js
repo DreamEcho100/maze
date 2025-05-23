@@ -1,4 +1,4 @@
-/** @import { DateLike, GetCookie, PasswordResetSession, PasswordResetSessionValidationResult, SetCookie } from "#types.ts"; */
+/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult } from "#types.ts"; */
 
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
@@ -15,6 +15,7 @@ import {
 } from "./constants.js";
 import { dateLikeToDate, dateLikeToNumber } from "./dates.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
+import { cookiesProvider } from "#providers/cookies.js";
 
 /**
  * @param {string} token - The token to be used to create the password reset session.
@@ -84,18 +85,16 @@ export async function validatePasswordResetSessionToken(token) {
 // }
 
 /**
- * @param {GetCookie} getCookie - The function to get a cookie.
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {Promise<PasswordResetSessionValidationResult>}
  */
-export async function validatePasswordResetSessionRequest(getCookie, setCookie) {
-  const token = getCookie(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
+export async function validatePasswordResetSessionRequest() {
+  const token = cookiesProvider.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
   if (token === null) {
     return { session: null, user: null };
   }
   const result = await validatePasswordResetSessionToken(token);
   if (result.session === null) {
-    deletePasswordResetSessionTokenCookie(setCookie);
+    deletePasswordResetSessionTokenCookie();
   }
   return result;
 }
@@ -103,11 +102,10 @@ export async function validatePasswordResetSessionRequest(getCookie, setCookie) 
 /**
  * @param {string} token - The token to be used to create the password reset session.
  * @param {DateLike} expiresAt - The date at which the password reset session expires.
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {void}
  */
-export function setPasswordResetSessionTokenCookie(token, expiresAt, setCookie) {
-  setCookie(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
+export function setPasswordResetSessionTokenCookie(token, expiresAt, ) {
+  cookiesProvider.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
     expires: dateLikeToDate(expiresAt),
     sameSite: "lax",
     httpOnly: true,
@@ -117,11 +115,10 @@ export function setPasswordResetSessionTokenCookie(token, expiresAt, setCookie) 
 }
 
 /**
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {void}
  */
-export function deletePasswordResetSessionTokenCookie(setCookie) {
-  setCookie(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
+export function deletePasswordResetSessionTokenCookie() {
+  cookiesProvider.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
     maxAge: 0,
     sameSite: "lax",
     httpOnly: true,

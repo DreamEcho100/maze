@@ -1,5 +1,6 @@
-/** @import { GetCookie, SetCookie, User } from "#types.ts"; */
+/** @import { User } from "#types.ts"; */
 
+import { cookiesProvider } from "#providers/cookies.js";
 import { userProvider } from "#providers/users.js";
 import {
   createEmailVerificationRequest,
@@ -58,10 +59,9 @@ export const REGISTER_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles register by deleting the user session and clearing session cookies.
  *
  * @param {unknown} data
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function registerService(data, options) {
+export async function registerService(data, ) {
   const input = z
     .object({
       email: z.string().email(),
@@ -98,7 +98,7 @@ export async function registerService(data, options) {
 
   await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 
-  setEmailVerificationRequestCookie(emailVerificationRequest, options.setCookie);
+  setEmailVerificationRequestCookie(emailVerificationRequest, cookiesProvider.set);
 
   const sessionToken = generateSessionToken();
   const session = await createSession(sessionToken, user.id, {
@@ -108,7 +108,6 @@ export async function registerService(data, options) {
   setSessionTokenCookie({
     token: sessionToken,
     expiresAt: session.expiresAt,
-    setCookie: options.setCookie,
   });
 
   if (user.twoFactorEnabledAt) {

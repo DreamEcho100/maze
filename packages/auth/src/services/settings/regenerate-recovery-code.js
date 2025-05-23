@@ -1,5 +1,3 @@
-/** @import { GetCookie } from "#types.ts"; */
-
 import { getCurrentSession } from "#utils/sessions.js";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
@@ -42,11 +40,10 @@ export const REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS = /** @type {const} */ ({
 /**
  * Regenerates the recovery code if the user is authenticated, verified, and meets necessary conditions.
  *
- * @param {{ getCookie: GetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function regenerateRecoveryCodeService(options) {
-  const { session, user } = await getCurrentSession(options.getCookie);
+export async function regenerateRecoveryCodeService() {
+  const { session, user } = await getCurrentSession();
   if (!session) {
     return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }

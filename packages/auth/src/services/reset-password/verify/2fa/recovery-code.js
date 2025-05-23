@@ -1,5 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
 
@@ -50,7 +48,7 @@ export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS = /** 
  * Handles the 2FA verification for a password reset using a recovery code.
  *
  * @param {unknown} code - The recovery code.
- * @param {{ getCookie: GetCookie, setCookie: SetCookie; tx: any }} options - Cookie management utilities.
+ * @param {{ tx: any }} options
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordReset2FAViaRecoveryCodeService(code, options) {
@@ -58,10 +56,7 @@ export async function verifyPasswordReset2FAViaRecoveryCodeService(code, options
     return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await validatePasswordResetSessionRequest(
-    options.getCookie,
-    options.setCookie,
-  );
+  const { session, user } = await validatePasswordResetSessionRequest();
   if (!session)
     return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   if (

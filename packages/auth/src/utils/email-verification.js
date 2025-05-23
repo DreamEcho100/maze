@@ -1,4 +1,4 @@
-/** @import { EmailVerificationRequest, GetCookie, SessionValidationResult, SetCookie } from "#types.ts"; */
+/** @import { EmailVerificationRequest, SessionValidationResult } from "#types.ts"; */
 
 import { encodeBase32 } from "@oslojs/encoding";
 import {
@@ -9,6 +9,7 @@ import {
   COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
 } from "./constants.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
+import { cookiesProvider } from "#providers/cookies.js";
 
 /**
  * Get the email verification request for a user.
@@ -70,11 +71,10 @@ export async function sendVerificationEmail(email, code) {
 /**
  * Set the email verification request cookie.
  * @param {EmailVerificationRequest} request - The email verification request.
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {void}
  */
-export function setEmailVerificationRequestCookie(request, setCookie) {
-  setCookie(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
+export function setEmailVerificationRequestCookie(request) {
+  cookiesProvider.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
     httpOnly: true,
     path: "/",
     secure: process.env.NODE_ENV === "production",
@@ -85,11 +85,10 @@ export function setEmailVerificationRequestCookie(request, setCookie) {
 
 /**
  * Delete the email verification request cookie.
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {void}
  */
-export function deleteEmailVerificationRequestCookie(setCookie) {
-  setCookie(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
+export function deleteEmailVerificationRequestCookie() {
+  cookiesProvider.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
     httpOnly: true,
     path: "/",
     secure: process.env.NODE_ENV === "production",
@@ -101,26 +100,22 @@ export function deleteEmailVerificationRequestCookie(setCookie) {
 /**
  * Get the email verification request from the request.
  * @param {() => Promise<SessionValidationResult> | SessionValidationResult} getCurrentSession - A function that returns the current session.
- * @param {GetCookie} getCookie - The function to get a cookie.
- * @param {SetCookie} setCookie - The function to set a cookie.
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
 export async function getUserEmailVerificationRequestFromRequest(
   getCurrentSession,
-  getCookie,
-  setCookie,
 ) {
   const { user } = await getCurrentSession();
   if (user === null) {
     return null;
   }
-  const id = getCookie(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
+  const id = cookiesProvider.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
   if (id === null) {
     return null;
   }
   const request = await getUserEmailVerificationRequest(user.id, id);
   if (!request) {
-    deleteEmailVerificationRequestCookie(setCookie);
+    deleteEmailVerificationRequestCookie();
   }
   return request;
 }

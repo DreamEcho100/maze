@@ -1,5 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
 import { userProvider } from "#providers/users.js";
 import {
   createEmailVerificationRequest,
@@ -48,16 +46,15 @@ export const UPDATE_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles updating a user's email by validating input and creating a verification request.
  *
  * @param {string} email New email address to set for the user
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function updateEmailService(email, options) {
+export async function updateEmailService(email) {
   const input = z.string().email().safeParse(email);
   if (!input.success) return UPDATE_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 
   const validatedEmail = input.data;
 
-  const { session, user } = await getCurrentSession(options.getCookie);
+  const { session, user } = await getCurrentSession();
   if (!session) return UPDATE_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED;
 
   if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
@@ -70,7 +67,7 @@ export async function updateEmailService(email, options) {
 
   const verificationRequest = await createEmailVerificationRequest(user.id, validatedEmail);
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-  setEmailVerificationRequestCookie(verificationRequest, options.setCookie);
+  setEmailVerificationRequestCookie(verificationRequest);
 
   return UPDATE_EMAIL_MESSAGES_SUCCESS.EMAIL_UPDATE_INITIATED;
 }

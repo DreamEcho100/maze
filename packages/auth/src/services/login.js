@@ -81,7 +81,6 @@ export async function loginUserService(data, options) {
     twoFactorVerifiedAt: null,
   });
   setSessionTokenCookie({
-    setCookie: options.setCookie,
     expiresAt: session.expiresAt,
     token: sessionToken,
   });

@@ -1,4 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { sessionProvider } from "#providers/sessions.js";
 import {
@@ -62,14 +61,10 @@ export const RESET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles the reset password process, including validation and session management.
  *
  * @param {string} password The new password to set for the user
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function resetPasswordService(password, options) {
-  const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest(
-    options.getCookie,
-    options.setCookie,
-  );
+export async function resetPasswordService(password) {
+  const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest();
 
   if (!passwordResetSession) {
     return RESET_PASSWORD_MESSAGES_ERRORS.NOT_AUTHENTICATED;
@@ -109,10 +104,9 @@ export async function resetPasswordService(password, options) {
   setSessionTokenCookie({
     token: sessionToken,
     expiresAt: session.expiresAt,
-    setCookie: options.setCookie,
   });
 
-  deletePasswordResetSessionTokenCookie(options.setCookie);
+  deletePasswordResetSessionTokenCookie();
 
   return RESET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_SUCCESS;
 }

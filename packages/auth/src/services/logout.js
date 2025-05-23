@@ -1,5 +1,4 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
+import { cookiesProvider } from "#providers/cookies.js";
 import { sessionProvider } from "#providers/sessions.js";
 import { deleteSessionTokenCookie, getCurrentSession } from "#utils/sessions.js";
 
@@ -31,18 +30,17 @@ export const LOGOUT_MESSAGES_SUCCESS = /** @type {const} */ ({
 /**
  * Handles logout by deleting the user session and clearing session cookies.
  *
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function logoutService(options) {
-  const { session } = await getCurrentSession(options.getCookie);
+export async function logoutService() {
+  const { session } = await getCurrentSession();
   if (!session) {
     return LOGOUT_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }
 
   await sessionProvider.deleteSessionById(session.id);
 
-  deleteSessionTokenCookie(options.setCookie);
+  deleteSessionTokenCookie(cookiesProvider.set);
 
   return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }

@@ -1,5 +1,4 @@
-/** @import { GetCookie } from '#types.ts'; */
-
+import { cookiesProvider } from "#providers/cookies.js";
 import { sessionProvider } from "#providers/sessions.js";
 import { userProvider } from "#providers/users.js";
 import { verifyTOTP } from "#utils/index.js";
@@ -59,10 +58,9 @@ export const VERIFY_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
  *
  * @param {unknown} data
- * @param {{ getCookie: GetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function verify2FAService(data, options) {
+export async function verify2FAService(data) {
   // Validate code input
   const input = z.object({ code: z.string().min(6) }).safeParse(data);
   if (!input.success) {
@@ -70,7 +68,7 @@ export async function verify2FAService(data, options) {
   }
 
   // Get session and user details
-  const { session, user } = await getCurrentSession(options.getCookie);
+  const { session, user } = await getCurrentSession(cookiesProvider.get);
   if (!session) {
     return VERIFY_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }

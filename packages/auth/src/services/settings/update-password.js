@@ -1,5 +1,3 @@
-/** @import { GetCookie, SetCookie } from "#types.ts"; */
-
 import { sessionProvider } from "#providers/sessions.js";
 import { userProvider } from "#providers/users.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
@@ -70,11 +68,10 @@ export const UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
  *
  * @param {unknown} currentPassword The user's current password
  * @param {unknown} newPassword The new password to set for the user
- * @param {{ getCookie: GetCookie, setCookie: SetCookie }} options
  * @returns {Promise<ActionResult>}
  */
-export async function updatePasswordService(currentPassword, newPassword, options) {
-  const { session, user } = await getCurrentSession(options.getCookie);
+export async function updatePasswordService(currentPassword, newPassword) {
+  const { session, user } = await getCurrentSession();
 
   if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.NOT_AUTHENTICATED;
 
@@ -108,7 +105,6 @@ export async function updatePasswordService(currentPassword, newPassword, option
   setSessionTokenCookie({
     token: sessionToken,
     expiresAt: newSession.expiresAt,
-    setCookie: options.setCookie,
   });
 
   return UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESS;

@@ -1,4 +1,5 @@
-/** @import { SessionValidationResult, SetCookie, GetCookie } from "#types.ts"; */
+/** @import { SessionValidationResult } from "#types.ts"; */
+import { cookiesProvider } from "#providers/cookies.js";
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -25,8 +26,6 @@ import { z } from "zod";
  * @param {unknown} data
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
- *  getCookie: GetCookie;
- *  setCookie: SetCookie;
  * }} options
  * @returns {Promise<ActionResult>}
  */
@@ -46,7 +45,7 @@ export async function verifyEmailUserService(data, options) {
     };
   }
 
-  const { session, user } = await getCurrentSession(options.getCookie);
+  const { session, user } = await getCurrentSession(cookiesProvider.get);
   if (session === null) {
     return {
       message: "Not authenticated",
@@ -65,11 +64,7 @@ export async function verifyEmailUserService(data, options) {
     };
   }
 
-  let verificationRequest = await getUserEmailVerificationRequestFromRequest(
-    options.getCurrentSession,
-    options.getCookie,
-    options.setCookie,
-  );
+  let verificationRequest = await getUserEmailVerificationRequestFromRequest(options.getCurrentSession);
   if (verificationRequest === null) {
     return {
       message: "Not authenticated",
@@ -123,7 +118,7 @@ export async function verifyEmailUserService(data, options) {
     userProvider.updateOneEmailAndSetEmailAsVerified(user.id, verificationRequest.email),
   ]);
 
-  deleteEmailVerificationRequestCookie(options.setCookie);
+  deleteEmailVerificationRequestCookie(cookiesProvider.set);
 
   if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
     // return redirect("/2fa/setup");

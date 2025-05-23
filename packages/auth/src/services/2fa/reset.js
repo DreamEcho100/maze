@@ -1,6 +1,5 @@
-/** @import { GetCookie } from '#types.ts'; */
-
-import { resetUser2FAWithRecoveryCode } from "#utils/2fa";
+import { cookiesProvider } from "#providers/cookies.js";
+import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { getCurrentSession } from "#utils/sessions.js";
 import { z } from "zod";
 
@@ -57,17 +56,17 @@ export const RESET_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Handles resetting 2FA using a recovery code, with validation checks and permission verification.
  *
  * @param {unknown} data
- * @param {{ getCookie: GetCookie }} options
+ * @param {any} tx
  * @returns {Promise<ActionResult>}
  */
-export async function reset2FAService(data, options) {
+export async function reset2FAService(data, tx) {
   const input = z.object({ code: z.string().min(6) }).safeParse(data);
 
   if (!input.success) {
     return RESET_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
-  const { session, user } = await getCurrentSession(options.getCookie);
+  const { session, user } = await getCurrentSession(cookiesProvider.get);
   if (!session) {
     return RESET_2FA_MESSAGES_ERRORS.NOT_AUTHENTICATED;
   }
@@ -80,7 +79,7 @@ export async function reset2FAService(data, options) {
     return RESET_2FA_MESSAGES_ERRORS.FORBIDDEN;
   }
 
-  const valid = await resetUser2FAWithRecoveryCode(user.id, input.data.code);
+  const valid = await resetUser2FAWithRecoveryCode(user.id, input.data.code, tx);
 
   if (!valid) {
     return RESET_2FA_MESSAGES_ERRORS.INVALID_RECOVERY_CODE;

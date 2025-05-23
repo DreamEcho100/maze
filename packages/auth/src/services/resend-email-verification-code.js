@@ -1,7 +1,8 @@
 /**
- * @import { SessionValidationResult, SetCookie, GetCookie } from "#types.ts";
+ * @import { SessionValidationResult } from "#types.ts";
  */
 
+import { cookiesProvider } from "#providers/cookies.js";
 import { RESEND_EMAIL_MESSAGES_ERRORS, RESEND_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
   createEmailVerificationRequest,
@@ -21,8 +22,6 @@ import {
  *
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
- *  getCookie: GetCookie;
- *  setCookie: SetCookie;
  * }} options
  * @returns {Promise<ActionResult>}
  */
@@ -45,11 +44,7 @@ export async function resendEmailVerificationCodeService(options) {
     };
   }
 
-  let verificationRequest = await getUserEmailVerificationRequestFromRequest(
-    options.getCurrentSession,
-    options.getCookie,
-    options.setCookie,
-  );
+  let verificationRequest = await getUserEmailVerificationRequestFromRequest(options.getCurrentSession);
 
   if (verificationRequest === null) {
     if (user.emailVerifiedAt) {
@@ -66,7 +61,7 @@ export async function resendEmailVerificationCodeService(options) {
     verificationRequest = await createEmailVerificationRequest(user.id, verificationRequest.email);
   }
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-  setEmailVerificationRequestCookie(verificationRequest, options.setCookie);
+  setEmailVerificationRequestCookie(verificationRequest, cookiesProvider.set);
 
   return {
     message: "A new code was sent to your inbox.",
