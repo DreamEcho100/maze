@@ -389,7 +389,8 @@ export interface CookiesProvider {
 }
 
 export interface IdsProvider {
-  createOne: () => string | Promise<string>;
+  createOneSync: () => string;
+  createOneAsync: () => Promise<string>;
 }
 
 export interface Providers {
