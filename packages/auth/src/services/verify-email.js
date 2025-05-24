@@ -15,8 +15,8 @@ import { getCurrentSession } from "#utils/sessions.js";
 import { z } from "zod";
 
 /**
- * @typedef {{ type: 'error'; statusCode: typeof VERIFY_EMAIL_MESSAGES_ERRORS[keyof typeof VERIFY_EMAIL_MESSAGES_ERRORS]["statusCode"]; message: string; messageCode: typeof VERIFY_EMAIL_MESSAGES_ERRORS[keyof typeof VERIFY_EMAIL_MESSAGES_ERRORS]["code"] }} ActionResultError
- * @typedef {{ type: 'success'; statusCode: typeof VERIFY_EMAIL_MESSAGES_SUCCESS[keyof typeof VERIFY_EMAIL_MESSAGES_SUCCESS]["statusCode"]; message: string; messageCode: typeof VERIFY_EMAIL_MESSAGES_SUCCESS[keyof typeof VERIFY_EMAIL_MESSAGES_SUCCESS]["code"] }} ActionResultSuccess
+ * @typedef {typeof VERIFY_EMAIL_MESSAGES_ERRORS[keyof typeof VERIFY_EMAIL_MESSAGES_ERRORS]} ActionResultError
+ * @typedef {typeof VERIFY_EMAIL_MESSAGES_SUCCESS['EMAIL_VERIFIED_SUCCESSFULLY']} ActionResultSuccess
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
@@ -37,57 +37,21 @@ export async function verifyEmailUserService(data, options) {
     .safeParse(data);
 
   if (!input.success) {
-    return {
-      message: "Invalid credentials or missing fields",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
   }
 
   const { session, user } = await getCurrentSession();
   if (session === null) {
-    return {
-      message: "Not authenticated",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
   }
 
   if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
-    return {
-      message: "Forbidden",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.FORBIDDEN.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.FORBIDDEN.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
   }
 
   let verificationRequest = await getUserEmailVerificationRequestFromRequest(options.getCurrentSession);
   if (verificationRequest === null) {
-    return {
-      message: "Not authenticated",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.statusCode,
-    };
-  }
-  if (typeof input.data.code !== "string") {
-    return {
-      message: "Invalid or missing fields",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS.statusCode,
-    };
-  }
-  if (input.data.code === "") {
-    return {
-      message: "Enter your code",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.ENTER_YOUR_CODE.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.ENTER_YOUR_CODE.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
   }
 
   if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
@@ -96,20 +60,10 @@ export async function verifyEmailUserService(data, options) {
       verificationRequest.email,
     );
     await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-    return {
-      message: "The verification code was expired. We sent another code to your inbox.",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED;
   }
   if (verificationRequest.code !== input.data.code) {
-    return {
-      message: "Incorrect code.",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.INCORRECT_CODE.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.INCORRECT_CODE.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
   }
 
   await Promise.all([
@@ -122,19 +76,9 @@ export async function verifyEmailUserService(data, options) {
 
   if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
     // return redirect("/2fa/setup");
-    return {
-      message: "Redirecting to 2FA setup",
-      messageCode: VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.code,
-      type: "error",
-      statusCode: VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.statusCode,
-    };
+    return VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_INCOMPLETE;
   }
 
-  return {
-    type: "success",
-    statusCode: VERIFY_EMAIL_MESSAGES_SUCCESS.EMAIL_VERIFIED.statusCode,
-    message: "Email verified",
-    messageCode: VERIFY_EMAIL_MESSAGES_SUCCESS.EMAIL_VERIFIED.code,
-  };
+  return VERIFY_EMAIL_MESSAGES_SUCCESS.EMAIL_VERIFIED_SUCCESSFULLY;
   // return redirect("/");
 }

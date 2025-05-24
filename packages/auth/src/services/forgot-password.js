@@ -1,5 +1,6 @@
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
+import { FORGET_PASSWORD_MESSAGES_ERRORS, FORGET_PASSWORD_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
 import {
   createPasswordResetSession,
@@ -9,33 +10,9 @@ import {
 import { generateSessionToken } from "#utils/sessions.js";
 import { z } from "zod";
 
-export const FORGET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
-  INVALID_CREDENTIALS_OR_MISSING_FIELDS: {
-    type: "error",
-    messageCode: "INVALID_CREDENTIALS_OR_MISSING_FIELDS",
-    message: "Invalid or missing fields",
-    statusCode: 400,
-  },
-  ACCOUNT_DOES_NOT_EXIST: {
-    type: "error",
-    messageCode: "ACCOUNT_DOES_NOT_EXIST",
-    message: "Account does not exist",
-    statusCode: 404,
-  },
-});
-
-export const FORGET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
-  PASSWORD_RESET_EMAIL_SENT: {
-    type: "success",
-    messageCode: "PASSWORD_RESET_EMAIL_SENT",
-    message: "Password reset email sent successfully",
-    statusCode: 200,
-  },
-});
-
 /**
  * @typedef {typeof FORGET_PASSWORD_MESSAGES_ERRORS[keyof typeof FORGET_PASSWORD_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof FORGET_PASSWORD_MESSAGES_SUCCESS[keyof typeof FORGET_PASSWORD_MESSAGES_SUCCESS] & { data: { sessionToken: string; expiresAt: string } }} ActionResultSuccess
+ * @typedef {typeof FORGET_PASSWORD_MESSAGES_SUCCESS['PASSWORD_RESET_EMAIL_SENT'] & { data: { sessionToken: string; expiresAt: string } }} ActionResultSuccess
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
@@ -50,12 +27,12 @@ export async function forgotPasswordService(data) {
   const input = z.object({ email: z.string().email() }).safeParse(data);
 
   if (!input.success) {
-    return FORGET_PASSWORD_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS;
+    return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;
   }
 
   const user = await userProvider.findOneByEmail(input.data.email);
   if (user === null) {
-    return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST;
+    return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
   }
 
   const sessionToken = generateSessionToken();

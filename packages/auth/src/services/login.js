@@ -6,8 +6,8 @@ import { createSession, generateSessionToken, setSessionTokenCookie } from "#uti
 import { z } from "zod";
 
 /**
- * @typedef {{ type: 'error'; statusCode: number; message: string; messageCode: typeof LOGIN_MESSAGES_ERRORS[keyof typeof LOGIN_MESSAGES_ERRORS]["code"] }} ActionResultError
- * @typedef {{ type: 'success'; statusCode: number; message: string; messageCode: typeof LOGIN_MESSAGES_SUCCESS[keyof typeof LOGIN_MESSAGES_SUCCESS]["code"]; data: { sessionToken: string; expiresAt: string } }} ActionResultSuccess
+ * @typedef {typeof LOGIN_MESSAGES_ERRORS[keyof typeof LOGIN_MESSAGES_ERRORS]} ActionResultError
+ * @typedef {typeof LOGIN_MESSAGES_SUCCESS['LOGGED_IN_SUCCESSFULLY'] & { data: { sessionToken: string; expiresAt: string } }} ActionResultSuccess
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
@@ -28,52 +28,27 @@ export async function loginUserService(data, options) {
     .safeParse(data);
 
   if (!input.success) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.statusCode,
-      message: "Invalid credentials or missing fields",
-      messageCode: LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
   }
 
   const user = await userProvider.findOneByEmail(input.data.email);
   if (user === null) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST.statusCode,
-      message: "Account does not exist",
-      messageCode: LOGIN_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
   }
 
   if (!user.emailVerifiedAt) {
     // return redirect("/auth/verify-email");
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.EMAIL_NOT_VERIFIED.statusCode,
-      message: "Email not verified",
-      messageCode: LOGIN_MESSAGES_ERRORS.EMAIL_NOT_VERIFIED.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
   }
 
   const passwordHash = await userProvider.getOnePasswordHash(user.id);
   if (!passwordHash) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET.statusCode,
-      message: "User does not exist or password not set",
-      messageCode: LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
   }
 
   const validPassword = await verifyPasswordHash(passwordHash, input.data.password);
   if (!validPassword) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.statusCode,
-      message: "Invalid credentials or missing fields",
-      messageCode: LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
   }
 
   const sessionToken = generateSessionToken();
@@ -86,28 +61,15 @@ export async function loginUserService(data, options) {
   });
 
   if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.statusCode,
-      message: "2FA not setup",
-      messageCode: LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED;
   }
 
   if (user.twoFactorEnabledAt) {
-    return {
-      type: "error",
-      statusCode: LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_NEEDS_VERIFICATION.statusCode,
-      message: "2FA not verified",
-      messageCode: LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_NEEDS_VERIFICATION.code,
-    };
+    return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED;
   }
 
   return {
-    type: "success",
-    statusCode: LOGIN_MESSAGES_SUCCESS.LOGGED_IN_SUCCESSFULLY.statusCode,
-    message: "Logged in successfully",
-    messageCode: LOGIN_MESSAGES_SUCCESS.LOGGED_IN_SUCCESSFULLY.code,
+    ...LOGIN_MESSAGES_SUCCESS.LOGGED_IN_SUCCESSFULLY,
     data: {
       sessionToken,
       expiresAt: dateLikeToISOString(session.expiresAt),

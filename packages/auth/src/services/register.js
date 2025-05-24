@@ -2,6 +2,7 @@
 
 import { cookiesProvider } from "#providers/cookies.js";
 import { userProvider } from "#providers/users.js";
+import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
   createEmailVerificationRequest,
   sendVerificationEmail,
@@ -12,45 +13,9 @@ import { createSession, generateSessionToken, setSessionTokenCookie } from "#uti
 import { createUser } from "#utils/users.js";
 import { z } from "zod";
 
-export const REGISTER_MESSAGES_ERRORS = /** @type {const} */ ({
-  INVALID_OR_MISSING_FIELDS: {
-    type: "error",
-    statusCode: 400,
-    message: "Invalid or missing fields",
-    messageCode: "INVALID_OR_MISSING_FIELDS",
-  },
-  EMAIL_ALREADY_USED: {
-    type: "error",
-    statusCode: 400,
-    message: "Email is already used",
-    messageCode: "EMAIL_ALREADY_USED",
-  },
-  WEAK_PASSWORD: {
-    type: "error",
-    statusCode: 400,
-    message: "Weak password",
-    messageCode: "WEAK_PASSWORD",
-  },
-  NEEDS_2FA_VALIDATION: {
-    type: "error",
-    statusCode: 403,
-    message: "2FA required",
-    messageCode: "NEEDS_2FA_VALIDATION",
-  },
-});
-
-export const REGISTER_MESSAGES_SUCCESS = /** @type {const} */ ({
-  REGISTER_SUCCESS: {
-    type: "success",
-    message: "registered successfully",
-    messageCode: "REGISTER_SUCCESS",
-    statusCode: 200,
-  },
-});
-
 /**
  * @typedef {typeof REGISTER_MESSAGES_ERRORS[keyof typeof REGISTER_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof REGISTER_MESSAGES_SUCCESS[keyof typeof REGISTER_MESSAGES_SUCCESS] & { data: { user: User } }} ActionResultSuccess
+ * @typedef {typeof REGISTER_MESSAGES_SUCCESS['REGISTRATION_SUCCESSFUL'] & { data: { user: User } }} ActionResultSuccess
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
@@ -83,13 +48,13 @@ export async function registerService(data, ) {
   const emailAvailable = await userProvider.findOneByEmail(input.data.email);
 
   if (emailAvailable) {
-    return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_USED;
+    return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
   }
 
   const strongPassword = await verifyPasswordStrength(input.data.password);
 
   if (!strongPassword) {
-    return REGISTER_MESSAGES_ERRORS.WEAK_PASSWORD;
+    return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
   }
 
   const user = await createUser(input.data.email, input.data.name, input.data.password);
@@ -111,13 +76,13 @@ export async function registerService(data, ) {
   });
 
   if (user.twoFactorEnabledAt) {
-    return REGISTER_MESSAGES_ERRORS.NEEDS_2FA_VALIDATION;
+    return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
   }
 
   // redirect("/auth/2fa/setup");
   // return redirect("/auth/login");
   return {
-    ...REGISTER_MESSAGES_SUCCESS.REGISTER_SUCCESS,
+    ...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
     data: { user },
   };
 }
