@@ -1,27 +1,10 @@
+/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+
+import { UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS, UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getCurrentSession } from "#utils/sessions.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 import { z } from "zod";
 
-export const UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS = /** @type {const} */ ({
-  NOT_AUTHENTICATED: {
-    type: "error",
-    statusCode: 401,
-    message: "Not authenticated",
-  },
-  INVALID_FIELDS: {
-    type: "error",
-    statusCode: 400,
-    message: "Invalid or missing fields",
-  },
-});
-
-export const UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS = /** @type {const} */ ({
-  SUCCESS: {
-    type: "success",
-    statusCode: 200,
-    message: "Updated two-factor authentication",
-  },
-});
 
 /**
  * @typedef {typeof UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS[keyof typeof UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS]} ActionResultError
@@ -33,7 +16,12 @@ export const UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS = /** @type {const} */ ({
  * Toggles two-factor authentication based on the input.
  *
  * @param {unknown} isTwoFactorEnabled - Whether two-factor should be enabled.
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
+ *    UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
+ *  >
+ * >}
  */
 export async function updateIsTwoFactorService(isTwoFactorEnabled) {
   const input = z
@@ -46,12 +34,12 @@ export async function updateIsTwoFactorService(isTwoFactorEnabled) {
     }, z.boolean().optional().default(false))
     .safeParse(isTwoFactorEnabled);
 
-  if (!input.success) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_FIELDS;
+  if (!input.success) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_2FA_INPUT;
 
   const { session, user } = await getCurrentSession();
-  if (!session) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.NOT_AUTHENTICATED;
+  if (!session) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
   await updateUserTwoFactorEnabledService(user.id, isTwoFactorEnabled ? new Date() : null);
 
-  return UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS.SUCCESS;
+  return UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS.TWO_FACTOR_STATUS_UPDATED_SUCCESSFULLY;
 }

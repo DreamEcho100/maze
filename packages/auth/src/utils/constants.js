@@ -463,6 +463,279 @@ export const ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
   },
 });
 
+export const REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  TWO_FACTOR_VERIFICATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication verification required",
+    messageCode: "TWO_FACTOR_VERIFICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN_EMAIL_NOT_VERIFIED
+  EMAIL_VERIFICATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Email verification required",
+    messageCode: "EMAIL_VERIFICATION_REQUIRED",
+  },
+});
+export const REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS = /** @type {const} */ ({
+  RECOVERY_CODE_REGENERATED: {
+    type: "success",
+    statusCode: 200,
+    message: "Recovery code regenerated successfully",
+    messageCode: "RECOVERY_CODE_REGENERATED_SUCCESSFULLY",
+  },
+});
+
+export const UPDATE_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: INVALID_OR_MISSING_FIELDS
+  EMAIL_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "Valid email address is required",
+    messageCode: "EMAIL_ADDRESS_REQUIRED",
+  },
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication setup or verification is required",
+    messageCode: "TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED",
+  },
+  EMAIL_ALREADY_REGISTERED: {
+    type: "error",
+    statusCode: 409,
+    message: "This email address is already registered",
+    messageCode: "EMAIL_ALREADY_REGISTERED",
+  },
+});
+export const UPDATE_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
+  // OLD: EMAIL_UPDATE_INITIATED
+  VERIFICATION_EMAIL_SENT: {
+    type: "success",
+    statusCode: 200,
+    message: "Verification email sent to your new email address",
+    messageCode: "VERIFICATION_EMAIL_SENT",
+  },
+});
+
+export const UPDATE_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication setup or verification required",
+    messageCode: "TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED",
+  },
+  // OLD: INVALID_OR_MISSING_FIELDS
+  PASSWORDS_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "Current and new passwords are required",
+    messageCode: "PASSWORDS_REQUIRED",
+  },
+  // OLD: WEAK_PASSWORD
+  PASSWORD_TOO_WEAK: {
+    type: "error",
+    statusCode: 400,
+    message: "New password does not meet security requirements",
+    messageCode: "PASSWORD_TOO_WEAK",
+  },
+  // OLD: INCORRECT_PASSWORD
+  CURRENT_PASSWORD_INCORRECT: {
+    type: "error",
+    statusCode: 400,
+    message: "Current password is incorrect",
+    messageCode: "CURRENT_PASSWORD_INCORRECT",
+  },
+  // OLD: USER_NOT_FOUND
+  ACCOUNT_NOT_FOUND: {
+    type: "error",
+    statusCode: 404,
+    message: "Account not found",
+    messageCode: "ACCOUNT_NOT_FOUND",
+  },
+});
+export const UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
+  PASSWORD_UPDATED_SUCCESSFULLY: {
+    type: "success",
+    statusCode: 200,
+    message: "Password updated successfully",
+    messageCode: "PASSWORD_UPDATED_SUCCESSFULLY",
+  },
+});
+
+export const UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: INVALID_FIELDS
+  INVALID_2FA_INPUT: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid two-factor authentication setting",
+    messageCode: "INVALID_2FA_INPUT",
+  },
+});
+export const UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS = /** @type {const} */ ({
+  TWO_FACTOR_STATUS_UPDATED_SUCCESSFULLY: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication setting updated successfully",
+    messageCode: "TWO_FACTOR_STATUS_UPDATED_SUCCESSFULLY",
+  },
+});
+
+export const VERIFY_PASSWORD_RESET_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please start the password reset process first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: INVALID_OR_MISSING_FIELDS
+  VERIFICATION_CODE_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "Verification code is required",
+    messageCode: "VERIFICATION_CODE_REQUIRED",
+  },
+  // OLD: INVALID_CODE
+  VERIFICATION_CODE_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid verification code",
+    messageCode: "VERIFICATION_CODE_INVALID",
+  },
+  // OLD: VERIFICATION_EXPIRED
+  VERIFICATION_EXPIRED_RESTART_REQUIRED: {
+    type: "error",
+    statusCode: 410,
+    message: "Verification expired. Please restart the password reset process",
+    messageCode: "VERIFICATION_EXPIRED_RESTART_REQUIRED",
+  },
+});
+export const VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS = /** @type {const} */ ({
+  EMAIL_VERIFIED_SUCCESSFULLY: {
+    type: "success",
+    statusCode: 200,
+    message: "Email verified successfully. You can now reset your password.",
+    messageCode: "EMAIL_VERIFIED_SUCCESSFULLY",
+  },
+});
+
+export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please complete email verification first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: INVALID_OR_MISSING_FIELDS
+  TOTP_CODE_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "TOTP code is required",
+    messageCode: "TOTP_CODE_REQUIRED",
+  },
+  // OLD: INVALID_CODE
+  TOTP_CODE_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid TOTP code",
+    messageCode: "TOTP_CODE_INVALID",
+  },
+});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS = /** @type {const} */ ({
+  TWO_FACTOR_VERIFIED_SUCCESSFULLY: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication verified successfully",
+    messageCode: "TWO_FACTOR_VERIFIED_SUCCESSFULLY",
+  },
+});
+
+export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please complete email verification first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: INVALID_OR_MISSING_FIELDS
+  TOTP_CODE_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "TOTP code is required",
+    messageCode: "TOTP_CODE_REQUIRED",
+  },
+  // OLD: INVALID_RECOVERY_CODE
+  INVALID_TOTP_CODE: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid TOTP code",
+    messageCode: "INVALID_TOTP_CODE",
+  },
+});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS = /** @type {const} */ ({
+  TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication verified successfully for password reset",
+    messageCode: "TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET",
+  },
+});
+
 // /** @constant */
 // export const LOGIN_MESSAGES = /** @type {const} */ ({
 //   ...LOGIN_MESSAGES_ERRORS,
