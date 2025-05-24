@@ -1,36 +1,8 @@
-/** @import { User } from '#types.ts'; */
+/** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
+import { ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS, ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { updateUserPassword } from "#utils/users.js";
-
-export const UPDATE_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
-  INVALID_OR_MISSING_FIELDS: {
-    type: "error",
-    statusCode: 400,
-    message: "Invalid or missing fields",
-    messageCode: "INVALID_OR_MISSING_FIELDS",
-  },
-  WEAK_PASSWORD: {
-    type: "error",
-    statusCode: 400,
-    message: "Weak password",
-    messageCode: "WEAK_PASSWORD",
-  },
-});
-
-export const UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
-  PASSWORD_UPDATED_SUCCESS: {
-    type: "success",
-    statusCode: 200,
-    message: "Password updated successfully",
-  },
-});
-
-/**
- * @typedef {typeof UPDATE_PASSWORD_MESSAGES_ERRORS[keyof typeof UPDATE_PASSWORD_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof UPDATE_PASSWORD_MESSAGES_SUCCESS[keyof typeof UPDATE_PASSWORD_MESSAGES_SUCCESS] & { data: { user: User } }} ActionResultSuccess
- * @typedef {ActionResultError | ActionResultSuccess} ActionResult
- */
 
 /**
  *
@@ -40,20 +12,26 @@ export const UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
  *  newPassword: string,
  *  userId: string,
  * }} data
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS,
+ *    ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS,
+ *    { user: User; }
+ *  >
+ * >}
  */
 export async function adminUpdatePasswordService(data) {
   if (typeof data.newPassword !== "string") {
-    return UPDATE_PASSWORD_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
+    return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_REQUIRED;
   }
 
   const strongPassword = await verifyPasswordStrength(data.newPassword);
-  if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.WEAK_PASSWORD;
+  if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
   const updatedUser = await updateUserPassword(data.userId, data.newPassword);
 
   return {
-    ...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESS,
+    ...ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,
     data: { user: updatedUser },
   };
 }

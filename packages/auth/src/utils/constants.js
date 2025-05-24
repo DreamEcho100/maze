@@ -77,7 +77,7 @@ export const REGISTER_MESSAGES_ERRORS = /** @type {const} */ ({
     type: "error",
     statusCode: 400,
     message: "Password does not meet security requirements",
-    messageCode: "PASSWORD_STRENGTH_INSUFFICIENT",
+    messageCode: "PASSWORD_TOO_WEAK",
   },
   // OLD: NEEDS_2FA_VALIDATION
   TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED: {
@@ -246,7 +246,7 @@ export const RESET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
     type: "error",
     statusCode: 400,
     message: "Password does not meet security requirements",
-    messageCode: "PASSWORD_STRENGTH_INSUFFICIENT",
+    messageCode: "PASSWORD_TOO_WEAK",
   },
 });
 export const RESET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
@@ -398,6 +398,68 @@ export const VERIFY_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
     statusCode: 200,
     message: "Two-factor authentication verified successfully",
     messageCode: "TWO_FACTOR_VERIFIED_SUCCESSFULLY",
+  },
+});
+
+export const ADMIN_REGISTER_MESSAGES_ERRORS = /** @type {const} */ ({
+  INVALID_OR_MISSING_FIELDS: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid or missing fields",
+    messageCode: "INVALID_OR_MISSING_FIELDS",
+  },
+  // OLD: EMAIL_ALREADY_REGISTERED
+  EMAIL_ALREADY_REGISTERED: {
+    type: "error",
+    statusCode: 409,
+    message: "An account with this email address already exists",
+    messageCode: "EMAIL_ALREADY_REGISTERED",
+  },
+  // OLD: WEAK_PASSWORD
+  PASSWORD_TOO_WEAK: {
+    type: "error",
+    statusCode: 400,
+    message: "Password does not meet security requirements",
+    messageCode: "PASSWORD_TOO_WEAK",
+  },
+  // OLD: NEEDS_2FA_VALIDATION
+  TWO_FACTOR_SETUP_OR_VALIDATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication setup or validation required",
+    messageCode: "TWO_FACTOR_SETUP_OR_VALIDATION_REQUIRED",
+  },
+});
+export const ADMIN_REGISTER_MESSAGES_SUCCESS = /** @type {const} */ ({
+  REGISTRATION_SUCCESSFUL: {
+    type: "success",
+    message: "registered successfully",
+    messageCode: "REGISTER_SUCCESS",
+    statusCode: 200,
+  },
+});
+
+export const ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
+  PASSWORD_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "New password is required",
+    messageCode: "PASSWORD_REQUIRED",
+  },
+  // OLD: WEAK_PASSWORD
+  PASSWORD_TOO_WEAK: {
+    type: "error",
+    statusCode: 400,
+    message: "Password does not meet security requirements",
+    messageCode: "PASSWORD_TOO_WEAK",
+  },
+});
+export const ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
+  PASSWORD_UPDATED_SUCCESSFULLY: {
+    type: "success",
+    statusCode: 200,
+    message: "Password updated successfully by administrator",
+    messageCode: "ADMIN_PASSWORD_UPDATED_SUCCESSFULLY",
   },
 });
 
