@@ -2,7 +2,7 @@
  * @import { SessionValidationResult } from "#types.ts";
  */
 
-import { cookiesProvider } from "#providers/cookies.js";
+// import { cookiesProvider } from "#providers/cookies.js";
 import { RESEND_EMAIL_MESSAGES_ERRORS, RESEND_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
   createEmailVerificationRequest,
@@ -12,8 +12,8 @@ import {
 } from "#utils/email-verification.js";
 
 /**
- * @typedef {{ type: 'error'; statusCode: typeof RESEND_EMAIL_MESSAGES_ERRORS[keyof typeof RESEND_EMAIL_MESSAGES_ERRORS]["statusCode"]; message: string; messageCode: typeof RESEND_EMAIL_MESSAGES_ERRORS[keyof typeof RESEND_EMAIL_MESSAGES_ERRORS]["code"] }} ActionResultError
- * @typedef {{ type: 'success'; statusCode: typeof RESEND_EMAIL_MESSAGES_SUCCESS[keyof typeof RESEND_EMAIL_MESSAGES_SUCCESS]["statusCode"]; message: string; messageCode: typeof RESEND_EMAIL_MESSAGES_SUCCESS[keyof typeof RESEND_EMAIL_MESSAGES_SUCCESS]["code"] }} ActionResultSuccess
+ * @typedef {typeof RESEND_EMAIL_MESSAGES_ERRORS[keyof typeof RESEND_EMAIL_MESSAGES_ERRORS]} ActionResultError
+ * @typedef {typeof RESEND_EMAIL_MESSAGES_SUCCESS['VERIFICATION_EMAIL_SENT'] } ActionResultSuccess
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
@@ -28,32 +28,17 @@ import {
 export async function resendEmailVerificationCodeService(options) {
   const { session, user } = await options.getCurrentSession();
   if (session === null) {
-    return {
-      message: "Not authenticated",
-      messageCode: RESEND_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.code,
-      type: "error",
-      statusCode: RESEND_EMAIL_MESSAGES_ERRORS.NOT_AUTHENTICATED.statusCode,
-    };
+    return RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
   }
   if (user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
-    return {
-      message: "Forbidden",
-      messageCode: RESEND_EMAIL_MESSAGES_ERRORS.FORBIDDEN.code,
-      type: "error",
-      statusCode: RESEND_EMAIL_MESSAGES_ERRORS.FORBIDDEN.statusCode,
-    };
+    return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
   }
 
   let verificationRequest = await getUserEmailVerificationRequestFromRequest(options.getCurrentSession);
 
   if (verificationRequest === null) {
     if (user.emailVerifiedAt) {
-      return {
-        message: "Forbidden",
-        messageCode: RESEND_EMAIL_MESSAGES_ERRORS.FORBIDDEN.code,
-        type: "error",
-        statusCode: RESEND_EMAIL_MESSAGES_ERRORS.FORBIDDEN.statusCode,
-      };
+      return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
     }
 
     verificationRequest = await createEmailVerificationRequest(user.id, user.email);
@@ -63,10 +48,5 @@ export async function resendEmailVerificationCodeService(options) {
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
   setEmailVerificationRequestCookie(verificationRequest);
 
-  return {
-    message: "A new code was sent to your inbox.",
-    messageCode: RESEND_EMAIL_MESSAGES_SUCCESS.EMAIL_SENT.code,
-    type: "success",
-    statusCode: RESEND_EMAIL_MESSAGES_SUCCESS.EMAIL_SENT.statusCode,
-  };
+  return RESEND_EMAIL_MESSAGES_SUCCESS.VERIFICATION_EMAIL_SENT;
 }

@@ -97,23 +97,6 @@ export const REGISTER_MESSAGES_SUCCESS = /** @type {const} */ ({
   },
 });
 
-export const RESEND_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
-  NOT_AUTHENTICATED: {
-    code: "NOT_AUTHENTICATED",
-    statusCode: 401, // Unauthorized: The user is not authenticated.
-  },
-  FORBIDDEN: {
-    code: "FORBIDDEN",
-    statusCode: 403, // Forbidden: The user does not have permission to resend the email.
-  },
-});
-export const RESEND_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
-  EMAIL_SENT: {
-    code: "EMAIL_SENT",
-    statusCode: 200, // OK: Email sent successfully.
-  },
-});
-
 export const VERIFY_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
   // OLD: INVALID_CREDENTIALS_OR_MISSING_FIELDS
   INVALID_OR_MISSING_FIELDS: {
@@ -183,13 +166,38 @@ export const FORGET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
     messageCode: "ACCOUNT_NOT_FOUND",
   },
 });
-
 export const FORGET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
   PASSWORD_RESET_EMAIL_SENT: {
     type: "success",
     statusCode: 200,
     message: "Password reset instructions sent to your email",
     messageCode: "PASSWORD_RESET_EMAIL_SENT",
+  },
+});
+
+export const RESEND_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in to verify your email",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+});
+export const RESEND_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
+  // OLD: EMAIL_SENT
+  VERIFICATION_EMAIL_SENT: {
+    type: "success",
+    statusCode: 200,
+    message: "email reset instructions sent to your email",
+    messageCode: "VERIFICATION_EMAIL_SENT",
   },
 });
 
