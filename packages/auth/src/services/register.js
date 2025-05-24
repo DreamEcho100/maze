@@ -1,4 +1,4 @@
-/** @import { User } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
 import { cookiesProvider } from "#providers/cookies.js";
 import { userProvider } from "#providers/users.js";
@@ -14,17 +14,16 @@ import { createUser } from "#utils/users.js";
 import { z } from "zod";
 
 /**
- * @typedef {typeof REGISTER_MESSAGES_ERRORS[keyof typeof REGISTER_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof REGISTER_MESSAGES_SUCCESS['REGISTRATION_SUCCESSFUL'] & { data: { user: User } }} ActionResultSuccess
- *
- * @typedef {ActionResultError | ActionResultSuccess} ActionResult
- */
-
-/**
  * Handles register by deleting the user session and clearing session cookies.
  *
  * @param {unknown} data
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    REGISTER_MESSAGES_ERRORS,
+ *    REGISTER_MESSAGES_SUCCESS,
+ *    { user: User }
+ *  >
+ * >}
  */
 export async function registerService(data, ) {
   const input = z

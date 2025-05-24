@@ -97,6 +97,24 @@ export const REGISTER_MESSAGES_SUCCESS = /** @type {const} */ ({
   },
 });
 
+
+export const LOGOUT_MESSAGES_ERRORS = /** @type {const} */ ({
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+    statusCode: 401,
+  },
+});
+export const LOGOUT_MESSAGES_SUCCESS = /** @type {const} */ ({
+  LOGOUT_SUCCESS: {
+    type: "success",
+    message: "Logged out successfully",
+    messageCode: "LOGOUT_SUCCESSFUL",
+    statusCode: 200,
+  },
+});
+
 export const VERIFY_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
   // OLD: INVALID_CREDENTIALS_OR_MISSING_FIELDS
   INVALID_OR_MISSING_FIELDS: {

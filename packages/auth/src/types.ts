@@ -400,3 +400,18 @@ export interface Providers {
   cookies: CookiesProvider;
   ids: IdsProvider;
 }
+
+export interface ActionResultBase<StatusType extends "success" | "error"> {
+  type: StatusType;
+  statusCode: number;
+  message: string;
+  messageCode: string;
+};
+
+export type ActionResult = ActionResultBase<'error'> | ActionResultBase<'success'>
+
+export type MultiErrorSingleSuccessResponse<
+  TErrorObj extends Record<string, ActionResultBase<'error'>>,
+  TSuccessObj extends Record<string, ActionResultBase<'success'>>,
+  TData extends unknown = undefined
+  > = TErrorObj[keyof TErrorObj] | (TData extends undefined ? TSuccessObj[keyof TSuccessObj] : TSuccessObj[keyof TSuccessObj] & { data: TData })

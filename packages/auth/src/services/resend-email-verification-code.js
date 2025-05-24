@@ -1,8 +1,5 @@
-/**
- * @import { SessionValidationResult } from "#types.ts";
- */
+/** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-// import { cookiesProvider } from "#providers/cookies.js";
 import { RESEND_EMAIL_MESSAGES_ERRORS, RESEND_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
   createEmailVerificationRequest,
@@ -12,18 +9,16 @@ import {
 } from "#utils/email-verification.js";
 
 /**
- * @typedef {typeof RESEND_EMAIL_MESSAGES_ERRORS[keyof typeof RESEND_EMAIL_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof RESEND_EMAIL_MESSAGES_SUCCESS['VERIFICATION_EMAIL_SENT'] } ActionResultSuccess
- *
- * @typedef {ActionResultError | ActionResultSuccess} ActionResult
- */
-
-/**
  *
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
  * }} options
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    RESEND_EMAIL_MESSAGES_ERRORS,
+ *    RESEND_EMAIL_MESSAGES_SUCCESS
+ *  >
+ * >}
  */
 export async function resendEmailVerificationCodeService(options) {
   const { session, user } = await options.getCurrentSession();

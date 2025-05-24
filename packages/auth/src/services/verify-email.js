@@ -1,4 +1,4 @@
-/** @import { SessionValidationResult } from "#types.ts"; */
+/** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 import { cookiesProvider } from "#providers/cookies.js";
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
@@ -15,19 +15,17 @@ import { getCurrentSession } from "#utils/sessions.js";
 import { z } from "zod";
 
 /**
- * @typedef {typeof VERIFY_EMAIL_MESSAGES_ERRORS[keyof typeof VERIFY_EMAIL_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof VERIFY_EMAIL_MESSAGES_SUCCESS['EMAIL_VERIFIED_SUCCESSFULLY']} ActionResultSuccess
- *
- * @typedef {ActionResultError | ActionResultSuccess} ActionResult
- */
-
-/**
  *
  * @param {unknown} data
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
  * }} options
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    VERIFY_EMAIL_MESSAGES_ERRORS,
+ *    VERIFY_EMAIL_MESSAGES_SUCCESS
+ *  >
+ * >}
  */
 export async function verifyEmailUserService(data, options) {
   const input = z

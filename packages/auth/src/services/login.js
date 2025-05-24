@@ -1,3 +1,5 @@
+/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+
 import { userProvider } from "#providers/users.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
@@ -6,20 +8,18 @@ import { createSession, generateSessionToken, setSessionTokenCookie } from "#uti
 import { z } from "zod";
 
 /**
- * @typedef {typeof LOGIN_MESSAGES_ERRORS[keyof typeof LOGIN_MESSAGES_ERRORS]} ActionResultError
- * @typedef {typeof LOGIN_MESSAGES_SUCCESS['LOGGED_IN_SUCCESSFULLY'] & { data: { sessionToken: string; expiresAt: string } }} ActionResultSuccess
- *
- * @typedef {ActionResultError | ActionResultSuccess} ActionResult
- */
-
-/**
- * Verifies the user’s credentials and creates a session if valid.
+ * Verifies the user's credentials and creates a session if valid.
  *
  * @param {unknown} data
- * @param {{ setCookie: (key: string, value: string, options: object) => void }} options
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<
+ *  MultiErrorSingleSuccessResponse<
+ *    LOGIN_MESSAGES_ERRORS,
+ *    LOGIN_MESSAGES_SUCCESS,
+ *    { sessionToken: string; expiresAt: string }
+ *  >
+ * >}
  */
-export async function loginUserService(data, options) {
+export async function loginUserService(data) {
   const input = z
     .object({
       email: z.string().email(),
