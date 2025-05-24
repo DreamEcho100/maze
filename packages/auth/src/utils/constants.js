@@ -219,6 +219,188 @@ export const RESEND_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
   },
 });
 
+export const RESET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please complete the password reset verification process",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: ACCESS_DENIED
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: EMAIL_NOT_VERIFIED
+  EMAIL_VERIFICATION_REQUIRED: {
+    type: "error",
+    statusCode: 403,
+    message: "Email verification required",
+    messageCode: "EMAIL_VERIFICATION_REQUIRED",
+  },
+  // OLD: PASSWORD_TOO_WEAK
+  PASSWORD_TOO_WEAK: {
+    type: "error",
+    statusCode: 400,
+    message: "Password does not meet security requirements",
+    messageCode: "PASSWORD_STRENGTH_INSUFFICIENT",
+  },
+});
+export const RESET_PASSWORD_MESSAGES_SUCCESS = /** @type {const} */ ({
+  PASSWORD_RESET_SUCCESSFUL: {
+    type: "success",
+    statusCode: 200,
+    message: "Password reset successfully",
+    messageCode: "PASSWORD_RESET_SUCCESSFUL",
+  },
+});
+
+export const RESET_2FA_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: INVALID_RECOVERY_CODE
+  RECOVERY_CODE_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid recovery code",
+    messageCode: "RECOVERY_CODE_INVALID",
+  },
+  // OLD: INVALID_OR_MISSING_FIELDS
+  RECOVERY_CODE_REQUIRED: {
+    type: "error",
+    statusCode: 400,
+    message: "Recovery code is required",
+    messageCode: "RECOVERY_CODE_REQUIRED",
+  },
+  // OLD: TWO_FA_NOT_ENABLED
+  TWO_FACTOR_NOT_ENABLED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication is not enabled",
+    messageCode: "TWO_FACTOR_NOT_ENABLED",
+  },
+});
+export const RESET_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
+  TWO_FACTOR_RESET_SUCCESSFUL: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication reset successfully",
+    messageCode: "TWO_FACTOR_RESET_SUCCESSFUL",
+  },
+});
+
+export const SETUP_2FA_MESSAGES_ERRORS = /** @type {const} */ ({
+  INVALID_OR_MISSING_FIELDS: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid or missing fields",
+    messageCode: "INVALID_OR_MISSING_FIELDS",
+  },
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: FORBIDDEN
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: INVALID_KEY
+  TOTP_KEY_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid TOTP key",
+    messageCode: "TOTP_KEY_INVALID",
+  },
+  // OLD: INVALID_CODE
+  VERIFICATION_CODE_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid verification code",
+    messageCode: "VERIFICATION_CODE_INVALID",
+  },
+  // OLD: TWO_FACTOR_NOT_ENABLED
+  TWO_FACTOR_NOT_ENABLED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication is not enabled",
+    messageCode: "TWO_FACTOR_NOT_ENABLED",
+  },
+});
+export const SETUP_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
+  TWO_FACTOR_RESET_SUCCESSFUL: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication reset successfully",
+    messageCode: "TWO_FACTOR_RESET_SUCCESSFUL",
+  },
+});
+
+export const VERIFY_2FA_MESSAGES_ERRORS = /** @type {const} */ ({
+  // OLD: AUTHENTICATION_REQUIRED
+  ACCESS_DENIED: {
+    type: "error",
+    statusCode: 403,
+    message: "Access denied",
+    messageCode: "ACCESS_DENIED",
+  },
+  // OLD: NOT_AUTHENTICATED
+  AUTHENTICATION_REQUIRED: {
+    type: "error",
+    statusCode: 401,
+    message: "Please log in first",
+    messageCode: "AUTHENTICATION_REQUIRED",
+  },
+  // OLD: INVALID_CODE
+  VERIFICATION_CODE_INVALID: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid two-factor authentication code",
+    messageCode: "TWO_FACTOR_CODE_INVALID",
+  },
+  INVALID_OR_MISSING_FIELDS: {
+    type: "error",
+    statusCode: 400,
+    message: "Invalid or missing fields",
+    messageCode: "INVALID_OR_MISSING_FIELDS",
+  },
+  TWO_FACTOR_NOT_ENABLED: {
+    type: "error",
+    statusCode: 403,
+    message: "Two-factor authentication is not enabled",
+    messageCode: "TWO_FACTOR_NOT_ENABLED",
+  },
+});
+export const VERIFY_2FA_MESSAGES_SUCCESS = /** @type {const} */ ({
+  // OLD: TWO_FA_VERIFIED_SUCCESS
+  TWO_FACTOR_VERIFIED: {
+    type: "success",
+    statusCode: 200,
+    message: "Two-factor authentication verified successfully",
+    messageCode: "TWO_FACTOR_VERIFIED_SUCCESSFULLY",
+  },
+});
+
 // /** @constant */
 // export const LOGIN_MESSAGES = /** @type {const} */ ({
 //   ...LOGIN_MESSAGES_ERRORS,

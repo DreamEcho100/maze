@@ -1,5 +1,4 @@
 /** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
-import { cookiesProvider } from "#providers/cookies.js";
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";

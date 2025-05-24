@@ -1,6 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { cookiesProvider } from "#providers/cookies.js";
 import { sessionProvider } from "#providers/sessions.js";
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { deleteSessionTokenCookie, getCurrentSession } from "#utils/sessions.js";
@@ -23,7 +22,7 @@ export async function logoutService() {
 
   await sessionProvider.deleteById(session.id);
 
-  deleteSessionTokenCookie(cookiesProvider.set);
+  deleteSessionTokenCookie();
 
   return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }

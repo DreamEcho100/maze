@@ -104,7 +104,7 @@ export async function validatePasswordResetSessionRequest() {
  * @param {DateLike} expiresAt - The date at which the password reset session expires.
  * @returns {void}
  */
-export function setPasswordResetSessionTokenCookie(token, expiresAt, ) {
+export function setPasswordResetSessionTokenCookie(token, expiresAt) {
   cookiesProvider.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
     expires: dateLikeToDate(expiresAt),
     sameSite: "lax",

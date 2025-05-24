@@ -33,11 +33,10 @@ export function setSessionTokenCookie(param) {
 /**
  * Delete the session token cookie.
  *
- * @param {(key: string, value: string, options: object) => void} setCookie - Function to set the cookie, passed by the framework.
  * @returns {void}
  */
-export function deleteSessionTokenCookie(setCookie) {
-  setCookie(COOKIE_TOKEN_SESSION_KEY, "", {
+export function deleteSessionTokenCookie() {
+  cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

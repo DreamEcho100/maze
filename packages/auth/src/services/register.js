@@ -1,6 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
-import { cookiesProvider } from "#providers/cookies.js";
 import { userProvider } from "#providers/users.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -25,7 +24,7 @@ import { z } from "zod";
  *  >
  * >}
  */
-export async function registerService(data, ) {
+export async function registerService(data) {
   const input = z
     .object({
       email: z.string().email(),
