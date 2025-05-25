@@ -24,12 +24,16 @@ export async function createUser(email, name, password) {
   const encryptedRecoveryCode = encryptString(recoveryCode);
 
   // const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
-  const result = await userProvider.createOne(
+  const result = await userProvider.createOne({
     email,
     name,
     passwordHash,
     encryptedRecoveryCode,
-  );
+  });
+
+  if (!result) {
+    throw new Error(`Failed to create user with email ${email}`);
+  }
 
   return result;
 }
@@ -44,7 +48,7 @@ export async function resetUserRecoveryCode(userId) {
   const encryptedCode = encryptString(recoveryCode);
 
   // await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-  await userProvider.updateOneRecoveryCodeByUserId(userId, encryptedCode);
+  await userProvider.updateOneRecoveryCode(userId, encryptedCode);
 
   return recoveryCode;
 }
@@ -76,6 +80,10 @@ export async function updateUserPassword(userId, password) {
   // const result = await updateUserPasswordRepository(userId, passwordHash);
   const result = await userProvider.updateOnePassword(userId, passwordHash);
 
+  if (!result) {
+    throw new Error(`User with ID ${userId} not found`);
+  }
+
   return result;
 }
 
@@ -89,6 +97,10 @@ export async function updateUserTOTPKey(userId, key) {
   const encryptedKey = encrypt(key);
   // const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
   const result = await userProvider.updateOneTOTPKey(userId, encryptedKey);
+
+  if (!result) {
+    throw new Error(`User with ID ${userId} not found`);
+  }
 
   return result;
 }
@@ -109,12 +121,18 @@ export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabled
       })()
     : null;
 
-  // return await updateUserTwoFactorEnabledRepository(
-  return await userProvider.updateOne2FAEnabled(
+    // return await updateUserTwoFactorEnabledRepository(
+    const result = await userProvider.updateOne2FAEnabled(
     {
       twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
       recoveryCode: encryptedRecoveryCode,
     },
     { userId },
   );
+  
+  if (!result) {
+    throw new Error(`User with ID ${userId} not found`);
+  }
+
+  return result;
 }

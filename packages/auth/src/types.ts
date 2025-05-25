@@ -22,7 +22,7 @@ export interface EmailVerificationRequest {
 
 type Organization = {
     id: string;
-    createdAt: Date;
+    createdAt: DateLike;
     updatedAt?: DateLike | null;
     ownerId: string;
 };
@@ -30,7 +30,7 @@ type Organization = {
 interface User {
     name: string;
     id: string;
-    createdAt: Date;
+    createdAt: DateLike;
     updatedAt?: DateLike | null;
     email: string;
     // passwordHash: string;
@@ -39,19 +39,22 @@ interface User {
     // `twoFactorRegisteredAt` is the date when the user registered for 2FA
     // TODO: not handled properly in the code
     twoFactorRegisteredAt?: DateLike | null;
-    totpKey?: Buffer | null;
-    recoveryCode?: Buffer | null;
-    type?: string | null;
-    organizationId?: string | null;
-    organization?: Organization | null;
+    // totpKey?: Buffer | null;
+    // recoveryCode?: Buffer | null;
+    // type?: string | null;
+    // organizationId?: string | null;
+    // organization?: Organization | null;
 }
 
 interface Session {
     id: string;
-    createdAt: Date;
+    createdAt: DateLike;
     userId: string;
-    expiresAt: Date;
+    expiresAt: DateLike;
     twoFactorVerifiedAt?: DateLike | null;
+    // token: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
 }
 
 interface SessionWithUser {
@@ -73,9 +76,9 @@ type SessionValidationResult = ValidSessionResult | InvalidSessionResult;
 
 interface PasswordResetSession {
     id: string;
-    createdAt: Date;
+    createdAt: DateLike;
     userId: string;
-    expiresAt: Date;
+    expiresAt: DateLike;
     twoFactorVerifiedAt?: DateLike | null;
     email: string;
     emailVerifiedAt?: DateLike | null;
@@ -159,9 +162,9 @@ export interface PasswordResetSessionProvider {
    * @param {DateLike | null} data.emailVerifiedAt - Email verification timestamp
    * @param {DateLike | null} data.twoFactorVerifiedAt - 2FA verification timestamp
    * @param {DateLike} data.expiresAt - Session expiration date
-   * @returns {Promise<PasswordResetSession>} The created password reset session
+   * @returns {Promise<PasswordResetSession | null>} The created password reset session
    */
-  createOne: (data: PasswordResetSession) => Promise<PasswordResetSession>;
+  createOne: (data: PasswordResetSession) => Promise<PasswordResetSession | null>;
   /**
    * Find a password reset session with associated user data
    * @param {string} sessionId - The password reset session ID
@@ -206,9 +209,9 @@ export interface SessionProvider {
    * @param {string} data.userId - User ID
    * @param {DateLike} data.expiresAt - Session expiration date
    * @param {DateLike | null} [data.twoFactorVerifiedAt] - 2FA verification timestamp
-   * @returns {Promise<Session>} The created session
+   * @returns {Promise<Session | null>} The created session
    */
-  createOne: (session: Session) => Promise<Session>;
+  createOne: (session: Session) => Promise<Session | null>;
   /**
    * Find a session by ID with associated user data
    * @param {string} sessionId - The session ID to find
@@ -219,17 +222,17 @@ export interface SessionProvider {
    * Extend a session's expiration time
    * @param {string} sessionId - The session ID to extend
    * @param {Date} expiresAt - New expiration date
-   * @returns {Promise<Session>} The updated session
+   * @returns {Promise<Session | null>} The updated session
    * @description Useful for implementing "remember me" functionality or session refresh
    */
-  extendExpirationDate: (sessionId: string, expiresAt: Date) => Promise<Session>;
+  extendOneExpirationDate: (sessionId: string, expiresAt: Date) => Promise<Session | null>;
   /**
    * Delete a specific session (logout)
    * @param {string} sessionId - The session ID to delete
    * @returns {Promise<void>}
    * @description Invalidates a single session, typically used for logout
    */
-  deleteById: (sessionId: string) => Promise<void>;
+  deleteOneById: (sessionId: string) => Promise<void>;
   /**
    * Delete all sessions for a user (logout everywhere)
    * @param {string} userId - The user ID
@@ -240,29 +243,32 @@ export interface SessionProvider {
   /**
    * Mark a session as 2FA verified
    * @param {string} sessionId - The session ID
-   * @returns {Promise<void>}
+   * @returns {Promise<Session | null>} The updated session
    */
-  markOne2FAVerified: (sessionId: string) => Promise<void>;
+  markOne2FAVerified: (sessionId: string) => Promise<Session | null>;
   /**
    * Remove 2FA verification from all user sessions
    * @param {string} userId - The user ID
    * @param {any} [transaction] - Optional database transaction
-   * @returns {Promise<void>}
+   * @returns {Promise<Session | null>} The updated session
    * @description Used when 2FA is disabled or when security requires re-verification
    */
-  unMarkOne2FAForUser: (userId: string, tx?: any) => Promise<void>;
+  unMarkOne2FAForUser: (userId: string, tx?: any) => Promise<Session | null>;
 }
 
 
 export interface UserProvider {
   /**
    * Create a new user
-   * @param {string} email - User's email address
-   * @param {string} name - User's display name
-   * @param {string} passwordHash - Hashed password
-   * @param {Uint8Array} encryptedRecoveryCode - Encrypted recovery code
+   * @param {Object} values - User data
+   * @param {string} values.email - User's email address
+   * @param {string} values.name - User's display name
+   * @param {string} values.passwordHash - Hashed password
+   * @param {Uint8Array} values.encryptedRecoveryCode - Encrypted recovery code
    */
-  createOne: (email: string, name: string, passwordHash: string, encryptedRecoveryCode: Uint8Array) => Promise<User>;
+  createOne: (values: {
+    id?: string, email: string, name: string, passwordHash: string, encryptedRecoveryCode: Uint8Array
+  }) => Promise<User | null>;
   /**
    * Find a user by email address
    * @param {string} email - The email to search for
@@ -275,7 +281,7 @@ export interface UserProvider {
    * @param {string} passwordHash - New hashed password
    * @returns {Promise<User>} The updated user
    */
-  updateOnePassword: (userId: string, passwordHash: string) => Promise<User>;
+  updateOnePassword: (userId: string, passwordHash: string) => Promise<User | null>;
   /**
    * Update user's email and mark it as verified
    * @param {string} userId - The user ID
@@ -283,7 +289,7 @@ export interface UserProvider {
    * @returns {Promise<User>} The updated user
    * @description Updates email and automatically sets emailVerifiedAt timestamp
    */
-  updateEmailAndVerify: (userId: string, email: string) => Promise<User>;
+  updateEmailAndVerify: (userId: string, email: string) => Promise<User | null>;
   /**
    * Verify user's email if it matches the provided email
    * @param {string} userId - The user ID
@@ -344,7 +350,7 @@ export interface UserProvider {
    * @param {Uint8Array} encryptedRecoveryCode - New encrypted recovery code
    * @returns {Promise<User>} The updated user
    */
-  updateOneRecoveryCode: (userId: string, encryptedNewRecoveryCode: Uint8Array, userRecoveryCode: Uint8Array, tx?: TransactionClient) => Promise<Uint8Array | null>;
+  updateOneRecoveryCode: (userId: string, encryptedRecoveryCode: Uint8Array) => Promise<User | null>;
   /**
    * Update recovery code with verification of current code
    * @param {string} userId - The user ID
@@ -354,7 +360,7 @@ export interface UserProvider {
    * @returns {Promise<Uint8Array | null>} The new encrypted recovery code or null if current code is invalid
    * @description Atomically updates recovery code only if current code matches
    */
-  updateOneRecoveryCodeByUserId: (userId: string, encryptedRecoveryCode: Uint8Array) => Promise<User>;
+  updateOneRecoveryCodeByUserId: (userId: string, encryptedNewRecoveryCode: Uint8Array, userRecoveryCode: Uint8Array, tx?: TransactionClient) => Promise<Uint8Array | null>;
   /**
    * Get user's TOTP key (decrypted)
    * @param {string} userId - The user ID
@@ -368,7 +374,7 @@ export interface UserProvider {
    * @param {Uint8Array} encryptedKey - New encrypted TOTP key
    * @returns {Promise<User>} The updated user
    */
-  updateOneTOTPKey: (userId: string, encryptedKey: Uint8Array) => Promise<User>;
+  updateOneTOTPKey: (userId: string, encryptedKey: Uint8Array) => Promise<User | null>;
   /**
    * Update user's 2FA enabled status
    * @param {Object} data - Update data
@@ -379,7 +385,7 @@ export interface UserProvider {
    * @returns {Promise<User>} The updated user
    * @description Enables/disables 2FA and optionally updates recovery code
    */
-  updateOne2FAEnabled: (data: { twoFactorEnabledAt: DateLike | null; recoveryCode?: Uint8Array | null; }, where: { userId: string; }) => Promise<User>;
+  updateOne2FAEnabled: (data: { twoFactorEnabledAt: DateLike | null; recoveryCode?: Uint8Array | null; }, where: { userId: string; }) => Promise<User | null>;
 }
 
 export interface CookiesProvider {

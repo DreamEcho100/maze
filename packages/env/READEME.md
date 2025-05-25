@@ -1,7 +1,7 @@
 
 # @de100/env Documentation
 
-This library provides type-safe and runtime-validated access to your environment variables for Next.js (and similar) projects. It’s built on the core ideas of environment validation from popular projects (like T3 Env) and supports any [Standard Schema–compliant validator](https://standardschema.dev/) (for example, Zod or Standard Schema). This ensures your environment is correctly configured at build and runtime while keeping server-only secrets secure.
+This library provides type-safe and runtime-validated access to your environment variables for Next.js (and similar) projects. It's built on the core ideas of environment validation from popular projects (like T3 Env) and supports any [Standard Schema–compliant validator](https://standardschema.dev/) (for example, Zod or Standard Schema). This ensures your environment is correctly configured at build and runtime while keeping server-only secrets secure.
 
 ## Notes
 
@@ -59,7 +59,7 @@ This library provides type-safe and runtime-validated access to your environment
 
 - **Custom Callbacks for Errors & Access:**  
   - **`onValidationError`:** Triggered when validation fails, so you can log issues or halt execution as needed.  
-  - **`onInvalidAccess`:** Invoked when there’s an attempt to access a server-only variable on the client side.
+  - **`onInvalidAccess`:** Invoked when there's an attempt to access a server-only variable on the client side.
 
 - **Runtime Environment Merging:**  
   Combine multiple sources of environment variables—including additional extended schemas—into a unified environment object.
@@ -178,7 +178,7 @@ pnpm add @de100/env zod
   Each variable is validated against its defined schema during initialization. If validation fails, the `onValidationError` callback is executed.
 
 - **Unauthorized Access:**  
-  The environment object is wrapped in a Proxy. If client-side code tries to access a server-only variable, the `onInvalidAccess` callback is triggered, ensuring sensitive data isn’t exposed.
+  The environment object is wrapped in a Proxy. If client-side code tries to access a server-only variable, the `onInvalidAccess` callback is triggered, ensuring sensitive data isn't exposed.
 
 ---
 
@@ -203,7 +203,7 @@ The final environment object is wrapped in a Proxy to:
 
 ## Example
 
-Here’s a complete example demonstrating how to set up and use **@de100/env**:
+Here's a complete example demonstrating how to set up and use **@de100/env**:
 
 ```ts
 // src/env.ts

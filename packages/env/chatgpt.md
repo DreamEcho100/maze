@@ -55,4 +55,4 @@ Below are some suggestions for improving your environment handling implementatio
 
 ## Final Thoughts
 
-Your implementation is already quite advanced, leveraging TypeScript’s type system and Standard Schema validations effectively. These improvements focus on enhancing maintainability, robustness, and flexibility in modern TypeScript projects. If you’d like to dive deeper into any of these suggestions or see sample code for a particular improvement, let me know!
+Your implementation is already quite advanced, leveraging TypeScript's type system and Standard Schema validations effectively. These improvements focus on enhancing maintainability, robustness, and flexibility in modern TypeScript projects. If you'd like to dive deeper into any of these suggestions or see sample code for a particular improvement, let me know!

@@ -116,6 +116,12 @@ export async function handleSessionMiddleware(param) {
 
   const result = await validateSessionToken(param.token);
 
+  if (!result.session) {
+    // If the session is not found, delete the session token cookie
+    deleteSessionTokenCookie();
+    return { session: null, user: null };
+  }
+
   if (result.session) {
     // Extend cookie expiration by 30 days
     setSessionTokenCookie({
@@ -149,13 +155,13 @@ export async function validateSessionToken(token) {
   const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
   if (Date.now() >= expiresAt) {
-    await sessionProvider.deleteById(sessionId);
+    await sessionProvider.deleteOneById(sessionId);
     return { session: null, user: null };
   }
 
   if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
     result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-    await sessionProvider.extendExpirationDate(sessionId, new Date(result.session.expiresAt));
+    await sessionProvider.extendOneExpirationDate(sessionId, new Date(result.session.expiresAt));
   }
 
   return result;

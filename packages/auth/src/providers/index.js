@@ -7,12 +7,12 @@ import { setPasswordResetSessionProvider } from './password-reset.js';
 import { setSessionProvider } from './sessions.js';
 import { setUserProvider } from './users.js';
 
-/** @param {Providers} providers */
+/** @param {Partial<Providers>} providers */
 export function setProviders(providers) {
-	setCookieProvider(providers.cookies);
-	setUserProvider(providers.user);
-	setSessionProvider(providers.session);
-	setPasswordResetSessionProvider(providers.passwordResetSession);
-	setUserEmailVerificationRequestProvider(providers.emailVerificationRequest);
-	setIdsProvider(providers.ids);
+	providers.cookies && setCookieProvider(providers.cookies);
+	providers.user && setUserProvider(providers.user);
+	providers.session && setSessionProvider(providers.session);
+	providers.passwordResetSession && setPasswordResetSessionProvider(providers.passwordResetSession);
+	providers.emailVerificationRequest && setUserEmailVerificationRequestProvider(providers.emailVerificationRequest);
+	providers.ids && setIdsProvider(providers.ids);
 }

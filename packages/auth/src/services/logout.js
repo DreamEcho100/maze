@@ -20,7 +20,7 @@ export async function logoutService() {
     return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
   }
 
-  await sessionProvider.deleteById(session.id);
+  await sessionProvider.deleteOneById(session.id);
 
   deleteSessionTokenCookie();
 

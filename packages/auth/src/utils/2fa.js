@@ -33,7 +33,7 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, tx) {
     await sessionProvider.unMarkOne2FAForUser(userId, tx);
 
     // const updatedUserRecoveryCode = await updateUserRecoveryCodeRepository(
-    const updatedUserRecoveryCode = await userProvider.updateOneRecoveryCode(
+    const updatedUserRecoveryCode = await userProvider.updateOneRecoveryCodeByUserId(
       userId,
       encryptedNewRecoveryCode,
       userRecoveryCodeStored,
