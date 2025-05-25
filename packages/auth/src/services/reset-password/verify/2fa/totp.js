@@ -42,7 +42,7 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
   }
 
   // await updateOnePasswordRemarkOne2FAVerifiedRepository(session.id);
-  await passwordResetSessionProvider.mark2FAVerified(session.id);
+  await passwordResetSessionProvider.markOneTwoFactorAsVerified(session.id);
   return {
     ...VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET,
     data: { nextStep: "reset-password" },

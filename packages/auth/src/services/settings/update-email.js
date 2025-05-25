@@ -38,7 +38,7 @@ export async function updateEmailService(email) {
   const emailAvailable = await userProvider.findOneByEmail(validatedEmail);
   if (emailAvailable) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
 
-  const verificationRequest = await createEmailVerificationRequest(user.id, validatedEmail);
+  const verificationRequest = await createEmailVerificationRequest({ where: { userId: user.id, email: validatedEmail } });
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
   setEmailVerificationRequestCookie(verificationRequest);
 

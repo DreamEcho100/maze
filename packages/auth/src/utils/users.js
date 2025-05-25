@@ -71,17 +71,22 @@ export async function resetUserRecoveryCode(userId) {
 
 /**
  * Update a user's password.
- * @param {string} userId
- * @param {string} password
+ * 
+ * @param {Object} props - The properties to identify the user.
+ * @param {Object} props.data - The data to be updated.
+ * @param {string} props.data.password - The new password to be set.
+ * @param {Object} props.where - The properties to identify the user.
+ * @param {string} props.where.id - The ID of the user to update.
+ * @param {{ tx?: any }} [options] - Additional options for the operation.
  * @returns {Promise<User>}
  */
-export async function updateUserPassword(userId, password) {
-  const passwordHash = await hashPassword(password);
-  // const result = await updateUserPasswordRepository(userId, passwordHash);
-  const result = await userProvider.updateOnePassword(userId, passwordHash);
+export async function updateUserPassword(props, options) {
+  const passwordHash = await hashPassword(props.data.password);
+  // const result = await updateUserPasswordRepository(id, passwordHash);
+  const result = await userProvider.updateOnePassword({ data: { passwordHash }, where: { id: props.where.id } }, options);
 
   if (!result) {
-    throw new Error(`User with ID ${userId} not found`);
+    throw new Error(`User with ID ${props.where.id} not found`);
   }
 
   return result;
@@ -89,17 +94,25 @@ export async function updateUserPassword(userId, password) {
 
 /**
  * Update the user's TOTP key.
- * @param {string} userId
- * @param {Uint8Array} key
+ * 
+ * @param {Object} props
+ * @param {Object} props.where - The properties to identify the user.
+ * @param {string} props.where.userId - The ID of the user.
+ * @param {object} props.data - The data to be updated.
+ * @param {Uint8Array} props.data.key - The TOTP key to be updated.
+ * @param {{ tx?: any }} [options] - Additional options for the operation.
  * @returns {Promise<User>}
  */
-export async function updateUserTOTPKey(userId, key) {
-  const encryptedKey = encrypt(key);
+export async function updateUserTOTPKey(props, options) {
+  const encryptedKey = encrypt(props.data.key);
   // const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
-  const result = await userProvider.updateOneTOTPKey(userId, encryptedKey);
+  const result = await userProvider.updateOneTOTPKey(
+    { data: { totpKey: encryptedKey }, where: { id: props.where.userId } },
+    options
+  );
 
   if (!result) {
-    throw new Error(`User with ID ${userId} not found`);
+    throw new Error(`User with ID ${props.where.userId} not found`);
   }
 
   return result;

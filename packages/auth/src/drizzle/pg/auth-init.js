@@ -47,6 +47,44 @@ const sessionReturnSchema = /** @type {const} */({
 	twoFactorVerifiedAt: true,
 })
 
+const emailVerificationRequestReturnTemplate = {
+	id: dbSchema.emailVerificationRequest.id,
+	code: dbSchema.emailVerificationRequest.code,
+	userId: dbSchema.emailVerificationRequest.userId,
+	expiresAt: dbSchema.emailVerificationRequest.expiresAt,
+	createdAt: dbSchema.emailVerificationRequest.createdAt,
+	email: dbSchema.emailVerificationRequest.email,
+}
+const emailVerificationRequestReturnSchema = /** @type {const} */({
+	id: true,
+	code: true,
+	userId: true,
+	expiresAt: true,
+	createdAt: true,
+	email: true,
+})
+
+const passwordResetSessionReturnTemplate = {
+	id: dbSchema.passwordResetSession.id,
+	userId: dbSchema.passwordResetSession.userId,
+	twoFactorVerifiedAt: dbSchema.passwordResetSession.twoFactorVerifiedAt,
+	expiresAt: dbSchema.passwordResetSession.expiresAt,
+	code: dbSchema.passwordResetSession.code,
+	createdAt: dbSchema.passwordResetSession.createdAt,
+	email: dbSchema.passwordResetSession.email,
+	emailVerifiedAt: dbSchema.passwordResetSession.emailVerifiedAt,
+}
+const passwordResetSessionReturnSchema = /** @type {const} */({
+	id: true,
+	userId: true,
+	twoFactorVerifiedAt: true,
+	expiresAt: true,
+	code: true,
+	createdAt: true,
+	email: true,
+	emailVerifiedAt: true,
+})
+
 export function setDrizzlePgAuthProviders() {
 	setProviders({
 		// cookies: {
@@ -97,14 +135,15 @@ export function setDrizzlePgAuthProviders() {
 					.where(eq(dbSchema.user.id, userId))
 					.then((result) => result[0]?.recoveryCode ?? null);
 			},
-			updateEmailAndVerify: async (userId, email) => {
-				return db.update(dbSchema.user)
+			updateEmailAndVerify: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				return _db.update(dbSchema.user)
 					.set({
-						email: email,
+						email: props.data.email,
 						emailVerifiedAt: new Date(),
 						updatedAt: new Date(),
 					})
-					.where(eq(dbSchema.user.id, userId))
+					.where(eq(dbSchema.user.id, props.where.id))
 					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
@@ -122,13 +161,14 @@ export function setDrizzlePgAuthProviders() {
 					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
-			updateOnePassword: async (userId, passwordHash) => {
-				return db.update(dbSchema.user)
+			updateOnePassword: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				return _db.update(dbSchema.user)
 					.set({
-						passwordHash: passwordHash,
+						passwordHash: props.data.passwordHash,
 						updatedAt: new Date(),
 					})
-					.where(eq(dbSchema.user.id, userId))
+					.where(eq(dbSchema.user.id, props.where.id))
 					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
@@ -159,29 +199,31 @@ export function setDrizzlePgAuthProviders() {
 					.returning({ recoveryCode: dbSchema.user.recoveryCode })
 					.then((result) => result[0]?.recoveryCode ?? null);
 			},
-			updateOneTOTPKey: async (userId, totpKey) => {
-				return db.update(dbSchema.user)
+			updateOneTOTPKey: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				return _db.update(dbSchema.user)
 					.set({
-						totpKey: totpKey ? Buffer.from(totpKey) : null,
+						totpKey: props.data.totpKey ? Buffer.from(props.data.totpKey) : null,
 						// Is the following needed?
 						// twoFactorRegisteredAt: totpKey ? new Date() : null,
 						// twoFactorEnabledAt: totpKey ? new Date() : null,
 						updatedAt: new Date(),
 					})
-					.where(eq(dbSchema.user.id, userId))
+					.where(eq(dbSchema.user.id, props.where.id))
 					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
-			verifyOneEmailIfMatches: async (userId, email) => {
-				return db.update(dbSchema.user)
+			verifyOneEmailIfMatches: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				return _db.update(dbSchema.user)
 					.set({
 						emailVerifiedAt: new Date(),
 						updatedAt: new Date(),
 					})
 					.where(
 						and(
-							eq(dbSchema.user.id, userId),
-							eq(dbSchema.user.email, email)
+							eq(dbSchema.user.id, props.where.id),
+							eq(dbSchema.user.email, props.where.email)
 						)
 					)
 					.returning(userReturnTemplate)
@@ -201,13 +243,14 @@ export function setDrizzlePgAuthProviders() {
 			}
 		},
 		session: {
-			createOne: async (values) => {
+			createOne: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
 				const createdAt = new Date();
 				return db.insert(dbSchema.session).values({
-					...values,
-					// id: values.id ?? (await idsProvider.createOneAsync()),
-					expiresAt: dateLikeToDate(values.expiresAt),
-					twoFactorVerifiedAt: values.twoFactorVerifiedAt ? dateLikeToDate(values.twoFactorVerifiedAt) : null,
+					...props.data,
+					// id: props.data.id ?? (await idsProvider.createOneAsync()),
+					expiresAt: dateLikeToDate(props.data.expiresAt),
+					twoFactorVerifiedAt: props.data.twoFactorVerifiedAt ? dateLikeToDate(props.data.twoFactorVerifiedAt) : null,
 					createdAt,
 					updatedAt: createdAt,
 				})
@@ -240,17 +283,18 @@ export function setDrizzlePgAuthProviders() {
 				await db.delete(dbSchema.session)
 					.where(eq(dbSchema.session.id, sessionId));
 			},
-			invalidateAllByUserId: async (userId) => {
-				await db.delete(dbSchema.session)
-					.where(eq(dbSchema.session.userId, userId));
+			invalidateAllByUserId: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				await _db.delete(dbSchema.session)
+					.where(eq(dbSchema.session.userId, props.where.userId))
 			},
-			markOne2FAVerified: async (sessionId) => {
+			markOne2FAVerified: async (props, options) => {
 				return db.update(dbSchema.session)
 					.set({
 						twoFactorVerifiedAt: new Date(),
 						updatedAt: new Date(),
 					})
-					.where(eq(dbSchema.session.id, sessionId))
+					.where(eq(dbSchema.session.id, props.where.id))
 					.returning(sessionReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
@@ -288,8 +332,95 @@ export function setDrizzlePgAuthProviders() {
 			// 		);
 			// },
 		},
-		passwordResetSession: {},
-		emailVerificationRequest: {},
+		passwordResetSession: {
+			createOne: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				const createdAt = new Date();
+				return _db.insert(dbSchema.passwordResetSession).values({
+					...props.data,
+					id: props.data.id ?? (await idsProvider.createOneAsync()),
+					emailVerifiedAt: props.data.emailVerifiedAt ? dateLikeToDate(props.data.emailVerifiedAt) : null,
+					twoFactorVerifiedAt: props.data.twoFactorVerifiedAt ? dateLikeToDate(props.data.twoFactorVerifiedAt) : null,
+					expiresAt: dateLikeToDate(props.data.expiresAt),
+					createdAt,
+				})
+					.returning(passwordResetSessionReturnTemplate)
+					.then((result) => result[0] ?? null);
+			},
+			findOneWithUser: async (sessionId) => {
+				return db.query.passwordResetSession.findFirst({
+					with: { user: { columns: userReturnSchema } },
+					columns: passwordResetSessionReturnSchema,
+					where: eq(dbSchema.passwordResetSession.id, sessionId),
+				})
+					.then((result) => {
+						if (!result) return { session: null, user: null };
+						const { user, ...session } = result;
+						return { session, user };
+					});
+			},
+			markOneEmailAsVerified: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				return _db.update(dbSchema.passwordResetSession)
+					.set({
+						emailVerifiedAt: new Date(),
+						// updatedAt: new Date(),
+					})
+					.where(eq(dbSchema.passwordResetSession.id, props.where.id))
+					.returning(passwordResetSessionReturnTemplate)
+					.then((result) => result[0] ?? null);
+			},
+			deleteOne: async (sessionId) => {
+				await db.delete(dbSchema.passwordResetSession)
+					.where(eq(dbSchema.passwordResetSession.id, sessionId));
+			},
+			markOneTwoFactorAsVerified: async (sessionId) => {
+				return db.update(dbSchema.passwordResetSession)
+					.set({
+						twoFactorVerifiedAt: new Date(),
+						// updatedAt: new Date(),
+					})
+					.where(eq(dbSchema.passwordResetSession.id, sessionId))
+					.returning(passwordResetSessionReturnTemplate)
+					.then((result) => result[0] ?? null);
+			},
+			deleteAllByUserId: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				await _db.delete(dbSchema.passwordResetSession)
+					.where(eq(dbSchema.passwordResetSession.userId, props.where.userId));
+					// .returning(passwordResetSessionReturnTemplate)
+					// .then((result) => result[0] ?? null);
+			},
+		},
+		emailVerificationRequest: {
+			createOne: async (values) => {
+				const createdAt = new Date();
+				return db.insert(dbSchema.emailVerificationRequest).values({
+					...values,
+					id: values.id ?? (await idsProvider.createOneAsync()),
+					expiresAt: dateLikeToDate(values.expiresAt),
+					createdAt,
+				})
+					.returning(emailVerificationRequestReturnTemplate)
+					.then((result) => result[0] ?? null);
+			},
+			deleteOneByUserId: async (props, options) => {
+				const _db = /** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */(options?.tx) ?? db;
+				await _db.delete(dbSchema.emailVerificationRequest)
+					.where(eq(dbSchema.emailVerificationRequest.userId, props.where.userId));
+			},
+			findOneByIdAndUserId: async (userId, id) => {
+    		return db.select(emailVerificationRequestReturnTemplate)
+					.from(dbSchema.emailVerificationRequest)
+					.where(
+							and(
+									eq(dbSchema.emailVerificationRequest.userId, userId),
+									eq(dbSchema.emailVerificationRequest.id, id)
+							)
+					)
+					.then((result) => result[0] ?? null);
+			},
+		},
 		// ids: {
 		// 	createOneSync: () => crypto.randomUUID(),
 		// 	createOneAsync: async () => crypto.randomUUID(),

@@ -15,6 +15,7 @@ import { updateUserPassword } from "#utils/users.js";
  * Handles the reset password process, including validation and session management.
  *
  * @param {string} password The new password to set for the user
+ * @param {{ tx: any }} options Options for the service, including transaction management
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
@@ -22,7 +23,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  >
  * >}
  */
-export async function resetPasswordService(password) {
+export async function resetPasswordService(password, options) {
   const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest();
 
   if (!passwordResetSession) {
@@ -49,15 +50,25 @@ export async function resetPasswordService(password) {
   const [[sessionToken, session]] = await Promise.all([
     (async () => {
       const sessionToken = generateSessionToken();
-      const session = await createSession(sessionToken, user.id, {
-        twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
-      });
+      const session = await createSession(
+        { data: { token: sessionToken, userId: user.id, flags: { twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt } }, },
+        { tx: options.tx }
+      );
 
       return /** @type {const} */ ([sessionToken, session]);
     })(),
-    passwordResetSessionProvider.deleteAllByUserId(passwordResetSession.userId),
-    sessionProvider.invalidateAllByUserId(passwordResetSession.userId),
-    updateUserPassword(passwordResetSession.userId, password),
+    passwordResetSessionProvider.deleteAllByUserId(
+      { where: { userId: passwordResetSession.userId } },
+      { tx: options.tx }
+    ),
+    sessionProvider.invalidateAllByUserId(
+      { where: { userId: passwordResetSession.userId } },
+      { tx: options.tx }
+    ),
+    updateUserPassword(
+      { data: { password }, where: { id: user.id } },
+      { tx: options.tx }
+    ),
   ]);
 
   setSessionTokenCookie({

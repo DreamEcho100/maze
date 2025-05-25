@@ -55,7 +55,7 @@ export async function adminRegisterService(data) {
 
   const user = await createUser(input.data.email, input.data.name, input.data.password);
 
-  const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
+  const emailVerificationRequest = await createEmailVerificationRequest({ where: { userId: user.id, email: user.email } });
 
   await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 

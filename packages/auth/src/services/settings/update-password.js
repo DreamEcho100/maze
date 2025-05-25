@@ -16,8 +16,11 @@ import { updateUserPassword } from "#utils/users.js";
  *
  * Handles updating a user's password, including validation and session management.
  *
- * @param {unknown} currentPassword The user's current password
- * @param {unknown} newPassword The new password to set for the user
+ * @param {Object} props The properties for the update password service
+ * @param {Object} props.data The data containing the current and new passwords
+ * @param {unknown} props.data.currentPassword The user's current password
+ * @param {unknown} props.data.newPassword The new password to set for the user
+ * @param {{ tx: any }} options Options for the service, including transaction management
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_PASSWORD_MESSAGES_ERRORS,
@@ -25,7 +28,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  >
  * >}
  */
-export async function updatePasswordService(currentPassword, newPassword) {
+export async function updatePasswordService(props, options) {
   const { session, user } = await getCurrentSession();
 
   if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -34,28 +37,41 @@ export async function updatePasswordService(currentPassword, newPassword) {
     return UPDATE_PASSWORD_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;
   }
 
-  if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+  if (typeof props.data.currentPassword !== "string" || typeof props.data.newPassword !== "string") {
     return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORDS_REQUIRED;
   }
 
-  const strongPassword = await verifyPasswordStrength(newPassword);
+  const strongPassword = await verifyPasswordStrength(props.data.newPassword);
   if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
   const passwordHash = await userProvider.getOnePasswordHash(user.id);
   if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
-  const validPassword = await verifyPasswordHash(passwordHash, currentPassword);
+  const validPassword = await verifyPasswordHash(passwordHash, props.data.currentPassword);
   if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
 
   await Promise.all([
-    sessionProvider.invalidateAllByUserId(user.id),
-    updateUserPassword(user.id, newPassword),
+    sessionProvider.invalidateAllByUserId(
+      { where: { userId: user.id } },
+      { tx: options.tx },
+    ),
+    updateUserPassword(
+      { data: { password: props.data.newPassword }, where: { id: user.id } },
+      { tx: options.tx },
+    ),
   ]);
 
   const sessionToken = generateSessionToken();
-  const newSession = await createSession(sessionToken, user.id, {
-    twoFactorVerifiedAt: session.twoFactorVerifiedAt,
-  });
+  const newSession = await createSession(
+    {
+      data: {
+        token: sessionToken,
+        userId: user.id,
+        flags: { twoFactorVerifiedAt: session.twoFactorVerifiedAt },
+      },
+    },
+   { tx: options.tx }
+  );
 
   setSessionTokenCookie({
     token: sessionToken,

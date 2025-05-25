@@ -18,6 +18,7 @@ import { z } from "zod";
  * @param {unknown} data
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
+ *  tx?: any
  * }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
@@ -53,8 +54,8 @@ export async function verifyEmailUserService(data, options) {
 
   if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
     verificationRequest = await createEmailVerificationRequest(
-      verificationRequest.userId,
-      verificationRequest.email,
+      { where: { userId: user.id, email: verificationRequest.email } },
+      { tx: options.tx }
     );
     await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
     return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED;
@@ -64,9 +65,18 @@ export async function verifyEmailUserService(data, options) {
   }
 
   await Promise.all([
-    deleteUserEmailVerificationRequest(user.id),
-    passwordResetSessionProvider.deleteAllByUserId(user.id),
-    userProvider.updateEmailAndVerify(user.id, verificationRequest.email),
+    deleteUserEmailVerificationRequest(
+      { where: { userId: user.id, email: verificationRequest.email } },
+      { tx: options.tx }
+    ),
+    passwordResetSessionProvider.deleteAllByUserId(
+      { where: { userId: user.id } },
+      { tx: options.tx }
+    ),
+    userProvider.updateEmailAndVerify(
+      { data: { email: verificationRequest.email }, where: { id: user.id } },
+      { tx: options.tx }
+    ),
   ]);
 
   deleteEmailVerificationRequestCookie();

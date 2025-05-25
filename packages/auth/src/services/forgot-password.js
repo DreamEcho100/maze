@@ -16,6 +16,7 @@ import { z } from "zod";
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
  * @param {unknown} data
+ * @param {{ tx: any }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -24,7 +25,7 @@ import { z } from "zod";
  *  >
  * >}
  */
-export async function forgotPasswordService(data) {
+export async function forgotPasswordService(data, options) {
   const input = z.object({ email: z.string().email() }).safeParse(data);
 
   if (!input.success) {
@@ -38,8 +39,14 @@ export async function forgotPasswordService(data) {
 
   const sessionToken = generateSessionToken();
   const [session] = await Promise.all([
-    createPasswordResetSession(sessionToken, user.id, user.email),
-    passwordResetSessionProvider.deleteAllByUserId(user.id),
+    createPasswordResetSession(
+      { data: { token: sessionToken, userId: user.id, email: user.email } },
+      { tx: options?.tx }
+    ),
+    passwordResetSessionProvider.deleteAllByUserId(
+      { where: { userId: user.id } },
+      { tx: options.tx }
+    ),
   ]);
 
   await sendPasswordResetEmail(session.email, session.code);

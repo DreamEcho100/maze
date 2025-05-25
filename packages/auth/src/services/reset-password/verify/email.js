@@ -17,6 +17,7 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  * Handles the password reset email verification process.
  *
  * @param {unknown} code - The verification code submitted by the user.
+ * @param {{ tx: any }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
@@ -25,7 +26,7 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  *  >
  * >}
  */
-export async function verifyPasswordResetEmailVerificationService(code) {
+export async function verifyPasswordResetEmailVerificationService(code, options) {
   if (typeof code !== "string" || !code) {
     return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
   }
@@ -44,10 +45,24 @@ export async function verifyPasswordResetEmailVerificationService(code) {
 
   const [emailMatches] = await Promise.all([
     // setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-    userProvider.verifyOneEmailIfMatches(session.userId,session.email),
+    userProvider.verifyOneEmailIfMatches(
+      { where: { id: session.userId, email: session.email }, },
+      { tx: options.tx }
+    ).then(result => {
+      if (!result) {
+        throw new Error("Email does not match the user's email.");
+      }
+      return true;
+    }),
     // updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-    passwordResetSessionProvider.markEmailVerified(session.id),
-  ]);
+    passwordResetSessionProvider.markOneEmailAsVerified(
+      { where: { id: session.id } },
+      { tx: options.tx }
+    ),
+  ]).catch((err) => {
+    console.error("Error verifying email:", err);
+    return [null]
+  });
 
   if (!emailMatches) {
     return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_EXPIRED_RESTART_REQUIRED;

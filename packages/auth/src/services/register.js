@@ -57,17 +57,22 @@ export async function registerService(data) {
 
   const user = await createUser(input.data.email, input.data.name, input.data.password);
 
-  const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
+  const emailVerificationRequest = await createEmailVerificationRequest({ where: { userId: user.id, email: user.email } });
 
   await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 
   setEmailVerificationRequestCookie(emailVerificationRequest);
 
   const sessionToken = generateSessionToken();
-  const session = await createSession(sessionToken, user.id, {
-    twoFactorVerifiedAt: null,
+  const session = await createSession({
+    data: {
+      token: sessionToken,
+      userId: user.id,
+      flags: {
+        twoFactorVerifiedAt: null,
+      },
+    },
   });
-
   setSessionTokenCookie({
     token: sessionToken,
     expiresAt: session.expiresAt,

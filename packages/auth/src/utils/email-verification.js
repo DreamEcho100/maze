@@ -27,34 +27,43 @@ export async function getUserEmailVerificationRequest(userId, id) {
 
 /**
  * Create an email verification request for a user.
- * @param {string} userId - The user ID.
- * @param {string} email - The email address.
+ * 
+ * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[0]} props
+ * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[1]} [options]
  * @returns {Promise<EmailVerificationRequest>} The email verification request.
  */
-export async function createEmailVerificationRequest(userId, email) {
-  await deleteUserEmailVerificationRequest(userId);
+export async function createEmailVerificationRequest(props, options) {
+  await deleteUserEmailVerificationRequest(props, options);
   const idBytes = new Uint8Array(20);
   crypto.getRandomValues(idBytes);
   const id = encodeBase32(idBytes).toLowerCase();
 
   const code = generateRandomOTP();
   const expiresAt = new Date(Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION);
-  return await userEmailVerificationRequestProvider.createOne({
+  const result = await userEmailVerificationRequestProvider.createOne({
     id: id,
-    userId: userId,
+    userId: props.where.userId,
     code: code,
-    email: email,
+    email: props.where.email,
     expiresAt: expiresAt,
   });
+
+  if (!result) {
+    throw new Error("Failed to create email verification request.");
+  }
+
+  return result;
 }
 
 /**
  * Delete all email verification requests for a user.
- * @param {string} userId - The user ID.
+ * 
+ * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[0]} props
+ * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[1]} [options]
  * @returns {Promise<void>} A promise that resolves when the requests have been deleted.
  */
-export async function deleteUserEmailVerificationRequest(userId) {
-  await userEmailVerificationRequestProvider.deleteOneByUser(userId); 
+export async function deleteUserEmailVerificationRequest(props, options) {
+  await userEmailVerificationRequestProvider.deleteOneByUserId(props, options); 
 }
 
 /**

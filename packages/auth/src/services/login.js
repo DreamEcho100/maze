@@ -52,9 +52,17 @@ export async function loginUserService(data) {
   }
 
   const sessionToken = generateSessionToken();
-  const session = await createSession(sessionToken, user.id, {
-    twoFactorVerifiedAt: null,
-  });
+  const session = await createSession(
+    {
+      data: {
+        token: sessionToken,
+        userId: user.id,
+        flags: {
+          twoFactorVerifiedAt: null,
+        }
+      },
+    },
+  );
   setSessionTokenCookie({
     expiresAt: session.expiresAt,
     token: sessionToken,

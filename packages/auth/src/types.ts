@@ -120,19 +120,6 @@ export type {
 
 export interface UserEmailVerificationRequestProvider {
   /**
-   * Delete all email verification requests for a user
-   * @param {string} userId - The user ID
-   * @returns {Promise<void>}
-   */
-  deleteOneByUser: (userId: string) => Promise<void>;
-  /**
-   * Find an email verification request by user ID and request ID
-   * @param {string} userId - The user ID
-   * @param {string} id - The request ID
-   * @returns {Promise<EmailVerificationRequest | null>}
-   */
-  findOneByIdAndUserId: (userId: string, id: string) => Promise<EmailVerificationRequest | null>;
-  /**
    * Create a new email verification request
    * @param {Object} data - The verification request data
    * @param {string} data.id - Unique request ID
@@ -147,24 +134,44 @@ export interface UserEmailVerificationRequestProvider {
       code: string;
       email: string;
       expiresAt: DateLike;
-  }) => Promise<EmailVerificationRequest>;
+  }) => Promise<EmailVerificationRequest | null | undefined>;
+  /**
+   * Delete all email verification requests for a user
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.userId - The user ID to delete requests for
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
+   * @returns {Promise<void>}
+   */
+  deleteOneByUserId: (props: { where: { userId: string; email: string; } }, options?: { tx?: TransactionClient; }) => Promise<void>;
+  /**
+   * Find an email verification request by user ID and request ID
+   * @param {string} userId - The user ID
+   * @param {string} id - The request ID
+   * @returns {Promise<void>}
+   */
+  findOneByIdAndUserId: (userId: string, id: string) => Promise<EmailVerificationRequest | null>;
 }
 
 
 export interface PasswordResetSessionProvider {
   /**
    * Create a new password reset session
-   * @param {Object} data - The password reset session data
-   * @param {string} data.id - Unique session ID
-   * @param {string} data.userId - User ID
-   * @param {string} data.email - User's email
-   * @param {string} data.code - Reset verification code
-   * @param {DateLike | null} data.emailVerifiedAt - Email verification timestamp
-   * @param {DateLike | null} data.twoFactorVerifiedAt - 2FA verification timestamp
-   * @param {DateLike} data.expiresAt - Session expiration date
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.data - The password reset session data
+   * @param {string} props.data.id - Unique session ID
+   * @param {string} props.data.userId - User ID
+   * @param {string} props.data.email - User's email
+   * @param {string} props.data.code - Reset verification code
+   * @param {DateLike | null} props.data.emailVerifiedAt - Email verification timestamp
+   * @param {DateLike | null} props.data.twoFactorVerifiedAt - 2FA verification timestamp
+   * @param {DateLike} props.data.expiresAt - Session expiration date
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<PasswordResetSession | null>} The created password reset session
    */
-  createOne: (data: PasswordResetSession) => Promise<PasswordResetSession | null>;
+  createOne: (props: { data: PasswordResetSession }, options?: { tx?: TransactionClient }) => Promise<PasswordResetSession | null>;
   /**
    * Find a password reset session with associated user data
    * @param {string} sessionId - The password reset session ID
@@ -181,37 +188,46 @@ export interface PasswordResetSessionProvider {
   deleteOne: (sessionId: string) => Promise<void>;
   /**
    * Mark a password reset session as email-verified
-   * @param {string} sessionId - The password reset session ID
-   * @returns {Promise<void>}
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {Object} props.where.sessionId - The session ID to update
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
+   * @returns {Promise<PasswordResetSession | undefined | null>}
    */
-  markEmailVerified: (sessionId: string) => Promise<void>;
+  markOneEmailAsVerified: (props: { where: { id: string } }, options?: { tx?: TransactionClient; }) => Promise<PasswordResetSession | undefined | null>;
   /**
    * Mark a password reset session as 2FA-verified
    * @param {string} sessionId - The password reset session ID
-   * @returns {Promise<void>}
+   * @returns {Promise<PasswordResetSession | undefined | null>}
    */
-  mark2FAVerified: (sessionId: string) => Promise<void>;
+  markOneTwoFactorAsVerified: (sessionId: string) => Promise<PasswordResetSession | undefined | null>;
   /**
    * Delete all password reset sessions for a specific user
-   * @param {string} userId - The user ID
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.userId - The user ID to delete sessions for
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<void>}
    * @description Useful for cleanup when user successfully resets password or for security purposes
    */
-  deleteAllByUserId: (userId: string) => Promise<void>;
+  deleteAllByUserId: (props: { where: { userId: string } }, options?: { tx?: TransactionClient; }) => Promise<void>;
 };
 
 
 export interface SessionProvider {
   /**
    * Create a new session
-   * @param {Object} data - The session data
-   * @param {string} data.id - Unique session ID
-   * @param {string} data.userId - User ID
-   * @param {DateLike} data.expiresAt - Session expiration date
-   * @param {DateLike | null} [data.twoFactorVerifiedAt] - 2FA verification timestamp
+   * @param {Object} props - The parameters
+   * @param {Object} props.data - The session data
+   * @param {string} props.data.id - Unique session ID
+   * @param {string} props.data.userId - User ID
+   * @param {DateLike} props.data.expiresAt - Session expiration date
+   * @param {DateLike | null} [props.data.twoFactorVerifiedAt] - 2FA verification timestamp
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<Session | null>} The created session
    */
-  createOne: (session: Session) => Promise<Session | null>;
+  createOne: (props: { data: Session }, options?: { tx?: TransactionClient; }) => Promise<Session | null>;
   /**
    * Find a session by ID with associated user data
    * @param {string} sessionId - The session ID to find
@@ -235,17 +251,25 @@ export interface SessionProvider {
   deleteOneById: (sessionId: string) => Promise<void>;
   /**
    * Delete all sessions for a user (logout everywhere)
-   * @param {string} userId - The user ID
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.userId - The user ID to delete sessions for
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<void>}
    * @description Invalidates all sessions for a user, useful for security purposes
    */
-  invalidateAllByUserId: (userId: string) => Promise<void>;
+  invalidateAllByUserId: (props: { where: { userId: string } }, options?: { tx?: TransactionClient; }) => Promise<void>;
   /**
    * Mark a session as 2FA verified
-   * @param {string} sessionId - The session ID
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.id - The session ID to update
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<Session | null>} The updated session
    */
-  markOne2FAVerified: (sessionId: string) => Promise<Session | null>;
+  markOne2FAVerified: (props: { where: { id: string } }, options?: { tx?: TransactionClient; }) => Promise<Session | null>;
   /**
    * Remove 2FA verification from all user sessions
    * @param {string} userId - The user ID
@@ -253,7 +277,7 @@ export interface SessionProvider {
    * @returns {Promise<Session | null>} The updated session
    * @description Used when 2FA is disabled or when security requires re-verification
    */
-  unMarkOne2FAForUser: (userId: string, tx?: any) => Promise<Session | null>;
+  unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<Session | null>;
 }
 
 
@@ -277,38 +301,50 @@ export interface UserProvider {
   findOneByEmail: (email: string) => Promise<User | null>;
   /**
    * Update user's password
-   * @param {string} userId - The user ID
-   * @param {string} passwordHash - New hashed password
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.id - The user ID to update
+   * @param {Object} props.data - The update data
+   * @param {string} props.data.passwordHash - New hashed password
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<User>} The updated user
    */
-  updateOnePassword: (userId: string, passwordHash: string) => Promise<User | null>;
+  updateOnePassword: (props: { where: { id: string }, data: { passwordHash: string } }, options?: { tx?: TransactionClient; }) => Promise<User | null>;
   /**
    * Update user's email and mark it as verified
-   * @param {string} userId - The user ID
-   * @param {string} email - New email address
+   * @param {Object} props - The parameters
+   * @param {Object} props.data - The update data
+   * @param {string} props.data.email - New email address
+   * @param {Object} props.where - Where conditions
+   * @param {string} props.where.id - The user ID to update
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<User>} The updated user
    * @description Updates email and automatically sets emailVerifiedAt timestamp
    */
-  updateEmailAndVerify: (userId: string, email: string) => Promise<User | null>;
+  updateEmailAndVerify: (props: { data: { email: string }, where: { id: string } }, options?: { tx?: TransactionClient; }) => Promise<User | null>;
   /**
    * Verify user's email if it matches the provided email
-   * @param {string} userId - The user ID
-   * @param {string} email - Email to match against
+   * @param {object} props
+   * @param {object} props.where - Where conditions
+   * @param {string} props.where.id - The user ID
+   * @param {string} props.where.email - Email to match against
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<User | null>} The updated user or null if email doesn't match
    */
-  verifyOneEmailIfMatches: (userId: string, email: string) => Promise<User | null | undefined>;
+  verifyOneEmailIfMatches: (props: { where: { id: string, email: string } }, options?: { tx?: TransactionClient; }) => Promise<User | null | undefined>;
   /**
    * Get user's password hash (for verification)
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @returns {Promise<string | null>} The password hash or null if not found
    * @description Used for password verification during login
    */
-  getOnePasswordHash: (userId: string) => Promise<string | null>;
+  getOnePasswordHash: (id: string) => Promise<string | null>;
 
 
   // /**
   //  * Get user's encrypted recovery code (raw)
-  //  * @param {string} userId - The user ID
+  //  * @param {string} id - The user ID
   //  * @param {any} [transaction] - Optional database transaction
   //  * @returns {Promise<Uint8Array | null>} The encrypted recovery code bytes
   //  * @description Returns raw encrypted bytes, used for internal operations
@@ -317,64 +353,69 @@ export interface UserProvider {
 
   // /**
   //  * Update user's recovery code
-  //  * @param {string} userId - The user ID
+  //  * @param {string} id - The user ID
   //  * @param {Uint8Array} encryptedRecoveryCode - New encrypted recovery code
   //  * @returns {Promise<User>} The updated user
   //  * @example
   //  * ```javascript
   //  * const newRecoveryCode = generateRecoveryCode();
   //  * const encrypted = encrypt(newRecoveryCode);
-  //  * await provider.updateRecoveryCode(userId, encrypted);
+  //  * await provider.updateRecoveryCode(id, encrypted);
   //  * ```
   //  */
   // updateRecoveryCode: undefined,
   /**
    * Get user's encrypted recovery code (raw bytes)
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @param {any} [transaction] - Optional database transaction
    * @returns {Promise<Uint8Array | null>} The encrypted recovery code bytes or null
    * @description Returns raw encrypted bytes from database
    */
-  getOneRecoveryCodeRaw: (userId: string, tx?: TransactionClient) => Promise<Uint8Array | null>;
+  getOneRecoveryCodeRaw: (id: string, tx?: TransactionClient) => Promise<Uint8Array | null>;
   /**
    * Get user's decrypted recovery code (plain text)
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @returns {Promise<string | null>} The decrypted recovery code or null
    * @description Returns the recovery code in plain text for verification
    */
-  getOneRecoveryCode: (userId: string) => Promise<string | null>;
+  getOneRecoveryCode: (id: string) => Promise<string | null>;
 
   /**
    * Update user's recovery code
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @param {Uint8Array} encryptedRecoveryCode - New encrypted recovery code
    * @returns {Promise<User>} The updated user
    */
-  updateOneRecoveryCode: (userId: string, encryptedRecoveryCode: Uint8Array) => Promise<User | null>;
+  updateOneRecoveryCode: (id: string, encryptedRecoveryCode: Uint8Array) => Promise<User | null>;
   /**
    * Update recovery code with verification of current code
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @param {Uint8Array} encryptedNewRecoveryCode - New encrypted recovery code
    * @param {Uint8Array} currentRecoveryCode - Current recovery code for verification
    * @param {any} [transaction] - Optional database transaction
    * @returns {Promise<Uint8Array | null>} The new encrypted recovery code or null if current code is invalid
    * @description Atomically updates recovery code only if current code matches
    */
-  updateOneRecoveryCodeByUserId: (userId: string, encryptedNewRecoveryCode: Uint8Array, userRecoveryCode: Uint8Array, tx?: TransactionClient) => Promise<Uint8Array | null>;
+  updateOneRecoveryCodeByUserId: (id: string, encryptedNewRecoveryCode: Uint8Array, userRecoveryCode: Uint8Array, tx?: TransactionClient) => Promise<Uint8Array | null>;
   /**
    * Get user's TOTP key (decrypted)
-   * @param {string} userId - The user ID
+   * @param {string} id - The user ID
    * @returns {Promise<Uint8Array | null>} The decrypted TOTP key or null
    * @description Returns the TOTP secret key for 2FA code generation/verification
    */
-  getOneTOTPKey: (userId: string) => Promise<Uint8Array | null>;
+  getOneTOTPKey: (id: string) => Promise<Uint8Array | null>;
   /**
    * Update user's TOTP key
-   * @param {string} userId - The user ID
-   * @param {Uint8Array} encryptedKey - New encrypted TOTP key
+   * 
+   * @param {Object} props - The parameters
+   * @param {Object} props.data - The update data
+   * @param {Uint8Array} props.data.totpKey - New encrypted TOTP key
+   * @param {Object} props.where - Where conditions
+   * @param {Object} props.where.userId - The user ID to update
+   * @param {{ tx?: TransactionClient }} [options] - Additional options (e.g. transaction)
    * @returns {Promise<User>} The updated user
    */
-  updateOneTOTPKey: (userId: string, encryptedKey: Uint8Array) => Promise<User | null>;
+  updateOneTOTPKey: (props: { data: { totpKey: Uint8Array; }, where: { id: string; } }, options?: { tx?: TransactionClient; }) => Promise<User | null>;
   /**
    * Update user's 2FA enabled status
    * @param {Object} data - Update data

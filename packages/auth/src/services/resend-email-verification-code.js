@@ -12,6 +12,7 @@ import {
  *
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
+ *  tx?: any
  * }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
@@ -36,9 +37,15 @@ export async function resendEmailVerificationCodeService(options) {
       return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
     }
 
-    verificationRequest = await createEmailVerificationRequest(user.id, user.email);
+    verificationRequest = await createEmailVerificationRequest(
+      { where: { userId: user.id, email: user.email } },
+      { tx: options.tx }
+    );
   } else {
-    verificationRequest = await createEmailVerificationRequest(user.id, verificationRequest.email);
+    verificationRequest = await createEmailVerificationRequest(
+      { where: { userId: user.id, email: verificationRequest.email } },
+      { tx: options.tx }
+    );
   }
   await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
   setEmailVerificationRequestCookie(verificationRequest);

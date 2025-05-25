@@ -11,6 +11,7 @@ import { z } from "zod";
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
  *
  * @param {unknown} data
+ * @param {{ tx: any }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    SETUP_2FA_MESSAGES_ERRORS,
@@ -18,7 +19,7 @@ import { z } from "zod";
  *  >
  * >}
  */
-export async function setup2FAService(data) {
+export async function setup2FAService(data, options) {
   const input = z
     .object({ code: z.string().min(6), encodedKey: z.string().min(28) })
     .safeParse(data);
@@ -56,9 +57,15 @@ export async function setup2FAService(data) {
   }
 
   await Promise.all([
-    updateUserTOTPKey(session.userId, key),
+    updateUserTOTPKey(
+      { data: { key }, where: { userId: user.id } },
+      { tx: options?.tx }
+    ),
     // markOne2FAVerifiedRepository(session.id),
-    sessionProvider.markOne2FAVerified(session.id),
+    sessionProvider.markOne2FAVerified(
+      { where: { id: session.id } },
+      { tx: options.tx }
+    ),
   ]);
 
   return SETUP_2FA_MESSAGES_SUCCESS.TWO_FACTOR_RESET_SUCCESSFUL;

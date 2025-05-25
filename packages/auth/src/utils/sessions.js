@@ -50,24 +50,27 @@ export function deleteSessionTokenCookie() {
  *
  * The session ID is the SHA-256 hash of the session token, and the session is set to expire in 30 days.
  *
- * @param {string} token - The session token, which is a random string.
- * @param {string} userId - The ID of the user for whom the session is created.
- * @param {{ twoFactorVerifiedAt?: DateLike | null; }} flags - Flags to set for the session.
+ * @param {object} props - The properties for the session.
+ * @param {object} props.data - The data associated with the session.
+ * @param {string} props.data.token - The session token, which is a random string.
+ * @param {string} props.data.userId - The ID of the user for whom the session is created.
+ * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
+ * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
  * @returns {Promise<Session>} A promise that resolves to the created session object.
  */
-export async function createSession(token, userId, flags) {
-  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+export async function createSession(props, options) {
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
   /** @type {Session} */
   const session = {
     id: sessionId,
-    userId,
+    userId: props.data.userId,
     expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
     // twoFactorVerifiedAt: 0,
-    twoFactorVerifiedAt: flags.twoFactorVerifiedAt,
+    twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
     createdAt: new Date(),
   };
 
-  await sessionProvider.createOne(session);
+  await sessionProvider.createOne({ data: session }, options);
 
   return session;
 }

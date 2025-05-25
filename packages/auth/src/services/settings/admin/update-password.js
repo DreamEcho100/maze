@@ -28,7 +28,7 @@ export async function adminUpdatePasswordService(data) {
   const strongPassword = await verifyPasswordStrength(data.newPassword);
   if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-  const updatedUser = await updateUserPassword(data.userId, data.newPassword);
+  const updatedUser = await updateUserPassword({ data: { password: data.newPassword }, where: { id: data.userId } });
 
   return {
     ...ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,

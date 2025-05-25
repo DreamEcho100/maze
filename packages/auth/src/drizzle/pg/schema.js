@@ -90,6 +90,7 @@ export const emailVerificationRequest = pgTable(
 	code: varchar("code", { length: 256 }).notNull().unique("uq_email_verification_request_code"),
 	// expiresAt: z.date(),
 	expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+	email: varchar("email", { length: 256 }).notNull(),
 	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
@@ -97,29 +98,34 @@ export const emailVerificationRequest = pgTable(
 	table => [
 		index("idx_email_verification_request_created_at").on(table.createdAt),
 		index("idx_email_verification_request_expires_at").on(table.expiresAt),
-		index("idx_email_verification_request_expires_at").on(table.expiresAt),
 		index("idx_email_verification_request_user_id").on(table.userId),
 	],
 );
 
 export const passwordResetSession = pgTable(
 	"password_reset_session", {
-		id: text("id").primaryKey().notNull().$default(createId),
+		id: text("id").primaryKey().notNull(), // .$default(createId),
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
 		code: varchar("code", { length: 256 }).notNull().unique("uq_password_reset_session_code"),
 		// expiresAt: z.date(),
-    expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		email: varchar("email", { length: 256 }).notNull(),
     userId: text("user_id")
       .notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		isEmailVerified: boolean("is_email_verified").default(false),
-		isTwoFactorVerified: boolean("is_two_factor_verified").default(false),
+		// isEmailVerified: boolean("is_email_verified").default(false),
+		// isTwoFactorVerified: boolean("is_two_factor_verified").default(false),
+		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
+		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 },
 	table => [
 		index("idx_password_reset_session_created_at").on(table.createdAt),
 		index("idx_password_reset_session_expires_at").on(table.expiresAt),
-		index("idx_password_reset_session_expires_at").on(table.expiresAt),
+		index("idx_password_reset_session_email").on(table.email),
 		index("idx_password_reset_session_user_id").on(table.userId),
+		index("idx_password_reset_session_code").on(table.code),
+		index("idx_password_reset_session_email_verified_at").on(table.emailVerifiedAt),
+		index("idx_password_reset_session_two_factor_verified_at").on(table.twoFactorVerifiedAt),
 	],
 )
 

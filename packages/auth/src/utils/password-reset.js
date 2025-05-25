@@ -18,19 +18,24 @@ import { generateRandomOTP } from "./generate-randomotp.js";
 import { cookiesProvider } from "#providers/cookies.js";
 
 /**
- * @param {string} token - The token to be used to create the password reset session.
- * @param {string} userId - The user ID associated with the password reset session.
- * @param {string} email - The email associated with the password reset session.
+ * Creates a password reset session.
+ * 
+ * @param {Object} props - The properties for the password reset session.
+ * @param {Object} props.data - The data for the password reset session.
+ * @param {string} props.data.token - The token to be used to create the password reset session.
+ * @param {string} props.data.userId - The user ID associated with the password reset session.
+ * @param {string} props.data.email - The user email associated with the password reset session.
  * @returns {Promise<PasswordResetSession>} A promise that resolves to the created password reset session.
+ * @param {{ tx?: any }} [options] - The properties for the password reset session.
  */
-export async function createPasswordResetSession(token, userId, email) {
-  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+export async function createPasswordResetSession(props, options) {
+  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
 
   /** @type {PasswordResetSession} */
   const session = {
     id: sessionId,
-    userId,
-    email,
+    userId: props.data.userId,
+    email: props.data.email,
     expiresAt: new Date(Date.now() + COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION),
     code: generateRandomOTP(),
     emailVerifiedAt: null,
@@ -39,9 +44,14 @@ export async function createPasswordResetSession(token, userId, email) {
   };
 
   // await createOnePasswordResetSessionRepository(session).then(
-  await passwordResetSessionProvider.createOne(session).then(
+  await passwordResetSessionProvider.createOne({ data: session }, options).then(
     /** @returns {PasswordResetSession} session */
-    (result) => ({
+    (result) => {
+      if (!result) {
+        throw new Error("Failed to create password reset session.");
+      }
+
+    return({
       id: result.id,
       userId: result.userId,
       email: result.email,
@@ -52,7 +62,7 @@ export async function createPasswordResetSession(token, userId, email) {
         ? dateLikeToDate(result.twoFactorVerifiedAt)
         : null,
       createdAt: dateLikeToDate(result.createdAt),
-    }),
+    })},
   );
 
   return session;
