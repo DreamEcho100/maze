@@ -5,7 +5,7 @@ import { idsProvider } from "../../providers/ids";
 import { dateLikeToDate } from "../../utils/dates";
 import { decrypt, decryptToString } from "../../utils/encryption";
 
-const defaultUserReturn = {
+const userReturnTemplate = {
 		name: dbSchema.user.name,
 		id: dbSchema.user.id,
 		createdAt: dbSchema.user.createdAt,
@@ -15,7 +15,7 @@ const defaultUserReturn = {
 		twoFactorEnabledAt: dbSchema.user.twoFactorEnabledAt,
 		twoFactorRegisteredAt: dbSchema.user.twoFactorRegisteredAt,
 }
-const defaultUserReturn2 = /** @type {const} */({
+const userReturnSchema = /** @type {const} */({
 		name: true,
 		id: true,
 		createdAt: true,
@@ -26,7 +26,7 @@ const defaultUserReturn2 = /** @type {const} */({
 		twoFactorRegisteredAt: true,
 })
 
-const defaultSessionReturn = {
+const sessionReturnTemplate = {
 	id: dbSchema.session.id,
 	userId: dbSchema.session.userId,
 	createdAt: dbSchema.session.createdAt,
@@ -36,7 +36,7 @@ const defaultSessionReturn = {
 	userAgent: dbSchema.session.userAgent,
 	twoFactorVerifiedAt: dbSchema.session.twoFactorVerifiedAt,
 }
-const defaultSessionReturn2 = /** @type {const} */({
+const sessionReturnSchema = /** @type {const} */({
 	id: true,
 	userId: true,
 	createdAt: true,
@@ -70,11 +70,11 @@ export function setDrizzlePgAuthProviders() {
 					createdAt,
 					updatedAt: createdAt,
 				})
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			findOneByEmail: async (email) => {
-				return db.select(defaultUserReturn).from(dbSchema.user)
+				return db.select(userReturnTemplate).from(dbSchema.user)
 					.where(eq(dbSchema.user.email, email))
 					.then((result) => result[0] ?? null);
 			},
@@ -105,7 +105,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.user.id, userId))
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			updateOne2FAEnabled: async (data, where) => {
@@ -119,7 +119,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.user.id, where.userId))
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			updateOnePassword: async (userId, passwordHash) => {
@@ -129,7 +129,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.user.id, userId))
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			updateOneRecoveryCode: async (userId, encryptedRecoveryCode) => {
@@ -139,7 +139,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.user.id, userId))
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			updateOneRecoveryCodeByUserId: async (userId, encryptedNewRecoveryCode, userRecoveryCode, tx) => {
@@ -169,7 +169,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.user.id, userId))
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			verifyOneEmailIfMatches: async (userId, email) => {
@@ -184,7 +184,7 @@ export function setDrizzlePgAuthProviders() {
 							eq(dbSchema.user.email, email)
 						)
 					)
-					.returning(defaultUserReturn)
+					.returning(userReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			getOneTOTPKey: async (userId) => {
@@ -211,13 +211,13 @@ export function setDrizzlePgAuthProviders() {
 					createdAt,
 					updatedAt: createdAt,
 				})
-					.returning(defaultSessionReturn)
+					.returning(sessionReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			findOneWithUser: async (sessionId) => {
 				return db.query.session.findFirst({
-					with: { user: { columns: defaultUserReturn2 } },
-					columns: defaultSessionReturn2,
+					with: { user: { columns: userReturnSchema } },
+					columns: sessionReturnSchema,
 					where: eq(dbSchema.session.id, sessionId),
 				})
 					.then((result) => {
@@ -233,7 +233,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.session.id, sessionId))
-					.returning(defaultSessionReturn)
+					.returning(sessionReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			deleteOneById: async (sessionId) => {
@@ -251,7 +251,7 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.session.id, sessionId))
-					.returning(defaultSessionReturn)
+					.returning(sessionReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			unMarkOne2FAForUser: async (userId, tx) => {
@@ -262,13 +262,13 @@ export function setDrizzlePgAuthProviders() {
 						updatedAt: new Date(),
 					})
 					.where(eq(dbSchema.session.userId, userId))
-					.returning(defaultSessionReturn)
+					.returning(sessionReturnTemplate)
 					.then((result) => result[0] ?? null);
 			},
 			// The following methods are commented out as they are not currently used.
 			// They could be useful for session management in the future, so they are kept here for reference.
 			// findManyExpired: async () => {
-			// 	return db.select(defaultSessionReturn)
+			// 	return db.select(sessionReturnTemplate)
 			// 		.from(dbSchema.session)
 			// 		.where(lt(dbSchema.session.expiresAt, new Date()));
 			// },
