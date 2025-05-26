@@ -54,12 +54,6 @@ catalogs:
     prettier:
       specifier: ^3.4.2
       version: 3.5.3
-    react:
-      specifier: 19.0.0
-      version: 19.0.0
-    react-dom:
-      specifier: 19.0.0
-      version: 19.0.0
     react-hook-form:
       specifier: ^7.54.2
       version: 7.55.0
@@ -408,6 +402,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.0.0(react@19.0.0)
+      ulid:
+        specifier: ^3.0.0
+        version: 3.0.0
       zod:
         specifier: 'catalog:'
         version: 3.25.28
@@ -9863,6 +9860,10 @@ packages:
   uglify-js@3.19.3:
     resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
     engines: {node: '>=0.8.0'}
+    hasBin: true
+
+  ulid@3.0.0:
+    resolution: {integrity: sha512-yvZYdXInnJve6LdlPIuYmURdS2NP41ZoF4QW7SXwbUKYt53+0eDAySO+rGSvM2O/ciuB/G+8N7GQrZ1mCJpuqw==}
     hasBin: true
 
   ultrahtml@1.5.3:
@@ -20243,6 +20244,8 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
+
+  ulid@3.0.0: {}
 
   ultrahtml@1.5.3: {}
 

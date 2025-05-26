@@ -1,7 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS,
@@ -39,7 +39,7 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
 	}
 
 	// const totpKey = await getUserTOTPKeyRepository(session.userId);
-	const totpKey = await userProvider.getOneTOTPKey(user.id);
+	const totpKey = await usersProvider.getOneTOTPKey(user.id);
 	if (!totpKey || !verifyTOTP(totpKey, 30, 6, code)) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_TOTP_CODE;
 	}

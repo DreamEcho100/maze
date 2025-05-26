@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { Toaster } from "@de100/ui/components/sonner";
 
-import { orpc, ORPCContext, queryClient } from "#client/utils/orpc";
+import { orpc, ORPCContext, queryClient } from "#client/libs/orpc";
 import { ThemeProvider } from "./theme-provider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {

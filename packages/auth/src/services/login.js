@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
@@ -32,7 +32,7 @@ export async function loginUserService(data) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}
 
-	const user = await userProvider.findOneByEmail(input.data.email);
+	const user = await usersProvider.findOneByEmail(input.data.email);
 	if (user === null) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
@@ -42,7 +42,7 @@ export async function loginUserService(data) {
 		return LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
 	}
 
-	const passwordHash = await userProvider.getOnePasswordHash(user.id);
+	const passwordHash = await usersProvider.getOnePasswordHash(user.id);
 	if (!passwordHash) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
 	}

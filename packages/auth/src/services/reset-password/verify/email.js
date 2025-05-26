@@ -1,7 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
@@ -47,7 +47,7 @@ export async function verifyPasswordResetEmailVerificationService(code, options)
 
 	const [emailMatches] = await Promise.all([
 		// setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-		userProvider
+		usersProvider
 			.verifyOneEmailIfMatches(
 				{ where: { id: session.userId, email: session.email } },
 				{ tx: options.tx },

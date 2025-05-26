@@ -49,11 +49,11 @@
 //     .then(transformDbEmailVerificationRequestToEmailVerificationRequest);
 // }
 
-/** @import { UserEmailVerificationRequestProvider } from "#types.ts"; */
+/** @import { UserEmailVerificationRequestsProvider } from "#types.ts"; */
 export let userEmailVerificationRequestProvider =
-	/** @type {UserEmailVerificationRequestProvider} */ ({});
+	/** @type {UserEmailVerificationRequestsProvider} */ ({});
 
-/** @param {UserEmailVerificationRequestProvider} newUserEmailVerificationRequestProvider  */
+/** @param {UserEmailVerificationRequestsProvider} newUserEmailVerificationRequestProvider  */
 export function setUserEmailVerificationRequestProvider(newUserEmailVerificationRequestProvider) {
 	userEmailVerificationRequestProvider = newUserEmailVerificationRequestProvider;
 }

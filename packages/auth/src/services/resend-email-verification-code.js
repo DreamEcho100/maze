@@ -12,7 +12,7 @@ import {
  *
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
- *  tx?: any
+ *  tx: any
  * }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<

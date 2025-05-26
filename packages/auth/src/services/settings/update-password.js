@@ -1,7 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { sessionProvider } from "#providers/sessions.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
@@ -50,7 +50,7 @@ export async function updatePasswordService(props, options) {
 	const strongPassword = await verifyPasswordStrength(props.data.newPassword);
 	if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-	const passwordHash = await userProvider.getOnePasswordHash(user.id);
+	const passwordHash = await usersProvider.getOnePasswordHash(user.id);
 	if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
 	const validPassword = await verifyPasswordHash(passwordHash, props.data.currentPassword);

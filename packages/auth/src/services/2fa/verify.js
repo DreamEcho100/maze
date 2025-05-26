@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import { sessionProvider } from "#providers/sessions.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
 import { getCurrentSession } from "#utils/sessions.js";
@@ -41,7 +41,7 @@ export async function verify2FAService(data) {
 	}
 
 	// Get TOTP key for user and verify code
-	const totpKey = await userProvider.getOneTOTPKey(user.id);
+	const totpKey = await usersProvider.getOneTOTPKey(user.id);
 	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
 		return VERIFY_2FA_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
 	}

@@ -120,11 +120,11 @@
 //   });
 // }
 
-/** @import { SessionProvider } from "#types.ts"; */
+/** @import { SessionsProvider } from "#types.ts"; */
 
-export let sessionProvider = /** @type {SessionProvider} */ ({});
+export let sessionProvider = /** @type {SessionsProvider} */ ({});
 
-/** @param {SessionProvider} newSessionProvider */
+/** @param {SessionsProvider} newSessionProvider */
 export function setSessionProvider(newSessionProvider) {
 	sessionProvider = newSessionProvider;
 }

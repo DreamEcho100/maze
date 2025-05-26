@@ -30,6 +30,7 @@
 		"next-themes": "catalog:",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
+		"ulid": "^3.0.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

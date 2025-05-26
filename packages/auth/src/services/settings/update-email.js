@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import { UPDATE_EMAIL_MESSAGES_ERRORS, UPDATE_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
@@ -36,7 +36,7 @@ export async function updateEmailService(email) {
 	}
 
 	// const emailAvailable = await getUserByEmailRepository(validatedEmail);
-	const emailAvailable = await userProvider.findOneByEmail(validatedEmail);
+	const emailAvailable = await usersProvider.findOneByEmail(validatedEmail);
 	if (emailAvailable) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
 
 	const verificationRequest = await createEmailVerificationRequest({

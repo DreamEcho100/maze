@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToNumber } from "#utils/dates.js";
 import {
@@ -19,7 +19,7 @@ import { getCurrentSession } from "#utils/sessions.js";
  * @param {unknown} data
  * @param {{
  *  getCurrentSession: () => Promise<SessionValidationResult>;
- *  tx?: any
+ *  tx: any
  * }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
@@ -76,7 +76,7 @@ export async function verifyEmailUserService(data, options) {
 			{ where: { userId: user.id } },
 			{ tx: options.tx },
 		),
-		userProvider.updateEmailAndVerify(
+		usersProvider.updateEmailAndVerify(
 			{ data: { email: verificationRequest.email }, where: { id: user.id } },
 			{ tx: options.tx },
 		),

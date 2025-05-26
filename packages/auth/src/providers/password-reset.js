@@ -87,11 +87,11 @@
 //   await db.passwordResetSession.deleteMany({ where: { userId } });
 // }
 
-/** @import { PasswordResetSessionProvider } from "#types.ts"; */
+/** @import { PasswordResetSessionsProvider } from "#types.ts"; */
 
-export let passwordResetSessionProvider = /** @type {PasswordResetSessionProvider} */ ({});
+export let passwordResetSessionProvider = /** @type {PasswordResetSessionsProvider} */ ({});
 
-/** @param {PasswordResetSessionProvider} newPasswordResetSessionProvider */
+/** @param {PasswordResetSessionsProvider} newPasswordResetSessionProvider */
 export function setPasswordResetSessionProvider(newPasswordResetSessionProvider) {
 	passwordResetSessionProvider = newPasswordResetSessionProvider;
 }

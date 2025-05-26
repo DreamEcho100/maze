@@ -115,7 +115,7 @@ export type {
 
 type TransactionClient = any;
 
-export interface UserEmailVerificationRequestProvider {
+export interface UserEmailVerificationRequestsProvider {
 	/**
 	 * Create a new email verification request
 	 * @param {Object} data - The verification request data
@@ -154,7 +154,7 @@ export interface UserEmailVerificationRequestProvider {
 	findOneByIdAndUserId: (userId: string, id: string) => Promise<EmailVerificationRequest | null>;
 }
 
-export interface PasswordResetSessionProvider {
+export interface PasswordResetSessionsProvider {
 	/**
 	 * Create a new password reset session
 	 *
@@ -224,7 +224,7 @@ export interface PasswordResetSessionProvider {
 	) => Promise<void>;
 }
 
-export interface SessionProvider {
+export interface SessionsProvider {
 	/**
 	 * Create a new session
 	 * @param {Object} props - The parameters
@@ -298,7 +298,7 @@ export interface SessionProvider {
 	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<Session | null>;
 }
 
-export interface UserProvider {
+export interface UsersProvider {
 	/**
 	 * Create a new user
 	 * @param {Object} values - User data
@@ -487,7 +487,18 @@ export interface CookiesProvider {
 			sameSite?: "lax" | "strict" | "none";
 		},
 	) => void;
-	delete: (name: string) => void;
+	delete: (
+		name: string,
+		options?: {
+			expires?: DateLike;
+			maxAge?: number;
+			path?: string;
+			domain?: string;
+			secure?: boolean;
+			httpOnly?: boolean;
+			sameSite?: "lax" | "strict" | "none";
+		},
+	) => void;
 }
 
 export interface IdsProvider {
@@ -496,12 +507,18 @@ export interface IdsProvider {
 }
 
 export interface Providers {
-	user: UserProvider;
-	session: SessionProvider;
-	passwordResetSession: PasswordResetSessionProvider;
-	emailVerificationRequest: UserEmailVerificationRequestProvider;
-	cookies: CookiesProvider;
-	ids: IdsProvider;
+	users: UsersProvider | (() => UsersProvider | Promise<UsersProvider>);
+	sessions: SessionsProvider | (() => SessionsProvider | Promise<SessionsProvider>);
+	passwordResetSessions:
+		| PasswordResetSessionsProvider
+		| (() => PasswordResetSessionsProvider | Promise<PasswordResetSessionsProvider>);
+	emailVerificationRequests:
+		| UserEmailVerificationRequestsProvider
+		| (() =>
+				| UserEmailVerificationRequestsProvider
+				| Promise<UserEmailVerificationRequestsProvider>);
+	cookies: CookiesProvider | (() => CookiesProvider | Promise<CookiesProvider>);
+	ids: IdsProvider | (() => IdsProvider | Promise<IdsProvider>);
 }
 
 export interface ActionResultBase<StatusType extends "success" | "error"> {

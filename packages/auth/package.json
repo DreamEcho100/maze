@@ -156,8 +156,16 @@
 			"default": "./src/utils/sessions.js"
 		},
 		"./providers": {
-			"types": "./dist/src/utils/providers/index.d.ts",
-			"default": "./src/utils/providers/index.js"
+			"types": "./dist/src/providers/index.d.ts",
+			"default": "./src/providers/index.js"
+		},
+		"./providers/ids": {
+			"types": "./dist/src/providers/ids.d.ts",
+			"default": "./src/providers/ids.js"
+		},
+		"./providers/users": {
+			"types": "./dist/src/providers/users.d.ts",
+			"default": "./src/providers/users.js"
 		},
 		"./utils/users": {
 			"types": "./dist/src/utils/users.d.ts",

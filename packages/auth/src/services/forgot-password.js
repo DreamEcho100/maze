@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { userProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/users.js";
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
@@ -36,7 +36,7 @@ export async function forgotPasswordService(data, options) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;
 	}
 
-	const user = await userProvider.findOneByEmail(input.data.email);
+	const user = await usersProvider.findOneByEmail(input.data.email);
 	if (user === null) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
