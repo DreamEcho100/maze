@@ -3,7 +3,6 @@
 /** @import { SessionValidationResult } from "@acme/auth/types"; */
 import { cache } from "react";
 import { cookies } from "next/headers";
-
 import { getCurrentSession as getCurrentSession_ } from "@acme/auth/utils/sessions";
 
 /**
@@ -25,6 +24,6 @@ import { getCurrentSession as getCurrentSession_ } from "@acme/auth/utils/sessio
  * ```
  */
 export const getCurrentSession = cache(async () => {
-  const cookiesManager = await cookies();
-  return getCurrentSession_((key) => cookiesManager.get(key)?.value ?? null);
+	const cookiesManager = await cookies();
+	return getCurrentSession_((key) => cookiesManager.get(key)?.value ?? null);
 });

@@ -1,8 +1,8 @@
 {
-  "extends": "@de100/tsconfig/internal-package.json",
-  "compilerOptions": {
-    "lib": ["ESNext", "DOM"]
-  },
-  "include": ["*.js", "*.ts", "src"],
-  "exclude": ["node_modules"]
+	"extends": "@de100/tsconfig/internal-package.json",
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM"]
+	},
+	"include": ["*.js", "*.ts", "src"],
+	"exclude": ["node_modules"]
 }

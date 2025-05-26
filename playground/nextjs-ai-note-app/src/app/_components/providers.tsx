@@ -5,9 +5,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "next-themes";
 
 export default function Providers(props: PropsWithChildren) {
-  return (
-    <ClerkProvider>
-      <ThemeProvider attribute="class">{props.children}</ThemeProvider>
-    </ClerkProvider>
-  );
+	return (
+		<ClerkProvider>
+			<ThemeProvider attribute="class">{props.children}</ThemeProvider>
+		</ClerkProvider>
+	);
 }

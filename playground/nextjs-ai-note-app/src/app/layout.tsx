@@ -9,30 +9,28 @@ import type { PropsWithChildren } from "react";
 import { ThemeProvider } from "@de100/ui/components/theme";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+	variable: "--font-geist-sans",
+	subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+	variable: "--font-geist-mono",
+	subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "FlowBrain",
-  description: "The intelligent note-taking app",
+	title: "FlowBrain",
+	description: "The intelligent note-taking app",
 };
 
 export default function RootLayout(props: PropsWithChildren) {
-  return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} font-geist-sans antialiased`}
-        >
-          <ThemeProvider attribute="class">{props.children}</ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
-  );
+	return (
+		<ClerkProvider>
+			<html lang="en" suppressHydrationWarning>
+				<body className={`${geistSans.variable} ${geistMono.variable} font-geist-sans antialiased`}>
+					<ThemeProvider attribute="class">{props.children}</ThemeProvider>
+				</body>
+			</html>
+		</ClerkProvider>
+	);
 }

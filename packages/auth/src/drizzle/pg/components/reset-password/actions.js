@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-
 import { resetPasswordService } from "@acme/auth/services/reset-password";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
@@ -14,25 +13,25 @@ import { redirect } from "~/libs/i18n/navigation/custom";
  * @returns {Promise<ActionResult>}
  */
 export async function resetPasswordAction(_prev, formData) {
-  const password = formData.get("password");
+	const password = formData.get("password");
 
-  if (typeof password !== "string" || !password.trim()) {
-    return {
-      message: "Invalid or missing fields",
-      type: "error",
-      statusCode: 400,
-    };
-  }
+	if (typeof password !== "string" || !password.trim()) {
+		return {
+			message: "Invalid or missing fields",
+			type: "error",
+			statusCode: 400,
+		};
+	}
 
-  const cookiesManager = await cookies();
-  const result = await resetPasswordService(password, {
-    getCookie: (name) => cookiesManager.get(name)?.value,
-    setCookie: cookiesManager.set,
-  });
+	const cookiesManager = await cookies();
+	const result = await resetPasswordService(password, {
+		getCookie: (name) => cookiesManager.get(name)?.value,
+		setCookie: cookiesManager.set,
+	});
 
-  if (result.type === "success") {
-    return redirect("/");
-  }
+	if (result.type === "success") {
+		return redirect("/");
+	}
 
-  return result;
+	return result;
 }

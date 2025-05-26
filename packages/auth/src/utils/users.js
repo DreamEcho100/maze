@@ -2,13 +2,10 @@
  * @import { DateLike, DBUser, User } from "#types.ts";
  */
 
-import {
-  userProvider
-} from "#providers/users.js";
+import { userProvider } from "#providers/users.js";
 import { encrypt, encryptString } from "#utils/encryption.js";
 import { generateRandomRecoveryCode } from "#utils/generate-random-recovery-code.js";
 import { hashPassword } from "#utils/passwords.js";
-
 import { dateLikeToDate } from "./dates.js";
 
 /**
@@ -19,23 +16,23 @@ import { dateLikeToDate } from "./dates.js";
  * @returns {Promise<User>}
  */
 export async function createUser(email, name, password) {
-  const passwordHash = await hashPassword(password);
-  const recoveryCode = generateRandomRecoveryCode();
-  const encryptedRecoveryCode = encryptString(recoveryCode);
+	const passwordHash = await hashPassword(password);
+	const recoveryCode = generateRandomRecoveryCode();
+	const encryptedRecoveryCode = encryptString(recoveryCode);
 
-  // const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
-  const result = await userProvider.createOne({
-    email,
-    name,
-    passwordHash,
-    encryptedRecoveryCode,
-  });
+	// const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
+	const result = await userProvider.createOne({
+		email,
+		name,
+		passwordHash,
+		encryptedRecoveryCode,
+	});
 
-  if (!result) {
-    throw new Error(`Failed to create user with email ${email}`);
-  }
+	if (!result) {
+		throw new Error(`Failed to create user with email ${email}`);
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -44,13 +41,13 @@ export async function createUser(email, name, password) {
  * @returns {Promise<string>}
  */
 export async function resetUserRecoveryCode(userId) {
-  const recoveryCode = generateRandomRecoveryCode();
-  const encryptedCode = encryptString(recoveryCode);
+	const recoveryCode = generateRandomRecoveryCode();
+	const encryptedCode = encryptString(recoveryCode);
 
-  // await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-  await userProvider.updateOneRecoveryCode(userId, encryptedCode);
+	// await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
+	await userProvider.updateOneRecoveryCode(userId, encryptedCode);
 
-  return recoveryCode;
+	return recoveryCode;
 }
 
 // /**
@@ -71,7 +68,7 @@ export async function resetUserRecoveryCode(userId) {
 
 /**
  * Update a user's password.
- * 
+ *
  * @param {Object} props - The properties to identify the user.
  * @param {Object} props.data - The data to be updated.
  * @param {string} props.data.password - The new password to be set.
@@ -81,20 +78,23 @@ export async function resetUserRecoveryCode(userId) {
  * @returns {Promise<User>}
  */
 export async function updateUserPassword(props, options) {
-  const passwordHash = await hashPassword(props.data.password);
-  // const result = await updateUserPasswordRepository(id, passwordHash);
-  const result = await userProvider.updateOnePassword({ data: { passwordHash }, where: { id: props.where.id } }, options);
+	const passwordHash = await hashPassword(props.data.password);
+	// const result = await updateUserPasswordRepository(id, passwordHash);
+	const result = await userProvider.updateOnePassword(
+		{ data: { passwordHash }, where: { id: props.where.id } },
+		options,
+	);
 
-  if (!result) {
-    throw new Error(`User with ID ${props.where.id} not found`);
-  }
+	if (!result) {
+		throw new Error(`User with ID ${props.where.id} not found`);
+	}
 
-  return result;
+	return result;
 }
 
 /**
  * Update the user's TOTP key.
- * 
+ *
  * @param {Object} props
  * @param {Object} props.where - The properties to identify the user.
  * @param {string} props.where.userId - The ID of the user.
@@ -104,18 +104,18 @@ export async function updateUserPassword(props, options) {
  * @returns {Promise<User>}
  */
 export async function updateUserTOTPKey(props, options) {
-  const encryptedKey = encrypt(props.data.key);
-  // const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
-  const result = await userProvider.updateOneTOTPKey(
-    { data: { totpKey: encryptedKey }, where: { id: props.where.userId } },
-    options
-  );
+	const encryptedKey = encrypt(props.data.key);
+	// const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
+	const result = await userProvider.updateOneTOTPKey(
+		{ data: { totpKey: encryptedKey }, where: { id: props.where.userId } },
+		options,
+	);
 
-  if (!result) {
-    throw new Error(`User with ID ${props.where.userId} not found`);
-  }
+	if (!result) {
+		throw new Error(`User with ID ${props.where.userId} not found`);
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -125,27 +125,27 @@ export async function updateUserTOTPKey(props, options) {
  * @returns {Promise<User>}
  */
 export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabledAt) {
-  const encryptedRecoveryCode = twoFactorEnabledAt
-    ? (() => {
-        const recoveryCode = generateRandomRecoveryCode();
-        const encryptedRecoveryCode = encryptString(recoveryCode);
+	const encryptedRecoveryCode = twoFactorEnabledAt
+		? (() => {
+				const recoveryCode = generateRandomRecoveryCode();
+				const encryptedRecoveryCode = encryptString(recoveryCode);
 
-        return encryptedRecoveryCode;
-      })()
-    : null;
+				return encryptedRecoveryCode;
+			})()
+		: null;
 
-    // return await updateUserTwoFactorEnabledRepository(
-    const result = await userProvider.updateOne2FAEnabled(
-    {
-      twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
-      recoveryCode: encryptedRecoveryCode,
-    },
-    { userId },
-  );
-  
-  if (!result) {
-    throw new Error(`User with ID ${userId} not found`);
-  }
+	// return await updateUserTwoFactorEnabledRepository(
+	const result = await userProvider.updateOne2FAEnabled(
+		{
+			twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
+			recoveryCode: encryptedRecoveryCode,
+		},
+		{ userId },
+	);
 
-  return result;
+	if (!result) {
+		throw new Error(`User with ID ${userId} not found`);
+	}
+
+	return result;
 }

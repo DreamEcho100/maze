@@ -12,9 +12,9 @@ Below are some suggestions for improving your environment handling implementatio
   ```ts
   const runtimeEnv = { ...process.env };
   if (options.emptyStringAsUndefined) {
-    Object.entries(runtimeEnv).forEach(([key, value]) => {
-      if (value === "") runtimeEnv[key] = undefined;
-    });
+  	Object.entries(runtimeEnv).forEach(([key, value]) => {
+  		if (value === "") runtimeEnv[key] = undefined;
+  	});
   }
   ```
 
@@ -26,13 +26,13 @@ Below are some suggestions for improving your environment handling implementatio
 
   ```ts
   if (propResult.issues) {
-    issues.push(
-      ...propResult.issues.map((issue) => ({
-        ...issue,
-        path: [key, ...(issue.path ?? [])],
-        context: { key, value: prop, expected: schema },
-      }))
-    );
+  	issues.push(
+  		...propResult.issues.map((issue) => ({
+  			...issue,
+  			path: [key, ...(issue.path ?? [])],
+  			context: { key, value: prop, expected: schema },
+  		})),
+  	);
   }
   ```
 

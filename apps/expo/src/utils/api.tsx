@@ -9,41 +9,41 @@ import { getBaseUrl } from "./base-url";
 import { getToken } from "./session-store";
 
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // ...
-    },
-  },
+	defaultOptions: {
+		queries: {
+			// ...
+		},
+	},
 });
 
 /**
  * A set of typesafe hooks for consuming your API.
  */
 export const trpc = createTRPCOptionsProxy<AppRouter>({
-  client: createTRPCClient({
-    links: [
-      loggerLink({
-        enabled: (opts) =>
-          process.env.NODE_ENV === "development" ||
-          (opts.direction === "down" && opts.result instanceof Error),
-        colorMode: "ansi",
-      }),
-      httpBatchLink({
-        transformer: superjson,
-        url: `${getBaseUrl()}/api/trpc`,
-        headers() {
-          const headers = new Map<string, string>();
-          headers.set("x-trpc-source", "expo-react");
+	client: createTRPCClient({
+		links: [
+			loggerLink({
+				enabled: (opts) =>
+					process.env.NODE_ENV === "development" ||
+					(opts.direction === "down" && opts.result instanceof Error),
+				colorMode: "ansi",
+			}),
+			httpBatchLink({
+				transformer: superjson,
+				url: `${getBaseUrl()}/api/trpc`,
+				headers() {
+					const headers = new Map<string, string>();
+					headers.set("x-trpc-source", "expo-react");
 
-          const token = getToken();
-          if (token) headers.set("Authorization", `Bearer ${token}`);
+					const token = getToken();
+					if (token) headers.set("Authorization", `Bearer ${token}`);
 
-          return Object.fromEntries(headers);
-        },
-      }),
-    ],
-  }),
-  queryClient,
+					return Object.fromEntries(headers);
+				},
+			}),
+		],
+	}),
+	queryClient,
 });
 
 export { type RouterInputs, type RouterOutputs } from "@de100/api";

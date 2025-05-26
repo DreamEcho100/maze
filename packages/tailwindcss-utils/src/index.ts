@@ -1,1 +1,1 @@
-export const name = 'tailwindcss-utils';
+export const name = "tailwindcss-utils";

@@ -2,9 +2,11 @@
 
 import { passwordResetSessionProvider } from "#providers/password-reset.js";
 import { userProvider } from "#providers/users.js";
-import { VERIFY_PASSWORD_RESET_MESSAGES_ERRORS, VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
+	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
-
 
 /**
  * @typedef {typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS[keyof typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS]} ActionResultError
@@ -27,51 +29,53 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  * >}
  */
 export async function verifyPasswordResetEmailVerificationService(code, options) {
-  if (typeof code !== "string" || !code) {
-    return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
-  }
+	if (typeof code !== "string" || !code) {
+		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
+	}
 
-  const { session, user } = await validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest();
 
-  if (!session) {
-    return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-  }
-  if (session.emailVerifiedAt) {
-    return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.ACCESS_DENIED;
-  }
-  if (code !== session.code) {
-    return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
-  }
+	if (!session) {
+		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	}
+	if (session.emailVerifiedAt) {
+		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.ACCESS_DENIED;
+	}
+	if (code !== session.code) {
+		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
+	}
 
-  const [emailMatches] = await Promise.all([
-    // setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-    userProvider.verifyOneEmailIfMatches(
-      { where: { id: session.userId, email: session.email }, },
-      { tx: options.tx }
-    ).then(result => {
-      if (!result) {
-        throw new Error("Email does not match the user's email.");
-      }
-      return true;
-    }),
-    // updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-    passwordResetSessionProvider.markOneEmailAsVerified(
-      { where: { id: session.id } },
-      { tx: options.tx }
-    ),
-  ]).catch((err) => {
-    console.error("Error verifying email:", err);
-    return [null]
-  });
+	const [emailMatches] = await Promise.all([
+		// setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
+		userProvider
+			.verifyOneEmailIfMatches(
+				{ where: { id: session.userId, email: session.email } },
+				{ tx: options.tx },
+			)
+			.then((result) => {
+				if (!result) {
+					throw new Error("Email does not match the user's email.");
+				}
+				return true;
+			}),
+		// updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
+		passwordResetSessionProvider.markOneEmailAsVerified(
+			{ where: { id: session.id } },
+			{ tx: options.tx },
+		),
+	]).catch((err) => {
+		console.error("Error verifying email:", err);
+		return [null];
+	});
 
-  if (!emailMatches) {
-    return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_EXPIRED_RESTART_REQUIRED;
-  }
+	if (!emailMatches) {
+		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_EXPIRED_RESTART_REQUIRED;
+	}
 
-  return {
-    ...VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS.EMAIL_VERIFIED_SUCCESSFULLY,
-    data: {
-      nextStep: user.twoFactorEnabledAt ? "verify-2fa" : "reset-password",
-    },
-  };
+	return {
+		...VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS.EMAIL_VERIFIED_SUCCESSFULLY,
+		data: {
+			nextStep: user.twoFactorEnabledAt ? "verify-2fa" : "reset-password",
+		},
+	};
 }

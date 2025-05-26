@@ -7,18 +7,18 @@ import { verifyPasswordResetEmailVerificationAction } from "./actions";
 
 /** @type {ActionResult} */
 const initialState = {
-  type: "idle",
+	type: "idle",
 };
 
 export function PasswordResetEmailVerificationForm() {
-  const [state, action] = useFormState(verifyPasswordResetEmailVerificationAction, initialState);
+	const [state, action] = useFormState(verifyPasswordResetEmailVerificationAction, initialState);
 
-  return (
-    <form action={action}>
-      <label htmlFor="form-verify.code">Code</label>
-      <input id="form-verify.code" name="code" required />
-      <button>verify</button>
-      <p>{state.message}</p>
-    </form>
-  );
+	return (
+		<form action={action}>
+			<label htmlFor="form-verify.code">Code</label>
+			<input id="form-verify.code" name="code" required />
+			<button>verify</button>
+			<p>{state.message}</p>
+		</form>
+	);
 }

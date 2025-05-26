@@ -1,4 +1,4 @@
 {
-  "extends": "@de100/tsconfig/base.json",
-  "include": ["routes"]
+	"extends": "@de100/tsconfig/base.json",
+	"include": ["routes"]
 }

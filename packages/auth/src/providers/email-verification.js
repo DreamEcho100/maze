@@ -1,4 +1,3 @@
-
 // /** @import { UserEmailVerificationRequestRepository, EmailVerificationRequest, SessionValidationResult, DateLike } from "#types.ts"; */
 // import { dateLikeToDate, } from "#utils/dates.js";
 
@@ -51,15 +50,13 @@
 // }
 
 /** @import { UserEmailVerificationRequestProvider } from "#types.ts"; */
-export let userEmailVerificationRequestProvider = /** @type {UserEmailVerificationRequestProvider} */({})
+export let userEmailVerificationRequestProvider =
+	/** @type {UserEmailVerificationRequestProvider} */ ({});
 
 /** @param {UserEmailVerificationRequestProvider} newUserEmailVerificationRequestProvider  */
-export function setUserEmailVerificationRequestProvider(
-  newUserEmailVerificationRequestProvider,
-) {
-  userEmailVerificationRequestProvider = newUserEmailVerificationRequestProvider;
+export function setUserEmailVerificationRequestProvider(newUserEmailVerificationRequestProvider) {
+	userEmailVerificationRequestProvider = newUserEmailVerificationRequestProvider;
 }
-
 
 // const userEmailVerificationRequestRepository = {
 //   deleteOneByUser: deleteOneUserEmailVerificationRequestRepository,

@@ -6,10 +6,10 @@ const { withNativeWind } = require("nativewind/metro");
 const path = require("node:path");
 
 const config = withTurborepoManagedCache(
-  withNativeWind(getDefaultConfig(__dirname), {
-    input: "./src/styles.css",
-    configPath: "./tailwind.config.ts",
-  }),
+	withNativeWind(getDefaultConfig(__dirname), {
+		input: "./src/styles.css",
+		configPath: "./tailwind.config.ts",
+	}),
 );
 
 // XXX: Resolve our exports in workspace packages
@@ -27,8 +27,6 @@ module.exports = config;
  * @returns {import('expo/metro-config').MetroConfig}
  */
 function withTurborepoManagedCache(config) {
-  config.cacheStores = [
-    new FileStore({ root: path.join(__dirname, ".cache/metro") }),
-  ];
-  return config;
+	config.cacheStores = [new FileStore({ root: path.join(__dirname, ".cache/metro") })];
+	return config;
 }

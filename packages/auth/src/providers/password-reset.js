@@ -89,16 +89,12 @@
 
 /** @import { PasswordResetSessionProvider } from "#types.ts"; */
 
-
-export let passwordResetSessionProvider =  /** @type {PasswordResetSessionProvider} */({})
+export let passwordResetSessionProvider = /** @type {PasswordResetSessionProvider} */ ({});
 
 /** @param {PasswordResetSessionProvider} newPasswordResetSessionProvider */
 export function setPasswordResetSessionProvider(newPasswordResetSessionProvider) {
-  passwordResetSessionProvider = newPasswordResetSessionProvider;
+	passwordResetSessionProvider = newPasswordResetSessionProvider;
 }
-
-
-
 
 // export const passwordResetSessionRepository = {
 //   createOne: createOnePasswordResetSessionRepository,

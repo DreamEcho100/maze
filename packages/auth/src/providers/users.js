@@ -251,17 +251,14 @@
 //     .then(transformDbUserToUser);
 // }
 
-
 /** @import { UserProvider } from "#types.ts"; */
 
-
-export let userProvider = /** @type {UserProvider} */({});
+export let userProvider = /** @type {UserProvider} */ ({});
 
 /** @param {UserProvider} newUserProvider  */
 export function setUserProvider(newUserProvider) {
-  userProvider = newUserProvider;
+	userProvider = newUserProvider;
 }
-
 
 // export const userRepository = {
 //   createOne: createUserRepository,

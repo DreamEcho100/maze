@@ -2,15 +2,14 @@
 
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
+
+import { cookiesProvider } from "#providers/cookies.js";
+import { sessionProvider } from "#providers/sessions.js";
 import {
-  sessionProvider
-} from "#providers/sessions.js";
-import {
-  COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
-  COOKIE_TOKEN_SESSION_KEY,
+	COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
+	COOKIE_TOKEN_SESSION_KEY,
 } from "#utils/constants.js";
 import { dateLikeToDate, dateLikeToNumber } from "#utils/dates.js";
-import { cookiesProvider } from "#providers/cookies.js";
 
 /**
  * Set the session token cookie with required attributes.
@@ -21,13 +20,13 @@ import { cookiesProvider } from "#providers/cookies.js";
  * @returns {void}
  */
 export function setSessionTokenCookie(param) {
-  cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    expires: dateLikeToDate(param.expiresAt),
-    path: "/",
-  });
+	cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
+		httpOnly: true,
+		sameSite: "lax",
+		secure: process.env.NODE_ENV === "production",
+		expires: dateLikeToDate(param.expiresAt),
+		path: "/",
+	});
 }
 
 /**
@@ -36,13 +35,13 @@ export function setSessionTokenCookie(param) {
  * @returns {void}
  */
 export function deleteSessionTokenCookie() {
-  cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-    path: "/",
-  });
+	cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, "", {
+		httpOnly: true,
+		sameSite: "lax",
+		secure: process.env.NODE_ENV === "production",
+		maxAge: 0,
+		path: "/",
+	});
 }
 
 /**
@@ -59,20 +58,20 @@ export function deleteSessionTokenCookie() {
  * @returns {Promise<Session>} A promise that resolves to the created session object.
  */
 export async function createSession(props, options) {
-  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
-  /** @type {Session} */
-  const session = {
-    id: sessionId,
-    userId: props.data.userId,
-    expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
-    // twoFactorVerifiedAt: 0,
-    twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
-    createdAt: new Date(),
-  };
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
+	/** @type {Session} */
+	const session = {
+		id: sessionId,
+		userId: props.data.userId,
+		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+		// twoFactorVerifiedAt: 0,
+		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
+		createdAt: new Date(),
+	};
 
-  await sessionProvider.createOne({ data: session }, options);
+	await sessionProvider.createOne({ data: session }, options);
 
-  return session;
+	return session;
 }
 
 /**
@@ -84,10 +83,10 @@ export async function createSession(props, options) {
  * @returns {string} A random session token encoded as a base32 string.
  */
 export function generateSessionToken() {
-  const bytes = new Uint8Array(20);
-  crypto.getRandomValues(bytes);
-  const token = encodeBase32LowerCaseNoPadding(bytes);
-  return token;
+	const bytes = new Uint8Array(20);
+	crypto.getRandomValues(bytes);
+	const token = encodeBase32LowerCaseNoPadding(bytes);
+	return token;
 }
 
 /**
@@ -96,12 +95,12 @@ export function generateSessionToken() {
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
  */
 export async function getCurrentSession() {
-  const token = cookiesProvider.get(COOKIE_TOKEN_SESSION_KEY);
-  if (!token) {
-    return { session: null, user: null };
-  }
+	const token = cookiesProvider.get(COOKIE_TOKEN_SESSION_KEY);
+	if (!token) {
+		return { session: null, user: null };
+	}
 
-  return await validateSessionToken(token);
+	return await validateSessionToken(token);
 }
 
 /**
@@ -113,27 +112,27 @@ export async function getCurrentSession() {
  * @returns {Promise<SessionValidationResult>} The result of session validation.
  */
 export async function handleSessionMiddleware(param) {
-  if (!param.token) {
-    return { session: null, user: null };
-  }
+	if (!param.token) {
+		return { session: null, user: null };
+	}
 
-  const result = await validateSessionToken(param.token);
+	const result = await validateSessionToken(param.token);
 
-  if (!result.session) {
-    // If the session is not found, delete the session token cookie
-    deleteSessionTokenCookie();
-    return { session: null, user: null };
-  }
+	if (!result.session) {
+		// If the session is not found, delete the session token cookie
+		deleteSessionTokenCookie();
+		return { session: null, user: null };
+	}
 
-  if (result.session) {
-    // Extend cookie expiration by 30 days
-    setSessionTokenCookie({
-      token: param.token,
-      expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
-    });
-  }
+	if (result.session) {
+		// Extend cookie expiration by 30 days
+		setSessionTokenCookie({
+			token: param.token,
+			expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+		});
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -146,26 +145,26 @@ export async function handleSessionMiddleware(param) {
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data, or null if the session is invalid or expired.
  */
 export async function validateSessionToken(token) {
-  const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-  const result = await sessionProvider.findOneWithUser(sessionId).catch((error) =>
-    console.error("Error:", error),
-  );
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const result = await sessionProvider
+		.findOneWithUser(sessionId)
+		.catch((error) => console.error("Error:", error));
 
-  if (!result?.session.userId) {
-    return { session: null, user: null };
-  }
+	if (!result?.session.userId) {
+		return { session: null, user: null };
+	}
 
-  const expiresAt = dateLikeToNumber(result.session.expiresAt);
+	const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
-  if (Date.now() >= expiresAt) {
-    await sessionProvider.deleteOneById(sessionId);
-    return { session: null, user: null };
-  }
+	if (Date.now() >= expiresAt) {
+		await sessionProvider.deleteOneById(sessionId);
+		return { session: null, user: null };
+	}
 
-  if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
-    result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-    await sessionProvider.extendOneExpirationDate(sessionId, new Date(result.session.expiresAt));
-  }
+	if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
+		result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
+		await sessionProvider.extendOneExpirationDate(sessionId, new Date(result.session.expiresAt));
+	}
 
-  return result;
+	return result;
 }

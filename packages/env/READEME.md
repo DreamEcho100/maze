@@ -1,4 +1,3 @@
-
 # @de100/env Documentation
 
 This library provides type-safe and runtime-validated access to your environment variables for Next.js (and similar) projects. It's built on the core ideas of environment validation from popular projects (like T3 Env) and supports any [Standard Schema–compliant validator](https://standardschema.dev/) (for example, Zod or Standard Schema). This ensures your environment is correctly configured at build and runtime while keeping server-only secrets secure.
@@ -57,8 +56,9 @@ This library provides type-safe and runtime-validated access to your environment
 - **Synchronous Validation:**  
   The synchronous validation function (`parseWithDictionary`) checks each environment variable against its defined schema before your application runs, ensuring any misconfiguration is caught immediately.
 
-- **Custom Callbacks for Errors & Access:**  
-  - **`onValidationError`:** Triggered when validation fails, so you can log issues or halt execution as needed.  
+- **Custom Callbacks for Errors & Access:**
+
+  - **`onValidationError`:** Triggered when validation fails, so you can log issues or halt execution as needed.
   - **`onInvalidAccess`:** Invoked when there's an attempt to access a server-only variable on the client side.
 
 - **Runtime Environment Merging:**  
@@ -90,46 +90,47 @@ pnpm add @de100/env zod
 
 1. **Create your environment schema file (e.g., `src/env.ts`):**
 
-    ```ts
-    import { createEnv } from '@de100/env';
-    import { z } from 'zod'; // Or import from your Standard Schema library
+   ```ts
+   import { z } from "zod"; // Or import from your Standard Schema library
 
-    export const env = createEnv({
-      // Server-only variables (not available on the client)
-      server: {
-        DATABASE_URL: z.string().url(),
-        OPEN_AI_API_KEY: z.string().min(1),
-      },
-      // Client-only variables (must be prefixed, e.g., NEXT_PUBLIC_)
-      client: {
-        NEXT_PUBLIC_CLIENTVAR: z.string(),
-      },
-      // Shared variables available on both server and client
-      shared: {
-        NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-      },
-      // Explicitly provide runtime variables (important for Next.js bundling)
-      experimental__runtimeEnv: {
-        NODE_ENV: process.env.NODE_ENV,
-        NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
-      },
-      // Optional configuration:
-      skipValidation: !!process.env.SKIP_ENV_VALIDATIONS,
-      emptyStringAsUndefined: true,
-    });
-    ```
+   import { createEnv } from "@de100/env";
+
+   export const env = createEnv({
+   	// Server-only variables (not available on the client)
+   	server: {
+   		DATABASE_URL: z.string().url(),
+   		OPEN_AI_API_KEY: z.string().min(1),
+   	},
+   	// Client-only variables (must be prefixed, e.g., NEXT_PUBLIC_)
+   	client: {
+   		NEXT_PUBLIC_CLIENTVAR: z.string(),
+   	},
+   	// Shared variables available on both server and client
+   	shared: {
+   		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+   	},
+   	// Explicitly provide runtime variables (important for Next.js bundling)
+   	experimental__runtimeEnv: {
+   		NODE_ENV: process.env.NODE_ENV,
+   		NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+   	},
+   	// Optional configuration:
+   	skipValidation: !!process.env.SKIP_ENV_VALIDATIONS,
+   	emptyStringAsUndefined: true,
+   });
+   ```
 
 2. **Use the validated environment variables in your application:**
 
-    ```ts
-    // In a Next.js API route or server file:
-    import { env } from '../env';
+   ```ts
+   // In a Next.js API route or server file:
+   import { env } from "../env";
 
-    export async function GET() {
-      const dbUrl = env.DATABASE_URL; // Type-safe and validated
-      // Use dbUrl in your database connection logic
-    }
-    ```
+   export async function GET() {
+   	const dbUrl = env.DATABASE_URL; // Type-safe and validated
+   	// Use dbUrl in your database connection logic
+   }
+   ```
 
 ### Environment Schemas
 
@@ -147,28 +148,28 @@ pnpm add @de100/env zod
 ## Configuration Options
 
 - **`skipValidation`**  
-  *Type:* `boolean`  
-  *Description:* When `true`, the validation step is bypassed. This is useful in CI/CD pipelines or during linting where not all environment variables are set.
+  _Type:_ `boolean`  
+  _Description:_ When `true`, the validation step is bypassed. This is useful in CI/CD pipelines or during linting where not all environment variables are set.
 
 - **`emptyStringAsUndefined`**  
-  *Type:* `boolean`  
-  *Description:* Converts empty string values (`""`) to `undefined`, helping to differentiate between “not set” and “intentionally empty.”
+  _Type:_ `boolean`  
+  _Description:_ Converts empty string values (`""`) to `undefined`, helping to differentiate between “not set” and “intentionally empty.”
 
 - **`experimental__runtimeEnv`**  
-  *Type:* `Partial<Record<string, string | boolean | number | undefined>>`  
-  *Description:* Manually extracts variables from `process.env` to ensure they are bundled in client-side code—essential for Next.js versions that require explicit declaration for client variables.
+  _Type:_ `Partial<Record<string, string | boolean | number | undefined>>`  
+  _Description:_ Manually extracts variables from `process.env` to ensure they are bundled in client-side code—essential for Next.js versions that require explicit declaration for client variables.
 
 - **`onValidationError`**  
-  *Type:* `(issues: unknown[]) => void`  
-  *Description:* Callback invoked when environment variable validation fails. The default behavior logs issues and throws an error.
+  _Type:_ `(issues: unknown[]) => void`  
+  _Description:_ Callback invoked when environment variable validation fails. The default behavior logs issues and throws an error.
 
 - **`onInvalidAccess`**  
-  *Type:* `(key: string) => void`  
-  *Description:* Callback triggered when there is an attempt to access a server-only variable on the client. The default action throws an error to protect sensitive data.
+  _Type:_ `(key: string) => void`  
+  _Description:_ Callback triggered when there is an attempt to access a server-only variable on the client. The default action throws an error to protect sensitive data.
 
 - **`extends`**  
-  *Type:* `Array<Record<string, StandardSchemaV1>>`  
-  *Description:* Allows additional configuration objects to be merged into the final environment object, useful for integrating settings from external modules or libraries.
+  _Type:_ `Array<Record<string, StandardSchemaV1>>`  
+  _Description:_ Allows additional configuration objects to be merged into the final environment object, useful for integrating settings from external modules or libraries.
 
 ---
 
@@ -207,26 +208,27 @@ Here's a complete example demonstrating how to set up and use **@de100/env**:
 
 ```ts
 // src/env.ts
-import { createEnv } from '@de100/env';
-import { z } from 'zod'; // Alternatively, use your Standard Schema library
+import { z } from "zod"; // Alternatively, use your Standard Schema library
+
+import { createEnv } from "@de100/env";
 
 export const env = createEnv({
-  server: {
-    DATABASE_URL: z.string().url(),
-    OPEN_AI_API_KEY: z.string().min(1),
-  },
-  client: {
-    NEXT_PUBLIC_CLIENTVAR: z.string(),
-  },
-  shared: {
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  },
-  experimental__runtimeEnv: {
-    NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
-  },
-  skipValidation: !!process.env.SKIP_ENV_VALIDATIONS,
-  emptyStringAsUndefined: true,
+	server: {
+		DATABASE_URL: z.string().url(),
+		OPEN_AI_API_KEY: z.string().min(1),
+	},
+	client: {
+		NEXT_PUBLIC_CLIENTVAR: z.string(),
+	},
+	shared: {
+		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+	},
+	experimental__runtimeEnv: {
+		NODE_ENV: process.env.NODE_ENV,
+		NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+	},
+	skipValidation: !!process.env.SKIP_ENV_VALIDATIONS,
+	emptyStringAsUndefined: true,
 });
 ```
 
@@ -234,11 +236,11 @@ And in a Next.js API route:
 
 ```ts
 // pages/api/hello.ts
-import { env } from '../../src/env';
+import { env } from "../../src/env";
 
 export default function handler(req, res) {
-  const dbUrl = env.DATABASE_URL;
-  res.status(200).json({ database: dbUrl });
+	const dbUrl = env.DATABASE_URL;
+	res.status(200).json({ database: dbUrl });
 }
 ```
 
@@ -270,4 +272,4 @@ This library is released under the MIT License.
 
 ---
 
-*This documentation is based on an implementation inspired by modern environment validation practices and leverages the Standard Schema specification. For more details, please refer to the official resources and community examples.*
+_This documentation is based on an implementation inspired by modern environment validation practices and leverages the Standard Schema specification. For more details, please refer to the official resources and community examples._

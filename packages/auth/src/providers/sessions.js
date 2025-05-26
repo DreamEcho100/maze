@@ -122,13 +122,12 @@
 
 /** @import { SessionProvider } from "#types.ts"; */
 
-export let sessionProvider = /** @type {SessionProvider} */({});
+export let sessionProvider = /** @type {SessionProvider} */ ({});
 
 /** @param {SessionProvider} newSessionProvider */
 export function setSessionProvider(newSessionProvider) {
-  sessionProvider = newSessionProvider;
+	sessionProvider = newSessionProvider;
 }
-
 
 // export const sessionRepository = {
 //   createOne: createOneSessionRepository,

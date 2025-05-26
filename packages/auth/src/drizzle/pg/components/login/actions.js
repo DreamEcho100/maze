@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-
 import { loginUserService } from "@acme/auth/services/login";
 import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@acme/auth/utils/constants";
 
@@ -15,34 +14,34 @@ import { redirect } from "~/libs/i18n/navigation/custom";
  * @returns {Promise<ActionResult>}
  */
 export async function loginAction(_prev, formData) {
-  const data = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
+	const data = {
+		email: formData.get("email"),
+		password: formData.get("password"),
+	};
 
-  const cookiesManager = await cookies();
-  const result = await loginUserService(data, { setCookie: cookiesManager.set });
+	const cookiesManager = await cookies();
+	const result = await loginUserService(data, { setCookie: cookiesManager.set });
 
-  if (result.type === "success") {
-    return redirect(AUTH_URLS.SUCCESS_LOGIN);
-  }
+	if (result.type === "success") {
+		return redirect(AUTH_URLS.SUCCESS_LOGIN);
+	}
 
-  switch (result.messageCode) {
-    case LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code:
-      return {
-        type: "error",
-        statusCode: result.statusCode,
-        message: result.message,
-      };
-    case LOGIN_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST.code:
-      return redirect(AUTH_URLS.REGISTER);
-    case LOGIN_MESSAGES_ERRORS.EMAIL_NOT_VERIFIED.code:
-      return redirect(AUTH_URLS.VERIFY_EMAIL);
-    case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.code:
-      return redirect(AUTH_URLS.SETUP_2FA);
-    case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_NEEDS_VERIFICATION.code:
-      return redirect(AUTH_URLS.TWO_FA);
-    default:
-      return { type: "error", statusCode: 500, message: "Unexpected error" };
-  }
+	switch (result.messageCode) {
+		case LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code:
+			return {
+				type: "error",
+				statusCode: result.statusCode,
+				message: result.message,
+			};
+		case LOGIN_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST.code:
+			return redirect(AUTH_URLS.REGISTER);
+		case LOGIN_MESSAGES_ERRORS.EMAIL_NOT_VERIFIED.code:
+			return redirect(AUTH_URLS.VERIFY_EMAIL);
+		case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.code:
+			return redirect(AUTH_URLS.SETUP_2FA);
+		case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_NEEDS_VERIFICATION.code:
+			return redirect(AUTH_URLS.TWO_FA);
+		default:
+			return { type: "error", statusCode: 500, message: "Unexpected error" };
+	}
 }

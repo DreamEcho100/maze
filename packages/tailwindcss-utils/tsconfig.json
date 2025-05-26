@@ -1,6 +1,6 @@
 {
-  "extends": "@de100/tsconfig/internal-package.json",
-  "compilerOptions": {},
-  "include": ["*.js", "*.ts", "src"],
-  "exclude": ["node_modules"]
+	"extends": "@de100/tsconfig/internal-package.json",
+	"compilerOptions": {},
+	"include": ["*.js", "*.ts", "src"],
+	"exclude": ["node_modules"]
 }

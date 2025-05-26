@@ -2,13 +2,16 @@
 
 import { sessionProvider } from "#providers/sessions.js";
 import { userProvider } from "#providers/users.js";
-import { UPDATE_PASSWORD_MESSAGES_ERRORS, UPDATE_PASSWORD_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	UPDATE_PASSWORD_MESSAGES_ERRORS,
+	UPDATE_PASSWORD_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
 import {
-  createSession,
-  generateSessionToken,
-  getCurrentSession,
-  setSessionTokenCookie,
+	createSession,
+	generateSessionToken,
+	getCurrentSession,
+	setSessionTokenCookie,
 } from "#utils/sessions.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -29,54 +32,54 @@ import { updateUserPassword } from "#utils/users.js";
  * >}
  */
 export async function updatePasswordService(props, options) {
-  const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession();
 
-  if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
-  if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
-    return UPDATE_PASSWORD_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;
-  }
+	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
+		return UPDATE_PASSWORD_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;
+	}
 
-  if (typeof props.data.currentPassword !== "string" || typeof props.data.newPassword !== "string") {
-    return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORDS_REQUIRED;
-  }
+	if (
+		typeof props.data.currentPassword !== "string" ||
+		typeof props.data.newPassword !== "string"
+	) {
+		return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORDS_REQUIRED;
+	}
 
-  const strongPassword = await verifyPasswordStrength(props.data.newPassword);
-  if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+	const strongPassword = await verifyPasswordStrength(props.data.newPassword);
+	if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-  const passwordHash = await userProvider.getOnePasswordHash(user.id);
-  if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
+	const passwordHash = await userProvider.getOnePasswordHash(user.id);
+	if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
-  const validPassword = await verifyPasswordHash(passwordHash, props.data.currentPassword);
-  if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
+	const validPassword = await verifyPasswordHash(passwordHash, props.data.currentPassword);
+	if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
 
-  await Promise.all([
-    sessionProvider.invalidateAllByUserId(
-      { where: { userId: user.id } },
-      { tx: options.tx },
-    ),
-    updateUserPassword(
-      { data: { password: props.data.newPassword }, where: { id: user.id } },
-      { tx: options.tx },
-    ),
-  ]);
+	await Promise.all([
+		sessionProvider.invalidateAllByUserId({ where: { userId: user.id } }, { tx: options.tx }),
+		updateUserPassword(
+			{ data: { password: props.data.newPassword }, where: { id: user.id } },
+			{ tx: options.tx },
+		),
+	]);
 
-  const sessionToken = generateSessionToken();
-  const newSession = await createSession(
-    {
-      data: {
-        token: sessionToken,
-        userId: user.id,
-        flags: { twoFactorVerifiedAt: session.twoFactorVerifiedAt },
-      },
-    },
-   { tx: options.tx }
-  );
+	const sessionToken = generateSessionToken();
+	const newSession = await createSession(
+		{
+			data: {
+				token: sessionToken,
+				userId: user.id,
+				flags: { twoFactorVerifiedAt: session.twoFactorVerifiedAt },
+			},
+		},
+		{ tx: options.tx },
+	);
 
-  setSessionTokenCookie({
-    token: sessionToken,
-    expiresAt: newSession.expiresAt,
-  });
+	setSessionTokenCookie({
+		token: sessionToken,
+		expiresAt: newSession.expiresAt,
+	});
 
-  return UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY;
+	return UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY;
 }

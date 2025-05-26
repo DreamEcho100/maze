@@ -1,16 +1,17 @@
 /** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
+import { z } from "zod";
+
 import { userProvider } from "#providers/users.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
-  createEmailVerificationRequest,
-  sendVerificationEmail,
-  setEmailVerificationRequestCookie,
+	createEmailVerificationRequest,
+	sendVerificationEmail,
+	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createSession, generateSessionToken, setSessionTokenCookie } from "#utils/sessions.js";
 import { createUser } from "#utils/users.js";
-import { z } from "zod";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -25,67 +26,69 @@ import { z } from "zod";
  * >}
  */
 export async function registerService(data) {
-  const input = z
-    .object({
-      email: z.string().email(),
-      name: z.string().min(3).max(32),
-      password: z.string().min(8),
-      enable2FA: z.preprocess((value) => {
-        if (typeof value === "boolean") {
-          return value;
-        }
-        return value === "on";
-      }, z.boolean().optional().default(false)),
-    })
-    .safeParse(data);
+	const input = z
+		.object({
+			email: z.string().email(),
+			name: z.string().min(3).max(32),
+			password: z.string().min(8),
+			enable2FA: z.preprocess((value) => {
+				if (typeof value === "boolean") {
+					return value;
+				}
+				return value === "on";
+			}, z.boolean().optional().default(false)),
+		})
+		.safeParse(data);
 
-  if (!input.success) {
-    return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
-  }
+	if (!input.success) {
+		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
+	}
 
-  const emailAvailable = await userProvider.findOneByEmail(input.data.email);
+	const emailAvailable = await userProvider.findOneByEmail(input.data.email);
 
-  if (emailAvailable) {
-    return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
-  }
+	if (emailAvailable) {
+		return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
+	}
 
-  const strongPassword = await verifyPasswordStrength(input.data.password);
+	const strongPassword = await verifyPasswordStrength(input.data.password);
 
-  if (!strongPassword) {
-    return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
-  }
+	if (!strongPassword) {
+		return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+	}
 
-  const user = await createUser(input.data.email, input.data.name, input.data.password);
+	const user = await createUser(input.data.email, input.data.name, input.data.password);
 
-  const emailVerificationRequest = await createEmailVerificationRequest({ where: { userId: user.id, email: user.email } });
+	const emailVerificationRequest = await createEmailVerificationRequest({
+		where: { userId: user.id, email: user.email },
+	});
 
-  await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
+	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 
-  setEmailVerificationRequestCookie(emailVerificationRequest);
+	setEmailVerificationRequestCookie(emailVerificationRequest);
 
-  const sessionToken = generateSessionToken();
-  const session = await createSession({
-    data: {
-      token: sessionToken,
-      userId: user.id,
-      flags: {
-        twoFactorVerifiedAt: null,
-      },
-    },
-  });
-  setSessionTokenCookie({
-    token: sessionToken,
-    expiresAt: session.expiresAt,
-  });
+	const sessionToken = generateSessionToken();
+	const session = await createSession({
+		data: {
+			token: sessionToken,
+			userId: user.id,
+			flags: {
+				twoFactorVerifiedAt: null,
+			},
+		},
+	});
+	setSessionTokenCookie({
+		token: sessionToken,
+		expiresAt: session.expiresAt,
+	});
 
-  if (user.twoFactorEnabledAt) {
-    return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
-  }
+	if (user.twoFactorEnabledAt) {
+		return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
+	}
 
-  // redirect("/auth/2fa/setup");
-  // return redirect("/auth/login");
-  return {
-    ...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
-    data: { user },
-  };
+	// redirect("/auth/2fa/setup");
+	// return redirect("/auth/login");
+	return {
+		...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
+		data: { user },
+	};
 }

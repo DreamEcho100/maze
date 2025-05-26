@@ -7,5 +7,5 @@ import { env } from "~/libs/env";
 export const exa = new Exa(env.EXA_SEARCH_API_KEY);
 
 export const openRouter = createOpenRouter({
-  apiKey: env.OPEN_ROUTER_API_KEY,
+	apiKey: env.OPEN_ROUTER_API_KEY,
 });

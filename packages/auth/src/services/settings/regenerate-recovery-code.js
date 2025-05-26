@@ -1,6 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS, REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
+	REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { getCurrentSession } from "#utils/sessions.js";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
@@ -16,22 +19,22 @@ import { resetUserRecoveryCode } from "#utils/users.js";
  * >}
  */
 export async function regenerateRecoveryCodeService() {
-  const { session, user } = await getCurrentSession();
-  if (!session) {
-    return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-  }
+	const { session, user } = await getCurrentSession();
+	if (!session) {
+		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	}
 
-  if (!user.emailVerifiedAt) {
-    return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
-  }
+	if (!user.emailVerifiedAt) {
+		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
+	}
 
-  if (!user.twoFactorEnabledAt || !session.twoFactorVerifiedAt) {
-    return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED;
-  }
+	if (!user.twoFactorEnabledAt || !session.twoFactorVerifiedAt) {
+		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED;
+	}
 
-  const recoveryCode = await resetUserRecoveryCode(session.userId);
-  return {
-    ...REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS.RECOVERY_CODE_REGENERATED,
-    data: { recoveryCode },
-  };
+	const recoveryCode = await resetUserRecoveryCode(session.userId);
+	return {
+		...REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS.RECOVERY_CODE_REGENERATED,
+		data: { recoveryCode },
+	};
 }

@@ -1,8 +1,8 @@
 {
-  "$schema": "https://turborepo.org/schema.json",
-  "extends": ["//"],
-  "tasks": {
-    "build": { "cache": false },
-    "dev": { "cache": false }
-  }
+	"$schema": "https://turborepo.org/schema.json",
+	"extends": ["//"],
+	"tasks": {
+		"build": { "cache": false },
+		"dev": { "cache": false }
+	}
 }

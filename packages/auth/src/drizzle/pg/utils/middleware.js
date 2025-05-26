@@ -4,7 +4,6 @@
  */
 
 import { NextResponse } from "next/server";
-
 import { COOKIE_TOKEN_SESSION_KEY } from "@acme/auth/utils/constants"; // #server/utils/constants
 
 import { csrfProtection } from "@acme/auth/utils/csrf";
@@ -61,24 +60,24 @@ Cannot find module
  * ```
  */
 export async function createAuthMiddleware(request, options) {
-  const authedRequest = await handleAuthMiddleware(request);
+	const authedRequest = await handleAuthMiddleware(request);
 
-  switch (authedRequest.status) {
-    case "authorized":
-      // return authedRequest.result;
-      return options?.onAuthorized?.(authedRequest.result) ?? NextResponse.next();
-    case "unauthorized":
-      return options?.onUnauthorized?.() ?? new NextResponse(null, { status: 401 });
-    case "invalid-csrf":
-      // return new NextResponse(null, { status: 403 });
-      return options?.onInvalidCSRF?.() ?? new NextResponse(null, { status: 403 });
-    case "valid-csrf":
-      // return NextResponse.next();
-      return options?.onValidCSRF?.() ?? NextResponse.next();
-    case "error":
-      // return new NextResponse(null, { status: 500 });
-      return options?.onError?.(authedRequest.error) ?? new NextResponse(null, { status: 500 });
-  }
+	switch (authedRequest.status) {
+		case "authorized":
+			// return authedRequest.result;
+			return options?.onAuthorized?.(authedRequest.result) ?? NextResponse.next();
+		case "unauthorized":
+			return options?.onUnauthorized?.() ?? new NextResponse(null, { status: 401 });
+		case "invalid-csrf":
+			// return new NextResponse(null, { status: 403 });
+			return options?.onInvalidCSRF?.() ?? new NextResponse(null, { status: 403 });
+		case "valid-csrf":
+			// return NextResponse.next();
+			return options?.onValidCSRF?.() ?? NextResponse.next();
+		case "error":
+			// return new NextResponse(null, { status: 500 });
+			return options?.onError?.(authedRequest.error) ?? new NextResponse(null, { status: 500 });
+	}
 }
 
 /**
@@ -96,39 +95,39 @@ export async function createAuthMiddleware(request, options) {
  *  the relevant session or error data.
  */
 async function handleAuthMiddleware(request) {
-  try {
-    // Handle session token for GET requests
-    if (request.method === "GET") {
-      const response = NextResponse.next();
-      const token = request.cookies.get(COOKIE_TOKEN_SESSION_KEY)?.value ?? null;
+	try {
+		// Handle session token for GET requests
+		if (request.method === "GET") {
+			const response = NextResponse.next();
+			const token = request.cookies.get(COOKIE_TOKEN_SESSION_KEY)?.value ?? null;
 
-      if (token !== null) {
-        const result = await handleSessionMiddleware({
-          token,
-          // eslint-disable-next-line @typescript-eslint/unbound-method
-          setCookie: response.cookies.set,
-        });
+			if (token !== null) {
+				const result = await handleSessionMiddleware({
+					token,
+					// eslint-disable-next-line @typescript-eslint/unbound-method
+					setCookie: response.cookies.set,
+				});
 
-        if (result.session) {
-          return { status: "authorized", result };
-        } else {
-          return { status: "unauthorized", result: null };
-        }
-      }
+				if (result.session) {
+					return { status: "authorized", result };
+				} else {
+					return { status: "unauthorized", result: null };
+				}
+			}
 
-      return { status: "unauthorized", result: null };
-    }
+			return { status: "unauthorized", result: null };
+		}
 
-    // CSRF Protection for non-GET requests
-    const originHeader = request.headers.get("Origin");
-    const hostHeader = request.headers.get("Host");
+		// CSRF Protection for non-GET requests
+		const originHeader = request.headers.get("Origin");
+		const hostHeader = request.headers.get("Host");
 
-    if (!csrfProtection(originHeader, hostHeader)) {
-      return { status: "invalid-csrf", result: null };
-    }
+		if (!csrfProtection(originHeader, hostHeader)) {
+			return { status: "invalid-csrf", result: null };
+		}
 
-    return { status: "valid-csrf", result: null };
-  } catch (error) {
-    return { status: "error", error };
-  }
+		return { status: "valid-csrf", result: null };
+	} catch (error) {
+		return { status: "error", error };
+	}
 }

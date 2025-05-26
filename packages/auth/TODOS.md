@@ -17,10 +17,10 @@ Based on my analysis of your authentication library, here's a comprehensive road
 
   ```javascript
   // Current inconsistencies found:
-  userProvider.getOneTOTPKey() // Should be: getTOTPKey()
-  userProvider.findOneByEmail() // Should be: findByEmail()
-  userProvider.getOnePasswordHash() // Should be: getPasswordHash()
-  sessionProvider.invalidateAllByUserId() // Should be: deleteByUser()
+  userProvider.getOneTOTPKey(); // Should be: getTOTPKey()
+  userProvider.findOneByEmail(); // Should be: findByEmail()
+  userProvider.getOnePasswordHash(); // Should be: getPasswordHash()
+  sessionProvider.invalidateAllByUserId(); // Should be: deleteByUser()
   ```
 
 ### **1.3 Error Code Fixes**
@@ -29,7 +29,7 @@ Based on my analysis of your authentication library, here's a comprehensive road
 
   ```javascript
   // In TOTP service - using wrong error code:
-  return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED; 
+  return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED;
   // Should be: TOTP_CODE_REQUIRED
 
   // In recovery code service:
@@ -71,17 +71,17 @@ Based on my analysis of your authentication library, here's a comprehensive road
 
   ```javascript
   const authConfig = {
-    security: {
-      sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 days
-      requireEmailVerification: true,
-      require2FA: false,
-      passwordStrength: 'medium'
-    },
-    cookies: {
-      secure: true,
-      sameSite: 'lax',
-      httpOnly: true
-    }
+  	security: {
+  		sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 days
+  		requireEmailVerification: true,
+  		require2FA: false,
+  		passwordStrength: "medium",
+  	},
+  	cookies: {
+  		secure: true,
+  		sameSite: "lax",
+  		httpOnly: true,
+  	},
   };
   ```
 

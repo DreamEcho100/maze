@@ -15,14 +15,14 @@ import { deleteSessionTokenCookie, getCurrentSession } from "#utils/sessions.js"
  * >}
  */
 export async function logoutService() {
-  const { session } = await getCurrentSession();
-  if (!session) {
-    return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-  }
+	const { session } = await getCurrentSession();
+	if (!session) {
+		return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	}
 
-  await sessionProvider.deleteOneById(session.id);
+	await sessionProvider.deleteOneById(session.id);
 
-  deleteSessionTokenCookie();
+	deleteSessionTokenCookie();
 
-  return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
+	return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }

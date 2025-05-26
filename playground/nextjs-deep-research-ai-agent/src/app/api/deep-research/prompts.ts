@@ -22,12 +22,8 @@ export const EXTRACTION_SYSTEM_PROMPT = `You are a **rigorous Knowledge Architec
 
 Act as if this briefing is for a high-stakes review.`;
 
-export const getExtractionPrompt = (
-  content: string,
-  topic: string,
-  clarificationsText: string,
-) =>
-  `Use the details below to produce a peer-review-ready technical summary.
+export const getExtractionPrompt = (content: string, topic: string, clarificationsText: string) =>
+	`Use the details below to produce a peer-review-ready technical summary.
 
 <topic>${topic}</topic>
 <clarifications>${clarificationsText}</clarifications>
@@ -77,15 +73,15 @@ If not sufficient:
 Use a step-by-step, chain-of-thought approach and flag uncertainties.`;
 
 export const getAnalysisPrompt = (
-  contentText: string,
-  topic: string,
-  clarificationsText: string,
-  currentQueries: string[],
-  currentIteration: number,
-  maxIterations: number,
-  findingsLength: number,
+	contentText: string,
+	topic: string,
+	clarificationsText: string,
+	currentQueries: string[],
+	currentIteration: number,
+	maxIterations: number,
+	findingsLength: number,
 ) =>
-  `Analyze the details below and determine if they are sufficient for a comprehensive report.
+	`Analyze the details below and determine if they are sufficient for a comprehensive report.
 
 **Topic:** <topic>${topic}</topic>
 **Clarifications:** <clarifications>${clarificationsText}</clarifications>
@@ -110,7 +106,7 @@ Act as a lead strategist on a time-sensitive mission; every query must be precis
 `;
 
 export const getPlanningPrompt = (topic: string, clarificationsText: string) =>
-  `Topic: <topic>${topic}</topic>
+	`Topic: <topic>${topic}</topic>
 Clarifications:
 ${clarificationsText}
 
@@ -132,12 +128,8 @@ Additional:
 Act urgently, as this report could determine a high-stakes project's future.
 Enclose your output within \`<report>\` tags.`;
 
-export const getReportPrompt = (
-  contentText: string,
-  topic: string,
-  clarificationsText: string,
-) =>
-  `Generate a comprehensive, peer-review-ready report using the following information:
+export const getReportPrompt = (contentText: string, topic: string, clarificationsText: string) =>
+	`Generate a comprehensive, peer-review-ready report using the following information:
 
 **Topic:** <topic>${topic}</topic>
 **Clarifications:**

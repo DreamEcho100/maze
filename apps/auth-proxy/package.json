@@ -1,28 +1,28 @@
 {
-  "name": "@de100/next-auth-proxy",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nitro build",
-    "clean": "git clean -xdf .cache .nitro .output .turbo .vercel node_modules",
-    "lint": "eslint",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@auth/core": "catalog:"
-  },
-  "devDependencies": {
-    "@de100/eslint-config": "workspace:*",
-    "@de100/prettier-config": "workspace:*",
-    "@de100/tailwind-config": "workspace:*",
-    "@de100/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
-    "eslint": "catalog:",
-    "h3": "^1.14.0",
-    "nitropack": "^2.10.4",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
-  },
-  "prettier": "@de100/prettier-config"
+	"name": "@de100/next-auth-proxy",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "nitro build",
+		"clean": "git clean -xdf .cache .nitro .output .turbo .vercel node_modules",
+		"lint": "eslint",
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@auth/core": "catalog:"
+	},
+	"devDependencies": {
+		"@de100/eslint-config": "workspace:*",
+		"@de100/prettier-config": "workspace:*",
+		"@de100/tailwind-config": "workspace:*",
+		"@de100/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"eslint": "catalog:",
+		"h3": "^1.14.0",
+		"nitropack": "^2.10.4",
+		"prettier": "catalog:",
+		"typescript": "catalog:"
+	},
+	"prettier": "@de100/prettier-config"
 }

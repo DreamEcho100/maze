@@ -6,14 +6,14 @@
  * @returns {boolean} Returns true if the request passes the CSRF check, false otherwise.
  */
 export function csrfProtection(originHeader, hostHeader) {
-  if (!originHeader || !hostHeader) {
-    return false;
-  }
+	if (!originHeader || !hostHeader) {
+		return false;
+	}
 
-  try {
-    const origin = new URL(originHeader);
-    return origin.host === hostHeader;
-  } catch {
-    return false;
-  }
+	try {
+		const origin = new URL(originHeader);
+		return origin.host === hostHeader;
+	} catch {
+		return false;
+	}
 }

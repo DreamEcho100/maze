@@ -3,30 +3,30 @@ import { redirect } from "~/libs/i18n/navigation/custom";
 import { TwoFactorResetForm } from "./components";
 
 export default async function AuthTwoFactorResetPage() {
-  const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession();
 
-  if (session === null) {
-    return redirect("/auth/login");
-  }
+	if (session === null) {
+		return redirect("/auth/login");
+	}
 
-  if (!user.emailVerifiedAt) {
-    return redirect("/auth/verify-email");
-  }
+	if (!user.emailVerifiedAt) {
+		return redirect("/auth/verify-email");
+	}
 
-  if (!user.twoFactorEnabledAt) {
-    return redirect("/");
-  }
-  if (!user.twoFactorRegisteredAt) {
-    return redirect("/auth/2fa/setup");
-  }
-  if (session.twoFactorVerifiedAt) {
-    return redirect("/");
-  }
+	if (!user.twoFactorEnabledAt) {
+		return redirect("/");
+	}
+	if (!user.twoFactorRegisteredAt) {
+		return redirect("/auth/2fa/setup");
+	}
+	if (session.twoFactorVerifiedAt) {
+		return redirect("/");
+	}
 
-  return (
-    <>
-      <h1>Recover your account</h1>
-      <TwoFactorResetForm />
-    </>
-  );
+	return (
+		<>
+			<h1>Recover your account</h1>
+			<TwoFactorResetForm />
+		</>
+	);
 }

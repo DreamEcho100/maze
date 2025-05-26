@@ -1,6 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
-import { ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS, ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS,
+	ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -21,17 +24,20 @@ import { updateUserPassword } from "#utils/users.js";
  * >}
  */
 export async function adminUpdatePasswordService(data) {
-  if (typeof data.newPassword !== "string") {
-    return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_REQUIRED;
-  }
+	if (typeof data.newPassword !== "string") {
+		return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_REQUIRED;
+	}
 
-  const strongPassword = await verifyPasswordStrength(data.newPassword);
-  if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+	const strongPassword = await verifyPasswordStrength(data.newPassword);
+	if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-  const updatedUser = await updateUserPassword({ data: { password: data.newPassword }, where: { id: data.userId } });
+	const updatedUser = await updateUserPassword({
+		data: { password: data.newPassword },
+		where: { id: data.userId },
+	});
 
-  return {
-    ...ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,
-    data: { user: updatedUser },
-  };
+	return {
+		...ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,
+		data: { user: updatedUser },
+	};
 }

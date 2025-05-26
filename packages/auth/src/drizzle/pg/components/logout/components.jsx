@@ -10,17 +10,17 @@ import { logoutAction } from "./actions";
 
 /** @type {ActionResult} */
 const initialState = {
-  type: "idle",
+	type: "idle",
 };
 
 /** @param {ButtonHTMLAttributes<HTMLButtonElement>} props  */
 export function LogoutButton(props) {
-  const [, action] = useFormState(logoutAction, initialState);
-  return (
-    <form action={action} style={{ display: "contents" }}>
-      <button {...props} type="submit">
-        Sign out
-      </button>
-    </form>
-  );
+	const [, action] = useFormState(logoutAction, initialState);
+	return (
+		<form action={action} style={{ display: "contents" }}>
+			<button {...props} type="submit">
+				Sign out
+			</button>
+		</form>
+	);
 }

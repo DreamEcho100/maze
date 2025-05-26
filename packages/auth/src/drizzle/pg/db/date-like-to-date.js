@@ -7,10 +7,10 @@
 export function dateLikeToDate(dateLike) {
 	if (dateLike instanceof Date) {
 		return dateLike;
-	} else if (typeof dateLike === 'string' || typeof dateLike === 'number') {
+	} else if (typeof dateLike === "string" || typeof dateLike === "number") {
 		return new Date(dateLike);
-	} else if (dateLike && typeof dateLike === 'object' && 'toDate' in dateLike) {
-		return /** @type {() => Date} */(dateLike.toDate)();
+	} else if (dateLike && typeof dateLike === "object" && "toDate" in dateLike) {
+		return /** @type {() => Date} */ (dateLike.toDate)();
 	}
-	throw new TypeError('Invalid date-like value');
+	throw new TypeError("Invalid date-like value");
 }

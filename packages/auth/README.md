@@ -11,7 +11,7 @@ Based on comprehensive analysis of your authentication library codebase, here's 
   ```typescript
   // In #types.ts - fix interface definitions:
   findByEmail → findOneByEmail
-  getPasswordHash → getOnePasswordHash  
+  getPasswordHash → getOnePasswordHash
   getTOTPKey → getOneTOTPKey
   updatePassword → updateOnePassword
   updateEmailAndVerify → updateOneEmailAndVerify
@@ -20,20 +20,20 @@ Based on comprehensive analysis of your authentication library codebase, here's 
   getRecoveryCodeRaw → getOneRecoveryCodeRaw
   updateRecoveryCode → updateOneRecoveryCode
   updateTOTPKey → updateOneTOTPKey
-  
+
   // Sessions:
   create → createOne
-  findWithUser → findOneWithUser  
+  findWithUser → findOneWithUser
   extend → extendOne
   delete → deleteOne
   deleteByUser → deleteAllByUserId (already correct)
-  
+
   // Email Verification:
   create → createOne
   findByCode → findOneByCode
   delete → deleteOne
   deleteByUser → deleteAllByUserId
-  
+
   // Password Reset:
   create → createOne
   findWithUser → findOneWithUser
@@ -50,19 +50,19 @@ Based on comprehensive analysis of your authentication library codebase, here's 
   ```javascript
   // Create validator to ensure all required methods exist
   export function validateProviders() {
-    const requiredMethods = {
-      userProvider: ['createOne', 'findOneByEmail', 'updateOnePassword', /*...*/],
-      sessionProvider: ['createOne', 'findOneWithUser', 'deleteOne', /*...*/],
-      // ... other providers
-    };
-    
-    for (const [providerName, methods] of Object.entries(requiredMethods)) {
-      for (const method of methods) {
-        if (typeof providers[providerName][method] !== 'function') {
-          throw new Error(`${providerName}.${method} is not implemented`);
-        }
-      }
-    }
+  	const requiredMethods = {
+  		userProvider: ["createOne", "findOneByEmail", "updateOnePassword" /*...*/],
+  		sessionProvider: ["createOne", "findOneWithUser", "deleteOne" /*...*/],
+  		// ... other providers
+  	};
+
+  	for (const [providerName, methods] of Object.entries(requiredMethods)) {
+  		for (const method of methods) {
+  			if (typeof providers[providerName][method] !== "function") {
+  				throw new Error(`${providerName}.${method} is not implemented`);
+  			}
+  		}
+  	}
   }
   ```
 
@@ -71,13 +71,13 @@ Based on comprehensive analysis of your authentication library codebase, here's 
   ```javascript
   // Example implementation to guide users
   const exampleUserProvider = {
-    createOne: async (email, name, passwordHash, recoveryCode) => {
-      // Database implementation example
-    },
-    findOneByEmail: async (email) => {
-      // Database query example  
-    },
-    // ... all methods with examples
+  	createOne: async (email, name, passwordHash, recoveryCode) => {
+  		// Database implementation example
+  	},
+  	findOneByEmail: async (email) => {
+  		// Database query example
+  	},
+  	// ... all methods with examples
   };
   ```
 
@@ -103,15 +103,15 @@ Based on comprehensive analysis of your authentication library codebase, here's 
 
   ```javascript
   // Found inconsistent validation patterns:
-  
+
   // Some use Zod (good):
   const input = updateUserPasswordSchema.safeParse(data);
-  
+
   // Others use manual checks (convert these):
   if (typeof code !== "string" || !code) {
-    return ERROR_MESSAGE;
+  	return ERROR_MESSAGE;
   }
-  
+
   // Some have TODO comments (implement these):
   // TODO: Add validation using `zod` (in #totp.js)
   ```
@@ -132,25 +132,25 @@ Based on comprehensive analysis of your authentication library codebase, here's 
 
   ```javascript
   // Missing cleanup scenarios:
-  
+
   // 1. Expired session cleanup utility:
   export async function cleanupExpiredSessions() {
-    const expiredSessions = await sessionProvider.findManyExpired();
-    for (const session of expiredSessions) {
-      await sessionProvider.deleteOne(session.id);
-    }
+  	const expiredSessions = await sessionProvider.findManyExpired();
+  	for (const session of expiredSessions) {
+  		await sessionProvider.deleteOne(session.id);
+  	}
   }
-  
+
   // 2. Cleanup on password change:
   export async function updateUserPasswordService(userId, newPassword) {
-    await userProvider.updateOnePassword(userId, newPassword);
-    // Invalidate all user sessions except current
-    await sessionProvider.deleteAllByUserIdExcept(userId, currentSessionId);
+  	await userProvider.updateOnePassword(userId, newPassword);
+  	// Invalidate all user sessions except current
+  	await sessionProvider.deleteAllByUserIdExcept(userId, currentSessionId);
   }
-  
+
   // 3. Cleanup abandoned password reset sessions:
   export async function cleanupExpiredPasswordResetSessions() {
-    await passwordResetSessionProvider.deleteAllExpired();
+  	await passwordResetSessionProvider.deleteAllExpired();
   }
   ```
 
@@ -161,20 +161,20 @@ Based on comprehensive analysis of your authentication library codebase, here's 
   ```javascript
   // Missing QR code generation:
   export function generateTOTPQRCode(secret, userEmail, issuer) {
-    const otpauthUrl = `otpauth://totp/${issuer}:${userEmail}?secret=${secret}&issuer=${issuer}`;
-    return generateQRCode(otpauthUrl);
+  	const otpauthUrl = `otpauth://totp/${issuer}:${userEmail}?secret=${secret}&issuer=${issuer}`;
+  	return generateQRCode(otpauthUrl);
   }
-  
+
   // Missing recovery code regeneration:
   export async function regenerateRecoveryCodesService(userId) {
-    const newRecoveryCodes = generateRecoveryCodes(10);
-    await userProvider.updateOneRecoveryCode(userId, encrypt(newRecoveryCodes));
-    return newRecoveryCodes;
+  	const newRecoveryCodes = generateRecoveryCodes(10);
+  	await userProvider.updateOneRecoveryCode(userId, encrypt(newRecoveryCodes));
+  	return newRecoveryCodes;
   }
-  
+
   // Missing backup authentication methods:
   export async function verify2FABackupMethod(userId, backupCode) {
-    // Implementation for backup 2FA verification
+  	// Implementation for backup 2FA verification
   }
   ```
 
@@ -184,32 +184,32 @@ Based on comprehensive analysis of your authentication library codebase, here's 
 
   ```javascript
   // Missing admin services in #services/settings/admin/:
-  
+
   // User management:
   export async function adminListUsersService(filters, pagination) {
-    // List and filter users
+  	// List and filter users
   }
-  
+
   export async function adminDisableUserService(userId, reason) {
-    // Disable user account
+  	// Disable user account
   }
-  
+
   export async function adminDeleteUserService(userId) {
-    // Delete user and cleanup all related data
+  	// Delete user and cleanup all related data
   }
-  
+
   // Session management:
   export async function adminListUserSessionsService(userId) {
-    // List all sessions for a user
+  	// List all sessions for a user
   }
-  
+
   export async function adminInvalidateSessionService(sessionId) {
-    // Admin can invalidate any session
+  	// Admin can invalidate any session
   }
-  
+
   // Audit logs:
   export async function adminGetAuditLogsService(filters) {
-    // Get authentication audit logs
+  	// Get authentication audit logs
   }
   ```
 
@@ -246,7 +246,7 @@ Based on comprehensive analysis of your authentication library codebase, here's 
 
 - [ ] **Create email provider adapters** for:
   - Resend
-  - SendGrid  
+  - SendGrid
   - Nodemailer
   - AWS SES
 
@@ -325,10 +325,12 @@ Based on comprehensive analysis of your authentication library codebase, here's 
 ## 🎯 **Immediate Action Items (This Week)**
 
 1. **Fix provider interface naming** to include One/Many/All:
+
    - Update #types.ts with correct method names
    - Update all service calls to match new interface names
 
 2. **Fix error code mismatches** in 2FA verification services:
+
    - Recovery code service error codes
    - Ensure all error codes match their context
 
