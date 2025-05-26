@@ -1,13 +1,14 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { resendEmailVerificationCodeService } from "@acme/auth/services/resend-email-verification-code";
-import { verifyEmailUserService } from "@acme/auth/services/verify-email";
+
+import { resendEmailVerificationCodeService } from "@de100/auth/services/resend-email-verification-code";
+import { verifyEmailUserService } from "@de100/auth/services/verify-email";
 import {
 	AUTH_URLS,
 	RESEND_EMAIL_MESSAGES_ERRORS,
 	VERIFY_EMAIL_MESSAGES_ERRORS,
-} from "@acme/auth/utils/constants";
+} from "@de100/auth/utils/constants";
 
 import { getCurrentSession } from "~/libs/auth/utils/get-current-session";
 import { redirect } from "~/libs/i18n/navigation/custom";

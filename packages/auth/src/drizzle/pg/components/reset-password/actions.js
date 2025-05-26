@@ -1,7 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { resetPasswordService } from "@acme/auth/services/reset-password";
+
+import { resetPasswordService } from "@de100/auth/services/reset-password";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

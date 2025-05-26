@@ -1,9 +1,10 @@
 "use server";
 
-/** @import { SessionValidationResult } from "@acme/auth/types"; */
+/** @import { SessionValidationResult } from "@de100/auth/types"; */
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { getCurrentSession as getCurrentSession_ } from "@acme/auth/utils/sessions";
+
+import { getCurrentSession as getCurrentSession_ } from "@de100/auth/utils/sessions";
 
 /**
  * Retrieves the current session from the request's cookies in a Next.js environment.

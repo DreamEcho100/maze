@@ -5,7 +5,7 @@ import hooksPlugin from "eslint-plugin-react-hooks";
 /** @type {Awaited<import('typescript-eslint').Config>} */
 export default [
 	{
-		files: ["**/*.ts", "**/*.tsx"],
+		files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
 		plugins: {
 			react: reactPlugin,
 			"react-compiler": compilerPlugin,

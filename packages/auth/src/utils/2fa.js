@@ -1,4 +1,4 @@
-// import { prisma as db } from "@acme/db/db";
+// import { prisma as db } from "@de100/db/db";
 
 import { sessionProvider } from "#providers/sessions.js";
 import { userProvider } from "#providers/users.js";

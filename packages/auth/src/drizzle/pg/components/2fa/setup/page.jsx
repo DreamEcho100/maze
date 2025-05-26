@@ -1,5 +1,6 @@
-import { createTOTPKeyURI, encodeBase64 } from "@acme/auth/utils";
 import { renderSVG } from "uqr";
+
+import { createTOTPKeyURI, encodeBase64 } from "@de100/auth/utils";
 
 import { getCurrentSession } from "~/libs/auth/utils/get-current-session";
 import { redirect } from "~/libs/i18n/navigation/custom";
@@ -36,8 +37,7 @@ export default async function AuthTwoFactorSetUpPage() {
 					width: "200px",
 					height: "200px",
 				}}
-				dangerouslySetInnerHTML={{ __html: qrcode }}
-			></div>
+				dangerouslySetInnerHTML={{ __html: qrcode }}></div>
 			<TwoFactorSetUpForm encodedTOTPKey={encodedTOTPKey} />
 		</>
 	);

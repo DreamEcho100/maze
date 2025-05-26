@@ -1,8 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { loginUserService } from "@acme/auth/services/login";
-import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@acme/auth/utils/constants";
+
+import { loginUserService } from "@de100/auth/services/login";
+import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

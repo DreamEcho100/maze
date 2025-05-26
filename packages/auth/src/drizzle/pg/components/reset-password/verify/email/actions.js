@@ -1,7 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { verifyPasswordResetEmailVerificationService } from "@acme/auth/services/reset-password/verify/email";
+
+import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

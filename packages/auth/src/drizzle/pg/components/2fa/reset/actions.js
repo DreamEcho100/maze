@@ -1,8 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { reset2FAService } from "@acme/auth/services/2fa/reset";
-import { AUTH_URLS } from "@acme/auth/utils/constants";
+
+import { reset2FAService } from "@de100/auth/services/2fa/reset";
+import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

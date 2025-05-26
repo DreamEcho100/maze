@@ -86,7 +86,7 @@ export const POST = protectedRoute({
 		const stream = new ReadableStream({
 			async start(controller) {
 				for await (const chunk of response) {
-					const content = chunk.choices[0]?.delta?.content ?? "";
+					const content = chunk.choices[0]?.delta.content ?? "";
 					controller.enqueue(
 						new TextEncoder().encode(
 							// To be compatible with vercel `ai` package

@@ -1,7 +1,7 @@
 // /** @import { UserEmailVerificationRequestRepository, EmailVerificationRequest, SessionValidationResult, DateLike } from "#types.ts"; */
 // import { dateLikeToDate, } from "#utils/dates.js";
 
-// // import { prisma as db } from "@acme/db/db";
+// // import { prisma as db } from "@de100/db/db";
 
 // import { transformDbEmailVerificationRequestToEmailVerificationRequest } from "../utils/transform.js";
 

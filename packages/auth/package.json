@@ -175,7 +175,8 @@
 		"clean": "rm -rf .turbo .cache .turbo dist node_modules",
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"lint": "eslint",
-		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
+		"preinstall": "pnpm i --filter='./src/drizzle/pg/db'"
 	},
 	"dependencies": {
 		"@de100/env": "workspace:^",

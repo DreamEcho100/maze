@@ -1,6 +1,6 @@
 /** @import { PasswordResetSession, PasswordResetSessionValidationResult } from "#types.ts"; */
 
-// import { prisma as db } from "@acme/db/db";
+// import { prisma as db } from "@de100/db/db";
 
 // import { dateLikeToDate } from "../utils/dates.js";
 // import {

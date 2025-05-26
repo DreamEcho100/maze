@@ -1,7 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { REGISTER_MESSAGES_ERRORS, registerService } from "@acme/auth/services/register";
+
+import { REGISTER_MESSAGES_ERRORS, registerService } from "@de100/auth/services/register";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

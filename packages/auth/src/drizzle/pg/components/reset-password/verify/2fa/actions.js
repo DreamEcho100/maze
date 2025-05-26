@@ -1,8 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { verifyPasswordReset2FAViaRecoveryCodeService } from "@acme/auth/services/reset-password/verify/2fa/recovery-code";
-import { verifyPasswordReset2FAViaTOTPService } from "@acme/auth/services/reset-password/verify/2fa/totp";
+
+import { verifyPasswordReset2FAViaRecoveryCodeService } from "@de100/auth/services/reset-password/verify/2fa/recovery-code";
+import { verifyPasswordReset2FAViaTOTPService } from "@de100/auth/services/reset-password/verify/2fa/totp";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

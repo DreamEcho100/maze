@@ -1,5 +1,5 @@
 /**
- * @import { SessionWithUser } from "@acme/auth/types";
+ * @import { SessionWithUser } from "@de100/auth/types";
  * @import { PropsWithChildren } from "react";
  */
 

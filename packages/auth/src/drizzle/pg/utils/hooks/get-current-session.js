@@ -1,5 +1,5 @@
-/** @import { ValidSessionResult, InvalidSessionResult } from "@acme/auth/types" */
-/** @import { SessionWithUser } from "@acme/auth/types";  */
+/** @import { ValidSessionResult, InvalidSessionResult } from "@de100/auth/types" */
+/** @import { SessionWithUser } from "@de100/auth/types";  */
 
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";

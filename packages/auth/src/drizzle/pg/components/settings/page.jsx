@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getUserRecoveryCodeRepository } from "@acme/auth/repositories/users";
+
+import { getUserRecoveryCodeRepository } from "@de100/auth/repositories/users";
 
 import CustomLink from "~/components/common/CustomLink";
 import { getCurrentSession } from "~/libs/auth/utils/get-current-session";
@@ -40,8 +41,7 @@ export default async function AuthSettingsPage() {
 						layout: null,
 						w: null,
 					}}
-					href="/"
-				>
+					href="/">
 					Home
 				</CustomLink>
 				<CustomLink
@@ -54,8 +54,7 @@ export default async function AuthSettingsPage() {
 						layout: null,
 						w: null,
 					}}
-					href="/settings"
-				>
+					href="/settings">
 					Settings
 				</CustomLink>
 			</header>
@@ -84,8 +83,7 @@ export default async function AuthSettingsPage() {
 								layout: null,
 								w: null,
 							}}
-							href="/auth/2fa/setup"
-						>
+							href="/auth/2fa/setup">
 							Update
 						</CustomLink>
 					</section>

@@ -3,7 +3,7 @@
 // // import { createId } from "@paralleldrive/cuid2";
 // import { decrypt, decryptToString } from "#utils/encryption.js";
 
-// import { prisma as db } from "@acme/db/db";
+// import { prisma as db } from "@de100/db/db";
 
 // import { transformDbUserToUser } from "../utils/transform.js";
 

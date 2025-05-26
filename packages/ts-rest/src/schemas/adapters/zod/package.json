@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"type": "module",
+	"scripts": {
+		"clean": "rm -rf .turbo .cache .turbo dist node_modules"
+	},
 	"dependencies": {
 		"zod": "catalog:"
 	}

@@ -18,12 +18,12 @@ export interface EmailVerificationRequest {
 	code: string;
 }
 
-type Organization = {
+interface Organization {
 	id: string;
 	createdAt: DateLike;
 	updatedAt?: DateLike | null;
 	ownerId: string;
-};
+}
 
 interface User {
 	name: string;

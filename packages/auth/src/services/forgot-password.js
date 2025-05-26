@@ -45,7 +45,7 @@ export async function forgotPasswordService(data, options) {
 	const [session] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },
-			{ tx: options?.tx },
+			{ tx: options.tx },
 		),
 		passwordResetSessionProvider.deleteAllByUserId(
 			{ where: { userId: user.id } },

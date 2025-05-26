@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { RPCHandler } from "@orpc/server/fetch";
 
 import { createContext } from "#server/libs/context";

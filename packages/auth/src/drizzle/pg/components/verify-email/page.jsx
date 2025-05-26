@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getUserEmailVerificationRequestFromRequest } from "@acme/auth/utils/email-verification";
+
+import { getUserEmailVerificationRequestFromRequest } from "@de100/auth/utils/email-verification";
 
 import CustomLink from "~/components/common/CustomLink";
 import { getCurrentSession } from "~/libs/auth/utils/get-current-session";
@@ -41,8 +42,7 @@ export default async function AuthVerifyEmailPage() {
 					layout: null,
 					w: null,
 				}}
-				href="/settings"
-			>
+				href="/settings">
 				Change your email
 			</CustomLink>
 		</>

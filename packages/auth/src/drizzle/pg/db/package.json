@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"clean": "rm -rf .turbo .cache .turbo dist node_modules"
 	},
 	"keywords": [],
 	"author": "",
@@ -19,10 +19,10 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@types/react": "catalog:",
-		"@types/react-dom": "catalog:",
 		"@types/node": "catalog:",
-		"@types/pg": "^8.11.10",
+		"@types/pg": "^8.11.11",
+		"@types/react": "catalog:react19",
+		"@types/react-dom": "catalog:react19",
 		"drizzle-kit": "^0.30.5",
 		"tsx": "^4.19.2"
 	}

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getUserRecoveryCodeRepository } from "@acme/auth/repositories/users";
+
+import { getUserRecoveryCodeRepository } from "@de100/auth/repositories/users";
 
 import CustomLink from "~/components/common/CustomLink";
 import { getCurrentSession } from "~/libs/auth/utils/get-current-session";

@@ -1,9 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { regenerateRecoveryCodeService } from "@acme/auth/services/settings/regenerate-recovery-code";
-import { updateEmailService } from "@acme/auth/services/settings/update-email";
-import { updateIsTwoFactorService } from "@acme/auth/services/settings/update-is-two-factor";
+
+import { regenerateRecoveryCodeService } from "@de100/auth/services/settings/regenerate-recovery-code";
+import { updateEmailService } from "@de100/auth/services/settings/update-email";
+import { updateIsTwoFactorService } from "@de100/auth/services/settings/update-is-two-factor";
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; }} ActionIdleResult
  * @typedef {{ type: 'error', statusCode: number; message: string; }} ActionErrorResult
@@ -11,8 +12,8 @@ import { updateIsTwoFactorService } from "@acme/auth/services/settings/update-is
  * @typedef {ActionIdleResult | ActionErrorResult | ActionSuccessResult} ActionResult
  */
 
-import { updatePasswordService } from "@acme/auth/services/settings/update-password";
-import { AUTH_URLS } from "@acme/auth/utils/constants";
+import { updatePasswordService } from "@de100/auth/services/settings/update-password";
+import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 

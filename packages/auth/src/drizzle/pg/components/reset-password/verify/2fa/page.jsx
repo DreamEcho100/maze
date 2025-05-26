@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
-import { validatePasswordResetSessionRequest } from "@acme/auth/utils/password-reset";
+
+import { validatePasswordResetSessionRequest } from "@de100/auth/utils/password-reset";
 
 import { redirect } from "~/libs/i18n/navigation/custom";
 import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";

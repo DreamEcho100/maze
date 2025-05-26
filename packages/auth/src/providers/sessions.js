@@ -1,7 +1,7 @@
 // /** @import { Session, DBUser, User } from "#types.ts"; */
 // import { dateLikeToDate } from "#utils/dates.js";
 
-// import { prisma as db } from "@acme/db/db";
+// import { prisma as db } from "@de100/db/db";
 
 // import { transformDbSessionToSession, transformDbUserToUser } from "../utils/transform.js";
 

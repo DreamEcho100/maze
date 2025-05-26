@@ -1,13 +1,14 @@
 /**
  * @import { NextRequest } from "next/server"
- * @import { Session, User } from "@acme/auth/types"
+ * @import { Session, User } from "@de100/auth/types"
  */
 
 import { NextResponse } from "next/server";
-import { COOKIE_TOKEN_SESSION_KEY } from "@acme/auth/utils/constants"; // #server/utils/constants
 
-import { csrfProtection } from "@acme/auth/utils/csrf";
-import { handleSessionMiddleware } from "@acme/auth/utils/sessions";
+import { COOKIE_TOKEN_SESSION_KEY } from "@de100/auth/utils/constants"; // #server/utils/constants
+
+import { csrfProtection } from "@de100/auth/utils/csrf";
+import { handleSessionMiddleware } from "@de100/auth/utils/sessions";
 
 /*
 Cannot find module 'auth-base-server/' or its corresponding type declarations.ts(2307)
@@ -31,7 +32,7 @@ Cannot find module
  *
  * @example
  * ```ts
- * import { createAuthMiddleware } from "@acme/auth/middleware";
+ * import { createAuthMiddleware } from "@de100/auth/middleware";
  *
  * export default async function middleware(request, next) {
  *   return createAuthMiddleware(request, {

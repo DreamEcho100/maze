@@ -58,7 +58,7 @@ export async function setup2FAService(data, options) {
 	}
 
 	await Promise.all([
-		updateUserTOTPKey({ data: { key }, where: { userId: user.id } }, { tx: options?.tx }),
+		updateUserTOTPKey({ data: { key }, where: { userId: user.id } }, { tx: options.tx }),
 		// markOne2FAVerifiedRepository(session.id),
 		sessionProvider.markOne2FAVerified({ where: { id: session.id } }, { tx: options.tx }),
 	]);

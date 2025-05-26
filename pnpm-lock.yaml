@@ -54,6 +54,12 @@ catalogs:
     prettier:
       specifier: ^3.4.2
       version: 3.5.3
+    react:
+      specifier: 19.0.0
+      version: 19.0.0
+    react-dom:
+      specifier: 19.0.0
+      version: 19.0.0
     react-hook-form:
       specifier: ^7.54.2
       version: 7.55.0
@@ -535,6 +541,46 @@ importers:
         specifier: 'catalog:'
         version: 5.8.2
 
+  packages/auth/src/drizzle/pg/db:
+    dependencies:
+      drizzle-orm:
+        specifier: ^0.38.4
+        version: 0.38.4(@opentelemetry/api@1.9.0)(@prisma/client@6.5.0(prisma@6.5.0(typescript@5.8.2))(typescript@5.8.2))(@types/pg@8.15.2)(@types/react@19.1.0)(@vercel/postgres@0.10.0)(kysely@0.28.2)(pg@8.16.0)(prisma@6.5.0(typescript@5.8.2))(react@19.0.0)
+      next:
+        specifier: 'catalog:'
+        version: 15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      pg:
+        specifier: ^8.16.0
+        version: 8.16.0
+      react:
+        specifier: 'catalog:'
+        version: 19.0.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.0.0(react@19.0.0)
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.28
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.13.17
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.15.2
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.1.0
+      '@types/react-dom':
+        specifier: catalog:react19
+        version: 19.1.1(@types/react@19.1.0)
+      drizzle-kit:
+        specifier: ^0.30.5
+        version: 0.30.6
+      tsx:
+        specifier: ^4.19.2
+        version: 4.19.4
+
   packages/db:
     dependencies:
       '@vercel/postgres':
@@ -723,6 +769,12 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.8.2
+
+  packages/ts-rest/src/schemas/adapters/zod:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.28
 
   packages/ui:
     dependencies:
@@ -940,10 +992,10 @@ importers:
         version: 6.5.0(prisma@6.5.0(typescript@5.8.2))(typescript@5.8.2)
       '@t3-oss/env-nextjs':
         specifier: ^0.12.0
-        version: 0.12.0(typescript@5.8.2)(zod@3.24.2)
+        version: 0.12.0(typescript@5.8.2)(zod@3.25.28)
       ai:
         specifier: ^4.2.8
-        version: 4.2.10(react@19.0.0)(zod@3.24.2)
+        version: 4.2.10(react@19.0.0)(zod@3.25.28)
       lucide-react:
         specifier: ^0.485.0
         version: 0.485.0(react@19.0.0)
@@ -952,7 +1004,7 @@ importers:
         version: 15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       openai:
         specifier: ^4.90.0
-        version: 4.91.1(ws@8.18.1(bufferutil@4.0.9))(zod@3.24.2)
+        version: 4.91.1(ws@8.18.1(bufferutil@4.0.9))(zod@3.25.28)
       react:
         specifier: catalog:react19
         version: 19.0.0
@@ -964,7 +1016,7 @@ importers:
         version: 7.55.0(react@19.0.0)
       zod:
         specifier: ^3.24.2
-        version: 3.24.2
+        version: 3.25.28
     devDependencies:
       '@de100/eslint-config':
         specifier: workspace:*
@@ -9710,6 +9762,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tsx@4.19.4:
+    resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   turbo-darwin-64@2.4.4:
     resolution: {integrity: sha512-5kPvRkLAfmWI0MH96D+/THnDMGXlFNmjeqNRj5grLKiry+M9pKj3pRuScddAXPdlxjO5Ptz06UNaOQrrYGTx1g==}
     cpu: [x64]
@@ -10283,9 +10340,6 @@ packages:
     peerDependencies:
       zod: ^3.18.0
 
-  zod@3.24.2:
-    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
-
   zod@3.25.28:
     resolution: {integrity: sha512-/nt/67WYKnr5by3YS7LroZJbtcCBurDKKPBPWWzaxvVCGuG/NOsiKkrjoOhI8mJ+SQUXEbUzeB3S+6XDUEEj7Q==}
 
@@ -10323,13 +10377,6 @@ snapshots:
     optionalDependencies:
       zod: 3.25.28
 
-  '@ai-sdk/provider-utils@2.2.3(zod@3.24.2)':
-    dependencies:
-      '@ai-sdk/provider': 1.1.0
-      nanoid: 3.3.11
-      secure-json-parse: 2.7.0
-      zod: 3.24.2
-
   '@ai-sdk/provider-utils@2.2.3(zod@3.25.28)':
     dependencies:
       '@ai-sdk/provider': 1.1.0
@@ -10345,16 +10392,6 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.2.5(react@19.0.0)(zod@3.24.2)':
-    dependencies:
-      '@ai-sdk/provider-utils': 2.2.3(zod@3.24.2)
-      '@ai-sdk/ui-utils': 1.2.4(zod@3.24.2)
-      react: 19.0.0
-      swr: 2.3.3(react@19.0.0)
-      throttleit: 2.1.0
-    optionalDependencies:
-      zod: 3.24.2
-
   '@ai-sdk/react@1.2.5(react@19.0.0)(zod@3.25.28)':
     dependencies:
       '@ai-sdk/provider-utils': 2.2.3(zod@3.25.28)
@@ -10364,13 +10401,6 @@ snapshots:
       throttleit: 2.1.0
     optionalDependencies:
       zod: 3.25.28
-
-  '@ai-sdk/ui-utils@1.2.4(zod@3.24.2)':
-    dependencies:
-      '@ai-sdk/provider': 1.1.0
-      '@ai-sdk/provider-utils': 2.2.3(zod@3.24.2)
-      zod: 3.24.2
-      zod-to-json-schema: 3.24.5(zod@3.24.2)
 
   '@ai-sdk/ui-utils@1.2.4(zod@3.25.28)':
     dependencies:
@@ -13707,22 +13737,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.12.0(typescript@5.8.2)(zod@3.24.2)':
-    optionalDependencies:
-      typescript: 5.8.2
-      zod: 3.24.2
-
   '@t3-oss/env-core@0.12.0(typescript@5.8.2)(zod@3.25.28)':
     optionalDependencies:
       typescript: 5.8.2
       zod: 3.25.28
-
-  '@t3-oss/env-nextjs@0.12.0(typescript@5.8.2)(zod@3.24.2)':
-    dependencies:
-      '@t3-oss/env-core': 0.12.0(typescript@5.8.2)(zod@3.24.2)
-    optionalDependencies:
-      typescript: 5.8.2
-      zod: 3.24.2
 
   '@t3-oss/env-nextjs@0.12.0(typescript@5.8.2)(zod@3.25.28)':
     dependencies:
@@ -14276,18 +14294,6 @@ snapshots:
     dependencies:
       clean-stack: 2.2.0
       indent-string: 4.0.0
-
-  ai@4.2.10(react@19.0.0)(zod@3.24.2):
-    dependencies:
-      '@ai-sdk/provider': 1.1.0
-      '@ai-sdk/provider-utils': 2.2.3(zod@3.24.2)
-      '@ai-sdk/react': 1.2.5(react@19.0.0)(zod@3.24.2)
-      '@ai-sdk/ui-utils': 1.2.4(zod@3.24.2)
-      '@opentelemetry/api': 1.9.0
-      jsondiffpatch: 0.6.0
-      zod: 3.24.2
-    optionalDependencies:
-      react: 19.0.0
 
   ai@4.2.10(react@19.0.0)(zod@3.25.28):
     dependencies:
@@ -18451,7 +18457,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openai@4.91.1(ws@8.18.1(bufferutil@4.0.9))(zod@3.24.2):
+  openai@4.91.1(ws@8.18.1(bufferutil@4.0.9))(zod@3.25.28):
     dependencies:
       '@types/node': 18.19.86
       '@types/node-fetch': 2.6.12
@@ -18462,7 +18468,7 @@ snapshots:
       node-fetch: 2.7.0
     optionalDependencies:
       ws: 8.18.1(bufferutil@4.0.9)
-      zod: 3.24.2
+      zod: 3.25.28
     transitivePeerDependencies:
       - encoding
 
@@ -18643,8 +18649,7 @@ snapshots:
   pg-cloudflare@1.2.5:
     optional: true
 
-  pg-connection-string@2.9.0:
-    optional: true
+  pg-connection-string@2.9.0: {}
 
   pg-int8@1.0.1: {}
 
@@ -18653,7 +18658,6 @@ snapshots:
   pg-pool@3.10.0(pg@8.16.0):
     dependencies:
       pg: 8.16.0
-    optional: true
 
   pg-protocol@1.10.0: {}
 
@@ -18664,7 +18668,6 @@ snapshots:
       postgres-bytea: 1.0.0
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
-    optional: true
 
   pg-types@4.0.2:
     dependencies:
@@ -18685,12 +18688,10 @@ snapshots:
       pgpass: 1.0.5
     optionalDependencies:
       pg-cloudflare: 1.2.5
-    optional: true
 
   pgpass@1.0.5:
     dependencies:
       split2: 4.2.0
-    optional: true
 
   picocolors@1.0.1: {}
 
@@ -18755,27 +18756,23 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postgres-array@2.0.0:
-    optional: true
+  postgres-array@2.0.0: {}
 
   postgres-array@3.0.4: {}
 
-  postgres-bytea@1.0.0:
-    optional: true
+  postgres-bytea@1.0.0: {}
 
   postgres-bytea@3.0.0:
     dependencies:
       obuf: 1.1.2
 
-  postgres-date@1.0.7:
-    optional: true
+  postgres-date@1.0.7: {}
 
   postgres-date@2.1.0: {}
 
   postgres-interval@1.2.0:
     dependencies:
       xtend: 4.0.2
-    optional: true
 
   postgres-interval@3.0.0: {}
 
@@ -19792,8 +19789,7 @@ snapshots:
 
   split-on-first@1.1.0: {}
 
-  split2@4.2.0:
-    optional: true
+  split2@4.2.0: {}
 
   sprintf-js@1.0.3: {}
 
@@ -20147,6 +20143,13 @@ snapshots:
   tslib@1.14.1: {}
 
   tslib@2.8.1: {}
+
+  tsx@4.19.4:
+    dependencies:
+      esbuild: 0.25.2
+      get-tsconfig: 4.10.0
+    optionalDependencies:
+      fsevents: 2.3.3
 
   turbo-darwin-64@2.4.4:
     optional: true
@@ -20712,10 +20715,6 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.24.5(zod@3.24.2):
-    dependencies:
-      zod: 3.24.2
-
   zod-to-json-schema@3.24.5(zod@3.25.28):
     dependencies:
       zod: 3.25.28
@@ -20723,8 +20722,6 @@ snapshots:
   zod-validation-error@3.4.0(zod@3.25.28):
     dependencies:
       zod: 3.25.28
-
-  zod@3.24.2: {}
 
   zod@3.25.28: {}
 
