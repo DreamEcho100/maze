@@ -1,6 +1,6 @@
 
 import { boolean, index, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { idsProvider } from "../../providers/ids";
+import { idsProvider } from "../../../providers/ids";
 import { relations } from "drizzle-orm";
 import { bytea } from "./bytea";
 
