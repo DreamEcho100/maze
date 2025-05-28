@@ -677,6 +677,11 @@ export interface IdsProvider {
 	createOneAsync: () => Promise<string>;
 }
 
+/**
+ * Strategy can be "session" (default) or "jwt"
+ * - "session": Traditional server-side sessions with cookies
+ * - "jwt": Stateless JWT tokens (refresh tokens still stored in DB for revocation)
+ */
 export type AuthStrategy = "session" | "jwt" | "hybrid";
 
 export interface ProvidersInit {

@@ -37,7 +37,7 @@ export async function createJWTAuth(props, options) {
 	const session = {
 		id: refreshTokenHash,
 		userId: props.data.userId,
-		expiresAt: new Date(Date.now() + ACCESS_TOKEN_EXPIRES_DURATION),
+		expiresAt: refreshExpiresAt, // ✅ Use refresh token expiration, not access token
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "jwt_refresh_token",

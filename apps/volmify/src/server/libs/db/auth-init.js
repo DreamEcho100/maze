@@ -101,6 +101,7 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 
 export async function setDrizzlePgAuthProviders() {
 	await initAuth({
+		// The following is for testing purposes, it can be removed in production
 		strategy: process.env.AUTH_STRATEGY ?? "jwt",
 		cookies: async () => {
 			const jar = await cookies();
@@ -427,6 +428,7 @@ export async function setDrizzlePgAuthProviders() {
 					// 		if (!result[0]) return true; // Token is revoked
 					// 		return result[0].revokedAt === null; // Token is not revoked
 					// 	});
+					// We will not go with DB, so this is for testing for now
 					return false;
 				},
 				cleanupExpired: async () => {
