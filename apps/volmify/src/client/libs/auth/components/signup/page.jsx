@@ -41,7 +41,8 @@ export default async function AuthSignUpPage() {
 					layout: null,
 					w: null,
 				}}
-				href="/auth/login">
+				href="/auth/login"
+			>
 				Sign in
 			</CustomLink>
 		</>

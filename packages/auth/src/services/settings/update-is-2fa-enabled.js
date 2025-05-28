@@ -6,7 +6,7 @@ import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 
 /**
@@ -39,7 +39,7 @@ export async function updateIsTwoFactorService(isTwoFactorEnabled) {
 
 	if (!input.success) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_2FA_INPUT;
 
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (!session) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	await updateUserTwoFactorEnabledService(user.id, isTwoFactorEnabled ? new Date() : null);

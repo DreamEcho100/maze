@@ -2,14 +2,14 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/index.js";
 import { UPDATE_EMAIL_MESSAGES_ERRORS, UPDATE_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 
 /**
  * Handles updating a user's email by validating input and creating a verification request.
@@ -28,7 +28,7 @@ export async function updateEmailService(email) {
 
 	const validatedEmail = input.data;
 
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (!session) return UPDATE_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {

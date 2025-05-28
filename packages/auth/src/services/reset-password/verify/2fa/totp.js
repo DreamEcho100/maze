@@ -1,7 +1,6 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { usersProvider } from "#providers/users.js";
+import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS,

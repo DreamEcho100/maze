@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 
-import { sessionProvider } from "#providers/sessions.js";
+import { sessionProvider } from "#providers/index.js";
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
 
 /**
@@ -29,7 +29,7 @@ export async function setup2FAService(data, options) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (!session) {
 		return SETUP_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

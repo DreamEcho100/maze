@@ -3,7 +3,6 @@ packages:
   - packages/*
   - tooling/*
   - playground/*
-  - packages/auth/src/drizzle/pg/db
   - packages/ts-rest/src/schemas/adapters/zod
 catalog:
   react: 19.0.0

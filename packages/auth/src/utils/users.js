@@ -2,7 +2,7 @@
  * @import { DateLike, DBUser, User } from "#types.ts";
  */
 
-import { usersProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/index.js";
 import { encrypt, encryptString } from "#utils/encryption.js";
 import { generateRandomRecoveryCode } from "#utils/generate-random-recovery-code.js";
 import { hashPassword } from "#utils/passwords.js";

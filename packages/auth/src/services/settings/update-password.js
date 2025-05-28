@@ -1,18 +1,17 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { sessionProvider } from "#providers/sessions.js";
-import { usersProvider } from "#providers/users.js";
+import { sessionProvider, usersProvider } from "#providers/index.js";
 import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
 import {
-	createSession,
-	generateSessionToken,
-	getCurrentSession,
-	setSessionTokenCookie,
-} from "#utils/sessions.js";
+	createAuthSession,
+	generateAuthSessionToken,
+	getCurrentAuthSession,
+	setAuthSessionToken,
+} from "#utils/startegy/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
 /**
@@ -32,7 +31,7 @@ import { updateUserPassword } from "#utils/users.js";
  * >}
  */
 export async function updatePasswordService(props, options) {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 
 	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -64,8 +63,8 @@ export async function updatePasswordService(props, options) {
 		),
 	]);
 
-	const sessionToken = generateSessionToken();
-	const newSession = await createSession(
+	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+	const newSession = await createAuthSession(
 		{
 			data: {
 				token: sessionToken,
@@ -76,7 +75,7 @@ export async function updatePasswordService(props, options) {
 		{ tx: options.tx },
 	);
 
-	setSessionTokenCookie({
+	setAuthSessionToken({
 		token: sessionToken,
 		expiresAt: newSession.expiresAt,
 	});

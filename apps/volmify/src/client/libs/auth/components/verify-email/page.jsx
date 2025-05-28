@@ -38,7 +38,8 @@ export default async function AuthVerifyEmailPage() {
 					layout: null,
 					w: null,
 				}}
-				href="/settings">
+				href="/settings"
+			>
 				Change your email
 			</CustomLink>
 		</>

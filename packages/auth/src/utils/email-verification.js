@@ -1,9 +1,8 @@
-/** @import { EmailVerificationRequest, SessionValidationResult } from "#types.ts"; */
+/** @import { EmailVerificationRequest, SessionValidationResult, User } from "#types.ts"; */
 
 import { encodeBase32 } from "@oslojs/encoding";
 
-import { cookiesProvider } from "#providers/cookies.js";
-import { userEmailVerificationRequestProvider } from "#providers/email-verification.js";
+import { cookiesProvider, userEmailVerificationRequestProvider } from "#providers/index.js";
 import {
 	COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
@@ -104,19 +103,15 @@ export function deleteEmailVerificationRequestCookie() {
 
 /**
  * Get the email verification request from the request.
- * @param {() => Promise<SessionValidationResult> | SessionValidationResult} getCurrentSession - A function that returns the current session.
+ * @param {string} userId
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
-export async function getUserEmailVerificationRequestFromRequest(getCurrentSession) {
-	const { user } = await getCurrentSession();
-	if (user === null) {
-		return null;
-	}
+export async function getUserEmailVerificationRequestFromRequest(userId) {
 	const id = cookiesProvider.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
 	if (id === null) {
 		return null;
 	}
-	const request = await getUserEmailVerificationRequest(user.id, id);
+	const request = await getUserEmailVerificationRequest(userId, id);
 	if (!request) {
 		deleteEmailVerificationRequestCookie();
 	}

@@ -1,4 +1,4 @@
-import { usersProvider } from "@de100/auth/providers/users";
+import { usersProvider } from "@de100/auth/providers";
 
 import { getCurrentSession } from "#client/libs/auth/get-current-session";
 import CustomLink from "~/components/common/CustomLink";
@@ -40,7 +40,8 @@ export default async function AuthSettingsPage() {
 						layout: null,
 						w: null,
 					}}
-					href="/">
+					href="/"
+				>
 					Home
 				</CustomLink>
 				<CustomLink
@@ -53,7 +54,8 @@ export default async function AuthSettingsPage() {
 						layout: null,
 						w: null,
 					}}
-					href="/settings">
+					href="/settings"
+				>
 					Settings
 				</CustomLink>
 			</header>
@@ -82,7 +84,8 @@ export default async function AuthSettingsPage() {
 								layout: null,
 								w: null,
 							}}
-							href="/auth/2fa/setup">
+							href="/auth/2fa/setup"
+						>
 							Update
 						</CustomLink>
 					</section>

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
@@ -10,7 +10,11 @@ import {
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
-import { createSession, generateSessionToken, setSessionTokenCookie } from "#utils/sessions.js";
+import {
+	createAuthSession,
+	generateAuthSessionToken,
+	setAuthSessionToken,
+} from "#utils/startegy/index.js";
 import { createUser } from "#utils/users.js";
 
 /**
@@ -66,8 +70,8 @@ export async function registerService(data) {
 
 	setEmailVerificationRequestCookie(emailVerificationRequest);
 
-	const sessionToken = generateSessionToken();
-	const session = await createSession({
+	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+	const session = await createAuthSession({
 		data: {
 			token: sessionToken,
 			userId: user.id,
@@ -76,7 +80,7 @@ export async function registerService(data) {
 			},
 		},
 	});
-	setSessionTokenCookie({
+	setAuthSessionToken({
 		token: sessionToken,
 		expiresAt: session.expiresAt,
 	});

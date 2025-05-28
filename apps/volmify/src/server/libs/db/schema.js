@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
-import { index, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
-import { idsProvider } from "@de100/auth/providers/ids";
+import { idsProvider } from "@de100/auth/providers";
 
 import { bytea } from "./bytea";
 
@@ -55,6 +55,8 @@ export const user = pgTable(
 	],
 );
 
+const jsonbMetadata = jsonb("metadata");
+
 export const session = pgTable(
 	"session",
 	{
@@ -77,6 +79,14 @@ export const session = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
+
+		//
+		sessionType: varchar("session_type", { length: 50 }).notNull().default("session"), // 'session' | 'refresh_token'
+		revokedAt: timestamp("revoked_at", { withTimezone: true }), // For token revocation
+		lastUsedAt: timestamp("last_used_at", { withTimezone: true }), // For refresh token tracking
+		metadata: /** @type {ReturnType<typeof jsonbMetadata.$type<Record<string, any>>>} */ (
+			jsonbMetadata
+		),
 	},
 	(table) => [
 		index("idx_session_created_at").on(table.createdAt),

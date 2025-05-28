@@ -3,13 +3,13 @@
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
 
-import { cookiesProvider } from "#providers/cookies.js";
 import {
+	cookiesProvider,
 	// createOnePasswordResetSessionRepository,
 	// deleteOnePasswordResetSessionRepository,
 	// findOnePasswordResetSessionWithUserRepository,
 	passwordResetSessionProvider,
-} from "#providers/password-reset.js";
+} from "#providers/index.js";
 import {
 	COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
 	COOKIE_TOKEN_PASSWORD_RESET_KEY,

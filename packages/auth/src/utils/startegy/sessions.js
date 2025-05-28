@@ -3,13 +3,60 @@
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 
-import { cookiesProvider } from "#providers/cookies.js";
-import { sessionProvider } from "#providers/sessions.js";
+import { cookiesProvider, headersProvider, sessionProvider } from "#providers/index.js";
 import {
 	COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
 	COOKIE_TOKEN_SESSION_KEY,
 } from "#utils/constants.js";
 import { dateLikeToDate, dateLikeToNumber } from "#utils/dates.js";
+
+/**
+ * Creates a new session for the given user.
+ *
+ * The session ID is the SHA-256 hash of the session token, and the session is set to expire in 30 days.
+ *
+ * @param {object} props - The properties for the session.
+ * @param {object} props.data - The data associated with the session.
+ * @param {string} props.data.token - The session token, which is a random string.
+ * @param {string} props.data.userId - The ID of the user for whom the session is created.
+ * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
+ * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
+ * @returns {Promise<Session>} A promise that resolves to the created session object.
+ */
+export async function createSession(props, options) {
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
+	/** @type {Session} */
+	const session = {
+		id: sessionId,
+		userId: props.data.userId,
+		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
+		createdAt: new Date(),
+		sessionType: "jwt",
+		ipAddress: headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
+		userAgent: headersProvider.get("user-agent") ?? null,
+		lastUsedAt: new Date(),
+		revokedAt: null, // Not revoked initially
+	};
+
+	await sessionProvider.createOne({ data: session }, options);
+
+	return session;
+}
+
+/**
+ * Retrieves the current session by validating the session token.
+ *
+ * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
+ */
+export async function getCurrentSession() {
+	const token = cookiesProvider.get(COOKIE_TOKEN_SESSION_KEY);
+	if (!token) {
+		return { session: null, user: null };
+	}
+
+	return await validateSessionToken(token);
+}
 
 /**
  * Set the session token cookie with required attributes.
@@ -45,36 +92,6 @@ export function deleteSessionTokenCookie() {
 }
 
 /**
- * Creates a new session for the given user.
- *
- * The session ID is the SHA-256 hash of the session token, and the session is set to expire in 30 days.
- *
- * @param {object} props - The properties for the session.
- * @param {object} props.data - The data associated with the session.
- * @param {string} props.data.token - The session token, which is a random string.
- * @param {string} props.data.userId - The ID of the user for whom the session is created.
- * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
- * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
- * @returns {Promise<Session>} A promise that resolves to the created session object.
- */
-export async function createSession(props, options) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
-	/** @type {Session} */
-	const session = {
-		id: sessionId,
-		userId: props.data.userId,
-		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
-		// twoFactorVerifiedAt: 0,
-		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
-		createdAt: new Date(),
-	};
-
-	await sessionProvider.createOne({ data: session }, options);
-
-	return session;
-}
-
-/**
  * Generates a random session token.
  *
  * The session token is generated using 20 random bytes encoded in base32.
@@ -87,20 +104,6 @@ export function generateSessionToken() {
 	crypto.getRandomValues(bytes);
 	const token = encodeBase32LowerCaseNoPadding(bytes);
 	return token;
-}
-
-/**
- * Retrieves the current session by validating the session token.
- *
- * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
- */
-export async function getCurrentSession() {
-	const token = cookiesProvider.get(COOKIE_TOKEN_SESSION_KEY);
-	if (!token) {
-		return { session: null, user: null };
-	}
-
-	return await validateSessionToken(token);
 }
 
 /**
@@ -124,13 +127,13 @@ export async function handleSessionMiddleware(param) {
 		return { session: null, user: null };
 	}
 
-	if (result.session) {
-		// Extend cookie expiration by 30 days
-		setSessionTokenCookie({
-			token: param.token,
-			expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
-		});
-	}
+	// if (result.session) {
+	// Extend cookie expiration by 30 days
+	setSessionTokenCookie({
+		token: param.token,
+		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+	});
+	// }
 
 	return result;
 }

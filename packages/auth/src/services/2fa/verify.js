@@ -2,11 +2,10 @@
 
 import { z } from "zod";
 
-import { sessionProvider } from "#providers/sessions.js";
-import { usersProvider } from "#providers/users.js";
+import { sessionProvider, usersProvider } from "#providers/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 
 /**
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
@@ -27,7 +26,7 @@ export async function verify2FAService(data) {
 	}
 
 	// Get session and user details
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (!session) {
 		return VERIFY_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

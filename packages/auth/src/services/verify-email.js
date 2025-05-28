@@ -1,8 +1,7 @@
 /** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 import { z } from "zod";
 
-import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { usersProvider } from "#providers/users.js";
+import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToNumber } from "#utils/dates.js";
 import {
@@ -12,15 +11,12 @@ import {
 	getUserEmailVerificationRequestFromRequest,
 	sendVerificationEmail,
 } from "#utils/email-verification.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 
 /**
  *
  * @param {unknown} data
- * @param {{
- *  getCurrentSession: () => Promise<SessionValidationResult>;
- *  tx: any
- * }} options
+ * @param {{ tx: any }} options
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_EMAIL_MESSAGES_ERRORS,
@@ -39,7 +35,7 @@ export async function verifyEmailUserService(data, options) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (session === null) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
@@ -48,9 +44,7 @@ export async function verifyEmailUserService(data, options) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	let verificationRequest = await getUserEmailVerificationRequestFromRequest(
-		options.getCurrentSession,
-	);
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
 	if (verificationRequest === null) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

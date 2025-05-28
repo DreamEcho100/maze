@@ -1,6 +1,5 @@
-import type z from "zod";
-
 import type { SchemaAdapter } from "#schemas";
+import type z from "zod";
 
 // Zod schema adapter
 export class ZodSchemaAdapter<T> implements SchemaAdapter<T> {

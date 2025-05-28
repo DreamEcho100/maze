@@ -4,7 +4,7 @@ import {
 	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
 	REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getCurrentSession } from "#utils/sessions.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
 /**
@@ -19,7 +19,7 @@ import { resetUserRecoveryCode } from "#utils/users.js";
  * >}
  */
 export async function regenerateRecoveryCodeService() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (!session) {
 		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

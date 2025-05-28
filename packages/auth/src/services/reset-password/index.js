@@ -1,7 +1,6 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { sessionProvider } from "#providers/sessions.js";
+import { passwordResetSessionProvider, sessionProvider } from "#providers/index.js";
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
@@ -11,7 +10,11 @@ import {
 	validatePasswordResetSessionRequest,
 } from "#utils/password-reset.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
-import { createSession, generateSessionToken, setSessionTokenCookie } from "#utils/sessions.js";
+import {
+	createAuthSession,
+	generateAuthSessionToken,
+	setAuthSessionToken,
+} from "#utils/startegy/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
 /**
@@ -52,8 +55,8 @@ export async function resetPasswordService(password, options) {
 
 	const [[sessionToken, session]] = await Promise.all([
 		(async () => {
-			const sessionToken = generateSessionToken();
-			const session = await createSession(
+			const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+			const session = await createAuthSession(
 				{
 					data: {
 						token: sessionToken,
@@ -79,7 +82,7 @@ export async function resetPasswordService(password, options) {
 		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
 	]);
 
-	setSessionTokenCookie({
+	setAuthSessionToken({
 		token: sessionToken,
 		expiresAt: session.expiresAt,
 	});

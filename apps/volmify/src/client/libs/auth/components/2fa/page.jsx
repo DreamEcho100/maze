@@ -39,7 +39,8 @@ export default async function AuthTwoFactorVerificationPage() {
 					layout: null,
 					w: null,
 				}}
-				href="/auth/2fa/reset">
+				href="/auth/2fa/reset"
+			>
 				Use recovery code
 			</CustomLink>
 		</>

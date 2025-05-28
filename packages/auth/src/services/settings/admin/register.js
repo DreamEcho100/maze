@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/users.js";
+import { usersProvider } from "#providers/index.js";
 import {
 	ADMIN_REGISTER_MESSAGES_ERRORS,
 	ADMIN_REGISTER_MESSAGES_SUCCESS,

@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 
-import { passwordResetSessionProvider } from "#providers/password-reset.js";
-import { usersProvider } from "#providers/users.js";
+import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
@@ -14,7 +13,8 @@ import {
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
-import { generateSessionToken } from "#utils/sessions.js";
+
+// import { generateSessionToken } from "#utils/sessions.js";
 
 /**
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.

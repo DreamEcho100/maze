@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { usersProvider } from "@de100/auth/providers/users";
+import { usersProvider } from "@de100/auth/providers";
 
 // import { getUserRecoveryCodeRepository } from "@de100/auth/repositories/users";
 
@@ -8,7 +8,7 @@ import { getCurrentSession } from "#client/libs/auth/get-current-session";
 import CustomLink from "~/components/common/CustomLink";
 import { redirect } from "~/libs/i18n/navigation/custom";
 
-// import { userProvider } from "@de100/auth/src/providers/users";
+// import { userProvider } from "@de100/auth/src/providers";
 
 export default async function AuthRecoveryCodePage() {
 	const { session, user } = await getCurrentSession();

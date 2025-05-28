@@ -7,11 +7,11 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
+import { getCurrentAuthSession } from "#utils/startegy/index.js";
 
 /**
  *
  * @param {{
- *  getCurrentSession: () => Promise<SessionValidationResult>;
  *  tx: any
  * }} options
  * @returns {Promise<
@@ -22,7 +22,7 @@ import {
  * >}
  */
 export async function resendEmailVerificationCodeService(options) {
-	const { session, user } = await options.getCurrentSession();
+	const { session, user } = await getCurrentAuthSession();
 	if (session === null) {
 		return RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
@@ -30,9 +30,7 @@ export async function resendEmailVerificationCodeService(options) {
 		return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	let verificationRequest = await getUserEmailVerificationRequestFromRequest(
-		options.getCurrentSession,
-	);
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
 
 	if (verificationRequest === null) {
 		if (user.emailVerifiedAt) {
