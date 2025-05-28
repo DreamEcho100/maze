@@ -1,7 +1,6 @@
 /** @import { DateLike, SessionValidationResult, Session } from "#types.ts" */
 
-import { sha256 } from "@oslojs/crypto/sha2";
-import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
+import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
 import { cookiesProvider, headersProvider, sessionProvider } from "#providers/index.js";
 import {
@@ -9,6 +8,7 @@ import {
 	COOKIE_TOKEN_SESSION_KEY,
 } from "#utils/constants.js";
 import { dateLikeToDate, dateLikeToNumber } from "#utils/dates.js";
+import { getSessionId } from "#utils/get-session-id.js";
 
 /**
  * Creates a new session for the given user.
@@ -24,7 +24,7 @@ import { dateLikeToDate, dateLikeToNumber } from "#utils/dates.js";
  * @returns {Promise<Session>} A promise that resolves to the created session object.
  */
 export async function createSession(props, options) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
+	const sessionId = getSessionId(props.data.token);
 
 	/** @type {Session} */
 	const session = {
@@ -149,7 +149,7 @@ export async function handleSessionMiddleware(param) {
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data, or null if the session is invalid or expired.
  */
 export async function validateSessionToken(token) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sessionId = getSessionId(token);
 	const result = await sessionProvider
 		.findOneWithUser(sessionId)
 		.catch((error) => console.error("Error:", error));

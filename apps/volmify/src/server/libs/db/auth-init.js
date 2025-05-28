@@ -382,7 +382,7 @@ export async function setDrizzlePgAuthProviders() {
 				deleteOneById: async (sessionId) => {
 					await db.delete(dbSchema.session).where(eq(dbSchema.session.id, sessionId));
 				},
-				invalidateAllByUserId: async (props, options) => {
+				deleteAllByUserId: async (props, options) => {
 					const _db =
 						/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
 							options?.tx
@@ -394,6 +394,7 @@ export async function setDrizzlePgAuthProviders() {
 						.update(dbSchema.session)
 						.set({ revokedAt: new Date(), updatedAt: new Date() })
 						.where(eq(dbSchema.session.id, id));
+					// RedisTokenBlacklistProvider.revokeOneById(id);
 				},
 				revokeAllByUserId: async (props, options) => {
 					const _db =
@@ -401,27 +402,38 @@ export async function setDrizzlePgAuthProviders() {
 							options?.tx
 						) ?? db;
 
+					// const result =
 					await _db
 						.update(dbSchema.session)
-						.set({
-							revokedAt: new Date(),
-							updatedAt: new Date(),
-						})
+						.set({ revokedAt: new Date(), updatedAt: new Date() })
 						.where(
 							and(
 								eq(dbSchema.session.userId, props.where.userId),
 								isNull(dbSchema.session.revokedAt), // Not revoked // eq(dbSchema.session.revokedAt, null),
 							),
-						);
+						)
+						.returning({ id: dbSchema.session.id });
+					// RedisTokenBlacklistProvider.revokeManyByIds(result.map((session) => session.id));
+				},
+				// eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars
+				isOneRevokedById: async (props) => {
+					// return RedisTokenBlacklistProvider.isOneRevokedById(props.where.id);
+					// For now, we don't use Redis for token revocation
+					// return db
+					// 	.select({ revokedAt: dbSchema.session.revokedAt })
+					// 	.from(dbSchema.session)
+					// 	.where(eq(dbSchema.session.id, props.where.id))
+					// 	.then((result) => {
+					// 		if (!result[0]) return true; // Token is revoked
+					// 		return result[0].revokedAt === null; // Token is not revoked
+					// 	});
+					return false;
 				},
 				cleanupExpired: async () => {
 					const result = await db
 						.delete(dbSchema.session)
 						.where(lt(dbSchema.session.expiresAt, new Date()));
-					// and(
-					// 	eq(dbSchema.session.sessionType, "refresh_token"),
-					// 	lt(dbSchema.session.expiresAt, new Date()),
-					// ),
+					// RedisTokenBlacklistProvider.cleanupExpired();
 
 					return result.rowCount ?? 0;
 				},

@@ -491,7 +491,7 @@ export interface SessionsProvider {
 	 * @returns {Promise<void>}
 	 * @description Invalidates all sessions for a user, useful for security purposes
 	 */
-	invalidateAllByUserId: (
+	deleteAllByUserId: (
 		props: { where: { userId: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<void>;
@@ -522,6 +522,7 @@ export interface SessionsProvider {
 		props: { where: { userId: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<void>;
+	isOneRevokedById: (props: { where: { id: string } }) => Promise<boolean>;
 	/**
 	 * Clean up expired refresh tokens
 	 * @returns {Promise<number>} Number of tokens cleaned up

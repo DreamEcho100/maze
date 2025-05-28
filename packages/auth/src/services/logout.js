@@ -2,7 +2,7 @@
 
 import { sessionProvider } from "#providers/index.js";
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { deleteAuthSessionTokens, getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/strategy/index.js";
 
 /**
  * Handles logout by deleting the user session and clearing session cookies.
@@ -20,9 +20,7 @@ export async function logoutService() {
 		return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
 
-	await sessionProvider.deleteOneById(session.id);
-
-	deleteAuthSessionTokens();
+	await invalidateOneAuthSessionToken({ where: { sessionId: session.id } });
 
 	return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }

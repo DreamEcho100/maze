@@ -1,9 +1,7 @@
 /** @import { DateLike, User, JWTAuthResult, Session } from "#types.ts" */
 
-import { sha256 } from "@oslojs/crypto/sha2";
-import { encodeHexLowerCase } from "@oslojs/encoding";
-
 import { headersProvider, jwtProvider, sessionProvider, usersProvider } from "#providers/index.js";
+import { getSessionId } from "#utils/get-session-id.js";
 
 // JWT-specific constants
 const ACCESS_TOKEN_EXPIRES_DURATION = 15 * 60 * 1000; // 15 minutes
@@ -33,7 +31,7 @@ export async function createJWTAuth(props, options) {
 	});
 
 	// Hash refresh token for storage (same pattern as sessions)
-	const refreshTokenHash = encodeHexLowerCase(sha256(new TextEncoder().encode(refreshToken)));
+	const refreshTokenHash = getSessionId(refreshToken);
 	const refreshExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
 	/** @type {Session} */
 	const session = {
@@ -96,30 +94,42 @@ export async function getCurrentJWTAuth() {
 
 	// Access token expired/invalid, try refresh token
 	const refreshToken = jwtProvider.getRefreshToken();
-	if (refreshToken) {
-		const result = await refreshJWTTokens(refreshToken);
-		if (result) {
-			return {
-				user: result.user,
-				session: {
-					id: result.refreshTokenHash,
-					userId: result.user.id,
-					expiresAt: result.refreshExpiresAt,
-					twoFactorVerifiedAt: result.twoFactorVerifiedAt,
-					createdAt: result.createdAt,
-				},
-				method: "jwt_refresh_token",
-				newTokens: {
-					accessToken: result.accessToken,
-					refreshToken: result.refreshToken,
-					accessExpiresAt: result.accessExpiresAt,
-					refreshExpiresAt: result.refreshExpiresAt,
-				},
-			};
-		}
+
+	if (!refreshToken) {
+		return { session: null, user: null };
 	}
 
-	return { session: null, user: null };
+	// Hash the refresh token to check if it's revoked (tokens are stored as hashes)
+	const refreshTokenHash = getSessionId(refreshToken);
+
+	// Check if the refresh token is revoked
+	const isRevoked = await sessionProvider.isOneRevokedById({ where: { id: refreshTokenHash } });
+	if (isRevoked) {
+		return { session: null, user: null };
+	}
+
+	const result = await refreshJWTTokens(refreshToken);
+	if (!result) {
+		return { session: null, user: null };
+	}
+
+	return {
+		user: result.user,
+		session: {
+			id: result.refreshTokenHash,
+			userId: result.user.id,
+			expiresAt: result.refreshExpiresAt,
+			twoFactorVerifiedAt: result.twoFactorVerifiedAt,
+			createdAt: result.createdAt,
+		},
+		method: "jwt_refresh_token",
+		newTokens: {
+			accessToken: result.accessToken,
+			refreshToken: result.refreshToken,
+			accessExpiresAt: result.accessExpiresAt,
+			refreshExpiresAt: result.refreshExpiresAt,
+		},
+	};
 }
 
 /**
@@ -174,7 +184,7 @@ export async function validateJWTToken(token) {
  * @returns {Promise<RefreshJWTTokensResult | null>}
  */
 async function refreshJWTTokens(refreshToken) {
-	const refreshTokenHash = encodeHexLowerCase(sha256(new TextEncoder().encode(refreshToken)));
+	const refreshTokenHash = getSessionId(refreshToken);
 
 	const result = await sessionProvider.findOneWithUser(refreshTokenHash);
 	if (!result) {
@@ -195,7 +205,7 @@ async function refreshJWTTokens(refreshToken) {
 	});
 
 	// Token rotation
-	const newRefreshTokenHash = encodeHexLowerCase(sha256(new TextEncoder().encode(newRefreshToken)));
+	const newRefreshTokenHash = getSessionId(newRefreshToken);
 	const newRefreshExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
 
 	await Promise.all([
@@ -229,21 +239,4 @@ async function refreshJWTTokens(refreshToken) {
 		twoFactorVerifiedAt: refreshTokenRecord.metadata?.twoFactorVerifiedAt ?? null,
 		createdAt: new Date(),
 	};
-}
-
-/**
- * Logout JWT auth (mirrors session deletion)
- * @param {string} [userId]
- * @returns {Promise<void>}
- */
-export async function logoutJWTAuth(userId) {
-	if (userId) {
-		await sessionProvider.revokeAllByUserId({ where: { userId } });
-	} else {
-		const refreshToken = jwtProvider.getRefreshToken();
-		if (refreshToken) {
-			const refreshTokenHash = encodeHexLowerCase(sha256(new TextEncoder().encode(refreshToken)));
-			await sessionProvider.revokeOneById(refreshTokenHash);
-		}
-	}
 }

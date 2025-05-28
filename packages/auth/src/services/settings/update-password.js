@@ -10,7 +10,7 @@ import {
 	createAuthSession,
 	generateAuthSessionToken,
 	getCurrentAuthSession,
-	setAuthSessionToken,
+	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -27,7 +27,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_PASSWORD_MESSAGES_ERRORS,
  *    UPDATE_PASSWORD_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setAuthSessionToken> }
+ *    { session: ReturnType<typeof setOneAuthSessionToken> }
  *  >
  * >}
  */
@@ -57,7 +57,7 @@ export async function updatePasswordService(props, options) {
 	if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
 
 	await Promise.all([
-		sessionProvider.invalidateAllByUserId({ where: { userId: user.id } }, { tx: options.tx }),
+		sessionProvider.deleteAllByUserId({ where: { userId: user.id } }, { tx: options.tx }),
 		updateUserPassword(
 			{ data: { password: props.data.newPassword }, where: { id: user.id } },
 			{ tx: options.tx },
@@ -76,7 +76,7 @@ export async function updatePasswordService(props, options) {
 		{ tx: options.tx },
 	);
 
-	const result = setAuthSessionToken({
+	const result = setOneAuthSessionToken({
 		token: sessionToken,
 		data: newSession,
 	});

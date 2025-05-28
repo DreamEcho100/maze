@@ -8,7 +8,7 @@ import { verifyPasswordHash } from "#utils/passwords.js";
 import {
 	createAuthSession,
 	generateAuthSessionToken,
-	setAuthSessionToken,
+	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 
 /**
@@ -19,7 +19,7 @@ import {
  *  MultiErrorSingleSuccessResponse<
  *    LOGIN_MESSAGES_ERRORS,
  *    LOGIN_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setAuthSessionToken> }
+ *    { session: ReturnType<typeof setOneAuthSessionToken> }
  *  >
  * >}
  */
@@ -65,7 +65,7 @@ export async function loginUserService(data) {
 			},
 		},
 	});
-	const result = setAuthSessionToken({
+	const result = setOneAuthSessionToken({
 		token: sessionToken,
 		data: session,
 	});

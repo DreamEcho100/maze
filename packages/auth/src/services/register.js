@@ -13,7 +13,7 @@ import { verifyPasswordStrength } from "#utils/passwords.js";
 import {
 	createAuthSession,
 	generateAuthSessionToken,
-	setAuthSessionToken,
+	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 import { createUser } from "#utils/users.js";
 
@@ -25,7 +25,7 @@ import { createUser } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    REGISTER_MESSAGES_ERRORS,
  *    REGISTER_MESSAGES_SUCCESS,
- *    { user: User; session: ReturnType<typeof setAuthSessionToken> }
+ *    { user: User; session: ReturnType<typeof setOneAuthSessionToken> }
  *  >
  * >}
  */
@@ -79,7 +79,7 @@ export async function registerService(data) {
 			},
 		},
 	});
-	const result = setAuthSessionToken({
+	const result = setOneAuthSessionToken({
 		token: sessionToken,
 		data: session,
 	});

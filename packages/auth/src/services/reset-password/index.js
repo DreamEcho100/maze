@@ -13,7 +13,7 @@ import { verifyPasswordStrength } from "#utils/passwords.js";
 import {
 	createAuthSession,
 	generateAuthSessionToken,
-	setAuthSessionToken,
+	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -26,7 +26,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
  *    RESET_PASSWORD_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setAuthSessionToken> }
+ *    { session: ReturnType<typeof setOneAuthSessionToken> }
  *  >
  * >}
  */
@@ -76,14 +76,14 @@ export async function resetPasswordService(password, options) {
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: options.tx },
 		),
-		sessionProvider.invalidateAllByUserId(
+		sessionProvider.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: options.tx },
 		),
 		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
 	]);
 
-	const result = setAuthSessionToken({
+	const result = setOneAuthSessionToken({
 		token: sessionToken,
 		data: session,
 	});
