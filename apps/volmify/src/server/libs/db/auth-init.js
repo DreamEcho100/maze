@@ -6,7 +6,7 @@ import { idsProvider, initAuth, sessionProvider } from "@de100/auth/providers";
 import { dateLikeToDate } from "@de100/auth/utils/dates";
 import { decrypt, decryptToString } from "@de100/auth/utils/encryption";
 
-import { db, dbSchema } from ".";
+import { db, dbSchema } from "./index.js";
 
 const userReturnTemplate = {
 	name: dbSchema.user.name,
