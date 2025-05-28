@@ -65,6 +65,11 @@ export async function deleteUserEmailVerificationRequest(props, options) {
  * Send a verification email to a user.
  * @param {string} email - The email address.
  * @param {string} code - The verification code.
+ *
+ * TODO: Add rate limiting for Volmify production:
+ * - Max 3 emails per 10 minutes per email address
+ * - Per-tenant rate limiting for enterprise customers
+ * - IP-based rate limiting for additional security
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function sendVerificationEmail(email, code) {

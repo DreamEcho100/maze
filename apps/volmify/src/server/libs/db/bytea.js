@@ -1,14 +1,14 @@
 import { customType } from "drizzle-orm/pg-core";
 
 export const bytea =
-	/** @type {typeof customType<{ data: Uint8Array<ArrayBufferLike>; notNull: false; default: false }>} */ (
+	/** @type {typeof customType<{ data: Uint8Array<ArrayBufferLike> | null | undefined; notNull: false; default: false }>} */ (
 		customType
 	)({
 		dataType() {
 			return "bytea";
 		},
 		toDriver(val) {
-			if (val === null) {
+			if (val == null) {
 				// If the value is null, return null
 				return null;
 			}
@@ -32,10 +32,10 @@ export const bytea =
 			// 	);
 			// }
 
-			// if (val === null) {
-			// 	// If the value is null, return null
-			// 	return null;
-			// }
+			if (val == null) {
+				// If the value is null, return null
+				return null;
+			}
 
 			if (!(val instanceof Buffer)) {
 				throw new Error(`Expected a Buffer, but received ${typeof val} instead.`);

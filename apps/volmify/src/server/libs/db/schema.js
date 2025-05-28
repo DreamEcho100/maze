@@ -7,45 +7,88 @@ import { bytea } from "./bytea";
 
 const createId = idsProvider.createOneSync;
 
+const organizationMetadataJsonb = jsonb("metadata");
+
+export const organization = pgTable(
+	"organization",
+	{
+		id: text("id").primaryKey().notNull().$default(createId),
+		name: varchar("name", { length: 100 }).notNull().unique("uq_organization_name"),
+		slug: varchar("slug", { length: 100 }).notNull().unique("uq_organization_slug"),
+		logo: varchar("logo", { length: 2096 }),
+		metadata:
+			/** @type {ReturnType<typeof organizationMetadataJsonb.$type<Record<string, any>>>} */ (
+				organizationMetadataJsonb
+			),
+		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
+	},
+	(table) => [
+		index("idx_organization_created_at").on(table.createdAt),
+		index("idx_organization_updated_at").on(table.updatedAt),
+		index("idx_organization_name").on(table.name),
+		index("idx_organization_slug").on(table.slug),
+	],
+);
+export const organizationTeam = pgTable(
+	"organization_team",
+	{
+		id: text("id").primaryKey().notNull().$default(createId),
+		name: varchar("name", { length: 100 }).notNull().unique("uq_organization_team_name"),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3 }),
+		deletedAt: timestamp("deleted_at", { precision: 3 }),
+		metadata: jsonb("metadata"),
+	},
+	(table) => [
+		index("idx_organization_team_created_at").on(table.createdAt),
+		index("idx_organization_team_updated_at").on(table.updatedAt),
+		index("idx_organization_team_name").on(table.name),
+	],
+);
+export const organizationMember = pgTable(
+	"organization_member",
+	{
+		id: text("id").primaryKey().notNull().$default(createId),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		// role: varchar("role", { length: 50 }).notNull().default("organization_member"), // 'admin' | 'organization_member' | 'viewer'
+		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
+		deletedAt: timestamp("deleted_at", { precision: 3 }),
+		teamId: text("team_id").references(() => organizationTeam.id, { onDelete: "set null" }),
+	},
+	(table) => [
+		index("idx_organization_member_created_at").on(table.createdAt),
+		// index("idx_organization_member_role").on(table.role),
+	],
+);
+
 export const user = pgTable(
 	"user",
 	{
-		// id: z.string(),
 		id: text("id").primaryKey().notNull().$default(createId),
-		// name: z.string(),
 		name: varchar("name", { length: 100 }).notNull().unique("uq_user_name"),
 		displayName: varchar("display_name", { length: 100 }),
-		// email: z.string().transform((val) => val.toLowerCase()),
 		email: varchar("email", { length: 256 }).notNull().unique("uq_user_email"),
-		// emailVerified: z.boolean().default(false),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
-		// image: z.string().nullish(),
 		image: varchar("image", { length: 2096 }),
-		// createdAt: z.date().default(() => new Date()),
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
-		// updatedAt: z.date().default(() => new Date()),
 		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
-		// roleId: text("role_id")
-		//   .notNull()
-		//   .references(() => role.id),
 
-		// passwordHash String @map("password_hash")
 		passwordHash: varchar("password_hash", { length: 512 }),
-		// twoFactorEnabledAt DateTime? @map("two_factor_enabled_at") // Is two-factor authentication enabled
 		twoFactorEnabledAt: timestamp("two_factor_enabled_at", { precision: 3 }),
-		// totpKey            Bytes?    @map("totp_key") // TOTP key for two-factor authentication
 		totpKey: bytea("totp_key"),
-		// recoveryCode       Bytes?    @map("recovery_code") // Recovery code for two-factor authentication
 		recoveryCode: bytea("recovery_code"),
-		// // twoFactorRegisteredAt DateTime? @map("two_factor_registered_at") // When two-factor authentication was registered
-		twoFactorRegisteredAt: timestamp("two_factor_registered_at", {
-			precision: 3,
-		}),
-		// // twoFactorVerifiedAt DateTime? @map("two_factor_verified_at") // When two-factor authentication was verified
+		twoFactorRegisteredAt: timestamp("two_factor_registered_at", { precision: 3 }),
 		// twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
-		// // recoveryCodeUsedAt DateTime? @map("recovery_code_used_at") // When the recovery code was last used
 		// recoveryCodeUsedAt: timestamp("recovery_code_used_at", { precision: 3 }),
-		// // recoveryCodeExpiresAt DateTime? @map("recovery_code_expires_at") // When the recovery code expires
 		// recoveryCodeExpiresAt: timestamp("recovery_code_expires_at", { precision: 3 }),
 	},
 	(table) => [
@@ -55,26 +98,17 @@ export const user = pgTable(
 	],
 );
 
-const jsonbMetadata = jsonb("metadata");
+const sessionMetadataJsonb = jsonb("metadata");
 
 export const session = pgTable(
 	"session",
 	{
-		// id: z.string(),
-		id: text("id").primaryKey().notNull().$default(createId),
-		// createdAt: z.date().default(() => new Date()),
+		id: text("id").primaryKey().notNull().$default(createId), // The hashed session ID or the hashed JWT refresh token
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
-		// updatedAt: z.date().default(() => new Date()),
 		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
-		// // token: z.string(),
-		// token: varchar("token", { length: 256 }).notNull().unique("uq_session_token"),
-		// expiresAt: z.date(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
-		// ipAddress: z.string().nullish(),
 		ipAddress: varchar("ip_address", { length: 45 }),
-		// userAgent: z.string().nullish(),
 		userAgent: varchar("user_agent", { length: 512 }),
-		// userId: z.coerce.string(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -84,8 +118,8 @@ export const session = pgTable(
 		sessionType: varchar("session_type", { length: 50 }).notNull().default("session"), // 'session' | 'refresh_token'
 		revokedAt: timestamp("revoked_at", { withTimezone: true }), // For token revocation
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }), // For refresh token tracking
-		metadata: /** @type {ReturnType<typeof jsonbMetadata.$type<Record<string, any>>>} */ (
-			jsonbMetadata
+		metadata: /** @type {ReturnType<typeof sessionMetadataJsonb.$type<Record<string, any>>>} */ (
+			sessionMetadataJsonb
 		),
 	},
 	(table) => [
@@ -102,7 +136,6 @@ export const emailVerificationRequest = pgTable(
 		id: text("id").primaryKey().notNull().$default(createId),
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
 		code: varchar("code", { length: 256 }).notNull().unique("uq_email_verification_request_code"),
-		// expiresAt: z.date(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: text("user_id")
@@ -122,7 +155,6 @@ export const passwordResetSession = pgTable(
 		id: text("id").primaryKey().notNull(), // .$default(createId),
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
 		code: varchar("code", { length: 256 }).notNull().unique("uq_password_reset_session_code"),
-		// expiresAt: z.date(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: text("user_id")
@@ -148,6 +180,9 @@ export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
 	emailVerificationRequests: many(emailVerificationRequest),
 	passwordResetSessions: many(passwordResetSession),
+	organizations: many(organizationMember),
+	organizationTeams: many(organizationTeam),
+	organizationMembers: many(organizationMember),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

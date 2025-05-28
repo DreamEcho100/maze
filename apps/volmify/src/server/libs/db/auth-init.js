@@ -102,7 +102,7 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 export async function setDrizzlePgAuthProviders() {
 	await initAuth({
 		// The following is for testing purposes, it can be removed in production
-		strategy: process.env.AUTH_STRATEGY ?? "jwt",
+		// strategy: process.env.AUTH_STRATEGY ?? "jwt",
 		cookies: async () => {
 			const jar = await cookies();
 			return {
