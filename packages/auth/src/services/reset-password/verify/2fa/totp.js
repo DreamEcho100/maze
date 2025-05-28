@@ -1,5 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
+import { z } from "zod";
+
 import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
@@ -7,6 +9,9 @@ import {
 } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
+
+const codeSchema = z.string().length(6).regex(/^\d+$/);
+const verifyCodeInput = z.object({ code: codeSchema });
 
 /**
  * Handles the 2FA verification for a password reset using TOTP.
@@ -21,8 +26,9 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  * >}
  */
 export async function verifyPasswordReset2FAViaTOTPService(code) {
-	// TODO: Add validation using `zod`
-	if (typeof code !== "string" || !code) {
+	const input = verifyCodeInput.safeParse({ code });
+
+	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
 	}
 
@@ -39,7 +45,7 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
 
 	// const totpKey = await getUserTOTPKeyRepository(session.userId);
 	const totpKey = await usersProvider.getOneTOTPKey(user.id);
-	if (!totpKey || !verifyTOTP(totpKey, 30, 6, code)) {
+	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_TOTP_CODE;
 	}
 

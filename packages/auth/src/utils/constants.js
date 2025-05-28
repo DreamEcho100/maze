@@ -129,11 +129,11 @@ export const VERIFY_EMAIL_MESSAGES_ERRORS = /** @type {const} */ ({
 		message: "Invalid verification code",
 		messageCode: "VERIFICATION_CODE_INVALID",
 	},
-	VERIFICATION_CODE_EXPIRED: {
+	VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE: {
 		type: "error",
 		statusCode: 410,
 		message: "Verification code has expired. A new code has been sent.",
-		messageCode: "VERIFICATION_CODE_EXPIRED",
+		messageCode: "VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE",
 	},
 	// OLD: NOT_AUTHENTICATED
 	AUTHENTICATION_REQUIRED: {

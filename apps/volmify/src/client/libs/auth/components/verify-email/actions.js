@@ -47,7 +47,7 @@ export async function verifyEmailAction(_prev, formData) {
 			return redirect(AUTH_URLS.LOGIN);
 		// case VERIFY_EMAIL_MESSAGES_ERRORS.ENTER_YOUR_CODE.messageCode:
 		// 	return redirect(AUTH_URLS.VERIFY_EMAIL);
-		case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED.messageCode:
+		case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
 			return redirect(AUTH_URLS.VERIFY_EMAIL);
 		// case VERIFY_EMAIL_MESSAGES_ERRORS.INCORRECT_CODE.messageCode:
 		// 	return redirect(AUTH_URLS.VERIFY_EMAIL);

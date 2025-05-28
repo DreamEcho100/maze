@@ -25,6 +25,7 @@ import { dateLikeToDate, dateLikeToNumber } from "#utils/dates.js";
  */
 export async function createSession(props, options) {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
+
 	/** @type {Session} */
 	const session = {
 		id: sessionId,
@@ -32,7 +33,7 @@ export async function createSession(props, options) {
 		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
-		sessionType: "jwt",
+		sessionType: "session",
 		ipAddress: headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
 		userAgent: headersProvider.get("user-agent") ?? null,
 		lastUsedAt: new Date(),

@@ -10,8 +10,9 @@ import {
 	deleteUserEmailVerificationRequest,
 	getUserEmailVerificationRequestFromRequest,
 	sendVerificationEmail,
+	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  *
@@ -44,18 +45,19 @@ export async function verifyEmailUserService(data, options) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	let verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
 	if (verificationRequest === null) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
 
 	if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
-		verificationRequest = await createEmailVerificationRequest(
+		const newVerificationRequest = await createEmailVerificationRequest(
 			{ where: { userId: user.id, email: verificationRequest.email } },
 			{ tx: options.tx },
 		);
-		await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED;
+		await sendVerificationEmail(newVerificationRequest.email, newVerificationRequest.code);
+		setEmailVerificationRequestCookie(newVerificationRequest);
+		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE;
 	}
 	if (verificationRequest.code !== input.data.code) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;

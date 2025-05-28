@@ -42,7 +42,7 @@ export async function createJWTAuth(props, options) {
 		expiresAt: new Date(Date.now() + ACCESS_TOKEN_EXPIRES_DURATION),
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
-		sessionType: "jwt",
+		sessionType: "jwt_refresh_token",
 		ipAddress: headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
 		userAgent: headersProvider.get("user-agent") ?? null,
 		lastUsedAt: new Date(),
@@ -75,19 +75,22 @@ export async function getCurrentJWTAuth() {
 			typeof payload.userId === "string"
 		) {
 			const user = await usersProvider.findOneById(payload.userId);
-			if (user) {
-				return {
-					user,
-					session: {
-						id: "jwt-access-session",
-						userId: user.id,
-						expiresAt: new Date(payload.exp * 1000),
-						twoFactorVerifiedAt: payload.twoFactorVerified ? new Date() : null,
-						createdAt: new Date(payload.iat * 1000),
-					},
-					method: "jwt-access",
-				};
+
+			if (!user) {
+				return { session: null, user: null }; // ✅ Good
 			}
+
+			return {
+				user,
+				session: {
+					id: "jwt-access-session",
+					userId: user.id,
+					expiresAt: new Date(payload.exp * 1000),
+					twoFactorVerifiedAt: payload.twoFactorVerified ? new Date() : null,
+					createdAt: new Date(payload.iat * 1000),
+				},
+				method: "jwt-access",
+			};
 		}
 	}
 
@@ -105,7 +108,7 @@ export async function getCurrentJWTAuth() {
 					twoFactorVerifiedAt: result.twoFactorVerifiedAt,
 					createdAt: result.createdAt,
 				},
-				method: "jwt-refresh",
+				method: "jwt_refresh_token",
 				newTokens: {
 					accessToken: result.accessToken,
 					refreshToken: result.refreshToken,
@@ -205,7 +208,7 @@ async function refreshJWTTokens(refreshToken) {
 				expiresAt: newRefreshExpiresAt,
 				metadata: refreshTokenRecord.metadata,
 				createdAt: new Date(),
-				sessionType: "jwt",
+				sessionType: "jwt_refresh_token",
 				ipAddress:
 					headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
 				userAgent: headersProvider.get("user-agent") ?? null,

@@ -2,7 +2,7 @@
 
 import { sessionProvider } from "#providers/index.js";
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { deleteAuthSessionTokens, getCurrentAuthSession } from "#utils/startegy/index.js";
+import { deleteAuthSessionTokens, getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  * Handles logout by deleting the user session and clearing session cookies.

@@ -14,7 +14,7 @@ import {
 	createAuthSession,
 	generateAuthSessionToken,
 	setAuthSessionToken,
-} from "#utils/startegy/index.js";
+} from "#utils/strategy/index.js";
 import { createUser } from "#utils/users.js";
 
 /**
@@ -25,7 +25,7 @@ import { createUser } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    REGISTER_MESSAGES_ERRORS,
  *    REGISTER_MESSAGES_SUCCESS,
- *    { user: User }
+ *    { user: User; session: ReturnType<typeof setAuthSessionToken> }
  *  >
  * >}
  */
@@ -67,7 +67,6 @@ export async function registerService(data) {
 	});
 
 	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
-
 	setEmailVerificationRequestCookie(emailVerificationRequest);
 
 	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
@@ -80,9 +79,9 @@ export async function registerService(data) {
 			},
 		},
 	});
-	setAuthSessionToken({
+	const result = setAuthSessionToken({
 		token: sessionToken,
-		expiresAt: session.expiresAt,
+		data: session,
 	});
 
 	if (user.twoFactorEnabledAt) {
@@ -93,6 +92,6 @@ export async function registerService(data) {
 	// return redirect("/auth/login");
 	return {
 		...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
-		data: { user },
+		data: { user, session: result },
 	};
 }

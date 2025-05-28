@@ -101,7 +101,7 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 
 export async function setDrizzlePgAuthProviders() {
 	await initAuth({
-		strategy: "jwt", // Default strategy
+		strategy: process.env.AUTH_STRATEGY ?? "jwt",
 		cookies: async () => {
 			const jar = await cookies();
 			return {
@@ -333,7 +333,7 @@ export async function setDrizzlePgAuthProviders() {
 							options?.tx
 						) ?? db;
 					const createdAt = new Date();
-					return db
+					return _db
 						.insert(dbSchema.session)
 						.values({
 							...props.data,

@@ -4,13 +4,12 @@ import { z } from "zod";
 
 import { usersProvider } from "#providers/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { dateLikeToISOString } from "#utils/dates.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
 import {
 	createAuthSession,
 	generateAuthSessionToken,
 	setAuthSessionToken,
-} from "#utils/startegy/index.js";
+} from "#utils/strategy/index.js";
 
 /**
  * Verifies the user's credentials and creates a session if valid.
@@ -20,7 +19,7 @@ import {
  *  MultiErrorSingleSuccessResponse<
  *    LOGIN_MESSAGES_ERRORS,
  *    LOGIN_MESSAGES_SUCCESS,
- *    { sessionToken: string; expiresAt: string }
+ *    { session: ReturnType<typeof setAuthSessionToken> }
  *  >
  * >}
  */
@@ -66,9 +65,9 @@ export async function loginUserService(data) {
 			},
 		},
 	});
-	setAuthSessionToken({
-		expiresAt: session.expiresAt,
+	const result = setAuthSessionToken({
 		token: sessionToken,
+		data: session,
 	});
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
@@ -81,9 +80,6 @@ export async function loginUserService(data) {
 
 	return {
 		...LOGIN_MESSAGES_SUCCESS.LOGGED_IN_SUCCESSFULLY,
-		data: {
-			sessionToken,
-			expiresAt: dateLikeToISOString(session.expiresAt),
-		},
+		data: { session: result },
 	};
 }

@@ -6,7 +6,7 @@ import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 
 /**

@@ -4,7 +4,7 @@ import {
 	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
 	REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
 /**

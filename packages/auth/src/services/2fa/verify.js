@@ -5,7 +5,7 @@ import { z } from "zod";
 import { sessionProvider, usersProvider } from "#providers/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
@@ -46,7 +46,7 @@ export async function verify2FAService(data) {
 	}
 
 	// Mark session as 2FA verified
-	await sessionProvider.markOne2FAVerified(session.id);
+	await sessionProvider.markOne2FAVerified({ where: { id: session.id } });
 
 	// Return success message with optional redirect flag
 	return VERIFY_2FA_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED;

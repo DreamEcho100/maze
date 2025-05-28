@@ -11,7 +11,7 @@ import {
 	generateAuthSessionToken,
 	getCurrentAuthSession,
 	setAuthSessionToken,
-} from "#utils/startegy/index.js";
+} from "#utils/strategy/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
 /**
@@ -27,6 +27,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_PASSWORD_MESSAGES_ERRORS,
  *    UPDATE_PASSWORD_MESSAGES_SUCCESS,
+ *    { session: ReturnType<typeof setAuthSessionToken> }
  *  >
  * >}
  */
@@ -75,10 +76,13 @@ export async function updatePasswordService(props, options) {
 		{ tx: options.tx },
 	);
 
-	setAuthSessionToken({
+	const result = setAuthSessionToken({
 		token: sessionToken,
-		expiresAt: newSession.expiresAt,
+		data: newSession,
 	});
 
-	return UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY;
+	return {
+		...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,
+		data: { session: result },
+	};
 }

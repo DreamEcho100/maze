@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  * Handles resetting 2FA using a recovery code, with validation checks and permission verification.

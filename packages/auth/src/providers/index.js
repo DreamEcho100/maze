@@ -8,14 +8,14 @@ export let headersProvider = /** @type {HeadersProvider} */ ({});
 
 /** @param {HeadersProvider} newHeadersProvider */
 function setHeadersProvider(newHeadersProvider) {
-	headersProvider = newHeadersProvider;
+	headersProvider = { ...headersProvider, ...newHeadersProvider };
 }
 
 export let cookiesProvider = /** @type {CookiesProvider} */ ({});
 
 /** @param {CookiesProvider} newCookiesProvider */
 function setCookiesProvider(newCookiesProvider) {
-	cookiesProvider = newCookiesProvider;
+	cookiesProvider = { ...cookiesProvider, ...newCookiesProvider };
 }
 
 export let jwtProvider = /** @type {JWTProvider} */ ({
@@ -57,7 +57,7 @@ export let jwtProvider = /** @type {JWTProvider} */ ({
 
 		const payload = {
 			userId,
-			type: "refresh",
+			type: "jwt_refresh_token",
 			tokenId: tokenId ?? idsProvider.createOneSync(),
 			...(sessionId && { sessionId }),
 		};
@@ -156,14 +156,14 @@ export let jwtProvider = /** @type {JWTProvider} */ ({
 
 /** @param {JWTProvider} newJWTProvider */
 function setJWTProvider(newJWTProvider) {
-	jwtProvider = newJWTProvider;
+	jwtProvider = { ...jwtProvider, ...newJWTProvider };
 }
 
 export let idsProvider = /** @type {IdsProvider} */ ({});
 
 /** @param {IdsProvider} newIdsProvider */
 function setIdsProvider(newIdsProvider) {
-	idsProvider = newIdsProvider;
+	idsProvider = { ...idsProvider, ...newIdsProvider };
 }
 
 export let userEmailVerificationRequestProvider =
@@ -171,32 +171,38 @@ export let userEmailVerificationRequestProvider =
 
 /** @param {UserEmailVerificationRequestsProvider} newUserEmailVerificationRequestProvider  */
 function setUserEmailVerificationRequestProvider(newUserEmailVerificationRequestProvider) {
-	userEmailVerificationRequestProvider = newUserEmailVerificationRequestProvider;
+	userEmailVerificationRequestProvider = {
+		...userEmailVerificationRequestProvider,
+		...newUserEmailVerificationRequestProvider,
+	};
 }
 
 export let passwordResetSessionProvider = /** @type {PasswordResetSessionsProvider} */ ({});
 
 /** @param {PasswordResetSessionsProvider} newPasswordResetSessionProvider */
 function setPasswordResetSessionProvider(newPasswordResetSessionProvider) {
-	passwordResetSessionProvider = newPasswordResetSessionProvider;
+	passwordResetSessionProvider = {
+		...passwordResetSessionProvider,
+		...newPasswordResetSessionProvider,
+	};
 }
 
 export let sessionProvider = /** @type {SessionsProvider} */ ({});
 
 /** @param {SessionsProvider} newSessionProvider */
 function setSessionProvider(newSessionProvider) {
-	sessionProvider = newSessionProvider;
+	sessionProvider = { ...sessionProvider, ...newSessionProvider };
 }
 
 export let usersProvider = /** @type {UsersProvider} */ ({});
 
 /** @param {UsersProvider} newUserProvider  */
 function setUserProvider(newUserProvider) {
-	usersProvider = newUserProvider;
+	usersProvider = { ...usersProvider, ...newUserProvider };
 }
 
 /** @type {AuthStrategy} */
-let authStrategy = "session";
+let authStrategy = process.env.AUTH_STRATEGY ?? globalThis.__AUTH_STRATEGY ?? "session";
 
 /**
  * @param {AuthStrategy} strategy - The authentication strategy to set. Must be either "session" or "jwt".

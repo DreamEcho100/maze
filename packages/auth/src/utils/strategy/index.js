@@ -1,6 +1,7 @@
-/** @import { SessionValidationResult, DateLike } from "#types.ts" */
+/** @import { SessionValidationResult, DateLike, Session } from "#types.ts" */
 
-import { jwtProvider, sessionProvider } from "#providers/index.js";
+import { getAuthStrategy, jwtProvider, sessionProvider } from "#providers/index.js";
+import { dateLikeToISOString } from "#utils/dates.js";
 import { createJWTAuth, getCurrentJWTAuth, logoutJWTAuth } from "./jwt.js";
 import {
 	createSession,
@@ -10,18 +11,11 @@ import {
 	setSessionTokenCookie,
 } from "./sessions.js";
 
-// Get strategy from your auth config (you'll need to implement this)
-function getAuthStrategy() {
-	// This should come from your auth config
-	// For now, return from environment or default
-	return process.env.AUTH_STRATEGY ?? "session"; // 'session' | 'jwt'
-}
-
 /**
  * Strategy-aware session creation (replaces createSession)
  * @param {object} props
  * @param {object} props.data
- * @param {string} props.data.token - Session token OR will create JWT
+ * @param {string} [props.data.token] - Session token OR will create JWT
  * @param {string} props.data.userId
  * @param {object} props.data.flags
  * @param {object} [options]
@@ -32,11 +26,22 @@ export async function createAuthSession(props, options) {
 	switch (strategy) {
 		case "jwt":
 			// For JWT, we don't use the token from props, we generate our own
-			return await createJWTAuth(props, options);
+			return /** @type {const} */ ({
+				strategy: "jwt",
+				data: await createJWTAuth(props, options),
+			});
+		case "session": {
+			/** @type {string} */
+			let token = props.data.token ?? generateSessionToken();
 
-		case "session":
+			return /** @type {const} */ ({
+				strategy: "session",
+				token: token, // ✅ Use the local token variable
+				session: await createSession({ ...props, data: { ...props.data, token } }, options),
+			});
+		}
 		default:
-			return await createSession(props, options);
+			throw new Error(`Unsupported auth strategy: ${strategy}`);
 	}
 }
 
@@ -70,8 +75,9 @@ export function generateAuthSessionToken(props) {
 			return jwtProvider.createRefreshToken(props);
 
 		case "session":
-		default:
 			return generateSessionToken();
+		default:
+			throw new Error(`Unsupported auth strategy: ${strategy}`);
 	}
 }
 
@@ -79,28 +85,30 @@ export function generateAuthSessionToken(props) {
  * Strategy-aware token setting (replaces setSessionTokenCookie)
  * @param {object} param
  * @param {string} param.token - Token to set
- * @param {DateLike} param.expiresAt - Expiration
- * @param {string} [param.accessToken] - For JWT strategy
- * @param {string} [param.refreshToken] - For JWT strategy
- * @returns {object | void} - Returns tokens for JWT strategy
+ * @param {Awaited<ReturnType<typeof createAuthSession>>} param.data - Session data from createAuthSession
  */
 export function setAuthSessionToken(param) {
 	const strategy = getAuthStrategy();
 
-	switch (strategy) {
-		case "jwt":
-			// For JWT, return tokens for client to handle
-			return {
-				accessToken: param.accessToken,
-				refreshToken: param.refreshToken,
-				accessExpiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min
-				refreshExpiresAt: param.expiresAt,
-			};
+	switch (param.data.strategy) {
+		case "jwt": {
+			return /** @type {const} */ ({
+				strategy: "jwt",
+				...param.data.data,
+			});
+		}
 
-		case "session":
+		case "session": {
+			setSessionTokenCookie({ token: param.token, expiresAt: param.data.session.expiresAt });
+			return /** @type {const} */ ({
+				strategy: "session",
+				sessionToken: param.token,
+				expiresAt: dateLikeToISOString(param.data.session.expiresAt),
+			});
+		}
+
 		default:
-			setSessionTokenCookie(param);
-			return;
+			throw new Error(`Unsupported auth strategy: ${strategy}`);
 	}
 }
 

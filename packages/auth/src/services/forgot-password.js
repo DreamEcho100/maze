@@ -13,6 +13,7 @@ import {
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
+import { generateAuthSessionToken } from "#utils/strategy/index.js";
 
 // import { generateSessionToken } from "#utils/sessions.js";
 
@@ -41,7 +42,7 @@ export async function forgotPasswordService(data, options) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
 
-	const sessionToken = generateSessionToken();
+	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
 	const [session] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },

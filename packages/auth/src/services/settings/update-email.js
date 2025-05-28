@@ -9,7 +9,7 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { getCurrentAuthSession } from "#utils/startegy/index.js";
+import { getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  * Handles updating a user's email by validating input and creating a verification request.

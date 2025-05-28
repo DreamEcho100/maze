@@ -1,5 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
+import { z } from "zod";
+
 import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
@@ -13,6 +15,9 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
+
+const codeSchema = z.string().length(6).regex(/^\d+$/);
+const verifyCodeInput = z.object({ code: codeSchema });
 
 /**
  * Handles the password reset email verification process.
@@ -28,7 +33,9 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  * >}
  */
 export async function verifyPasswordResetEmailVerificationService(code, options) {
-	if (typeof code !== "string" || !code) {
+	const input = verifyCodeInput.safeParse({ code });
+
+	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
 
@@ -40,7 +47,7 @@ export async function verifyPasswordResetEmailVerificationService(code, options)
 	if (session.emailVerifiedAt) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
-	if (code !== session.code) {
+	if (input.data.code !== session.code) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
 	}
 
