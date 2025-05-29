@@ -151,13 +151,13 @@
 			"types": "./dist/src/utils/passwords.d.ts",
 			"default": "./src/utils/passwords.js"
 		},
-		"./utils/sessions": {
-			"types": "./dist/src/utils/sessions.d.ts",
-			"default": "./src/utils/sessions.js"
+		"./utils/strategy": {
+			"types": "./dist/src/utils/strategy/index.d.ts",
+			"default": "./src/utils/strategy/index.js"
 		},
-		"./providers": {
-			"types": "./dist/src/providers/index.d.ts",
-			"default": "./src/providers/index.js"
+		"./init": {
+			"types": "./dist/src/init/index.d.ts",
+			"default": "./src/init/index.js"
 		},
 		"./utils/users": {
 			"types": "./dist/src/utils/users.d.ts",

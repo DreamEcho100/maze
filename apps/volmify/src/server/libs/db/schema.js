@@ -10,12 +10,11 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-
-import { idsProvider } from "@de100/auth/providers";
+import { ulid } from "ulid";
 
 import { bytea } from "./bytea";
 
-const createId = idsProvider.createOneSync;
+const createId = ulid;
 
 export const systemPermissionCategory = pgTable(
 	"system_permission_category",

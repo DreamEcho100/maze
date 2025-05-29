@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS,
@@ -44,13 +44,13 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
 	}
 
 	// const totpKey = await getUserTOTPKeyRepository(session.userId);
-	const totpKey = await usersProvider.getOneTOTPKey(user.id);
+	const totpKey = await authConfig.providers.users.getOneTOTPKey(user.id);
 	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_TOTP_CODE;
 	}
 
 	// await updateOnePasswordRemarkOne2FAVerifiedRepository(session.id);
-	await passwordResetSessionProvider.markOneTwoFactorAsVerified(session.id);
+	await authConfig.providers.passwordResetSession.markOneTwoFactorAsVerified(session.id);
 	return {
 		...VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET,
 		data: { nextStep: "reset-password" },

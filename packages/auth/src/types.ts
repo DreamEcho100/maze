@@ -716,7 +716,7 @@ export type ActionResult = ActionResultBase<"error"> | ActionResultBase<"success
 export type MultiErrorSingleSuccessResponse<
 	TErrorObj extends Record<string, ActionResultBase<"error">>,
 	TSuccessObj extends Record<string, ActionResultBase<"success">>,
-	TData extends unknown = undefined,
+	TData = undefined,
 > =
 	| TErrorObj[keyof TErrorObj]
 	| (TData extends undefined

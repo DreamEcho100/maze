@@ -8,7 +8,7 @@ import {
 	VERIFY_EMAIL_MESSAGES_ERRORS,
 } from "@de100/auth/utils/constants";
 
-import { getCurrentSession } from "#client/libs/auth/get-current-session";
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { db } from "#server/libs/db";
 import { redirect } from "~/libs/i18n/navigation/custom";
 

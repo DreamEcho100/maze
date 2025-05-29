@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
@@ -37,7 +37,7 @@ export async function forgotPasswordService(data, options) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;
 	}
 
-	const user = await usersProvider.findOneByEmail(input.data.email);
+	const user = await authConfig.providers.users.findOneByEmail(input.data.email);
 	if (user === null) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
@@ -48,7 +48,7 @@ export async function forgotPasswordService(data, options) {
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },
 			{ tx: options.tx },
 		),
-		passwordResetSessionProvider.deleteAllByUserId(
+		authConfig.providers.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: user.id } },
 			{ tx: options.tx },
 		),

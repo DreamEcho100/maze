@@ -1,12 +1,6 @@
 /** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult } from "#types.ts"; */
 
-import {
-	cookiesProvider,
-	// createOnePasswordResetSessionRepository,
-	// deleteOnePasswordResetSessionRepository,
-	// findOnePasswordResetSessionWithUserRepository,
-	passwordResetSessionProvider,
-} from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
 	COOKIE_TOKEN_PASSWORD_RESET_KEY,
@@ -42,7 +36,7 @@ export async function createPasswordResetSession(props, options) {
 	};
 
 	// await createOnePasswordResetSessionRepository(session).then(
-	await passwordResetSessionProvider.createOne({ data: session }, options).then(
+	await authConfig.providers.passwordResetSession.createOne({ data: session }, options).then(
 		/** @returns {PasswordResetSession} session */
 		(result) => {
 			if (!result) {
@@ -74,30 +68,22 @@ export async function createPasswordResetSession(props, options) {
 export async function validatePasswordResetSessionToken(token) {
 	const sessionId = getSessionId(token);
 	// const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
-	const result = await passwordResetSessionProvider.findOneWithUser(sessionId);
+	const result = await authConfig.providers.passwordResetSession.findOneWithUser(sessionId);
 
 	if (!result.session || Date.now() >= dateLikeToNumber(result.session.expiresAt)) {
 		// await deleteOnePasswordResetSessionRepository(sessionId);
-		await passwordResetSessionProvider.deleteOne(sessionId);
+		await authConfig.providers.passwordResetSession.deleteOne(sessionId);
 		return { session: null, user: null };
 	}
 
 	return result;
 }
 
-// /**
-//  * @param {string} userId - The ID of the user.
-//  * @returns {Promise<void>}
-//  */
-// export async function invalidateUserPasswordResetSessions(userId) {
-//   await deleteAllPasswordResetSessionsForUserRepository(userId);
-// }
-
 /**
  * @returns {Promise<PasswordResetSessionValidationResult>}
  */
 export async function validatePasswordResetSessionRequest() {
-	const token = cookiesProvider.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
+	const token = authConfig.cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
 	if (token === null) {
 		return { session: null, user: null };
 	}
@@ -114,7 +100,7 @@ export async function validatePasswordResetSessionRequest() {
  * @returns {void}
  */
 export function setPasswordResetSessionTokenCookie(token, expiresAt) {
-	cookiesProvider.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
+	authConfig.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
 		expires: dateLikeToDate(expiresAt),
 		sameSite: "lax",
 		httpOnly: true,
@@ -127,7 +113,7 @@ export function setPasswordResetSessionTokenCookie(token, expiresAt) {
  * @returns {void}
  */
 export function deletePasswordResetSessionTokenCookie() {
-	cookiesProvider.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
+	authConfig.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
 		maxAge: 0,
 		sameSite: "lax",
 		httpOnly: true,

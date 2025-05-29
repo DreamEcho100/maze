@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
 import {
@@ -35,7 +35,7 @@ export async function loginUserService(data) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}
 
-	const user = await usersProvider.findOneByEmail(input.data.email);
+	const user = await authConfig.providers.users.findOneByEmail(input.data.email);
 	if (user === null) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
@@ -45,7 +45,7 @@ export async function loginUserService(data) {
 		return LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
 	}
 
-	const passwordHash = await usersProvider.getOnePasswordHash(user.id);
+	const passwordHash = await authConfig.providers.users.getOnePasswordHash(user.id);
 	if (!passwordHash) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
 	}
@@ -65,10 +65,7 @@ export async function loginUserService(data) {
 			},
 		},
 	});
-	const result = setOneAuthSessionToken({
-		token: sessionToken,
-		data: session,
-	});
+	const result = setOneAuthSessionToken(session);
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED;

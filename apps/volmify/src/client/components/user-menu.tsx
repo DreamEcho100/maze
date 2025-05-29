@@ -44,6 +44,7 @@ export default function UserMenu() {
 						variant="destructive"
 						className="w-full"
 						onClick={() => {
+							// eslint-disable-next-line @typescript-eslint/no-floating-promises
 							authClient.signOut({
 								fetchOptions: {
 									onSuccess: () => {

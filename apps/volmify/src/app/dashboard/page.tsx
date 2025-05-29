@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { authClient } from "#client/libs/auth-client";
-import { orpc } from "#client/utils/orpc";
+import { orpc } from "#client/libs/orpc";
 
 export default function Dashboard() {
 	const router = useRouter();

@@ -2,7 +2,7 @@
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
-import { cookiesProvider, headersProvider, sessionProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
 	COOKIE_TOKEN_SESSION_KEY,
@@ -34,15 +34,24 @@ export async function createSession(props, options) {
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "session",
-		ipAddress: headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
-		userAgent: headersProvider.get("user-agent") ?? null,
+		ipAddress:
+			authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+		userAgent: authConfig.headers.get("user-agent") ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
 	};
 
-	await sessionProvider.createOne({ data: session }, options);
+	await authConfig.providers.session.createOne({ data: session }, options);
 
 	return session;
+}
+
+export function getTokenFromCookies() {
+	const token = authConfig.cookies.get(COOKIE_TOKEN_SESSION_KEY);
+	if (!token) {
+		return null;
+	}
+	return token;
 }
 
 /**
@@ -51,7 +60,7 @@ export async function createSession(props, options) {
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
  */
 export async function getCurrentSession() {
-	const token = cookiesProvider.get(COOKIE_TOKEN_SESSION_KEY);
+	const token = getTokenFromCookies();
 	if (!token) {
 		return { session: null, user: null };
 	}
@@ -68,7 +77,7 @@ export async function getCurrentSession() {
  * @returns {void}
  */
 export function setSessionTokenCookie(param) {
-	cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
+	authConfig.cookies.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -83,7 +92,7 @@ export function setSessionTokenCookie(param) {
  * @returns {void}
  */
 export function deleteSessionTokenCookie() {
-	cookiesProvider.set(COOKIE_TOKEN_SESSION_KEY, "", {
+	authConfig.cookies.set(COOKIE_TOKEN_SESSION_KEY, "", {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -150,7 +159,7 @@ export async function handleSessionMiddleware(param) {
  */
 export async function validateSessionToken(token) {
 	const sessionId = getSessionId(token);
-	const result = await sessionProvider
+	const result = await authConfig.providers.session
 		.findOneWithUser(sessionId)
 		.catch((error) => console.error("Error:", error));
 
@@ -161,13 +170,16 @@ export async function validateSessionToken(token) {
 	const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
 	if (Date.now() >= expiresAt) {
-		await sessionProvider.deleteOneById(sessionId);
+		await authConfig.providers.session.deleteOneById(sessionId);
 		return { session: null, user: null };
 	}
 
 	if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
 		result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-		await sessionProvider.extendOneExpirationDate(sessionId, new Date(result.session.expiresAt));
+		await authConfig.providers.session.extendOneExpirationDate(
+			sessionId,
+			new Date(result.session.expiresAt),
+		);
 	}
 
 	return result;

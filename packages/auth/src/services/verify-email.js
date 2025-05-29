@@ -1,7 +1,7 @@
 /** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 import { z } from "zod";
 
-import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToNumber } from "#utils/dates.js";
 import {
@@ -68,11 +68,11 @@ export async function verifyEmailUserService(data, options) {
 			{ where: { userId: user.id, email: verificationRequest.email } },
 			{ tx: options.tx },
 		),
-		passwordResetSessionProvider.deleteAllByUserId(
+		authConfig.providers.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: user.id } },
 			{ tx: options.tx },
 		),
-		usersProvider.updateEmailAndVerify(
+		authConfig.providers.users.updateEmailAndVerify(
 			{ data: { email: verificationRequest.email }, where: { id: user.id } },
 			{ tx: options.tx },
 		),

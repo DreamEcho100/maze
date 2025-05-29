@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { sessionProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
@@ -60,7 +60,10 @@ export async function setup2FAService(data, options) {
 	await Promise.all([
 		updateUserTOTPKey({ data: { key }, where: { userId: user.id } }, { tx: options.tx }),
 		// markOne2FAVerifiedRepository(session.id),
-		sessionProvider.markOne2FAVerified({ where: { id: session.id } }, { tx: options.tx }),
+		authConfig.providers.session.markOne2FAVerified(
+			{ where: { id: session.id } },
+			{ tx: options.tx },
+		),
 	]);
 
 	return SETUP_2FA_MESSAGES_SUCCESS.TWO_FACTOR_RESET_SUCCESSFUL;

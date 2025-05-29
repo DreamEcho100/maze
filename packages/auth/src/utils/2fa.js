@@ -1,6 +1,6 @@
 // import { prisma as db } from "@de100/db/db";
 
-import { sessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { decryptToString, encryptString } from "./encryption.js";
 import { generateRandomRecoveryCode } from "./generate-random-recovery-code.js";
 
@@ -17,7 +17,7 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, tx) {
 	// Note: In Postgres and MySQL, these queries should be done in a transaction using SELECT FOR UPDATE
 	// return await db.$transaction(async (tx) => {
 	//
-	const userRecoveryCodeStored = await usersProvider.getOneRecoveryCodeRaw(userId, tx);
+	const userRecoveryCodeStored = await authConfig.providers.users.getOneRecoveryCodeRaw(userId, tx);
 	if (!userRecoveryCodeStored) {
 		return false;
 	}
@@ -29,10 +29,10 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, tx) {
 	const newRecoveryCode = generateRandomRecoveryCode();
 	const encryptedNewRecoveryCode = encryptString(newRecoveryCode);
 	// await unMarkOne2FAForUserRepository(userId, tx);
-	await sessionProvider.unMarkOne2FAForUser(userId, tx);
+	await authConfig.providers.session.unMarkOne2FAForUser(userId, tx);
 
 	// const updatedUserRecoveryCode = await updateUserRecoveryCodeRepository(
-	const updatedUserRecoveryCode = await usersProvider.updateOneRecoveryCodeByUserId(
+	const updatedUserRecoveryCode = await authConfig.providers.users.updateOneRecoveryCodeByUserId(
 		userId,
 		encryptedNewRecoveryCode,
 		userRecoveryCodeStored,

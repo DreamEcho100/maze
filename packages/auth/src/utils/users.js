@@ -1,8 +1,8 @@
 /**
- * @import { DateLike, DBUser, User } from "#types.ts";
+ * @import { DateLike, User } from "#types.ts";
  */
 
-import { usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { encrypt, encryptString } from "#utils/encryption.js";
 import { generateRandomRecoveryCode } from "#utils/generate-random-recovery-code.js";
 import { hashPassword } from "#utils/passwords.js";
@@ -21,7 +21,7 @@ export async function createUser(email, name, password) {
 	const encryptedRecoveryCode = encryptString(recoveryCode);
 
 	// const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
-	const result = await usersProvider.createOne({
+	const result = await authConfig.providers.users.createOne({
 		email,
 		name,
 		passwordHash,
@@ -45,7 +45,7 @@ export async function resetUserRecoveryCode(userId) {
 	const encryptedCode = encryptString(recoveryCode);
 
 	// await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-	await usersProvider.updateOneRecoveryCode(userId, encryptedCode);
+	await authConfig.providers.users.updateOneRecoveryCode(userId, encryptedCode);
 
 	return recoveryCode;
 }
@@ -80,7 +80,7 @@ export async function resetUserRecoveryCode(userId) {
 export async function updateUserPassword(props, options) {
 	const passwordHash = await hashPassword(props.data.password);
 	// const result = await updateUserPasswordRepository(id, passwordHash);
-	const result = await usersProvider.updateOnePassword(
+	const result = await authConfig.providers.users.updateOnePassword(
 		{ data: { passwordHash }, where: { id: props.where.id } },
 		options,
 	);
@@ -106,7 +106,7 @@ export async function updateUserPassword(props, options) {
 export async function updateUserTOTPKey(props, options) {
 	const encryptedKey = encrypt(props.data.key);
 	// const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
-	const result = await usersProvider.updateOneTOTPKey(
+	const result = await authConfig.providers.users.updateOneTOTPKey(
 		{ data: { totpKey: encryptedKey }, where: { id: props.where.userId } },
 		options,
 	);
@@ -135,7 +135,7 @@ export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabled
 		: null;
 
 	// return await updateUserTwoFactorEnabledRepository(
-	const result = await usersProvider.updateOne2FAEnabled(
+	const result = await authConfig.providers.users.updateOne2FAEnabled(
 		{
 			twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
 			recoveryCode: encryptedRecoveryCode,

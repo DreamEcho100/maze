@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 
-import { getCurrentSession as getCurrentSession_ } from "@de100/auth/utils/sessions";
+import { getCurrentAuthSession } from "@de100/auth/utils/strategy";
 
 /**
  * Retrieves the current session from the request's cookies in a Next.js environment.
@@ -22,4 +22,4 @@ import { getCurrentSession as getCurrentSession_ } from "@de100/auth/utils/sessi
  * }
  * ```
  */
-export const getCurrentSession = cache(getCurrentSession_);
+export const getCurrentSession = cache(getCurrentAuthSession);

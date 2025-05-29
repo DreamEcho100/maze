@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryClient } from "#client/libs/orpc";
-import { getCurrentSession } from "../get-current-session";
+import { getCurrentSession } from "../../../../server/libs/auth/get-current-session";
 
 export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
 	AUTHENTICATED: "AUTHENTICATED",

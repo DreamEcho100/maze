@@ -1,6 +1,6 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { sessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
@@ -50,14 +50,17 @@ export async function updatePasswordService(props, options) {
 	const strongPassword = await verifyPasswordStrength(props.data.newPassword);
 	if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-	const passwordHash = await usersProvider.getOnePasswordHash(user.id);
+	const passwordHash = await authConfig.providers.users.getOnePasswordHash(user.id);
 	if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
 	const validPassword = await verifyPasswordHash(passwordHash, props.data.currentPassword);
 	if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
 
 	await Promise.all([
-		sessionProvider.deleteAllByUserId({ where: { userId: user.id } }, { tx: options.tx }),
+		authConfig.providers.session.deleteAllByUserId(
+			{ where: { userId: user.id } },
+			{ tx: options.tx },
+		),
 		updateUserPassword(
 			{ data: { password: props.data.newPassword }, where: { id: user.id } },
 			{ tx: options.tx },
@@ -76,10 +79,7 @@ export async function updatePasswordService(props, options) {
 		{ tx: options.tx },
 	);
 
-	const result = setOneAuthSessionToken({
-		token: sessionToken,
-		data: newSession,
-	});
+	const result = setOneAuthSessionToken(newSession);
 
 	return {
 		...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,

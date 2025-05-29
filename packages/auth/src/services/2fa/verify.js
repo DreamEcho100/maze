@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { sessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
@@ -40,13 +40,13 @@ export async function verify2FAService(data) {
 	}
 
 	// Get TOTP key for user and verify code
-	const totpKey = await usersProvider.getOneTOTPKey(user.id);
+	const totpKey = await authConfig.providers.users.getOneTOTPKey(user.id);
 	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
 		return VERIFY_2FA_MESSAGES_ERRORS.VERIFICATION_CODE_INVALID;
 	}
 
 	// Mark session as 2FA verified
-	await sessionProvider.markOne2FAVerified({ where: { id: session.id } });
+	await authConfig.providers.session.markOne2FAVerified({ where: { id: session.id } });
 
 	// Return success message with optional redirect flag
 	return VERIFY_2FA_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED;

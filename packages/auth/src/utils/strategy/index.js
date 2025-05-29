@@ -1,6 +1,6 @@
 /** @import { SessionValidationResult } from "#types.ts" */
 
-import { getAuthStrategy, jwtProvider, sessionProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { dateLikeToISOString } from "#utils/dates.js";
 import { createJWTAuth, getCurrentJWTAuth } from "./jwt.js";
 import {
@@ -21,9 +21,7 @@ import {
  * @param {object} [options]
  */
 export async function createAuthSession(props, options) {
-	const strategy = getAuthStrategy();
-
-	switch (strategy) {
+	switch (authConfig.strategy) {
 		case "jwt":
 			// For JWT, we don't use the token from props, we generate our own
 			return /** @type {const} */ ({
@@ -34,16 +32,18 @@ export async function createAuthSession(props, options) {
 		case "session": {
 			/** @type {string} */
 			const token = props.data.token ?? generateSessionToken();
+			const session = await createSession({ ...props, data: { ...props.data, token } }, options);
 
 			return /** @type {const} */ ({
 				strategy: "session",
 				token: token,
-				session: await createSession({ ...props, data: { ...props.data, token } }, options),
+				session: session,
+				expiresAt: session.expiresAt,
 			});
 		}
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
 
@@ -52,9 +52,7 @@ export async function createAuthSession(props, options) {
  * @returns {Promise<SessionValidationResult>}
  */
 export async function getCurrentAuthSession() {
-	const strategy = getAuthStrategy();
-
-	switch (strategy) {
+	switch (authConfig.strategy) {
 		case "jwt":
 			return await getCurrentJWTAuth();
 
@@ -62,7 +60,7 @@ export async function getCurrentAuthSession() {
 			return await getCurrentSession();
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
 
@@ -72,48 +70,49 @@ export async function getCurrentAuthSession() {
  * @returns {string}
  */
 export function generateAuthSessionToken(props) {
-	const strategy = getAuthStrategy();
-
-	switch (strategy) {
+	switch (authConfig.strategy) {
 		case "jwt":
-			return jwtProvider.createRefreshToken(props);
+			return authConfig.jwt.createRefreshToken(props);
 
 		case "session":
 			return generateSessionToken();
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
 
 /**
+ * @typedef {Awaited<ReturnType<typeof createAuthSession>>} CreateAuthSessionResult
+ *
+ * @typedef {Exclude<CreateAuthSessionResult, { strategy: "jwt" }>} SessionAuthResult
+ * @typedef {Exclude<CreateAuthSessionResult, { strategy: "session" }>} JwtAuth
+ */
+
+/**
  * Strategy-aware token setting (replaces setSessionTokenCookie)
- * @param {object} param
- * @param {string} param.token - Token to set
- * @param {Awaited<ReturnType<typeof createAuthSession>>} param.data - Session data from createAuthSession
+ * @param {Awaited<ReturnType<typeof createAuthSession>>} param - Session data from createAuthSession
  */
 export function setOneAuthSessionToken(param) {
-	const strategy = getAuthStrategy();
-
-	switch (param.data.strategy) {
+	switch (param.strategy) {
 		case "jwt": {
 			return /** @type {const} */ ({
 				strategy: "jwt",
-				...param.data.data,
+				...param.data,
 			});
 		}
 
 		case "session": {
-			setSessionTokenCookie({ token: param.token, expiresAt: param.data.session.expiresAt });
+			setSessionTokenCookie({ token: param.token, expiresAt: param.session.expiresAt });
 			return /** @type {const} */ ({
 				strategy: "session",
 				sessionToken: param.token,
-				expiresAt: dateLikeToISOString(param.data.session.expiresAt),
+				expiresAt: dateLikeToISOString(param.expiresAt),
 			});
 		}
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
 
@@ -123,24 +122,22 @@ export function setOneAuthSessionToken(param) {
  * @param {{ where: { sessionId: string } }} props
  */
 export async function invalidateOneAuthSessionToken(props) {
-	const strategy = getAuthStrategy();
-
-	switch (strategy) {
+	switch (authConfig.strategy) {
 		case "jwt":
 			// For JWT, no cookies to clear - client handles this, but we should still ensure the refresh token is invalidated/revoked
-			return await sessionProvider.revokeOneById(props.where.sessionId);
+			return await authConfig.providers.session.revokeOneById(props.where.sessionId);
 
 		case "session":
-			await sessionProvider.deleteOneById(props.where.sessionId);
+			await authConfig.providers.session.deleteOneById(props.where.sessionId);
 			return deleteSessionTokenCookie();
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
 
 /**
- * Strategy-aware session invalidation (replaces sessionProvider.invalidateAllByUserId)
+ * Strategy-aware session invalidation (replaces authConfig.providers.session.invalidateAllByUserId)
  * @param {object} props
  * @param {object} props.where
  * @param {string} props.where.userId
@@ -148,18 +145,49 @@ export async function invalidateOneAuthSessionToken(props) {
  * @returns {Promise<void>}
  */
 export async function invalidateAllUserAuth(props, options) {
-	const strategy = getAuthStrategy();
-
-	switch (strategy) {
+	switch (authConfig.strategy) {
 		case "jwt":
-			await sessionProvider.revokeAllByUserId(props, options);
+			await authConfig.providers.session.revokeAllByUserId(props, options);
 			break;
 
 		case "session":
-			await sessionProvider.deleteAllByUserId(props, options);
+			await authConfig.providers.session.deleteAllByUserId(props, options);
 			break;
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${strategy}`);
+			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
 	}
 }
+
+// /**
+//  * Middleware to handle session token validation and cookie expiration extension.
+//  *
+//  * @returns {Promise<SessionValidationResult>} The result of session validation.
+//  */
+// export async function handleSessionMiddleware() {
+// 	const result = await getCurrentAuthSession();
+
+// 	if (!result.session) {
+// 		return { session: null, user: null };
+// 	}
+
+// 	if (result.session.sessionType === "jwt_refresh_token") {
+// 		// For JWT, we don't set cookies, just return the data
+// 		return result;
+// 	}
+
+// 	// For session authConfig.strategy, we set the cookie
+// 	// Set the session token cookie with the new expiration date
+// 	const token = getTokenFromCookies();
+// 	if (!token) {
+// 		return { session: null, user: null };
+// 	}
+// 	setOneAuthSessionToken({
+// 		strategy: "session",
+// 		session: result.session,
+// 		token: token,
+// 		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+// 	});
+
+// 	return result;
+// }

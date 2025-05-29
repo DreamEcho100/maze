@@ -1,6 +1,6 @@
-/** @import { DateLike, User, JWTAuthResult, Session } from "#types.ts" */
+/** @import { DateLike, User, Session } from "#types.ts" */
 
-import { headersProvider, jwtProvider, sessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { getSessionId } from "#utils/get-session-id.js";
 
 // JWT-specific constants
@@ -21,7 +21,7 @@ export async function createJWTAuth(props, options) {
 	const { userId, flags = {} } = props.data;
 
 	// Create JWT token pair
-	const { accessToken, refreshToken } = jwtProvider.createTokenPair({
+	const { accessToken, refreshToken } = authConfig.jwt.createTokenPair({
 		data: {
 			userId,
 			customClaims: {
@@ -41,13 +41,14 @@ export async function createJWTAuth(props, options) {
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "jwt_refresh_token",
-		ipAddress: headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
-		userAgent: headersProvider.get("user-agent") ?? null,
+		ipAddress:
+			authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+		userAgent: authConfig.headers.get("user-agent") ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
 	};
 
-	await sessionProvider.createOne({ data: session }, options);
+	await authConfig.providers.session.createOne({ data: session }, options);
 
 	return {
 		accessToken,
@@ -63,16 +64,16 @@ export async function createJWTAuth(props, options) {
  */
 export async function getCurrentJWTAuth() {
 	// Try access token first (fastest path)
-	const accessToken = jwtProvider.getAccessToken();
+	const accessToken = authConfig.jwt.getAccessToken();
 	if (accessToken) {
-		const payload = jwtProvider.verifyToken(accessToken);
+		const payload = authConfig.jwt.verifyToken(accessToken);
 		if (
 			payload &&
 			typeof payload === "object" &&
 			"userId" in payload &&
 			typeof payload.userId === "string"
 		) {
-			const user = await usersProvider.findOneById(payload.userId);
+			const user = await authConfig.providers.users.findOneById(payload.userId);
 
 			if (!user) {
 				return { session: null, user: null }; // ✅ Good
@@ -93,7 +94,7 @@ export async function getCurrentJWTAuth() {
 	}
 
 	// Access token expired/invalid, try refresh token
-	const refreshToken = jwtProvider.getRefreshToken();
+	const refreshToken = authConfig.jwt.getRefreshToken();
 
 	if (!refreshToken) {
 		return { session: null, user: null };
@@ -103,7 +104,9 @@ export async function getCurrentJWTAuth() {
 	const refreshTokenHash = getSessionId(refreshToken);
 
 	// Check if the refresh token is revoked
-	const isRevoked = await sessionProvider.isOneRevokedById({ where: { id: refreshTokenHash } });
+	const isRevoked = await authConfig.providers.session.isOneRevokedById({
+		where: { id: refreshTokenHash },
+	});
 	if (isRevoked) {
 		return { session: null, user: null };
 	}
@@ -138,7 +141,7 @@ export async function getCurrentJWTAuth() {
  * @returns {Promise<{user: User | null, session: any | null}>}
  */
 export async function validateJWTToken(token) {
-	const payload = jwtProvider.verifyToken(token);
+	const payload = authConfig.jwt.verifyToken(token);
 	if (
 		!payload ||
 		typeof payload !== "object" ||
@@ -148,7 +151,7 @@ export async function validateJWTToken(token) {
 		return { session: null, user: null };
 	}
 
-	const user = await usersProvider.findOneById(payload.userId);
+	const user = await authConfig.providers.users.findOneById(payload.userId);
 	if (!user) {
 		return { session: null, user: null };
 	}
@@ -186,7 +189,7 @@ export async function validateJWTToken(token) {
 async function refreshJWTTokens(refreshToken) {
 	const refreshTokenHash = getSessionId(refreshToken);
 
-	const result = await sessionProvider.findOneWithUser(refreshTokenHash);
+	const result = await authConfig.providers.session.findOneWithUser(refreshTokenHash);
 	if (!result) {
 		return null;
 	}
@@ -195,12 +198,12 @@ async function refreshJWTTokens(refreshToken) {
 
 	// Check expiration
 	if (new Date() >= new Date(refreshTokenRecord.expiresAt)) {
-		await sessionProvider.revokeOneById(refreshTokenRecord.id);
+		await authConfig.providers.session.revokeOneById(refreshTokenRecord.id);
 		return null;
 	}
 
 	// Create new token pair
-	const { accessToken, refreshToken: newRefreshToken } = jwtProvider.createTokenPair({
+	const { accessToken, refreshToken: newRefreshToken } = authConfig.jwt.createTokenPair({
 		data: { userId: user.id },
 	});
 
@@ -209,8 +212,8 @@ async function refreshJWTTokens(refreshToken) {
 	const newRefreshExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
 
 	await Promise.all([
-		sessionProvider.revokeOneById(refreshTokenRecord.id),
-		sessionProvider.createOne({
+		authConfig.providers.session.revokeOneById(refreshTokenRecord.id),
+		authConfig.providers.session.createOne({
 			data: {
 				// tokenHash: newRefreshTokenHash,
 				id: newRefreshTokenHash,
@@ -220,8 +223,8 @@ async function refreshJWTTokens(refreshToken) {
 				createdAt: new Date(),
 				sessionType: "jwt_refresh_token",
 				ipAddress:
-					headersProvider.get("x-forwarded-for") ?? headersProvider.get("x-real-ip") ?? null,
-				userAgent: headersProvider.get("user-agent") ?? null,
+					authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+				userAgent: authConfig.headers.get("user-agent") ?? null,
 				lastUsedAt: new Date(),
 				revokedAt: null, // Not revoked initially
 				twoFactorVerifiedAt: refreshTokenRecord.metadata?.twoFactorVerifiedAt ?? null,

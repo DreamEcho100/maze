@@ -1,35 +1,35 @@
 {
-  "name": "create-t3-turbo",
-  "private": true,
-  "engines": {
-    "node": ">=23.7.0",
-    "pnpm": "^10.7.1"
-  },
-  "packageManager": "pnpm@10.11.0",
-  "scripts": {
-    "build": "turbo run build",
-    "clean": "git clean -xdf node_modules",
-    "clean:workspaces": "turbo run clean",
-    "db:push": "turbo -F @de100/db push",
-    "db:studio": "turbo -F @de100/db studio",
-    "dev": "turbo watch dev --continue",
-    "dev:next": "turbo watch dev -F @de100/nextjs...",
-    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
-    "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
-    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
-    "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
-    "lint:ws": "pnpm dlx sherif@latest -p \"./playground/*\"",
-    "typecheck": "turbo run typecheck",
-    "ui-add": "turbo run ui-add",
-    "postinstall": "pnpm lint:ws"
-  },
-  "devDependencies": {
-    "@de100/prettier-config": "workspace:*",
-    "@turbo/gen": "^2.3.4",
-    "prettier": "catalog:",
-    "tailwindcss": "catalog:",
-    "turbo": "^2.3.4",
-    "typescript": "catalog:"
-  },
-  "prettier": "@de100/prettier-config"
+	"name": "create-t3-turbo",
+	"private": true,
+	"engines": {
+		"node": ">=23.7.0",
+		"pnpm": "^10.7.1"
+	},
+	"packageManager": "pnpm@10.11.0",
+	"scripts": {
+		"build": "turbo run build",
+		"clean": "git clean -xdf node_modules",
+		"clean:workspaces": "turbo run clean",
+		"db:push": "turbo -F @de100/db push",
+		"db:studio": "turbo -F @de100/db studio",
+		"dev": "turbo watch dev --continue",
+		"dev:next": "turbo watch dev -F @de100/nextjs...",
+		"format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
+		"format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
+		"lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
+		"lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
+		"lint:ws": "pnpm dlx sherif@latest -p \"./playground/*\"",
+		"typecheck": "turbo run typecheck",
+		"ui-add": "turbo run ui-add",
+		"postinstall": "pnpm lint:ws"
+	},
+	"devDependencies": {
+		"@de100/prettier-config": "workspace:*",
+		"@turbo/gen": "^2.3.4",
+		"prettier": "catalog:",
+		"tailwindcss": "catalog:",
+		"turbo": "^2.3.4",
+		"typescript": "catalog:"
+	},
+	"prettier": "@de100/prettier-config"
 }

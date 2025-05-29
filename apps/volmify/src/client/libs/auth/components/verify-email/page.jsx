@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 
 import { getUserEmailVerificationRequestFromRequest } from "@de100/auth/utils/email-verification";
 
-import { getCurrentSession } from "#client/libs/auth/get-current-session";
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import CustomLink from "~/components/common/CustomLink";
 import { redirect } from "~/libs/i18n/navigation/custom";
 import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components";

@@ -1,6 +1,6 @@
-import { usersProvider } from "@de100/auth/providers";
+import { usersProvider } from "@de100/auth/init";
 
-import { getCurrentSession } from "#client/libs/auth/get-current-session";
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import CustomLink from "~/components/common/CustomLink";
 import { redirect } from "~/libs/i18n/navigation/custom";
 import {

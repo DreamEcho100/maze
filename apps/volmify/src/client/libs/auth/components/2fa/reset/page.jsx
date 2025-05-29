@@ -1,4 +1,4 @@
-import { getCurrentSession } from "#client/libs/auth/get-current-session";
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { redirect } from "~/libs/i18n/navigation/custom";
 import { TwoFactorResetForm } from "./components";
 

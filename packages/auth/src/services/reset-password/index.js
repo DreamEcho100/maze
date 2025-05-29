@@ -1,6 +1,6 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { passwordResetSessionProvider, sessionProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
@@ -54,7 +54,7 @@ export async function resetPasswordService(password, options) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 	}
 
-	const [[sessionToken, session]] = await Promise.all([
+	const [session] = await Promise.all([
 		(async () => {
 			const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
 			const session = await createAuthSession(
@@ -70,23 +70,20 @@ export async function resetPasswordService(password, options) {
 				{ tx: options.tx },
 			);
 
-			return /** @type {const} */ ([sessionToken, session]);
+			return session;
 		})(),
-		passwordResetSessionProvider.deleteAllByUserId(
+		authConfig.providers.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: options.tx },
 		),
-		sessionProvider.deleteAllByUserId(
+		authConfig.providers.session.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: options.tx },
 		),
 		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
 	]);
 
-	const result = setOneAuthSessionToken({
-		token: sessionToken,
-		data: session,
-	});
+	const result = setOneAuthSessionToken(session);
 
 	deletePasswordResetSessionTokenCookie();
 

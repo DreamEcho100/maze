@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
@@ -48,7 +48,7 @@ export async function registerService(data) {
 		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await usersProvider.findOneByEmail(input.data.email);
+	const emailAvailable = await authConfig.providers.users.findOneByEmail(input.data.email);
 
 	if (emailAvailable) {
 		return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -79,10 +79,7 @@ export async function registerService(data) {
 			},
 		},
 	});
-	const result = setOneAuthSessionToken({
-		token: sessionToken,
-		data: session,
-	});
+	const result = setOneAuthSessionToken(session);
 
 	if (user.twoFactorEnabledAt) {
 		return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;

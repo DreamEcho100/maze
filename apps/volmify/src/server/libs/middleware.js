@@ -8,7 +8,8 @@ import { NextResponse } from "next/server";
 import { COOKIE_TOKEN_SESSION_KEY } from "@de100/auth/utils/constants"; // #server/utils/constants
 
 import { csrfProtection } from "@de100/auth/utils/csrf";
-import { handleSessionMiddleware } from "@de100/auth/utils/sessions";
+
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 
 /*
 Cannot find module 'auth-base-server/' or its corresponding type declarations.ts(2307)
@@ -99,15 +100,16 @@ async function handleAuthMiddleware(request) {
 	try {
 		// Handle session token for GET requests
 		if (request.method === "GET") {
-			const response = NextResponse.next();
+			// const response = NextResponse.next();
 			const token = request.cookies.get(COOKIE_TOKEN_SESSION_KEY)?.value ?? null;
 
 			if (token !== null) {
-				const result = await handleSessionMiddleware({
-					token,
-					// eslint-disable-next-line @typescript-eslint/unbound-method
-					setCookie: response.cookies.set,
-				});
+				// const result = await handleSessionMiddleware({
+				// 	token,
+				// 	// eslint-disable-next-line @typescript-eslint/unbound-method
+				// 	setCookie: response.cookies.set,
+				// });
+				const result = await getCurrentSession();
 
 				if (result.session) {
 					return { status: "authorized", result };

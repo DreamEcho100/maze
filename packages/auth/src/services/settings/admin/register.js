@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	ADMIN_REGISTER_MESSAGES_ERRORS,
 	ADMIN_REGISTER_MESSAGES_SUCCESS,
@@ -45,7 +45,7 @@ export async function adminRegisterService(data) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await usersProvider.findOneByEmail(input.data.email);
+	const emailAvailable = await authConfig.providers.users.findOneByEmail(input.data.email);
 
 	if (emailAvailable) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;

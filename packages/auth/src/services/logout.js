@@ -1,6 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { sessionProvider } from "#providers/index.js";
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/strategy/index.js";
 

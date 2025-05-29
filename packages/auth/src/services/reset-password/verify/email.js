@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { passwordResetSessionProvider, usersProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
@@ -53,7 +53,7 @@ export async function verifyPasswordResetEmailVerificationService(code, options)
 
 	const [emailMatches] = await Promise.all([
 		// setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-		usersProvider
+		authConfig.providers.users
 			.verifyOneEmailIfMatches(
 				{ where: { id: session.userId, email: session.email } },
 				{ tx: options.tx },
@@ -65,7 +65,7 @@ export async function verifyPasswordResetEmailVerificationService(code, options)
 				return true;
 			}),
 		// updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-		passwordResetSessionProvider.markOneEmailAsVerified(
+		authConfig.providers.passwordResetSession.markOneEmailAsVerified(
 			{ where: { id: session.id } },
 			{ tx: options.tx },
 		),

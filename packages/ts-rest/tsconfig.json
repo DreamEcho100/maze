@@ -4,6 +4,6 @@
 		"baseUrl": ".",
 		"paths": { "#*": ["./src/*"] }
 	},
-	"include": ["*.js", "*.ts", "src", "src/**/*"],
+	"include": ["*.js", "*.ts", "src/**/*"],
 	"exclude": ["node_modules"]
 }

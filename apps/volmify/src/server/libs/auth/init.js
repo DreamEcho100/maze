@@ -1,12 +1,16 @@
-import { cookies, headers } from "next/headers";
+/**
+ * @import { NextRequest } from 'next/server';
+ * @import { AuthConfig } from "@de100/auth/init";
+ */
+
 import { and, eq, isNull, lt } from "drizzle-orm";
 import { ulid } from "ulid";
 
-import { idsProvider, initAuth, sessionProvider } from "@de100/auth/providers";
+import { authConfig, initAuth } from "@de100/auth/init";
 import { dateLikeToDate } from "@de100/auth/utils/dates";
 import { decrypt, decryptToString } from "@de100/auth/utils/encryption";
 
-import { db, dbSchema } from "./index.js";
+import { db, dbSchema } from "../db/index.js";
 
 const userReturnTemplate = {
 	name: dbSchema.user.name,
@@ -99,12 +103,27 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 	emailVerifiedAt: true,
 });
 
-export async function setDrizzlePgAuthProviders() {
-	await initAuth({
+/** @param {{ req?: NextRequest }} props */
+export async function setDrizzlePgAuthProviders(props) {
+	const _global = /** @type {{ ___authConfig?: AuthConfig }} */ (globalThis);
+
+	if (_global.___authConfig?.hasInitialized) {
+		// If authConfig is already initialized, we can skip re-initialization
+		return _global.___authConfig;
+	}
+
+	_global.___authConfig = await initAuth({
 		// The following is for testing purposes, it can be removed in production
-		// strategy: process.env.AUTH_STRATEGY ?? "jwt",
+		strategy: process.env.AUTH_STRATEGY ?? "jwt",
 		cookies: async () => {
-			const jar = await cookies();
+			const jar =
+				props.req?.cookies ??
+				(await import("next/headers").then(async (mod) => await mod.cookies()));
+
+			if (!jar) {
+				throw new Error("Cookies are not available in this context.");
+			}
+
 			return {
 				get: (name) => jar.get(name)?.value ?? null,
 				set: (name, value, options) => {
@@ -133,7 +152,17 @@ export async function setDrizzlePgAuthProviders() {
 				},
 			};
 		},
-		headers: async () => await headers(),
+		headers: async () => {
+			const headers =
+				props.req?.headers ??
+				(await import("next/headers").then(async (mod) => await mod.headers()));
+
+			if (!headers) {
+				throw new Error("Cookies are not available in this context.");
+			}
+
+			return headers;
+		},
 		ids: {
 			createOneSync: ulid,
 			createOneAsync: async () => new Promise((resolve) => resolve(ulid())),
@@ -146,7 +175,7 @@ export async function setDrizzlePgAuthProviders() {
 						.insert(dbSchema.user)
 						.values({
 							...values,
-							id: values.id ?? (await idsProvider.createOneAsync()),
+							id: values.id ?? (await authConfig.ids.createOneAsync()),
 							email: values.email,
 							name: values.name,
 							passwordHash: values.passwordHash,
@@ -338,7 +367,7 @@ export async function setDrizzlePgAuthProviders() {
 						.insert(dbSchema.session)
 						.values({
 							...props.data,
-							// id: props.data.id ?? (await idsProvider.createOneAsync()),
+							// id: props.data.id ?? (await authConfig.ids.createOneAsync()),
 							expiresAt: dateLikeToDate(props.data.expiresAt),
 							twoFactorVerifiedAt: props.data.twoFactorVerifiedAt
 								? dateLikeToDate(props.data.twoFactorVerifiedAt)
@@ -362,7 +391,7 @@ export async function setDrizzlePgAuthProviders() {
 							if (!result) return null;
 							// Check if token is expired
 							if (Date.now() >= result.expiresAt.getTime()) {
-								await sessionProvider.revokeOneById(result.id);
+								await authConfig.providers.session.revokeOneById(result.id);
 								return null;
 							}
 							const { user, ...session } = result;
@@ -395,7 +424,7 @@ export async function setDrizzlePgAuthProviders() {
 						.update(dbSchema.session)
 						.set({ revokedAt: new Date(), updatedAt: new Date() })
 						.where(eq(dbSchema.session.id, id));
-					// RedisTokenBlacklistProvider.revokeOneById(id);
+					// authConfig.RedisTokenBlacklist.revokeOneById(id);
 				},
 				revokeAllByUserId: async (props, options) => {
 					const _db =
@@ -414,11 +443,11 @@ export async function setDrizzlePgAuthProviders() {
 							),
 						)
 						.returning({ id: dbSchema.session.id });
-					// RedisTokenBlacklistProvider.revokeManyByIds(result.map((session) => session.id));
+					// authConfig.RedisTokenBlacklist.revokeManyByIds(result.map((session) => session.id));
 				},
 				// eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars
 				isOneRevokedById: async (props) => {
-					// return RedisTokenBlacklistProvider.isOneRevokedById(props.where.id);
+					// return authConfig.RedisTokenBlacklist.isOneRevokedById(props.where.id);
 					// For now, we don't use Redis for token revocation
 					// return db
 					// 	.select({ revokedAt: dbSchema.session.revokedAt })
@@ -435,7 +464,7 @@ export async function setDrizzlePgAuthProviders() {
 					const result = await db
 						.delete(dbSchema.session)
 						.where(lt(dbSchema.session.expiresAt, new Date()));
-					// RedisTokenBlacklistProvider.cleanupExpired();
+					// authConfig.RedisTokenBlacklist.cleanupExpired();
 
 					return result.rowCount ?? 0;
 				},
@@ -501,7 +530,7 @@ export async function setDrizzlePgAuthProviders() {
 						.insert(dbSchema.passwordResetSession)
 						.values({
 							...props.data,
-							id: props.data.id ?? (await idsProvider.createOneAsync()),
+							id: props.data.id ?? (await authConfig.ids.createOneAsync()),
 							emailVerifiedAt: props.data.emailVerifiedAt
 								? dateLikeToDate(props.data.emailVerifiedAt)
 								: null,
@@ -577,7 +606,7 @@ export async function setDrizzlePgAuthProviders() {
 						.insert(dbSchema.emailVerificationRequest)
 						.values({
 							...values,
-							id: values.id ?? (await idsProvider.createOneAsync()),
+							id: values.id ?? (await authConfig.ids.createOneAsync()),
 							expiresAt: dateLikeToDate(values.expiresAt),
 							createdAt,
 						})

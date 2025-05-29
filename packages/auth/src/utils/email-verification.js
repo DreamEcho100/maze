@@ -2,7 +2,7 @@
 
 import { encodeBase32 } from "@oslojs/encoding";
 
-import { cookiesProvider, userEmailVerificationRequestProvider } from "#providers/index.js";
+import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
@@ -17,14 +17,14 @@ import { generateRandomOTP } from "./generate-randomotp.js";
  */
 export async function getUserEmailVerificationRequest(userId, id) {
 	// return await findOneUserEmailVerificationRequestRepository(userId, id);
-	return await userEmailVerificationRequestProvider.findOneByIdAndUserId(userId, id);
+	return await authConfig.providers.userEmailVerificationRequest.findOneByIdAndUserId(userId, id);
 }
 
 /**
  * Create an email verification request for a user.
  *
- * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[0]} props
- * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[1]} [options]
+ * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[0]} props
+ * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[1]} [options]
  * @returns {Promise<EmailVerificationRequest>} The email verification request.
  */
 export async function createEmailVerificationRequest(props, options) {
@@ -35,7 +35,7 @@ export async function createEmailVerificationRequest(props, options) {
 
 	const code = generateRandomOTP();
 	const expiresAt = new Date(Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION);
-	const result = await userEmailVerificationRequestProvider.createOne({
+	const result = await authConfig.providers.userEmailVerificationRequest.createOne({
 		id: id,
 		userId: props.where.userId,
 		code: code,
@@ -53,12 +53,12 @@ export async function createEmailVerificationRequest(props, options) {
 /**
  * Delete all email verification requests for a user.
  *
- * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[0]} props
- * @param {Parameters<typeof userEmailVerificationRequestProvider.deleteOneByUserId>[1]} [options]
+ * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[0]} props
+ * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[1]} [options]
  * @returns {Promise<void>} A promise that resolves when the requests have been deleted.
  */
 export async function deleteUserEmailVerificationRequest(props, options) {
-	await userEmailVerificationRequestProvider.deleteOneByUserId(props, options);
+	await authConfig.providers.userEmailVerificationRequest.deleteOneByUserId(props, options);
 }
 
 /**
@@ -83,7 +83,7 @@ export async function sendVerificationEmail(email, code) {
  * @returns {void}
  */
 export function setEmailVerificationRequestCookie(request) {
-	cookiesProvider.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
+	authConfig.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
 		httpOnly: true,
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
@@ -97,7 +97,7 @@ export function setEmailVerificationRequestCookie(request) {
  * @returns {void}
  */
 export function deleteEmailVerificationRequestCookie() {
-	cookiesProvider.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
+	authConfig.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
 		httpOnly: true,
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
@@ -112,7 +112,7 @@ export function deleteEmailVerificationRequestCookie() {
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
 export async function getUserEmailVerificationRequestFromRequest(userId) {
-	const id = cookiesProvider.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
+	const id = authConfig.cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
 	if (id === null) {
 		return null;
 	}
