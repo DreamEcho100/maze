@@ -550,46 +550,6 @@ importers:
         specifier: 'catalog:'
         version: 5.8.2
 
-  packages/auth/src/drizzle/pg/db:
-    dependencies:
-      drizzle-orm:
-        specifier: ^0.38.4
-        version: 0.38.4(@opentelemetry/api@1.9.0)(@prisma/client@6.5.0(prisma@6.5.0(typescript@5.8.2))(typescript@5.8.2))(@types/pg@8.15.2)(@types/react@19.1.0)(@vercel/postgres@0.10.0)(kysely@0.28.2)(pg@8.16.0)(prisma@6.5.0(typescript@5.8.2))(react@19.0.0)
-      next:
-        specifier: 'catalog:'
-        version: 15.2.4(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      pg:
-        specifier: ^8.16.0
-        version: 8.16.0
-      react:
-        specifier: 'catalog:'
-        version: 19.0.0
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.0.0(react@19.0.0)
-      zod:
-        specifier: 'catalog:'
-        version: 3.25.28
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.13.17
-      '@types/pg':
-        specifier: ^8.11.11
-        version: 8.15.2
-      '@types/react':
-        specifier: catalog:react19
-        version: 19.1.0
-      '@types/react-dom':
-        specifier: catalog:react19
-        version: 19.1.1(@types/react@19.1.0)
-      drizzle-kit:
-        specifier: ^0.30.5
-        version: 0.30.6
-      tsx:
-        specifier: ^4.19.2
-        version: 4.19.4
-
   packages/db:
     dependencies:
       '@vercel/postgres':
@@ -635,6 +595,27 @@ importers:
       '@de100/standard-schema':
         specifier: workspace:^
         version: link:../standard-schema
+    devDependencies:
+      '@de100/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@de100/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@de100/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      eslint:
+        specifier: 'catalog:'
+        version: 9.23.0(jiti@2.4.2)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.2
+
+  packages/i18n:
     devDependencies:
       '@de100/eslint-config':
         specifier: workspace:*
@@ -9802,11 +9783,6 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  tsx@4.19.4:
-    resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
   turbo-darwin-64@2.4.4:
     resolution: {integrity: sha512-5kPvRkLAfmWI0MH96D+/THnDMGXlFNmjeqNRj5grLKiry+M9pKj3pRuScddAXPdlxjO5Ptz06UNaOQrrYGTx1g==}
     cpu: [x64]
@@ -18734,7 +18710,8 @@ snapshots:
   pg-cloudflare@1.2.5:
     optional: true
 
-  pg-connection-string@2.9.0: {}
+  pg-connection-string@2.9.0:
+    optional: true
 
   pg-int8@1.0.1: {}
 
@@ -18743,6 +18720,7 @@ snapshots:
   pg-pool@3.10.0(pg@8.16.0):
     dependencies:
       pg: 8.16.0
+    optional: true
 
   pg-protocol@1.10.0: {}
 
@@ -18753,6 +18731,7 @@ snapshots:
       postgres-bytea: 1.0.0
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
+    optional: true
 
   pg-types@4.0.2:
     dependencies:
@@ -18773,10 +18752,12 @@ snapshots:
       pgpass: 1.0.5
     optionalDependencies:
       pg-cloudflare: 1.2.5
+    optional: true
 
   pgpass@1.0.5:
     dependencies:
       split2: 4.2.0
+    optional: true
 
   picocolors@1.0.1: {}
 
@@ -18841,23 +18822,27 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postgres-array@2.0.0: {}
+  postgres-array@2.0.0:
+    optional: true
 
   postgres-array@3.0.4: {}
 
-  postgres-bytea@1.0.0: {}
+  postgres-bytea@1.0.0:
+    optional: true
 
   postgres-bytea@3.0.0:
     dependencies:
       obuf: 1.1.2
 
-  postgres-date@1.0.7: {}
+  postgres-date@1.0.7:
+    optional: true
 
   postgres-date@2.1.0: {}
 
   postgres-interval@1.2.0:
     dependencies:
       xtend: 4.0.2
+    optional: true
 
   postgres-interval@3.0.0: {}
 
@@ -19874,7 +19859,8 @@ snapshots:
 
   split-on-first@1.1.0: {}
 
-  split2@4.2.0: {}
+  split2@4.2.0:
+    optional: true
 
   sprintf-js@1.0.3: {}
 
@@ -20228,13 +20214,6 @@ snapshots:
   tslib@1.14.1: {}
 
   tslib@2.8.1: {}
-
-  tsx@4.19.4:
-    dependencies:
-      esbuild: 0.25.2
-      get-tsconfig: 4.10.0
-    optionalDependencies:
-      fsevents: 2.3.3
 
   turbo-darwin-64@2.4.4:
     optional: true
