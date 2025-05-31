@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { StoreApi } from "zustand";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
 import { createStore, useStore } from "zustand";
 import { mutative } from "zustand-mutative";
 
@@ -140,6 +140,8 @@ export function useGetLocale() {
 }
 export function useTranslations(): State["t"] {
 	const i18nStore = useI18nStore();
+	// const t = useStore(i18nStore, (state) => state.t);
+	// return useCallback((key, args) => t(key, args), [t]) as State["t"];
 	return useStore(i18nStore, (state) => state.t);
 }
 
