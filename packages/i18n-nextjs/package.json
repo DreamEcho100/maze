@@ -1,14 +1,10 @@
 {
-	"name": "@de100/ts-rest",
+	"name": "@de100/i18n-nextjs",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
-	"imports": {
-		"#*": "./src/*"
-	},
 	"exports": {
-		".": "./src/index.ts",
-		"./schemas/adapters/zod": "./src/schemas/adapters/zod/index.ts"
+		".": "./src/index.ts"
 	},
 	"license": "MIT",
 	"scripts": {
@@ -23,10 +19,18 @@
 		"@de100/eslint-config": "workspace:*",
 		"@de100/prettier-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
-		"@standard-schema/spec": "catalog:",
+		"@types/react": "catalog:react19",
+		"@types/react-dom": "catalog:react19",
 		"eslint": "catalog:",
 		"prettier": "catalog:",
 		"typescript": "catalog:"
 	},
-	"prettier": "@de100/prettier-config"
+	"prettier": "@de100/prettier-config",
+	"dependencies": {
+		"@de100/i18n": "workspace:*",
+		"@de100/i18n-reactjs": "workspace:*",
+		"next": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	}
 }
