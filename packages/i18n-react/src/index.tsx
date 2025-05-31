@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { StoreApi } from "zustand";
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { createStore, useStore } from "zustand";
 import { mutative } from "zustand-mutative";
 
