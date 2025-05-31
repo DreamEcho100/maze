@@ -336,6 +336,7 @@ function getPluralRules(locale: string, type?: Intl.PluralRuleType): Intl.Plural
 /**
  * Pre-compiled regex patterns for better performance
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PARAM_REGEX = /\{([^:}]+)(?::([^}]*))?\}/g;
 
 /**
@@ -647,7 +648,12 @@ function performSubstitution(
 			if (error instanceof I18nError) {
 				throw error;
 			}
-			throw new I18nError(`Failed to process parameter '${argKey}': ${error}`, locale, key, argKey);
+			throw new I18nError(
+				`Failed to process parameter '${argKey}': ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+				locale,
+				key,
+				argKey,
+			);
 		}
 	}, str);
 }
