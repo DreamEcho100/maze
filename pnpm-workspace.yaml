@@ -5,10 +5,10 @@ packages:
   - playground/*
   - packages/ts-rest/src/schemas/adapters/zod
 catalog:
-  react: 19.0.0
-  react-dom: 19.0.0
-  "@types/react": ^19.0.12
-  "@types/react-dom": ^19.0.4
+  react: ^19.1.0
+  react-dom: ^19.1.0
+  "@types/react": ^19.1.6
+  "@types/react-dom": ^19.1.5
   "@auth/core": 0.37.2
   "@auth/drizzle-adapter": ~1.7.4
   next-auth: 5.0.0-beta.25
@@ -29,12 +29,15 @@ catalog:
   "@trpc/client": ^11.0.0-rc.824
   "@trpc/tanstack-react-query": ^11.0.0-rc.824
   "@trpc/server": ^11.0.0-rc.824
+  mutative: ^1.2.0 # https://www.npmjs.com/package/mutative
+  zustand-mutative: ^1.3.0 # https://www.npmjs.com/package/zustand-mutative
+  zustand: ^5.0.5 # https://www.npmjs.com/package/zustand
 catalogs:
   react19:
-    react: 19.0.0
-    react-dom: 19.0.0
-    "@types/react": ^19.0.12
-    "@types/react-dom": ^19.0.4
+    react: ^19.1.0
+    react-dom: ^19.1.0
+    "@types/react": ^19.1.6
+    "@types/react-dom": ^19.1.5
 onlyBuiltDependencies:
   - "@clerk/shared"
   - "@parcel/watcher"

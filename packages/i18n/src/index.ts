@@ -1,4 +1,4 @@
-export const name = "i18n";
+export const name = "@de100/i18n";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TObj = Record<string, any>;
@@ -41,7 +41,7 @@ type I18nMessage = string | ReturnType<DefineTranslation<string, ParamOptions>>;
  * Structure for language message files - nested object with string keys
  * Values can be translation messages or nested message objects
  */
-interface LanguageMessages {
+export interface LanguageMessages {
 	[key: string]: I18nMessage | LanguageMessages;
 }
 

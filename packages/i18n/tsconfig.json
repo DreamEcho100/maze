@@ -1,6 +1,8 @@
 {
 	"extends": "@de100/tsconfig/internal-package.json",
-	"compilerOptions": {},
+	"compilerOptions": {
+		"jsx": "react"
+	},
 	"include": ["*.js", "*.ts", "src/**/*"],
 	"exclude": ["node_modules"]
 }
