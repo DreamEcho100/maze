@@ -1,9 +1,9 @@
 import { renderSVG } from "uqr";
 
 import { createTOTPKeyURI, encodeBase64 } from "@de100/auth/utils";
+import { redirect } from "@de100/i18n-nextjs/server";
 
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import { redirect } from "~/libs/i18n/navigation/custom";
 import { TwoFactorSetUpForm } from "./components";
 
 export default async function AuthTwoFactorSetUpPage() {
@@ -37,8 +37,7 @@ export default async function AuthTwoFactorSetUpPage() {
 					width: "200px",
 					height: "200px",
 				}}
-				dangerouslySetInnerHTML={{ __html: qrcode }}
-			></div>
+				dangerouslySetInnerHTML={{ __html: qrcode }}></div>
 			<TwoFactorSetUpForm encodedTOTPKey={encodedTOTPKey} />
 		</>
 	);

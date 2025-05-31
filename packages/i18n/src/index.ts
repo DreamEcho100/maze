@@ -344,11 +344,13 @@ const PARAM_REGEX = /\{([^:}]+)(?::([^}]*))?\}/g;
  */
 export function initI18n({
 	locale,
+	// defaultLocale,
 	fallbackLocale,
 	translations,
 	onError,
 }: {
 	locale: string;
+	// defaultLocale: string;
 	fallbackLocale: string | string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
 	onError?: (error: I18nError) => void;

@@ -1,11 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
-
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
+import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { redirect } from "~/libs/i18n/navigation/custom";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -15,7 +13,6 @@ import { redirect } from "~/libs/i18n/navigation/custom";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordResetEmailVerificationAction(_prev, formData) {
-	const cookiesManager = await cookies();
 	const result = await db.transaction((tx) =>
 		verifyPasswordResetEmailVerificationService(formData.get("code"), { tx }),
 	);

@@ -1,6 +1,8 @@
+import { redirect } from "@de100/i18n-nextjs/server";
+
+import { Link } from "#client/components/link";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import CustomLink from "~/components/common/CustomLink";
-import { redirect } from "~/libs/i18n/navigation/custom";
+// import CustomLink from "~/components/common/CustomLink";
 import { TwoFactorVerificationForm } from "./components";
 
 export default async function AuthTwoFactorVerificationPage() {
@@ -29,20 +31,7 @@ export default async function AuthTwoFactorVerificationPage() {
 			<h1>Two-factor authentication</h1>
 			<p>Enter the code from your authenticator app.</p>
 			<TwoFactorVerificationForm />
-			<CustomLink
-				classVariants={{
-					px: null,
-					py: null,
-					theme: null,
-					rounded: null,
-					size: null,
-					layout: null,
-					w: null,
-				}}
-				href="/auth/2fa/reset"
-			>
-				Use recovery code
-			</CustomLink>
+			<Link href="/auth/2fa/reset">Use recovery code</Link>
 		</>
 	);
 }

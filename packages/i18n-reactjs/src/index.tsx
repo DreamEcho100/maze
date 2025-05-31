@@ -23,15 +23,17 @@ export const name = "@de100/i18n-reactjs";
 type BaseTranslationState = ReturnType<typeof initI18n>;
 interface State extends BaseTranslationState {
 	locale: string;
+	defaultLocale: string;
+	allowedLocales: string[];
 	fallbackLocale: string | string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
 }
 interface Actions {
 	setLocale: (locale: string) => void;
-	setTranslations: (translations: Record<Lowercase<string>, LanguageMessages>) => void;
-	setFallbackLocale?: (fallbackLocale: string | string[]) => void;
 	init: (props: {
+		locale: string;
 		defaultLocale: string;
+		allowedLocales: string[];
 		fallbackLocale: string | string[];
 		translations: Record<Lowercase<string>, LanguageMessages>;
 	}) => void;
@@ -41,36 +43,24 @@ const createI18nStore: () => StoreApi<State & Actions> = () =>
 		mutative((set) => ({
 			// Initialize with safe defaults
 			locale: "",
+			defaultLocale: "",
+			allowedLocales: [],
 			fallbackLocale: "",
 			translations: {},
 			t: (key: string) => key, // Safe fallback
 			clearCache: () => void 0, // Safe fallback
 			//
-			setTranslations: (translations) => {
-				set((state) => {
-					state.translations = translations;
-					state.init({
-						defaultLocale: state.locale,
-						fallbackLocale: state.fallbackLocale,
-						translations,
-					});
-				});
-			},
-			setFallbackLocale: (fallbackLocale) => {
-				set((state) => {
-					state.fallbackLocale = fallbackLocale;
-					state.init({
-						defaultLocale: state.locale,
-						fallbackLocale,
-						translations: state.translations,
-					});
-				});
-			},
 			setLocale: (locale) => {
 				set((state) => {
+					if (!state.allowedLocales.includes(locale)) {
+						throw new Error(`Locale "${locale}" is not allowed.`);
+					}
+
 					state.locale = locale;
 					state.init({
-						defaultLocale: locale,
+						locale: locale,
+						defaultLocale: state.defaultLocale,
+						allowedLocales: state.allowedLocales,
 						translations: state.translations,
 						fallbackLocale: state.fallbackLocale,
 					});
@@ -78,8 +68,10 @@ const createI18nStore: () => StoreApi<State & Actions> = () =>
 			},
 			init: (props) => {
 				set((state) => {
+					state.defaultLocale = props.defaultLocale;
+					state.allowedLocales = props.allowedLocales;
 					const initRes = initI18n({
-						locale: props.defaultLocale,
+						locale: props.locale,
 						fallbackLocale: props.fallbackLocale,
 						translations: props.translations,
 					});
@@ -95,13 +87,17 @@ export const globalI18nStore = createI18nStore();
 const I18nContext = createContext({ store: globalI18nStore });
 
 export function I18nProvider({
+	locale,
 	defaultLocale,
+	allowedLocales,
 	translations,
 	fallbackLocale,
 	children,
 	isNew,
 }: {
+	locale: string;
 	defaultLocale: string;
+	allowedLocales: string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
 	fallbackLocale: string | string[];
 	children: ReactNode;
@@ -112,13 +108,15 @@ export function I18nProvider({
 
 		// Initialize only once or when dependencies change
 		store.getState().init({
+			locale,
 			defaultLocale,
+			allowedLocales,
 			fallbackLocale,
 			translations,
 		});
 
 		return store;
-	}, [defaultLocale, fallbackLocale, translations, isNew]);
+	}, [locale, fallbackLocale, translations, isNew]);
 
 	return <I18nContext value={{ store }}>{children}</I18nContext>;
 }
@@ -148,9 +146,9 @@ export function useTranslations(): State["t"] {
 interface UseTranslationReturn {
 	t: State["t"];
 	locale: State["locale"];
+	defaultLocale: State["defaultLocale"];
+	allowedLocales: State["allowedLocales"];
 	setLocale: Actions["setLocale"];
-	setTranslations: Actions["setTranslations"];
-	setFallbackLocale: Actions["setFallbackLocale"];
 	translations: State["translations"];
 	clearCache: State["clearCache"];
 }
@@ -158,6 +156,8 @@ interface UseTranslationReturn {
 export function useI18n(): UseTranslationReturn {
 	const i18nStore = useI18nStore();
 	const locale = useStore(i18nStore, (state) => state.locale);
+	const defaultLocale = useStore(i18nStore, (state) => state.defaultLocale);
+	const allowedLocales = useStore(i18nStore, (state) => state.allowedLocales);
 	const t = useStore(i18nStore, (state) => state.t);
 	const translations = useStore(i18nStore, (state) => state.translations);
 	const clearCache = useStore(i18nStore, (state) => state.clearCache);
@@ -165,11 +165,11 @@ export function useI18n(): UseTranslationReturn {
 	return {
 		t,
 		locale,
+		defaultLocale,
+		allowedLocales,
 		clearCache,
 		translations,
 		setLocale: i18nStore.getState().setLocale,
-		setTranslations: i18nStore.getState().setTranslations,
-		setFallbackLocale: i18nStore.getState().setFallbackLocale,
 	};
 }
 

@@ -1,6 +1,6 @@
 import { validatePasswordResetSessionRequest } from "@de100/auth/utils/password-reset";
+import { redirect } from "@de100/i18n-nextjs/server";
 
-import { redirect } from "~/libs/i18n/navigation/custom";
 import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";
 
 export default async function AuthPasswordReset2FAVerificationPage() {

@@ -12,9 +12,9 @@ import { updateIsTwoFactorService } from "@de100/auth/services/settings/update-i
 
 import { updatePasswordService } from "@de100/auth/services/settings/update-password";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
+import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { redirect } from "~/libs/i18n/navigation/custom";
 
 /**
  *

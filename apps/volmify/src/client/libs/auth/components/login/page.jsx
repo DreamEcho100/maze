@@ -1,6 +1,7 @@
+import { redirect } from "@de100/i18n-nextjs/server";
+
+import { Link } from "#client/components/link";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import CustomLink from "~/components/common/CustomLink";
-import { redirect } from "~/libs/i18n/navigation/custom";
 import { LoginForm } from "./components";
 
 export default async function AuthLoginPage() {
@@ -25,8 +26,8 @@ export default async function AuthLoginPage() {
 		<>
 			<h1>Sign in</h1>
 			<LoginForm />
-			<CustomLink href="/auth/signup">Create an account</CustomLink>
-			<CustomLink href="/auth/forgot-password">Forgot password?</CustomLink>
+			<Link href="/auth/signup">Create an account</Link>
+			<Link href="/auth/forgot-password">Forgot password?</Link>
 		</>
 	);
 }

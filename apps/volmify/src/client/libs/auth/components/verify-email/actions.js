@@ -7,10 +7,9 @@ import {
 	RESEND_EMAIL_MESSAGES_ERRORS,
 	VERIFY_EMAIL_MESSAGES_ERRORS,
 } from "@de100/auth/utils/constants";
+import { redirect } from "@de100/i18n-nextjs/server";
 
-import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { db } from "#server/libs/db";
-import { redirect } from "~/libs/i18n/navigation/custom";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -24,7 +23,7 @@ import { redirect } from "~/libs/i18n/navigation/custom";
  */
 export async function verifyEmailAction(_prev, formData) {
 	const result = await db.transaction((tx) =>
-		verifyEmailUserService({ code: formData.get("code") }, { tx, getCurrentSession }),
+		verifyEmailUserService({ code: formData.get("code") }, { tx }),
 	);
 	// setCookie: cookiesManager.set,
 	// getCookie: (name) => cookiesManager.get(name)?.value,
@@ -63,9 +62,7 @@ export async function verifyEmailAction(_prev, formData) {
  * @returns {Promise<ActionResult>}
  */
 export async function resendEmailVerificationCodeAction(_prev) {
-	const result = await db.transaction((tx) =>
-		resendEmailVerificationCodeService({ tx, getCurrentSession }),
-	);
+	const result = await db.transaction((tx) => resendEmailVerificationCodeService({ tx }));
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);

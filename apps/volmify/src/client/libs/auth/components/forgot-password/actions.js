@@ -2,9 +2,9 @@
 
 import { forgotPasswordService } from "@de100/auth/services/forgot-password";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
+import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { redirect } from "~/libs/i18n/navigation/custom";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult

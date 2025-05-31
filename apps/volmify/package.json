@@ -19,6 +19,8 @@
 	"dependencies": {
 		"@de100/auth": "workspace:*",
 		"@de100/env": "workspace:^",
+		"@de100/i18n-nextjs": "workspace:*",
+		"@de100/i18n-reactjs": "workspace:*",
 		"@de100/ui": "workspace:*",
 		"@orpc/client": "^1.2.0",
 		"@orpc/react-query": "^1.2.0",

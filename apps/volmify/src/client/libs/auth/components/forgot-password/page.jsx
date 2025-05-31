@@ -1,4 +1,4 @@
-import CustomLink from "~/components/common/CustomLink";
+import { Link } from "#client/components/link";
 import { ForgotPasswordForm } from "./components";
 
 export default function ForgotPasswordPage() {
@@ -6,20 +6,7 @@ export default function ForgotPasswordPage() {
 		<>
 			<h1>Forgot your password?</h1>
 			<ForgotPasswordForm />
-			<CustomLink
-				classVariants={{
-					px: null,
-					py: null,
-					theme: null,
-					rounded: null,
-					size: null,
-					layout: null,
-					w: null,
-				}}
-				href="/auth/login"
-			>
-				Sign in
-			</CustomLink>
+			<Link href="/auth/login">Sign in</Link>
 		</>
 	);
 }

@@ -381,6 +381,12 @@ importers:
       '@de100/env':
         specifier: workspace:^
         version: link:../../packages/env
+      '@de100/i18n-nextjs':
+        specifier: workspace:*
+        version: link:../../packages/i18n-nextjs
+      '@de100/i18n-reactjs':
+        specifier: workspace:*
+        version: link:../../packages/i18n-reactjs
       '@de100/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -1289,7 +1295,7 @@ importers:
         version: 1.2.8(eslint@9.23.0(jiti@2.4.2))
       '@next/eslint-plugin-next':
         specifier: ^15.2.1
-        version: 15.2.4
+        version: 15.3.3
       eslint-plugin-import:
         specifier: ^2.31.0
         version: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.0)(eslint@9.23.0(jiti@2.4.2))
@@ -3089,9 +3095,6 @@ packages:
 
   '@next/env@15.3.3':
     resolution: {integrity: sha512-OdiMrzCl2Xi0VTjiQQUK0Xh7bJHnOuET2s+3V+Y40WJBAXrJeGA3f+I8MZJ/YQ3mVGi5XGR1L66oFlgqXhQ4Vw==}
-
-  '@next/eslint-plugin-next@15.2.4':
-    resolution: {integrity: sha512-O8ScvKtnxkp8kL9TpJTTKnMqlkZnS+QxwoQnJwPGBxjBbzd6OVVPEJ5/pMNrktSyXQD/chEfzfFzYLM6JANOOQ==}
 
   '@next/eslint-plugin-next@15.3.3':
     resolution: {integrity: sha512-VKZJEiEdpKkfBmcokGjHu0vGDG+8CehGs90tBEy/IDoDDKGngeyIStt2MmE5FYNyU9BhgR7tybNWTAJY/30u+Q==}
@@ -12481,10 +12484,6 @@ snapshots:
   '@netlify/serverless-functions-api@1.36.0': {}
 
   '@next/env@15.3.3': {}
-
-  '@next/eslint-plugin-next@15.2.4':
-    dependencies:
-      fast-glob: 3.3.1
 
   '@next/eslint-plugin-next@15.3.3':
     dependencies:

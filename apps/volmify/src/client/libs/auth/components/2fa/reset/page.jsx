@@ -1,5 +1,6 @@
+import { redirect } from "@de100/i18n-nextjs/server";
+
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import { redirect } from "~/libs/i18n/navigation/custom";
 import { TwoFactorResetForm } from "./components";
 
 export default async function AuthTwoFactorResetPage() {

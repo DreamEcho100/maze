@@ -1,10 +1,10 @@
-import { usersProvider } from "@de100/auth/init";
+import { authConfig } from "@de100/auth/init";
+import { redirect } from "@de100/i18n-nextjs/server";
 
+import { Link } from "#client/components/link";
 // import { getUserRecoveryCodeRepository } from "@de100/auth/repositories/users";
 
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import CustomLink from "~/components/common/CustomLink";
-import { redirect } from "~/libs/i18n/navigation/custom";
 
 // import { userProvider } from "@de100/auth/src/providers";
 
@@ -28,14 +28,14 @@ export default async function AuthRecoveryCodePage() {
 	if (!session.twoFactorVerifiedAt) {
 		return redirect("/auth/2fa");
 	}
-	const recoveryCode = await usersProvider.getOneRecoveryCode(user.id);
+	const recoveryCode = await authConfig.providers.users.getOneRecoveryCode(user.id);
 
 	return (
 		<>
 			<h1>Recovery code</h1>
 			<p>Your recovery code is: {recoveryCode}</p>
 			<p>You can use this recovery code if you lose access to your second factors.</p>
-			<CustomLink href="/">Next</CustomLink>
+			<Link href="/">Next</Link>
 		</>
 	);
 }

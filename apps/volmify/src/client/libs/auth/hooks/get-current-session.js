@@ -106,7 +106,7 @@ export function useGetCurrentSession(props) {
 		refetchOnWindowFocus: true,
 		refetchOnReconnect: true,
 		/** @type {ClientAuthenticatedUserSession|ClientUnauthenticatedUserSession|undefined} */
-		initialData: props?.data?.user && {
+		placeholderData: props?.data?.user && {
 			status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
 			data: props.data,
 			update,

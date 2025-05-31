@@ -1,8 +1,8 @@
-import { usersProvider } from "@de100/auth/init";
+import { authConfig } from "@de100/auth/init";
+import { redirect } from "@de100/i18n-nextjs/server";
 
+import { Link } from "#client/components/link";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import CustomLink from "~/components/common/CustomLink";
-import { redirect } from "~/libs/i18n/navigation/custom";
 import {
 	RecoveryCodeSection,
 	UpdateEmailForm,
@@ -24,40 +24,14 @@ export default async function AuthSettingsPage() {
 	let recoveryCode = null;
 	if (user.twoFactorRegisteredAt) {
 		// recoveryCode = await getUserRecoveryCodeRepository(user.id);
-		recoveryCode = await usersProvider.getOneRecoveryCode(user.id);
+		recoveryCode = await authConfig.providers.users.getOneRecoveryCode(user.id);
 	}
 
 	return (
 		<>
 			<header>
-				<CustomLink
-					classVariants={{
-						px: null,
-						py: null,
-						theme: null,
-						rounded: null,
-						size: null,
-						layout: null,
-						w: null,
-					}}
-					href="/"
-				>
-					Home
-				</CustomLink>
-				<CustomLink
-					classVariants={{
-						px: null,
-						py: null,
-						theme: null,
-						rounded: null,
-						size: null,
-						layout: null,
-						w: null,
-					}}
-					href="/settings"
-				>
-					Settings
-				</CustomLink>
+				<Link href="/">Home</Link>
+				<Link href="/settings">Settings</Link>
 			</header>
 			<main>
 				<h1>Settings</h1>
@@ -74,20 +48,7 @@ export default async function AuthSettingsPage() {
 				{user.twoFactorRegisteredAt && (
 					<section>
 						<h2>Update two-factor authentication</h2>
-						<CustomLink
-							classVariants={{
-								px: null,
-								py: null,
-								theme: null,
-								rounded: null,
-								size: null,
-								layout: null,
-								w: null,
-							}}
-							href="/auth/2fa/setup"
-						>
-							Update
-						</CustomLink>
+						<Link href="/auth/2fa/setup">Update</Link>
 					</section>
 				)}
 

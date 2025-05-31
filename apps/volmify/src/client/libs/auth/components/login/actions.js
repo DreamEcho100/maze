@@ -2,8 +2,7 @@
 
 import { loginUserService } from "@de100/auth/services/login";
 import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
-
-import { redirect } from "~/libs/i18n/navigation/custom";
+import { redirect } from "@de100/i18n-nextjs/server";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -25,19 +24,15 @@ export async function loginAction(_prev, formData) {
 	}
 
 	switch (result.messageCode) {
-		case LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS_OR_MISSING_FIELDS.code:
-			return {
-				type: "error",
-				statusCode: result.statusCode,
-				message: result.message,
-			};
-		case LOGIN_MESSAGES_ERRORS.ACCOUNT_DOES_NOT_EXIST.code:
+		case LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS.messageCode:
+			return result;
+		case LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND.messageCode:
 			return redirect(AUTH_URLS.REGISTER);
-		case LOGIN_MESSAGES_ERRORS.EMAIL_NOT_VERIFIED.code:
+		case LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED.messageCode:
 			return redirect(AUTH_URLS.VERIFY_EMAIL);
-		case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_SETUP.code:
+		case LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED.messageCode:
 			return redirect(AUTH_URLS.SETUP_2FA);
-		case LOGIN_MESSAGES_ERRORS.TWO_FA_NOT_NEEDS_VERIFICATION.code:
+		case LOGIN_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED.messageCode:
 			return redirect(AUTH_URLS.TWO_FA);
 		default:
 			return { type: "error", statusCode: 500, message: "Unexpected error" };

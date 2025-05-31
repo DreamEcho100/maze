@@ -1,24 +1,19 @@
-import { cookies } from "next/headers";
-
 import { getUserEmailVerificationRequestFromRequest } from "@de100/auth/utils/email-verification";
+import { redirect } from "@de100/i18n-nextjs/server";
 
+import { Link } from "#client/components/link";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-import CustomLink from "~/components/common/CustomLink";
-import { redirect } from "~/libs/i18n/navigation/custom";
 import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components";
 
 export default async function AuthVerifyEmailPage() {
-	const { user, session } = await getCurrentSession();
+	const { user } = await getCurrentSession();
 	if (user === null) {
 		return redirect("/auth/login");
 	}
 
 	// TODO: Ideally we'd sent a new verification email automatically if the previous one is expired,
 	// but we can't set cookies inside server components.
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(() => ({
-		user,
-		session,
-	}));
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
 	if (verificationRequest === null && user.emailVerifiedAt) {
 		return redirect("/");
 	}
@@ -28,20 +23,7 @@ export default async function AuthVerifyEmailPage() {
 			<p>We sent an 8-digit code to {verificationRequest?.email ?? user.email}.</p>
 			<EmailVerificationForm />
 			<ResendEmailVerificationCodeForm />
-			<CustomLink
-				classVariants={{
-					px: null,
-					py: null,
-					theme: null,
-					rounded: null,
-					size: null,
-					layout: null,
-					w: null,
-				}}
-				href="/settings"
-			>
-				Change your email
-			</CustomLink>
+			<Link href="/settings">Change your email</Link>
 		</>
 	);
 }
