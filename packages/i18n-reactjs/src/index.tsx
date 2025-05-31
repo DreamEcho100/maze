@@ -9,7 +9,7 @@ import { mutative } from "zustand-mutative";
 import type { LanguageMessages } from "@de100/i18n";
 import { initI18n } from "@de100/i18n";
 
-export const name = "@de100/i18n-react";
+export const name = "@de100/i18n-reactjs";
 
 // const unusedProxyThrow = new Proxy(
 // 	{},
