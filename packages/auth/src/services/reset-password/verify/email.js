@@ -1,13 +1,12 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
+import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/validations.js";
 
 /**
  * @typedef {typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS[keyof typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS]} ActionResultError
@@ -15,9 +14,6 @@ import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
  *
  * @typedef {ActionResultError | ActionResultSuccess} ActionResult
  */
-
-const codeSchema = z.string().length(6).regex(/^\d+$/);
-const verifyCodeInput = z.object({ code: codeSchema });
 
 /**
  * Handles the password reset email verification process.
@@ -33,8 +29,7 @@ const verifyCodeInput = z.object({ code: codeSchema });
  * >}
  */
 export async function verifyPasswordResetEmailVerificationService(code, options) {
-	const input = verifyCodeInput.safeParse({ code });
-
+	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse({ code });
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}

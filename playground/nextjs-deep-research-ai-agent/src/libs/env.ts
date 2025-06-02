@@ -1,20 +1,23 @@
 import { vercel } from "@t3-oss/env-nextjs/presets-zod";
-import { z } from "zod";
+import { z } from "zod/v4-mini";
 
 import { createEnv } from "@de100/env";
 
 export const env = createEnv({
 	extends: [vercel()],
 	shared: {
-		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+		// NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+		NODE_ENV: z.prefault(z.enum(["development", "production", "test"]), "development"),
 	},
 	/**
 	 * Specify your server-side environment variables schema here.
 	 * This way you can ensure the app isn't built with invalid env vars.
 	 */
 	server: {
-		OPEN_ROUTER_API_KEY: z.string().min(1),
-		EXA_SEARCH_API_KEY: z.string().min(1),
+		// OPEN_ROUTER_API_KEY: z.string().min(1),
+		// EXA_SEARCH_API_KEY: z.string().min(1),
+		OPENAI_API_KEY: z.string().check(z.minLength(1)),
+		GOOGLE_API_KEY: z.string().check(z.minLength(1)),
 	},
 
 	// clientPrefix: "NEXT_PUBLIC_",

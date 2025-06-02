@@ -1,7 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import { UPDATE_EMAIL_MESSAGES_ERRORS, UPDATE_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -10,6 +8,7 @@ import {
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { emailSchema } from "#utils/validations.js";
 
 /**
  * Handles updating a user's email by validating input and creating a verification request.
@@ -23,7 +22,7 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
  * >}
  */
 export async function updateEmailService(email) {
-	const input = z.string().email().safeParse(email);
+	const input = emailSchema.safeParse(email);
 	if (!input.success) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_REQUIRED;
 
 	const validatedEmail = input.data;

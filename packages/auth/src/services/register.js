@@ -1,7 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -16,6 +14,7 @@ import {
 	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 import { createUser } from "#utils/users.js";
+import { registerServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -30,20 +29,7 @@ import { createUser } from "#utils/users.js";
  * >}
  */
 export async function registerService(data) {
-	const input = z
-		.object({
-			email: z.string().email(),
-			name: z.string().min(3).max(32),
-			password: z.string().min(8),
-			enable2FA: z.preprocess((value) => {
-				if (typeof value === "boolean") {
-					return value;
-				}
-				return value === "on";
-			}, z.boolean().optional().default(false)),
-		})
-		.safeParse(data);
-
+	const input = registerServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}

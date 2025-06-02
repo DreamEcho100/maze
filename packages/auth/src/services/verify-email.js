@@ -1,5 +1,4 @@
-/** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
-import { z } from "zod";
+/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -13,6 +12,7 @@ import {
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { verifyEmailServiceInputSchema } from "#utils/validations.js";
 
 /**
  *
@@ -26,12 +26,7 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
  * >}
  */
 export async function verifyEmailUserService(data, options) {
-	const input = z
-		.object({
-			code: z.string().min(6),
-		})
-		.safeParse(data);
-
+	const input = verifyEmailServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}

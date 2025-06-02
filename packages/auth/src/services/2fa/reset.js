@@ -1,10 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { reset2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles resetting 2FA using a recovery code, with validation checks and permission verification.
@@ -19,8 +18,7 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
  * >}
  */
 export async function reset2FAService(data, tx) {
-	const input = z.object({ code: z.string().min(6) }).safeParse(data);
-
+	const input = reset2FAServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return RESET_2FA_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED;
 	}

@@ -14,7 +14,7 @@
 
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 // The following code is only for demonstration purposes
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // -----------------------------
 // Core Type Definitions

@@ -1,5 +1,5 @@
 import type { ChatCompletionMessage } from "openai/resources/index.mjs";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { protectedRoute } from "~/libs/server";
 import { notesIndex } from "~/libs/server/db/pinecone";

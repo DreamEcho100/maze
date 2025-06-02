@@ -1,4 +1,4 @@
-/** @import { SessionValidationResult, MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { RESEND_EMAIL_MESSAGES_ERRORS, RESEND_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {

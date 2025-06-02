@@ -1,7 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
@@ -10,6 +8,7 @@ import {
 	generateAuthSessionToken,
 	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
+import { loginServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Verifies the user's credentials and creates a session if valid.
@@ -24,13 +23,7 @@ import {
  * >}
  */
 export async function loginUserService(data) {
-	const input = z
-		.object({
-			email: z.string().email(),
-			password: z.string().min(6),
-		})
-		.safeParse(data);
-
+	const input = loginServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}

@@ -1,9 +1,6 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { createEnv } from "@de100/env";
-
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-const NEXTAUTH_URL = process.env.NEXTAUTH_URL;
 
 export const env = createEnv({
 	server: {
@@ -16,13 +13,13 @@ export const env = createEnv({
 			(str) => process.env.NEXTAUTH_URL ?? process.env.VERCEL_URL ?? str,
 
 			// VERCEL_URL doesn't include `https` so it cant be validated as a URL
-			process.env.VERCEL_URL ? z.string() : z.string().url(),
+			process.env.VERCEL_URL ? z.string() : z.url(),
 		),
 	},
-	// client: {},
+	// // client: {},
 	// runtimeEnv: {
-	//   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
-	//   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+	// 	ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+	// 	NEXTAUTH_URL: process.env.NEXTAUTH_URL,
 	// },
 	skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

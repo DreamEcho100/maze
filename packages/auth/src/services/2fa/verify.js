@@ -1,11 +1,10 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { verify2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
@@ -20,7 +19,7 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
  */
 export async function verify2FAService(data) {
 	// Validate code input
-	const input = z.object({ code: z.string().min(6) }).safeParse(data);
+	const input = verify2FAServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return VERIFY_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}

@@ -1,9 +1,9 @@
 import type { SchemaAdapter } from "#schemas";
-import type z from "zod";
+import type z from "zod/v4-mini";
 
 // Zod schema adapter
 export class ZodSchemaAdapter<T> implements SchemaAdapter<T> {
-	constructor(private schema: z.ZodType<T>) {}
+	constructor(private schema: z.ZodMiniType<T>) {}
 
 	parse(data: unknown): T {
 		return this.schema.parse(data);
@@ -20,6 +20,6 @@ export class ZodSchemaAdapter<T> implements SchemaAdapter<T> {
 }
 
 // Factory function to create a Zod schema adapter
-export function createZodAdapter<T>(schema: z.ZodType<T>): SchemaAdapter<T> {
+export function createZodAdapter<T>(schema: z.ZodMiniType<T>): SchemaAdapter<T> {
 	return new ZodSchemaAdapter(schema);
 }

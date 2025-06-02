@@ -1,12 +1,11 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
+import { setup2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
@@ -21,10 +20,7 @@ import { updateUserTOTPKey } from "#utils/users.js";
  * >}
  */
 export async function setup2FAService(data, options) {
-	const input = z
-		.object({ code: z.string().min(6), encodedKey: z.string().min(28) })
-		.safeParse(data);
-
+	const input = setup2FAServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}

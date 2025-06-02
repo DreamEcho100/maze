@@ -3,7 +3,7 @@
 import type { Label as LabelPrimitive } from "radix-ui";
 import type { ComponentProps, HTMLAttributes } from "react";
 import type { ControllerProps, FieldPath, FieldValues, UseFormProps } from "react-hook-form";
-import type { ZodType, ZodTypeDef } from "zod";
+import type { ZodType } from "zod/v4";
 import { createContext, useContext, useId } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Slot } from "radix-ui";
@@ -12,9 +12,9 @@ import { useForm as __useForm, Controller, FormProvider, useFormContext } from "
 import { cn } from "#libs/utils";
 import { Label } from "./label";
 
-const useForm = <TOut extends FieldValues, TDef extends ZodTypeDef, TIn extends FieldValues>(
+const useForm = <TOut extends FieldValues, TIn extends FieldValues>(
 	props: Omit<UseFormProps<TIn>, "resolver"> & {
-		schema: ZodType<TOut, TDef, TIn>;
+		schema: ZodType<TOut, TIn>;
 	},
 ) => {
 	const form = __useForm<TIn, unknown, TOut>({
@@ -128,8 +128,7 @@ function FormMessage({ className, children, ...props }: HTMLAttributes<HTMLParag
 		<p
 			id={formMessageId}
 			className={cn("text-destructive text-[0.8rem] font-medium", className)}
-			{...props}
-		>
+			{...props}>
 			{body}
 		</p>
 	);

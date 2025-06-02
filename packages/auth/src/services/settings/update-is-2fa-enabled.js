@@ -1,13 +1,12 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { z } from "zod";
-
 import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
+import { formBoolSchema } from "#utils/validations.js";
 
 /**
  * @typedef {typeof UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS[keyof typeof UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS]} ActionResultError
@@ -27,15 +26,7 @@ import { updateUserTwoFactorEnabledService } from "#utils/users.js";
  * >}
  */
 export async function updateIsTwoFactorService(isTwoFactorEnabled) {
-	const input = z
-		.preprocess((value) => {
-			if (typeof value === "boolean") {
-				return value;
-			}
-
-			return value === "on";
-		}, z.boolean().optional().default(false))
-		.safeParse(isTwoFactorEnabled);
+	const input = formBoolSchema.safeParse(isTwoFactorEnabled);
 
 	if (!input.success) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_2FA_INPUT;
 

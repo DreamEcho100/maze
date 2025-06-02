@@ -1,5 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { z } from "zod";
+import { z } from "zod/v4-mini";
 
 import { desc, eq } from "@de100/db";
 import { CreatePostSchema, Post } from "@de100/db/schema";

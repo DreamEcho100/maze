@@ -1,7 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -14,6 +12,7 @@ import {
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
 import { generateAuthSessionToken } from "#utils/strategy/index.js";
+import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
 // import { generateSessionToken } from "#utils/sessions.js";
 
@@ -31,7 +30,7 @@ import { generateAuthSessionToken } from "#utils/strategy/index.js";
  * >}
  */
 export async function forgotPasswordService(data, options) {
-	const input = z.object({ email: z.string().email() }).safeParse(data);
+	const input = forgotPasswordServiceInputSchema.safeParse(data);
 
 	if (!input.success) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;

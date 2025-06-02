@@ -1,16 +1,12 @@
 /** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
 
-import { z } from "zod";
-
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
-
-const codeSchema = z.string().length(6).regex(/^\d+$/);
-const verifyCodeInput = z.object({ code: codeSchema });
+import { verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the 2FA verification for a password reset using a recovery code.
@@ -26,7 +22,7 @@ const verifyCodeInput = z.object({ code: codeSchema });
  * >}
  */
 export async function verifyPasswordReset2FAViaRecoveryCodeService(code, options) {
-	const input = verifyCodeInput.safeParse({ code });
+	const input = verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema.safeParse({ code });
 
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;

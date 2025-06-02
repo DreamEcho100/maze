@@ -1,7 +1,5 @@
 /** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
-import { z } from "zod";
-
 import { authConfig } from "#init/index.js";
 import {
 	ADMIN_REGISTER_MESSAGES_ERRORS,
@@ -13,6 +11,7 @@ import {
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createUser } from "#utils/users.js";
+import { adminRegisterServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -27,19 +26,7 @@ import { createUser } from "#utils/users.js";
  * >}
  */
 export async function adminRegisterService(data) {
-	const input = z
-		.object({
-			email: z.string().email(),
-			name: z.string().min(3).max(32),
-			password: z.string().min(8),
-			enable2FA: z.preprocess((value) => {
-				if (typeof value === "boolean") {
-					return value;
-				}
-				return value === "on";
-			}, z.boolean().optional().default(false)),
-		})
-		.safeParse(data);
+	const input = adminRegisterServiceInputSchema.safeParse(data);
 
 	if (!input.success) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;

@@ -1,6 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
-import z from "zod/v4";
+import z from "zod/v4-mini";
 
 import { Button } from "@de100/ui/components/button";
 import { Input } from "@de100/ui/components/input";
@@ -38,8 +38,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 		},
 		validators: {
 			onSubmit: z.object({
-				email: z.string().email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				email: z.string().check(z.email("Invalid email address")),
+				password: z.string().check(z.minLength(8, "Password must be at least 8 characters")),
 			}),
 		},
 	});
@@ -58,8 +58,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 					e.stopPropagation();
 					void form.handleSubmit();
 				}}
-				className="space-y-4"
-			>
+				className="space-y-4">
 				<div>
 					<form.Field name="email">
 						{(field) => (
@@ -111,8 +110,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
-						>
+							disabled={!state.canSubmit || state.isSubmitting}>
 							{state.isSubmitting ? "Submitting..." : "Sign In"}
 						</Button>
 					)}
@@ -123,8 +121,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 				<Button
 					variant="link"
 					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800"
-				>
+					className="text-indigo-600 hover:text-indigo-800">
 					Need an account? Sign Up
 				</Button>
 			</div>
