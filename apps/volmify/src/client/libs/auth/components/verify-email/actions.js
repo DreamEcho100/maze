@@ -10,6 +10,7 @@ import {
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
+import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -22,8 +23,16 @@ import { db } from "#server/libs/db";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyEmailAction(_prev, formData) {
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
 	const result = await db.transaction((tx) =>
-		verifyEmailUserService({ code: formData.get("code") }, { tx }),
+		verifyEmailUserService(
+			{ code: formData.get("code") },
+			{
+				tx,
+				ipAddress: ipAddressAndUserAgent.ipAddress,
+				userAgent: ipAddressAndUserAgent.userAgent,
+			},
+		),
 	);
 	// setCookie: cookiesManager.set,
 	// getCookie: (name) => cookiesManager.get(name)?.value,
@@ -62,7 +71,14 @@ export async function verifyEmailAction(_prev, formData) {
  * @returns {Promise<ActionResult>}
  */
 export async function resendEmailVerificationCodeAction(_prev) {
-	const result = await db.transaction((tx) => resendEmailVerificationCodeService({ tx }));
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
+	const result = await db.transaction((tx) =>
+		resendEmailVerificationCodeService({
+			tx,
+			ipAddress: ipAddressAndUserAgent.ipAddress,
+			userAgent: ipAddressAndUserAgent.userAgent,
+		}),
+	);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);

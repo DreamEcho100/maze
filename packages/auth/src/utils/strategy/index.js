@@ -1,4 +1,4 @@
-/** @import { SessionValidationResult } from "#types.ts" */
+/** @import { UserAgent, SessionValidationResult } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { dateLikeToISOString } from "#utils/dates.js";
@@ -17,6 +17,8 @@ import {
  * @param {object} props.data
  * @param {string} [props.data.token] - Session token OR will create JWT
  * @param {string} props.data.userId
+ * @param {string|null|undefined} props.data.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.data.userAgent - Optional user agent for the session
  * @param {object} props.data.flags
  * @param {object} [options]
  */
@@ -49,12 +51,15 @@ export async function createAuthSession(props, options) {
 
 /**
  * Strategy-aware current session/auth retrieval (replaces getCurrentSession)
+ * @param {object} options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<SessionValidationResult>}
  */
-export async function getCurrentAuthSession() {
+export async function getCurrentAuthSession(options) {
 	switch (authConfig.strategy) {
 		case "jwt":
-			return await getCurrentJWTAuth();
+			return await getCurrentJWTAuth(options);
 
 		case "session":
 			return await getCurrentSession();

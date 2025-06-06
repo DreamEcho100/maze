@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { RESEND_EMAIL_MESSAGES_ERRORS, RESEND_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -11,9 +11,10 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
 
 /**
  *
- * @param {{
- *  tx: any
- * }} options
+ * @param {object} options
+ * @param {any} options.tx - Transaction object for database operations
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESEND_EMAIL_MESSAGES_ERRORS,
@@ -22,7 +23,10 @@ import { getCurrentAuthSession } from "#utils/strategy/index.js";
  * >}
  */
 export async function resendEmailVerificationCodeService(options) {
-	const { session, user } = await getCurrentAuthSession();
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: options.ipAddress,
+		userAgent: options.userAgent,
+	});
 	if (session === null) {
 		return RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

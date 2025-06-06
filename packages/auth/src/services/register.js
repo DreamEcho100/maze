@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -20,6 +20,9 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  * Handles register by deleting the user session and clearing session cookies.
  *
  * @param {unknown} data
+ * @param {object} options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    REGISTER_MESSAGES_ERRORS,
@@ -28,7 +31,7 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function registerService(data) {
+export async function registerService(data, options) {
 	const input = registerServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
@@ -60,6 +63,8 @@ export async function registerService(data) {
 		data: {
 			token: sessionToken,
 			userId: user.id,
+			ipAddress: options.ipAddress ?? null,
+			userAgent: options.userAgent ?? null,
 			flags: {
 				twoFactorVerifiedAt: null,
 			},

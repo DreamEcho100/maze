@@ -4,6 +4,8 @@ import { loginUserService } from "@de100/auth/services/login";
 import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
 import { redirect } from "@de100/i18n-nextjs/server";
 
+import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
+
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
  *
@@ -17,7 +19,8 @@ export async function loginAction(_prev, formData) {
 		password: formData.get("password"),
 	};
 
-	const result = await loginUserService(data);
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
+	const result = await loginUserService(data, ipAddressAndUserAgent);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_LOGIN);

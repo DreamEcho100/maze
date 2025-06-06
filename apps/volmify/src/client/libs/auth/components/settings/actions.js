@@ -15,6 +15,7 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
+import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
 
 /**
  *
@@ -36,8 +37,16 @@ export async function updatePasswordAction(_prev, formData) {
 		};
 	}
 
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
 	const result = await db.transaction((tx) =>
-		updatePasswordService({ data: { currentPassword, newPassword } }, { tx }),
+		updatePasswordService(
+			{ data: { currentPassword, newPassword } },
+			{
+				tx,
+				ipAddress: ipAddressAndUserAgent.ipAddress,
+				userAgent: ipAddressAndUserAgent.userAgent,
+			},
+		),
 	);
 
 	return result;
@@ -58,7 +67,8 @@ export async function updateEmailAction(_prev, formData) {
 		};
 	}
 
-	const result = await updateEmailService(email);
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
+	const result = await updateEmailService(email, ipAddressAndUserAgent);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_UPDATE_EMAIL);
@@ -71,7 +81,8 @@ export async function updateEmailAction(_prev, formData) {
  * @returns {Promise<ActionIdleResult | ActionErrorResult | (ActionSuccessResult & { data: { recoveryCode: string; } })>}
  */
 export async function regenerateRecoveryCodeAction() {
-	return await regenerateRecoveryCodeService();
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
+	return await regenerateRecoveryCodeService(ipAddressAndUserAgent);
 }
 
 /**
@@ -80,7 +91,11 @@ export async function regenerateRecoveryCodeAction() {
  * @returns {Promise<ActionResult>}
  */
 export async function updateIsTwoFactorEnabledAction(_prev, formData) {
-	const result = await updateIsTwoFactorService(formData.get("is_two_factor_enabled"));
+	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
+	const result = await updateIsTwoFactorService(
+		formData.get("is_two_factor_enabled"),
+		ipAddressAndUserAgent,
+	);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_UPDATE_2FA);

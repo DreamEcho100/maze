@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -17,7 +17,10 @@ import { verifyEmailServiceInputSchema } from "#utils/validations.js";
 /**
  *
  * @param {unknown} data
- * @param {{ tx: any }} options
+ * @param {object} options
+ * @param {any} options.tx - Transaction object for database operations
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_EMAIL_MESSAGES_ERRORS,
@@ -31,7 +34,10 @@ export async function verifyEmailUserService(data, options) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession();
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: options.ipAddress,
+		userAgent: options.userAgent,
+	});
 	if (session === null) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

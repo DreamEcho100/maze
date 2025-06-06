@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -11,7 +11,10 @@ import { setup2FAServiceInputSchema } from "#utils/validations.js";
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
  *
  * @param {unknown} data
- * @param {{ tx: any }} options
+ * @param {object} options
+ * @param {any} options.tx - Transaction object for database operations
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    SETUP_2FA_MESSAGES_ERRORS,
@@ -25,7 +28,10 @@ export async function setup2FAService(data, options) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession();
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: options.ipAddress,
+		userAgent: options.userAgent,
+	});
 	if (!session) {
 		return SETUP_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

@@ -1,4 +1,4 @@
-/** @import { DateLike, User, Session } from "#types.ts" */
+/** @import { UserAgent, DateLike, User, Session } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { getSessionId } from "#utils/get-session-id.js";
@@ -12,6 +12,8 @@ const REFRESH_TOKEN_EXPIRES_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
  * @param {object} props
  * @param {object} props.data
  * @param {string} props.data.userId
+ * @param {string|null|undefined} props.data.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} props.data.userAgent - Optional user agent for the session.
  * @param {object} props.data.flags
  * @param {DateLike | null} [props.data.flags.twoFactorVerifiedAt]
  * @param {object} [options]
@@ -41,9 +43,11 @@ export async function createJWTAuth(props, options) {
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "jwt_refresh_token",
-		ipAddress:
-			authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
-		userAgent: authConfig.headers.get("user-agent") ?? null,
+		// ipAddress:
+		// 	authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+		// userAgent: authConfig.headers.get("user-agent") ?? null,
+		ipAddress: props.data.ipAddress ?? null,
+		userAgent: props.data.userAgent ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
 	};
@@ -60,9 +64,12 @@ export async function createJWTAuth(props, options) {
 
 /**
  * Get current JWT authentication (mirrors getCurrentSession)
+ * @param {object} options - Additional options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<{user: User | null, session: any | null, method?: string, newTokens?: object}>}
  */
-export async function getCurrentJWTAuth() {
+export async function getCurrentJWTAuth(options) {
 	// Try access token first (fastest path)
 	const accessToken = authConfig.jwt.getAccessToken();
 	if (accessToken) {
@@ -111,7 +118,7 @@ export async function getCurrentJWTAuth() {
 		return { session: null, user: null };
 	}
 
-	const result = await refreshJWTTokens(refreshToken);
+	const result = await refreshJWTTokens(refreshToken, options);
 	if (!result) {
 		return { session: null, user: null };
 	}
@@ -184,9 +191,12 @@ export async function validateJWTToken(token) {
 /**
  * Refresh JWT tokens -
  * @param {string} refreshToken
+ * @param {object} [options] - Additional options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<RefreshJWTTokensResult | null>}
  */
-async function refreshJWTTokens(refreshToken) {
+async function refreshJWTTokens(refreshToken, options) {
 	const refreshTokenHash = getSessionId(refreshToken);
 
 	const result = await authConfig.providers.session.findOneWithUser(refreshTokenHash);
@@ -222,9 +232,11 @@ async function refreshJWTTokens(refreshToken) {
 				metadata: refreshTokenRecord.metadata,
 				createdAt: new Date(),
 				sessionType: "jwt_refresh_token",
-				ipAddress:
-					authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
-				userAgent: authConfig.headers.get("user-agent") ?? null,
+				// ipAddress:
+				// 	authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+				// userAgent: authConfig.headers.get("user-agent") ?? null,
+				ipAddress: options?.ipAddress ?? refreshTokenRecord.ipAddress ?? null,
+				userAgent: options?.userAgent ?? refreshTokenRecord.userAgent ?? null,
 				lastUsedAt: new Date(),
 				revokedAt: null, // Not revoked initially
 				twoFactorVerifiedAt: refreshTokenRecord.metadata?.twoFactorVerifiedAt ?? null,

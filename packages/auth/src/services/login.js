@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -14,6 +14,9 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  * Verifies the user's credentials and creates a session if valid.
  *
  * @param {unknown} data
+ * @param {object} options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    LOGIN_MESSAGES_ERRORS,
@@ -22,7 +25,7 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function loginUserService(data) {
+export async function loginUserService(data, options) {
 	const input = loginServiceInputSchema.safeParse(data);
 	if (!input.success) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
@@ -53,6 +56,8 @@ export async function loginUserService(data) {
 		data: {
 			token: sessionToken,
 			userId: user.id,
+			ipAddress: options.ipAddress ?? null,
+			userAgent: options.userAgent ?? null,
 			flags: {
 				twoFactorVerifiedAt: null,
 			},

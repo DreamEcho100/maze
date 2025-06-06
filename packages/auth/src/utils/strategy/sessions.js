@@ -1,4 +1,4 @@
-/** @import { DateLike, SessionValidationResult, Session } from "#types.ts" */
+/** @import { UserAgent, DateLike, SessionValidationResult, Session } from "#types.ts" */
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
@@ -19,6 +19,8 @@ import { getSessionId } from "#utils/get-session-id.js";
  * @param {object} props.data - The data associated with the session.
  * @param {string} props.data.token - The session token, which is a random string.
  * @param {string} props.data.userId - The ID of the user for whom the session is created.
+ * @param {string|null|undefined} props.data.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} props.data.userAgent - Optional user agent for the session.
  * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
  * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
  * @returns {Promise<Session>} A promise that resolves to the created session object.
@@ -34,9 +36,11 @@ export async function createSession(props, options) {
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "session",
-		ipAddress:
-			authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
-		userAgent: authConfig.headers.get("user-agent") ?? null,
+		// ipAddress:
+		// 	authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
+		// userAgent: authConfig.headers.get("user-agent") ?? null,
+		ipAddress: props.data.ipAddress ?? null,
+		userAgent: props.data.userAgent ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
 	};

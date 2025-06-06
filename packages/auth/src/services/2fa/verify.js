@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -10,6 +10,9 @@ import { verify2FAServiceInputSchema } from "#utils/validations.js";
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
  *
  * @param {unknown} data
+ * @param {object} options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_2FA_MESSAGES_ERRORS,
@@ -17,7 +20,7 @@ import { verify2FAServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function verify2FAService(data) {
+export async function verify2FAService(data, options) {
 	// Validate code input
 	const input = verify2FAServiceInputSchema.safeParse(data);
 	if (!input.success) {
@@ -25,7 +28,10 @@ export async function verify2FAService(data) {
 	}
 
 	// Get session and user details
-	const { session, user } = await getCurrentAuthSession();
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: options.ipAddress,
+		userAgent: options.userAgent,
+	});
 	if (!session) {
 		return VERIFY_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

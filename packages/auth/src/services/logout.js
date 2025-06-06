@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/strategy/index.js";
@@ -6,6 +6,9 @@ import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/str
 /**
  * Handles logout by deleting the user session and clearing session cookies.
  *
+ * @param {object} options
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    LOGOUT_MESSAGES_ERRORS,
@@ -13,8 +16,8 @@ import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/str
  *  >
  * >}
  */
-export async function logoutService() {
-	const { session } = await getCurrentAuthSession();
+export async function logoutService(options) {
+	const { session } = await getCurrentAuthSession(options);
 	if (!session) {
 		return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

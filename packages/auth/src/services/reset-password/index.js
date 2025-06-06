@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -21,7 +21,10 @@ import { updateUserPassword } from "#utils/users.js";
  * Handles the reset password process, including validation and session management.
  *
  * @param {string} password The new password to set for the user
- * @param {{ tx: any }} options Options for the service, including transaction management
+ * @param {object} options
+ * @param {any} options.tx - Transaction object for database operations
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
@@ -62,6 +65,8 @@ export async function resetPasswordService(password, options) {
 					data: {
 						token: sessionToken,
 						userId: user.id,
+						ipAddress: options.ipAddress ?? null,
+						userAgent: options.userAgent ?? null,
 						flags: {
 							twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
 						},

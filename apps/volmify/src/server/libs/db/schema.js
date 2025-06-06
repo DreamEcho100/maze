@@ -1,3 +1,5 @@
+/** @import { UserAgent } from "@de100/auth/types" */
+
 import { relations } from "drizzle-orm";
 import {
 	boolean,
@@ -405,6 +407,8 @@ export const user = pgTable(
 	],
 );
 const sessionMetadataJsonb = jsonb("metadata");
+const userAgentJsonb = jsonb("user_agent_metadata");
+
 export const session = pgTable(
 	"session",
 	{
@@ -413,7 +417,8 @@ export const session = pgTable(
 		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
 		ipAddress: varchar("ip_address", { length: 45 }),
-		userAgent: varchar("user_agent", { length: 512 }),
+		// userAgent: varchar("user_agent", { length: 512 }),
+		userAgent: /** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (userAgentJsonb),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
