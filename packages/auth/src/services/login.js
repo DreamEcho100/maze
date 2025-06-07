@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -51,19 +51,25 @@ export async function loginUserService(data, options) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}
 
-	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+	/** @type {SessionMetadata} */
+	const sessionInputBasicInfo = {
+		ipAddress: options.ipAddress ?? null,
+		userAgent: options.userAgent ?? null,
+		twoFactorVerifiedAt: null,
+		userId: user.id,
+		metadata: null,
+	};
+	const sessionToken = generateAuthSessionToken({
+		data: { user: user, metadata: sessionInputBasicInfo },
+	});
 	const session = await createAuthSession({
 		data: {
 			token: sessionToken,
-			userId: user.id,
-			ipAddress: options.ipAddress ?? null,
-			userAgent: options.userAgent ?? null,
-			flags: {
-				twoFactorVerifiedAt: null,
-			},
+			user,
+			metadata: sessionInputBasicInfo,
 		},
 	});
-	const result = setOneAuthSessionToken(session);
+	const result = setOneAuthSessionToken(session, options.userAgent);
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED;

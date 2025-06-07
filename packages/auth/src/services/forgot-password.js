@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -11,7 +11,7 @@ import {
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
-import { generateAuthSessionToken } from "#utils/strategy/index.js";
+import { generateAuthSessionToken, getCurrentAuthSession } from "#utils/strategy/index.js";
 import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
 // import { generateSessionToken } from "#utils/sessions.js";
@@ -20,7 +20,10 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
  * @param {unknown} data
- * @param {{ tx: any }} options
+ * @param {object} options
+ * @param {any} options.tx - Transaction object for database operations
+ * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -31,6 +34,12 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  */
 export async function forgotPasswordService(data, options) {
 	const input = forgotPasswordServiceInputSchema.safeParse(data);
+	const { session } = await getCurrentAuthSession({
+		ipAddress: options.ipAddress,
+		userAgent: options.userAgent,
+	});
+
+	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (!input.success) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;
@@ -41,8 +50,18 @@ export async function forgotPasswordService(data, options) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
 
-	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
-	const [session] = await Promise.all([
+	/** @type {SessionMetadata} */
+	const sessionInputBasicInfo = {
+		ipAddress: options.ipAddress ?? null,
+		userAgent: options.userAgent ?? null,
+		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
+		userId: user.id,
+		metadata: session.metadata,
+	};
+	const sessionToken = generateAuthSessionToken({
+		data: { user: user, metadata: sessionInputBasicInfo },
+	});
+	const [passwordResetEmailSession] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },
 			{ tx: options.tx },
@@ -53,15 +72,15 @@ export async function forgotPasswordService(data, options) {
 		),
 	]);
 
-	await sendPasswordResetEmail(session.email, session.code);
+	await sendPasswordResetEmail(passwordResetEmailSession.email, passwordResetEmailSession.code);
 
-	setPasswordResetSessionTokenCookie(sessionToken, session.expiresAt);
+	setPasswordResetSessionTokenCookie(sessionToken, passwordResetEmailSession.expiresAt);
 
 	return {
 		...FORGET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_EMAIL_SENT,
 		data: {
 			sessionToken,
-			expiresAt: dateLikeToISOString(session.expiresAt),
+			expiresAt: dateLikeToISOString(passwordResetEmailSession.expiresAt),
 		},
 	};
 }

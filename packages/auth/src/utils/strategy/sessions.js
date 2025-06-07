@@ -1,4 +1,4 @@
-/** @import { UserAgent, DateLike, SessionValidationResult, Session } from "#types.ts" */
+/** @import { UserAgent, DateLike, SessionValidationResult, DBSession, ClientSession } from "#types.ts" */
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
@@ -23,31 +23,41 @@ import { getSessionId } from "#utils/get-session-id.js";
  * @param {UserAgent|null|undefined} props.data.userAgent - Optional user agent for the session.
  * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
  * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
- * @returns {Promise<Session>} A promise that resolves to the created session object.
  */
+//  * @returns {Promise<DBSession>} A promise that resolves to the created session object.
 export async function createSession(props, options) {
 	const sessionId = getSessionId(props.data.token);
 
-	/** @type {Session} */
-	const session = {
+	/** @type {DBSession} */
+	const sessionData = {
 		id: sessionId,
 		userId: props.data.userId,
 		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
 		twoFactorVerifiedAt: props.data.flags.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		sessionType: "session",
-		// ipAddress:
-		// 	authConfig.headers.get("x-forwarded-for") ?? authConfig.headers.get("x-real-ip") ?? null,
-		// userAgent: authConfig.headers.get("user-agent") ?? null,
 		ipAddress: props.data.ipAddress ?? null,
 		userAgent: props.data.userAgent ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
 	};
 
-	await authConfig.providers.session.createOne({ data: session }, options);
+	const result = await authConfig.providers.session.createOne({ data: sessionData }, options);
 
-	return session;
+	if (!result) {
+		throw new Error("Failed to create session");
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const { user, id, ...session } = result;
+
+	/** @type {ClientSession} */
+	const clientSession = {
+		...session,
+		token: props.data.token,
+	};
+
+	return { session: clientSession, user };
 }
 
 export function getTokenFromCookies() {
@@ -175,6 +185,7 @@ export async function validateSessionToken(token) {
 
 	if (Date.now() >= expiresAt) {
 		await authConfig.providers.session.deleteOneById(sessionId);
+		deleteSessionTokenCookie();
 		return { session: null, user: null };
 	}
 
@@ -186,5 +197,17 @@ export async function validateSessionToken(token) {
 		);
 	}
 
-	return result;
+	const {
+		user,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		session: { id, ...session },
+	} = result;
+
+	/** @type {ClientSession} */
+	const clientSession = {
+		...session,
+		token: token,
+	};
+
+	return { user, session: clientSession };
 }

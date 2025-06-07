@@ -2,7 +2,7 @@
 
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = "process.env.JWT_SECRET";
 
 export class AuthConfig {
 	strategy = /** @type {AuthStrategy} */ ("jwt");
@@ -10,25 +10,8 @@ export class AuthConfig {
 	headers = /** @type {HeadersProvider} */ ({});
 	cookies = /** @type {CookiesProvider} */ ({});
 	jwt = /** @type {JWTProvider} */ ({
-		getAccessToken() {
-			const authHeader = authConfig.headers.get("authorization");
-
-			if (!authHeader?.startsWith("Bearer ")) {
-				return null;
-			}
-
-			return authHeader.slice(7); // Remove "Bearer " prefix
-		},
-		getRefreshToken: () => authConfig.headers.get("x-refresh-token") ?? null,
 		createAccessToken: (props, options = {}) => {
-			const { userId, sessionId, customClaims = {} } = props.data;
-
-			const payload = {
-				userId,
-				type: "access",
-				...(sessionId && { sessionId }),
-				...customClaims,
-			};
+			const payload = props.data;
 
 			const secret = options.secret ?? JWT_SECRET;
 
@@ -44,13 +27,13 @@ export class AuthConfig {
 			});
 		},
 		createRefreshToken: (props, options = {}) => {
-			const { userId, sessionId, tokenId } = props.data;
+			const { user } = props.data;
 
 			const payload = {
-				userId,
-				type: "jwt_refresh_token",
-				tokenId: tokenId ?? authConfig.ids.createOneSync(),
-				...(sessionId && { sessionId }),
+				user,
+				// type: "jwt_refresh_token",
+				// tokenId: tokenId ?? authConfig.ids.createOneSync(),
+				// ...(sessionId && { sessionId }),
 			};
 
 			const secret = options.secret ?? JWT_SECRET;
@@ -66,7 +49,7 @@ export class AuthConfig {
 				algorithm: "HS256",
 			});
 		},
-		verifyToken: (token, options = {}) => {
+		verifyAccessToken: (token, options = {}) => {
 			const secret = options.secret ?? JWT_SECRET;
 
 			if (!secret) {
@@ -130,8 +113,8 @@ export class AuthConfig {
 			const refreshToken = authConfig.jwt.createRefreshToken(
 				{
 					data: {
-						userId: props.data.userId,
-						sessionId: props.data.sessionId,
+						user: props.data.user,
+						metadata: props.data.metadata,
 					},
 				},
 				{

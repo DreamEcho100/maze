@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -73,21 +73,28 @@ export async function updatePasswordService(props, options) {
 		),
 	]);
 
-	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+	/** @type {SessionMetadata} */
+	const sessionInputBasicInfo = {
+		ipAddress: options.ipAddress ?? null,
+		userAgent: options.userAgent ?? null,
+		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
+		userId: user.id,
+		metadata: session.metadata,
+	};
+	const sessionToken = generateAuthSessionToken({
+		data: { user: user, metadata: sessionInputBasicInfo },
+	});
 	const newSession = await createAuthSession(
 		{
 			data: {
 				token: sessionToken,
-				userId: user.id,
-				ipAddress: options.ipAddress ?? null,
-				userAgent: options.userAgent ?? null,
-				flags: { twoFactorVerifiedAt: session.twoFactorVerifiedAt },
+				user: user,
+				metadata: sessionInputBasicInfo,
 			},
 		},
 		{ tx: options.tx },
 	);
-
-	const result = setOneAuthSessionToken(newSession);
+	const result = setOneAuthSessionToken(newSession, options.userAgent);
 
 	return {
 		...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,

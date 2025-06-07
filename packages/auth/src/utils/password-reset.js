@@ -110,6 +110,7 @@ export function setPasswordResetSessionTokenCookie(token, expiresAt) {
 }
 
 /**
+ * @warning needs refactor to be able to work with mobile tablet devices
  * @returns {void}
  */
 export function deletePasswordResetSessionTokenCookie() {

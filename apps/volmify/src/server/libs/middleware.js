@@ -1,6 +1,6 @@
 /**
  * @import { NextRequest } from "next/server"
- * @import { Session, User } from "@de100/auth/types"
+ * @import { ClientSession, User } from "@de100/auth/types"
  */
 
 import { NextResponse } from "next/server";
@@ -21,7 +21,7 @@ Cannot find module
 /**
  * @param {NextRequest} request
  * @param {{
- *  onAuthorized?: (result: { session: Session; user: User }) => NextResponse | Promise<NextResponse>;
+ *  onAuthorized?: (result: { session: ClientSession; user: User }) => NextResponse | Promise<NextResponse>;
  *  onUnauthorized?: () => NextResponse | Promise<NextResponse>;
  *  onInvalidCSRF?: () => NextResponse | Promise<NextResponse>;
  *  onValidCSRF?: () => NextResponse | Promise<NextResponse>;
@@ -88,7 +88,7 @@ export async function createAuthMiddleware(request, options) {
  * @param {NextRequest} request - The incoming HTTP request object.
  *
  * @returns {Promise<
- *  { status: "authorized", result: { session: Session, user: User }} |
+ *  { status: "authorized", result: { session: ClientSession, user: User }} |
  *  { status: "unauthorized", result: null } |
  *  { status: "invalid-csrf", result: null } |
  *  { status: "valid-csrf", result: null } |

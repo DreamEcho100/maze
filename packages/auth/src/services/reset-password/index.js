@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -56,20 +56,25 @@ export async function resetPasswordService(password, options) {
 	if (!strongPassword) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 	}
-
+	/** @type {SessionMetadata} */
+	const sessionInputBasicInfo = {
+		ipAddress: options.ipAddress ?? null,
+		userAgent: options.userAgent ?? null,
+		twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
+		userId: user.id,
+		metadata: null,
+	};
 	const [session] = await Promise.all([
 		(async () => {
-			const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+			const sessionToken = generateAuthSessionToken({
+				data: { user: user, metadata: sessionInputBasicInfo },
+			});
 			const session = await createAuthSession(
 				{
 					data: {
 						token: sessionToken,
-						userId: user.id,
-						ipAddress: options.ipAddress ?? null,
-						userAgent: options.userAgent ?? null,
-						flags: {
-							twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
-						},
+						metadata: sessionInputBasicInfo,
+						user,
 					},
 				},
 				{ tx: options.tx },
@@ -87,8 +92,7 @@ export async function resetPasswordService(password, options) {
 		),
 		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
 	]);
-
-	const result = setOneAuthSessionToken(session);
+	const result = setOneAuthSessionToken(session, options.userAgent);
 
 	deletePasswordResetSessionTokenCookie();
 

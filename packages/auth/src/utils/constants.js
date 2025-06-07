@@ -168,6 +168,12 @@ export const VERIFY_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
 });
 
 export const FORGET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
+	AUTHENTICATION_REQUIRED: {
+		type: "error",
+		statusCode: 401,
+		message: "Please log in to reset your password",
+		messageCode: "AUTHENTICATION_REQUIRED",
+	},
 	// OLD: INVALID_CREDENTIALS_OR_MISSING_FIELDS
 	EMAIL_REQUIRED: {
 		type: "error",

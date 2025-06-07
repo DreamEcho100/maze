@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, User, SessionMetadata } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -58,19 +58,25 @@ export async function registerService(data, options) {
 	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 	setEmailVerificationRequestCookie(emailVerificationRequest);
 
-	const sessionToken = generateAuthSessionToken({ data: { userId: user.id } });
+	/** @type {SessionMetadata} */
+	const sessionInputBasicInfo = {
+		ipAddress: options.ipAddress ?? null,
+		userAgent: options.userAgent ?? null,
+		twoFactorVerifiedAt: null,
+		userId: user.id,
+		metadata: null,
+	};
+	const sessionToken = generateAuthSessionToken({
+		data: { user: user, metadata: sessionInputBasicInfo },
+	});
 	const session = await createAuthSession({
 		data: {
 			token: sessionToken,
-			userId: user.id,
-			ipAddress: options.ipAddress ?? null,
-			userAgent: options.userAgent ?? null,
-			flags: {
-				twoFactorVerifiedAt: null,
-			},
+			user,
+			metadata: sessionInputBasicInfo,
 		},
 	});
-	const result = setOneAuthSessionToken(session);
+	const result = setOneAuthSessionToken(session, options.userAgent);
 
 	if (user.twoFactorEnabledAt) {
 		return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;

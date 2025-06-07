@@ -3,7 +3,7 @@
 //   EmailVerificationRequest as EmailVerificationRequest,
 //   Organization as Organization,
 //   PasswordResetSession as PasswordResetSession,
-//   Session as Session,
+//   DBSession as DBSession,
 //   User as User,
 // } from "@prisma/client";
 
@@ -71,8 +71,8 @@ interface User {
 	// organization?: Organization | null;
 }
 
-interface Session {
-	id: string;
+interface DBSession {
+	id: string; // Unique token for the session
 	createdAt: DateLike;
 	userId: string;
 	expiresAt: DateLike;
@@ -81,19 +81,44 @@ interface Session {
 	ipAddress?: string | null;
 	userAgent?: UserAgent | null;
 	//
-	sessionType: "session" | "jwt" | (string & {});
+	sessionType: "session" | "jwt_refresh_token" | (string & {});
 	revokedAt?: DateLike | null;
 	lastUsedAt?: DateLike | null;
 	metadata?: Record<string, any> | null;
 }
 
+interface ClientSession {
+	token: string; // Unique token for the session
+	createdAt: DateLike;
+	userId: string;
+	expiresAt: DateLike;
+	twoFactorVerifiedAt?: DateLike | null;
+	// token: string;
+	ipAddress?: string | null;
+	userAgent?: UserAgent | null;
+	//
+	sessionType: "session" | "jwt_refresh_token" | (string & {});
+	revokedAt?: DateLike | null;
+	lastUsedAt?: DateLike | null;
+	metadata?: Record<string, any> | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SessionMetadata
+	extends Omit<
+		ClientSession,
+		"token" | "expiresAt" | "id" | "lastUsedAt" | "createdAt" | "sessionType" | "revokedAt"
+	> {
+	// sessionType: "session" | "jwt_refresh_token";
+}
+
 interface SessionWithUser {
-	session: Session;
+	session: ClientSession;
 	user: User;
 }
 
 interface ValidSessionResult {
-	session: Session;
+	session: ClientSession;
 	user: User;
 }
 
@@ -134,7 +159,8 @@ export type {
 	AsyncGetCookie,
 	Organization,
 	User,
-	Session,
+	DBSession,
+	ClientSession,
 	SessionWithUser,
 	ValidSessionResult,
 	InvalidSessionResult,
@@ -475,31 +501,28 @@ export interface SessionsProvider {
 	 * Create a new session
 	 * @param props - The parameters
 	 * @param props.data - The session data
-	 * @param props.data.id - Unique session ID
-	 * @param props.data.userId - User ID
-	 * @param props.data.expiresAt - Session expiration date
 	 * @param {DateLike | null} [props.data.twoFactorVerifiedAt] - 2FA verification timestamp
 	 * @param [options] - Additional options (e.g. transaction)
-	 * @returns {Promise<Session | null>} The created session
+	 * @returns {Promise<DBSession | null>} The created session
 	 */
 	createOne: (
-		props: { data: Session },
+		props: { data: DBSession },
 		options?: { tx?: TransactionClient },
-	) => Promise<Session | null>;
+	) => Promise<(DBSession & { user: User }) | null>;
 	/**
 	 * Find a session by ID with associated user data
 	 * @param sessionId - The session ID to find
-	 * @returns {Promise<{session: Session, user: User}
+	 * @returns {Promise<{session: DBSession, user: User}
 	 */
-	findOneWithUser: (sessionId: string) => Promise<{ session: Session; user: User } | null>;
+	findOneWithUser: (sessionId: string) => Promise<{ session: DBSession; user: User } | null>;
 	/**
 	 * Extend a session's expiration time
 	 * @param sessionId - The session ID to extend
 	 * @param {Date} expiresAt - New expiration date
-	 * @returns {Promise<Session | null>} The updated session
+	 * @returns {Promise<DBSession | null>} The updated session
 	 * @description Useful for implementing "remember me" functionality or session refresh
 	 */
-	extendOneExpirationDate: (sessionId: string, expiresAt: Date) => Promise<Session | null>;
+	extendOneExpirationDate: (sessionId: string, expiresAt: Date) => Promise<DBSession | null>;
 	/**
 	 * Delete a specific session (logout)
 	 * @param sessionId - The session ID to delete
@@ -528,7 +551,7 @@ export interface SessionsProvider {
 	 * @param props.where - Where conditions
 	 * @param props.where.id - The session ID to update
 	 * @param [options] - Additional options (e.g. transaction)
-	 * @returns {Promise<Session | null>} The updated session
+	 * @returns {Promise<DBSession | null>} The updated session
 	 */
 	/**
 	 * Delete/revoke a specific refresh token
@@ -548,7 +571,7 @@ export interface SessionsProvider {
 		props: { where: { userId: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<void>;
-	isOneRevokedById: (props: { where: { id: string } }) => Promise<boolean>;
+	isRefreshTokenRevokedById: (props: { where: { id: string } }) => Promise<boolean>;
 	/**
 	 * Clean up expired refresh tokens
 	 * @returns {Promise<number>} Number of tokens cleaned up
@@ -557,28 +580,34 @@ export interface SessionsProvider {
 	markOne2FAVerified: (
 		props: { where: { id: string } },
 		options?: { tx?: TransactionClient },
-	) => Promise<Session | null>;
+	) => Promise<DBSession | null>;
 	/**
 	 * Remove 2FA verification from all user sessions
 	 * @param userId - The user ID
 	 * @param {any} [transaction] - Optional database transaction
-	 * @returns {Promise<Session | null>} The updated session
+	 * @returns {Promise<DBSession | null>} The updated session
 	 * @description Used when 2FA is disabled or when security requires re-verification
 	 */
-	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<Session | null>;
+	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<DBSession | null>;
+}
+
+export interface JWTRefreshTokenPayload {
+	user: User;
+	metadata: SessionMetadata;
 }
 
 // Add to your existing types...
 
 export interface JWTProvider {
-	getAccessToken: () => string | null;
-	getRefreshToken: () => string | null;
+	// getAccessToken: () => string | null;
+	// getRefreshToken: () => string | null;
+	// TODO: Add more payload data like the `email`
+	// * @param props.data.email - User email
 	/**
 	 * Create a JWT access token
 	 * @param props - The parameters
 	 * @param props.data - Token payload data
-	 * @param props.data.userId - User ID
-	 * @param props.data.email - User email
+	 * @param props.data.user
 	 * @param [props.data.sessionId] - Optional session ID (for hybrid strategy)
 	 * @param [props.data.customClaims] - Additional custom claims
 	 * @param [options] - Token options
@@ -589,14 +618,7 @@ export interface JWTProvider {
 	 * @returns The JWT token string
 	 */
 	createAccessToken: (
-		props: {
-			data: {
-				userId: string;
-				// email: string;
-				sessionId?: string;
-				customClaims?: Record<string, any>;
-			};
-		},
+		props: { data: JWTRefreshTokenPayload },
 		options?: {
 			expiresIn?: number;
 			audience?: string | string[];
@@ -620,7 +642,7 @@ export interface JWTProvider {
 	 * @returns The JWT refresh token string
 	 */
 	createRefreshToken: (
-		props: { data: { userId: string; sessionId?: string; tokenId?: string } },
+		props: { data: { user: User; metadata: SessionMetadata } },
 		options?: {
 			expiresIn?: number;
 			audience?: string | string[];
@@ -637,9 +659,9 @@ export interface JWTProvider {
 	 * @param [options.issuer] - Expected issuer
 	 * @param [options.secret] - JWT secret (defaults to env)
 	 * @param {boolean} [options.ignoreExpiration] - Skip expiration check
-	 * @returns {Record<string, any> | null} Decoded payload or null if invalid
+	 * @returns {{ exp: number; iat: number; twoFactorVerifiedAt?: number; userId: string; sessionId?: string; } | null}
 	 */
-	verifyToken: (
+	verifyAccessToken: (
 		token: string,
 		options?: {
 			audience?: string | string[];
@@ -647,7 +669,11 @@ export interface JWTProvider {
 			secret?: string;
 			ignoreExpiration?: boolean;
 		},
-	) => Record<string, any> | string | null;
+	) => {
+		exp: number;
+		iat: number;
+		payload: JWTRefreshTokenPayload;
+	} | null;
 
 	/**
 	 * Extract JWT token from request object (framework agnostic)
@@ -657,12 +683,13 @@ export interface JWTProvider {
 	 */
 	extractFromRequest: () => string | null;
 
+	// TODO: Add more payload data like the `email`
+	// * @param props.data.email - User email
 	/**
 	 * Create token pair (access + refresh)
 	 * @param props - The parameters
 	 * @param props.data - Token payload data
-	 * @param props.data.userId - User ID
-	 * @param props.data.email - User email
+	 * @param props.data.user
 	 * @param [props.data.sessionId] - Optional session ID
 	 * @param [props.data.customClaims] - Additional custom claims
 	 * @param [options] - Token options
@@ -670,12 +697,7 @@ export interface JWTProvider {
 	 */
 	createTokenPair: (
 		props: {
-			data: {
-				userId: string;
-				// email: string;
-				sessionId?: string;
-				customClaims?: Record<string, any>;
-			};
+			data: JWTRefreshTokenPayload;
 		},
 		options?: {
 			accessTokenExpiry?: number;

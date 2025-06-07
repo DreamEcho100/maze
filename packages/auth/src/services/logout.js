@@ -1,6 +1,7 @@
 /** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
+import { getSessionId } from "#utils/get-session-id.js";
 import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/strategy/index.js";
 
 /**
@@ -22,7 +23,8 @@ export async function logoutService(options) {
 		return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
 
-	await invalidateOneAuthSessionToken({ where: { sessionId: session.id } });
+	const sessionId = getSessionId(session.token);
+	await invalidateOneAuthSessionToken({ where: { sessionId: sessionId } }, { deleteCookie: true });
 
 	return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }
