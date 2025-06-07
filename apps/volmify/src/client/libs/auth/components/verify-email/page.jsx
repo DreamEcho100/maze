@@ -3,6 +3,7 @@ import { redirect } from "@de100/i18n-nextjs/server";
 
 import { Link } from "#client/components/link";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
+import { getCookies } from "#server/libs/get-cookies";
 import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components";
 
 export default async function AuthVerifyEmailPage() {
@@ -13,7 +14,10 @@ export default async function AuthVerifyEmailPage() {
 
 	// TODO: Ideally we'd sent a new verification email automatically if the previous one is expired,
 	// but we can't set cookies inside server components.
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest(
+		user.id,
+		await getCookies(),
+	);
 	if (verificationRequest === null && user.emailVerifiedAt) {
 		return redirect("/");
 	}

@@ -52,7 +52,26 @@ export const loginServiceInputSchema = z.object({
 	password: z.string().check(z.minLength(6)),
 });
 
+export const resetPasswordServiceInputSchema = z.object({
+	password: z.string().check(z.minLength(8)),
+	// confirmPassword: z.string().check(z.minLength(8)),
+});
+// 	.refine((data) => data.password === data.confirmPassword, {
+// 	message: "Passwords do not match",
+// });
+
+export const updateEmailServiceInputSchema = z.object({
+	email: emailSchema,
+});
+
+export const updateIsTwoFactorServiceInputSchema = z.object({
+	isTwoFactorEnabled: formBoolSchema,
+});
+
 export const verifyEmailServiceInputSchema = z.object({ code: codeSchema });
+export const verifyPasswordReset2FAViaTOTPServiceInputSchema = z.object({
+	code: codeSchema,
+});
 
 export const reset2FAServiceInputSchema = z.object({ code: codeSchema });
 

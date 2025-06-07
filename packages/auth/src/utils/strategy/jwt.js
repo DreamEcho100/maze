@@ -1,4 +1,4 @@
-/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession } from "#types.ts" */
+/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession, CookiesProvider, HeadersProvider } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { getAuthorizationTokenFromHeaders } from "#utils/get-authorization-token-from-headers.js";
@@ -99,10 +99,16 @@ export async function createJWTAuth(props, options) {
 	};
 }
 
-/** Get access token from cookies (for web platforms) */
-export const getAccessTokenFromCookies = () => authConfig.cookies.get("jwt_access_token");
-/** Get refresh token from cookies (for web platforms) */
-export const getRefreshTokenFromCookies = () => authConfig.cookies.get("jwt_refresh_token");
+/**
+ * Get access token from cookies (for web platforms)
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ */
+export const getAccessTokenFromCookies = (cookies) => cookies.get("jwt_access_token");
+/**
+ * Get refresh token from cookies (for web platforms)
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ */
+export const getRefreshTokenFromCookies = (cookies) => cookies.get("jwt_refresh_token");
 
 /**
  * Set JWT token cookies (like setSessionTokenCookie)
@@ -111,10 +117,11 @@ export const getRefreshTokenFromCookies = () => authConfig.cookies.get("jwt_refr
  * @param {string} param.refreshToken
  * @param {DateLike} param.accessExpiresAt
  * @param {DateLike} param.refreshExpiresAt
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  */
-export function setJWTTokenCookies(param) {
+export function setJWTTokenCookies(param, cookies) {
 	// Set access token cookie (short-lived)
-	authConfig.cookies.set("jwt_access_token", param.accessToken, {
+	cookies.set("jwt_access_token", param.accessToken, {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -123,7 +130,7 @@ export function setJWTTokenCookies(param) {
 	});
 
 	// Set refresh token cookie (long-lived, httpOnly)
-	authConfig.cookies.set("jwt_refresh_token", param.refreshToken, {
+	cookies.set("jwt_refresh_token", param.refreshToken, {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -132,9 +139,12 @@ export function setJWTTokenCookies(param) {
 	});
 }
 
-/** Delete JWT token cookies */
-export function deleteJWTTokenCookies() {
-	authConfig.cookies.set("jwt_access_token", "", {
+/**
+ * Delete JWT token cookies
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ */
+export function deleteJWTTokenCookies(cookies) {
+	cookies.set("jwt_access_token", "", {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -142,7 +152,7 @@ export function deleteJWTTokenCookies() {
 		path: "/",
 	});
 
-	authConfig.cookies.set("jwt_refresh_token", "", {
+	cookies.set("jwt_refresh_token", "", {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -155,6 +165,8 @@ export function deleteJWTTokenCookies() {
  * Get current JWT authentication (mirrors getCurrentSession)
  *
  * @param {object} options - Additional options
+ * @param {CookiesProvider} options.cookies - Optional cookies provider to access session token cookies.
+ * @param {HeadersProvider} options.headers - Optional headers provider to access authorization headers.
  * @param {any} [options.tx] - Optional transaction for database operations.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
@@ -165,17 +177,18 @@ export function deleteJWTTokenCookies() {
 export async function getCurrentJWTAuth(options) {
 	const userAgent = options.userAgent ?? null;
 	const isDeviceMobileOrTablet = userAgent && checkIsDeviceMobileOrTablet(userAgent);
-
 	/** @type {string|null|undefined} */
 	let accessToken = null;
 	/** @type {string|null|undefined} */
 	let refreshToken = null;
 
 	if (isDeviceMobileOrTablet) {
-		accessToken = getAuthorizationTokenFromHeaders();
+		accessToken = getAuthorizationTokenFromHeaders(options.headers);
 	} else {
-		accessToken = getAccessTokenFromCookies() ?? getAuthorizationTokenFromHeaders();
-		refreshToken = getRefreshTokenFromCookies();
+		accessToken =
+			getAccessTokenFromCookies(options.cookies) ??
+			getAuthorizationTokenFromHeaders(options.headers);
+		refreshToken = getRefreshTokenFromCookies(options.cookies);
 	}
 
 	// ✅ Try access token first - NO DATABASE LOOKUP
@@ -199,7 +212,7 @@ export async function getCurrentJWTAuth(options) {
 
 	// If no refresh token or on mobile/tablet, we can't refresh
 	if (!refreshToken || isDeviceMobileOrTablet) {
-		deleteJWTTokenCookies();
+		deleteJWTTokenCookies(options.cookies);
 		return { session: null, user: null };
 	}
 
@@ -213,17 +226,20 @@ export async function getCurrentJWTAuth(options) {
 	);
 
 	if (!refreshResult) {
-		deleteJWTTokenCookies();
+		deleteJWTTokenCookies(options.cookies);
 		return { session: null, user: null };
 	}
 
 	// Set new cookies for web
-	setJWTTokenCookies({
-		accessToken: refreshResult.metadata.accessToken,
-		refreshToken: refreshResult.metadata.refreshToken,
-		accessExpiresAt: refreshResult.metadata.accessExpiresAt,
-		refreshExpiresAt: refreshResult.metadata.refreshExpiresAt,
-	});
+	setJWTTokenCookies(
+		{
+			accessToken: refreshResult.metadata.accessToken,
+			refreshToken: refreshResult.metadata.refreshToken,
+			accessExpiresAt: refreshResult.metadata.accessExpiresAt,
+			refreshExpiresAt: refreshResult.metadata.refreshExpiresAt,
+		},
+		options.cookies,
+	);
 
 	return {
 		user: refreshResult.user,

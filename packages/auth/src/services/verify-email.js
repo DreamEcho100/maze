@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -17,7 +17,9 @@ import { verifyEmailServiceInputSchema } from "#utils/validations.js";
 /**
  *
  * @param {unknown} data
- * @param {object} options
+ * @param {object} options - Options for the service.
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {any} options.tx - Transaction object for database operations
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
@@ -37,27 +39,29 @@ export async function verifyEmailUserService(data, options) {
 	const { session, user } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
-	if (session === null) {
-		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-	}
+	if (!session) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id);
-	if (verificationRequest === null) {
-		return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-	}
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest(
+		user.id,
+		options.cookies,
+	);
+	if (!verificationRequest) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
 		const newVerificationRequest = await createEmailVerificationRequest(
 			{ where: { userId: user.id, email: verificationRequest.email } },
 			{ tx: options.tx },
 		);
+
 		await sendVerificationEmail(newVerificationRequest.email, newVerificationRequest.code);
-		setEmailVerificationRequestCookie(newVerificationRequest);
+		setEmailVerificationRequestCookie(newVerificationRequest, options.cookies);
 		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE;
 	}
 	if (verificationRequest.code !== input.data.code) {
@@ -79,7 +83,7 @@ export async function verifyEmailUserService(data, options) {
 		),
 	]);
 
-	deleteEmailVerificationRequestCookie();
+	deleteEmailVerificationRequestCookie(options.cookies);
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		// return redirect("/2fa/setup");

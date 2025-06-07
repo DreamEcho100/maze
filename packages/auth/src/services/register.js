@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, User, SessionMetadata } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, User, SessionMetadata, CookiesProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -20,7 +20,8 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  * Handles register by deleting the user session and clearing session cookies.
  *
  * @param {unknown} data
- * @param {object} options
+ * @param {object} options - Options for the service.
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<
@@ -56,7 +57,7 @@ export async function registerService(data, options) {
 	});
 
 	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
-	setEmailVerificationRequestCookie(emailVerificationRequest);
+	setEmailVerificationRequestCookie(emailVerificationRequest, options.cookies);
 
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
@@ -76,7 +77,10 @@ export async function registerService(data, options) {
 			metadata: sessionInputBasicInfo,
 		},
 	});
-	const result = setOneAuthSessionToken(session, options.userAgent);
+	const result = setOneAuthSessionToken(session, {
+		cookies: options.cookies,
+		userAgent: options.userAgent,
+	});
 
 	if (user.twoFactorEnabledAt) {
 		return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;

@@ -1,4 +1,4 @@
-/** @import { User, UserAgent, SessionValidationResult, SessionMetadata } from "#types.ts" */
+/** @import { User, UserAgent, SessionValidationResult, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 // import { dateLikeToISOString } from "#utils/dates.js";
@@ -82,6 +82,8 @@ export async function createAuthSession(props, options) {
 /**
  * Strategy-aware current session/auth retrieval (replaces getCurrentSession)
  * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<SessionValidationResult>}
@@ -92,7 +94,7 @@ export async function getCurrentAuthSession(options) {
 			return await getCurrentJWTAuth(options);
 
 		case "session":
-			return await getCurrentSession();
+			return await getCurrentSession(options.cookies);
 
 		default:
 			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
@@ -127,12 +129,14 @@ export function generateAuthSessionToken(props) {
 /**
  * Strategy-aware token setting (replaces setSessionTokenCookie)
  * @param {Awaited<ReturnType<typeof createAuthSession>>} param - ClientSession data from createAuthSession
- * @param {UserAgent|null|undefined} userAgent - User agent for the session
+ * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {UserAgent|null|undefined} options.userAgent - User agent for the session
  */
-export function setOneAuthSessionToken(param, userAgent) {
+export function setOneAuthSessionToken(param, options) {
 	switch (param.strategy) {
 		case "jwt": {
-			if (userAgent && isDeviceMobileOrTablet(userAgent)) {
+			if (options.userAgent && isDeviceMobileOrTablet(options.userAgent)) {
 				return /** @type {const} */ ({
 					strategy: "jwt",
 					platform: "mobile/tablet",
@@ -144,12 +148,15 @@ export function setOneAuthSessionToken(param, userAgent) {
 			}
 
 			// For web, we set the session token cookie
-			setJWTTokenCookies({
-				accessToken: param.data.metadata.accessToken,
-				accessExpiresAt: param.data.metadata.accessExpiresAt,
-				refreshToken: param.data.metadata.refreshToken,
-				refreshExpiresAt: param.data.metadata.refreshExpiresAt,
-			});
+			setJWTTokenCookies(
+				{
+					accessToken: param.data.metadata.accessToken,
+					accessExpiresAt: param.data.metadata.accessExpiresAt,
+					refreshToken: param.data.metadata.refreshToken,
+					refreshExpiresAt: param.data.metadata.refreshExpiresAt,
+				},
+				options.cookies,
+			);
 			return /** @type {const} */ ({
 				strategy: "jwt",
 				platform: "web",
@@ -160,7 +167,7 @@ export function setOneAuthSessionToken(param, userAgent) {
 		}
 
 		case "session": {
-			if (userAgent && isDeviceMobileOrTablet(userAgent)) {
+			if (options.userAgent && isDeviceMobileOrTablet(options.userAgent)) {
 				return /** @type {const} */ ({
 					strategy: "session",
 					platform: "mobile/tablet",
@@ -169,7 +176,10 @@ export function setOneAuthSessionToken(param, userAgent) {
 				});
 			}
 
-			setSessionTokenCookie({ token: param.token, expiresAt: param.session.expiresAt });
+			setSessionTokenCookie(
+				{ token: param.token, expiresAt: param.session.expiresAt },
+				options.cookies,
+			);
 			return /** @type {const} */ ({
 				strategy: "session",
 				platform: "web",
@@ -186,18 +196,18 @@ export function setOneAuthSessionToken(param, userAgent) {
  * Strategy-aware token clearing (replaces deleteSessionTokenCookie)
  *
  * @param {{ where: { sessionId: string } }} props
- * @param {{ deleteCookie?: boolean }} options
+ * @param {{ shouldDeleteCookie?: boolean; cookies: CookiesProvider }} options
  */
 export async function invalidateOneAuthSessionToken(props, options) {
-	const { deleteCookie = true } = options;
+	const { shouldDeleteCookie: deleteCookie = true } = options;
 
 	switch (authConfig.strategy) {
 		case "jwt":
-			if (deleteCookie) deleteJWTTokenCookies();
+			if (deleteCookie) deleteJWTTokenCookies(options.cookies);
 			return await authConfig.providers.session.revokeOneById(props.where.sessionId);
 
 		case "session":
-			if (deleteCookie) deleteSessionTokenCookie();
+			if (deleteCookie) deleteSessionTokenCookie(options.cookies);
 			return await authConfig.providers.session.deleteOneById(props.where.sessionId);
 
 		default:
@@ -210,18 +220,20 @@ export async function invalidateOneAuthSessionToken(props, options) {
  * @param {object} props
  * @param {object} props.where
  * @param {string} props.where.userId
- * @param {object} [options]
+ * @param {object} options
+ * @param {any} options.tx - Optional transaction object for database operations
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
  * @returns {Promise<void>}
  */
 export async function invalidateAllUserAuth(props, options) {
 	switch (authConfig.strategy) {
 		case "jwt":
 			await authConfig.providers.session.revokeAllByUserId(props, options);
-			return deleteJWTTokenCookies();
+			return deleteJWTTokenCookies(options.cookies);
 
 		case "session":
 			await authConfig.providers.session.deleteAllByUserId(props, options);
-			return deleteSessionTokenCookie();
+			return deleteSessionTokenCookie(options.cookies);
 
 		default:
 			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);

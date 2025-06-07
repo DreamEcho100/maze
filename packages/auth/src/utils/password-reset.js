@@ -1,4 +1,4 @@
-/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult } from "#types.ts"; */
+/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -80,27 +80,24 @@ export async function validatePasswordResetSessionToken(token) {
 }
 
 /**
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  * @returns {Promise<PasswordResetSessionValidationResult>}
  */
-export async function validatePasswordResetSessionRequest() {
-	const token = authConfig.cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
-	if (token === null) {
-		return { session: null, user: null };
-	}
+export async function validatePasswordResetSessionRequest(cookies) {
+	const token = cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
+	if (!token) return { session: null, user: null };
 	const result = await validatePasswordResetSessionToken(token);
-	if (result.session === null) {
-		deletePasswordResetSessionTokenCookie();
-	}
+	if (!result.session) deletePasswordResetSessionTokenCookie(cookies);
 	return result;
 }
 
 /**
  * @param {string} token - The token to be used to create the password reset session.
  * @param {DateLike} expiresAt - The date at which the password reset session expires.
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  */
-export function setPasswordResetSessionTokenCookie(token, expiresAt) {
-	authConfig.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
+export function setPasswordResetSessionTokenCookie(token, expiresAt, cookies) {
+	cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
 		expires: dateLikeToDate(expiresAt),
 		sameSite: "lax",
 		httpOnly: true,
@@ -111,10 +108,10 @@ export function setPasswordResetSessionTokenCookie(token, expiresAt) {
 
 /**
  * @warning needs refactor to be able to work with mobile tablet devices
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  */
-export function deletePasswordResetSessionTokenCookie() {
-	authConfig.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
+export function deletePasswordResetSessionTokenCookie(cookies) {
+	cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
 		maxAge: 0,
 		sameSite: "lax",
 		httpOnly: true,

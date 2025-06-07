@@ -4,7 +4,7 @@ import { resetPasswordService } from "@de100/auth/services/reset-password";
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
+import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -24,12 +24,10 @@ export async function resetPasswordAction(_prev, formData) {
 		};
 	}
 
-	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
-	const result = await db.transaction((tx) =>
+	const result = await db.transaction(async (tx) =>
 		resetPasswordService(password, {
+			...(await getSessionOptionsBasics()),
 			tx,
-			ipAddress: ipAddressAndUserAgent.ipAddress,
-			userAgent: ipAddressAndUserAgent.userAgent,
 		}),
 	);
 

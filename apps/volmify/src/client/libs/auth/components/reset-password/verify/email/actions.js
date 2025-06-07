@@ -4,6 +4,7 @@ import { verifyPasswordResetEmailVerificationService } from "@de100/auth/service
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
+import { getCookies } from "#server/libs/get-cookies";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -13,8 +14,11 @@ import { db } from "#server/libs/db";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordResetEmailVerificationAction(_prev, formData) {
-	const result = await db.transaction((tx) =>
-		verifyPasswordResetEmailVerificationService(formData.get("code"), { tx }),
+	const result = await db.transaction(async (tx) =>
+		verifyPasswordResetEmailVerificationService(
+			{ code: formData.get("code") },
+			{ tx, cookies: await getCookies() },
+		),
 	);
 	if (result.type === "success") {
 		switch (result.data.nextStep) {

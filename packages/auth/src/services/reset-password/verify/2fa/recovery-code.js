@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { CookiesProvider, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import {
@@ -11,8 +11,10 @@ import { verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema } from "#utils/
 /**
  * Handles the 2FA verification for a password reset using a recovery code.
  *
- * @param {unknown} code - The recovery code.
- * @param {{ tx: any }} options
+ * @param {unknown} data
+ * @param {object} options - Options for the service.
+ * @param {any} options.tx - Transaction object for database operations.
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS,
@@ -21,14 +23,14 @@ import { verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema } from "#utils/
  *  >
  * >}
  */
-export async function verifyPasswordReset2FAViaRecoveryCodeService(code, options) {
-	const input = verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema.safeParse({ code });
+export async function verifyPasswordReset2FAViaRecoveryCodeService(data, options) {
+	const input = verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema.safeParse(data);
 
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest(options.cookies);
 	if (!session)
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	if (

@@ -52,7 +52,7 @@ export async function adminRegisterService(data) {
 
 	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
 
-	// setEmailVerificationRequestCookie(
+	// await setEmailVerificationRequestCookie(
 	//   emailVerificationRequest,
 	//   options.setCookie,
 	// );

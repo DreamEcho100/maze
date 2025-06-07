@@ -225,6 +225,12 @@ export const RESEND_EMAIL_MESSAGES_SUCCESS = /** @type {const} */ ({
 });
 
 export const RESET_PASSWORD_MESSAGES_ERRORS = /** @type {const} */ ({
+	INVALID_OR_MISSING_FIELDS: {
+		type: "error",
+		statusCode: 400,
+		message: "Invalid or missing fields",
+		messageCode: "INVALID_OR_MISSING_FIELDS",
+	},
 	// OLD: NOT_AUTHENTICATED
 	AUTHENTICATION_REQUIRED: {
 		type: "error",

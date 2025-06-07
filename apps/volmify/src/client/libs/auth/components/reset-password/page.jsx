@@ -1,10 +1,11 @@
 import { validatePasswordResetSessionRequest } from "@de100/auth/utils/password-reset";
 import { redirect } from "@de100/i18n-nextjs/server";
 
+import { getCookies } from "#server/libs/get-cookies";
 import { PasswordResetForm } from "./components";
 
 export default async function AuthPasswordResetPage() {
-	const { session, user } = await validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest(await getCookies());
 
 	if (session === null) {
 		return redirect("/auth/forgot-password");

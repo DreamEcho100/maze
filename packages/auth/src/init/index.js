@@ -7,8 +7,8 @@ const JWT_SECRET = "process.env.JWT_SECRET";
 export class AuthConfig {
 	strategy = /** @type {AuthStrategy} */ ("jwt");
 
-	headers = /** @type {HeadersProvider} */ ({});
-	cookies = /** @type {CookiesProvider} */ ({});
+	// headers = /** @type {() => Promise<HeadersProvider>} */ ({});
+	// cookies = /** @type {() => Promise<CookiesProvider>} */ ({});
 	jwt = /** @type {JWTProvider} */ ({
 		createAccessToken: (props, options = {}) => {
 			const payload = props.data;
@@ -70,34 +70,6 @@ export class AuthConfig {
 				return null;
 			}
 		},
-		extractFromRequest: () => {
-			// 1. Authorization header (Bearer token)
-			const authHeader = authConfig.headers.get("authorization");
-			if (authHeader?.startsWith("Bearer ")) {
-				return authHeader.slice(7);
-			}
-
-			// 2. Cookie (for web apps)
-			const cookieToken =
-				authConfig.cookies.get("auth_token") ?? authConfig.cookies.get("access_token");
-			if (cookieToken) {
-				return cookieToken;
-			}
-
-			// // 3. Query parameter (for webhooks, API callbacks)
-			// const queryToken = req.query?.token ?? req.query?.access_token;
-			// if (queryToken) {
-			// 	return queryToken;
-			// }
-
-			// 4. Custom header (for mobile apps)
-			const customHeader = authConfig.headers.get("x-auth-token");
-			if (customHeader) {
-				return customHeader;
-			}
-
-			return null;
-		},
 		createTokenPair: (props, options = {}) => {
 			// const tokenId = idsProvider.createOneSync();
 
@@ -153,7 +125,7 @@ export class AuthConfig {
 		if (config.authStrategy) this.strategy = config.authStrategy;
 
 		await Promise.all(
-			/** @type {const} */ (["cookies", "ids", "headers", "jwt"]).map(async (key) => {
+			/** @type {const} */ (["ids", "jwt"]).map(async (key) => {
 				const value = config[key];
 				if (!value) return;
 

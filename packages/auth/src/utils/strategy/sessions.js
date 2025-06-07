@@ -1,4 +1,4 @@
-/** @import { UserAgent, DateLike, SessionValidationResult, DBSession, ClientSession } from "#types.ts" */
+/** @import { UserAgent, DateLike, SessionValidationResult, DBSession, ClientSession, CookiesProvider } from "#types.ts" */
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
@@ -63,8 +63,13 @@ export async function createSession(props, options) {
 	return { session: clientSession, user };
 }
 
-export function getTokenFromCookies() {
-	const token = authConfig.cookies.get(COOKIE_TOKEN_SESSION_KEY);
+/**
+ * Retrieves the session token from cookies.
+ * If the token is not found, it returns null.
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token.
+ */
+export function getTokenFromCookies(cookies) {
+	const token = cookies.get(COOKIE_TOKEN_SESSION_KEY);
 	if (!token) {
 		return null;
 	}
@@ -74,15 +79,16 @@ export function getTokenFromCookies() {
 /**
  * Retrieves the current session by validating the session token.
  *
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token.
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
  */
-export async function getCurrentSession() {
-	const token = getTokenFromCookies();
+export async function getCurrentSession(cookies) {
+	const token = getTokenFromCookies(cookies);
 	if (!token) {
 		return { session: null, user: null };
 	}
 
-	return await validateSessionToken(token);
+	return await validateSessionToken(token, cookies);
 }
 
 /**
@@ -91,10 +97,10 @@ export async function getCurrentSession() {
  * @param {object} param
  * @param {string} param.token - The session token to be set in the cookie.
  * @param {DateLike} param.expiresAt - Expiration date for the session token.
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token.
  */
-export function setSessionTokenCookie(param) {
-	authConfig.cookies.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
+export function setSessionTokenCookie(param, cookies) {
+	cookies.set(COOKIE_TOKEN_SESSION_KEY, param.token, {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -105,11 +111,10 @@ export function setSessionTokenCookie(param) {
 
 /**
  * Delete the session token cookie.
- *
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token.
  */
-export function deleteSessionTokenCookie() {
-	authConfig.cookies.set(COOKIE_TOKEN_SESSION_KEY, "", {
+export function deleteSessionTokenCookie(cookies) {
+	cookies.set(COOKIE_TOKEN_SESSION_KEY, "", {
 		httpOnly: true,
 		sameSite: "lax",
 		secure: process.env.NODE_ENV === "production",
@@ -138,7 +143,7 @@ export function generateSessionToken() {
  *
  * @param {object} param
  * @param {string | null} param.token - The session token extracted from cookies.
- * @param {(key: string, value: string, options: object) => void} param.setCookie - Framework-provided function to set cookies.
+ * @param {CookiesProvider} param.cookies - The cookies provider to access the session token.
  * @returns {Promise<SessionValidationResult>} The result of session validation.
  */
 export async function handleSessionMiddleware(param) {
@@ -146,20 +151,23 @@ export async function handleSessionMiddleware(param) {
 		return { session: null, user: null };
 	}
 
-	const result = await validateSessionToken(param.token);
+	const result = await validateSessionToken(param.token, param.cookies);
 
 	if (!result.session) {
 		// If the session is not found, delete the session token cookie
-		deleteSessionTokenCookie();
+		deleteSessionTokenCookie(param.cookies);
 		return { session: null, user: null };
 	}
 
 	// if (result.session) {
 	// Extend cookie expiration by 30 days
-	setSessionTokenCookie({
-		token: param.token,
-		expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
-	});
+	setSessionTokenCookie(
+		{
+			token: param.token,
+			expiresAt: new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION),
+		},
+		param.cookies,
+	);
 	// }
 
 	return result;
@@ -172,9 +180,10 @@ export async function handleSessionMiddleware(param) {
  * If the session has expired, it will be deleted from the database.
  *
  * @param {string} token - The session token to be validated.
+ * @param {CookiesProvider} cookies - The cookies provider to access the session token.
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data, or null if the session is invalid or expired.
  */
-export async function validateSessionToken(token) {
+export async function validateSessionToken(token, cookies) {
 	const sessionId = getSessionId(token);
 	const result = await authConfig.providers.session
 		.findOneWithUser(sessionId)
@@ -188,7 +197,7 @@ export async function validateSessionToken(token) {
 
 	if (Date.now() >= expiresAt) {
 		await authConfig.providers.session.deleteOneById(sessionId);
-		deleteSessionTokenCookie();
+		deleteSessionTokenCookie(cookies);
 		return { session: null, user: null };
 	}
 

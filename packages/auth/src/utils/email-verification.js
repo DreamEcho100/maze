@@ -1,4 +1,4 @@
-/** @import { EmailVerificationRequest, SessionValidationResult, User } from "#types.ts"; */
+/** @import { EmailVerificationRequest, CookiesProvider } from "#types.ts"; */
 
 import { encodeBase32 } from "@oslojs/encoding";
 
@@ -80,10 +80,10 @@ export async function sendVerificationEmail(email, code) {
 /**
  * Set the email verification request cookie.
  * @param {EmailVerificationRequest} request - The email verification request.
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
  */
-export function setEmailVerificationRequestCookie(request) {
-	authConfig.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
+export function setEmailVerificationRequestCookie(request, cookies) {
+	cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
 		httpOnly: true,
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
@@ -94,10 +94,10 @@ export function setEmailVerificationRequestCookie(request) {
 
 /**
  * Delete the email verification request cookie.
- * @returns {void}
+ * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
  */
-export function deleteEmailVerificationRequestCookie() {
-	authConfig.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
+export function deleteEmailVerificationRequestCookie(cookies) {
+	cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
 		httpOnly: true,
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
@@ -109,17 +109,15 @@ export function deleteEmailVerificationRequestCookie() {
 /**
  * Get the email verification request from the request.
  * @param {string} userId
+ * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
-export async function getUserEmailVerificationRequestFromRequest(userId) {
-	const id = authConfig.cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
-	if (id === null) {
-		return null;
-	}
+export async function getUserEmailVerificationRequestFromRequest(userId, cookies) {
+	const id = cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
+	if (!id) return null;
+
 	const request = await getUserEmailVerificationRequest(userId, id);
-	if (!request) {
-		deleteEmailVerificationRequestCookie();
-	}
+	if (!request) deleteEmailVerificationRequestCookie(cookies);
 	return request;
 }
 

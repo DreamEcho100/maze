@@ -1,7 +1,8 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
+import { getSessionId } from "#utils/get-session-id.js";
 import { verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { verify2FAServiceInputSchema } from "#utils/validations.js";
@@ -11,6 +12,8 @@ import { verify2FAServiceInputSchema } from "#utils/validations.js";
  *
  * @param {unknown} data
  * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
@@ -31,6 +34,8 @@ export async function verify2FAService(data, options) {
 	const { session, user } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
 	if (!session) {
 		return VERIFY_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -51,7 +56,9 @@ export async function verify2FAService(data, options) {
 	}
 
 	// Mark session as 2FA verified
-	await authConfig.providers.session.markOne2FAVerified({ where: { id: session.id } });
+	await authConfig.providers.session.markOne2FAVerified({
+		where: { id: getSessionId(session.token) },
+	});
 
 	// Return success message with optional redirect flag
 	return VERIFY_2FA_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED;

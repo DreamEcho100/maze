@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -15,6 +15,7 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  *
  * @param {unknown} data
  * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
  * @returns {Promise<
@@ -32,7 +33,7 @@ export async function loginUserService(data, options) {
 	}
 
 	const user = await authConfig.providers.users.findOneByEmail(input.data.email);
-	if (user === null) {
+	if (!user) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
 
@@ -69,7 +70,10 @@ export async function loginUserService(data, options) {
 			metadata: sessionInputBasicInfo,
 		},
 	});
-	const result = setOneAuthSessionToken(session, options.userAgent);
+	const result = setOneAuthSessionToken(session, {
+		cookies: options.cookies,
+		userAgent: options.userAgent,
+	});
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED;

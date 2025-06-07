@@ -5,6 +5,7 @@ import { verifyPasswordReset2FAViaTOTPService } from "@de100/auth/services/reset
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
+import { getCookies } from "#server/libs/get-cookies";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -16,7 +17,10 @@ import { db } from "#server/libs/db";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
-	const result = await verifyPasswordReset2FAViaTOTPService(formData.get("code"));
+	const result = await verifyPasswordReset2FAViaTOTPService(
+		{ code: formData.get("code") },
+		{ cookies: await getCookies() },
+	);
 
 	if (result.type === "success") {
 		return redirect("/auth/reset-password");
@@ -32,8 +36,8 @@ export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
  */
 export async function verifyPasswordReset2FAWithRecoveryCodeAction(_prev, formData) {
 	const code = formData.get("code");
-	const result = await db.transaction((tx) =>
-		verifyPasswordReset2FAViaRecoveryCodeService(code, { tx }),
+	const result = await db.transaction(async (tx) =>
+		verifyPasswordReset2FAViaRecoveryCodeService({ code }, { tx, cookies: await getCookies() }),
 	);
 
 	if (result.type === "success") {

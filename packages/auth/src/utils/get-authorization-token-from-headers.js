@@ -1,7 +1,8 @@
-import { authConfig } from "#init/index.js";
+/** @import { HeadersProvider } from "#types.ts" */
 
-export function getAuthorizationTokenFromHeaders() {
-	const accessToken = authConfig.headers.get("authorization")?.split(" ")[1] ?? null;
+/** @param {HeadersProvider} headers */
+export function getAuthorizationTokenFromHeaders(headers) {
+	const accessToken = headers.get("authorization")?.split(" ")[1] ?? null;
 
 	if (!accessToken || typeof accessToken !== "string" || accessToken.length === 0) {
 		return null; // No access token found or invalid access token format

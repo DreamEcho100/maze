@@ -675,14 +675,6 @@ export interface JWTProvider {
 		payload: JWTRefreshTokenPayload;
 	} | null;
 
-	/**
-	 * Extract JWT token from request object (framework agnostic)
-	 * @param {any} req - Request object (Express, Next.js, etc.)
-	 * @returns {string | null} JWT token or null if not found
-	 * @description Checks Authorization header, cookies, query params
-	 */
-	extractFromRequest: () => string | null;
-
 	// TODO: Add more payload data like the `email`
 	// * @param props.data.email - User email
 	/**

@@ -10,7 +10,7 @@ import {
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
+import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -23,14 +23,12 @@ import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyEmailAction(_prev, formData) {
-	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
-	const result = await db.transaction((tx) =>
+	const result = await db.transaction(async (tx) =>
 		verifyEmailUserService(
 			{ code: formData.get("code") },
 			{
+				...(await getSessionOptionsBasics()),
 				tx,
-				ipAddress: ipAddressAndUserAgent.ipAddress,
-				userAgent: ipAddressAndUserAgent.userAgent,
 			},
 		),
 	);
@@ -71,12 +69,10 @@ export async function verifyEmailAction(_prev, formData) {
  * @returns {Promise<ActionResult>}
  */
 export async function resendEmailVerificationCodeAction(_prev) {
-	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
-	const result = await db.transaction((tx) =>
+	const result = await db.transaction(async (tx) =>
 		resendEmailVerificationCodeService({
+			...(await getSessionOptionsBasics()),
 			tx,
-			ipAddress: ipAddressAndUserAgent.ipAddress,
-			userAgent: ipAddressAndUserAgent.userAgent,
 		}),
 	);
 

@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, HeadersProvider, CookiesProvider } from "#types.ts" */
 
 import {
 	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
@@ -11,6 +11,8 @@ import { resetUserRecoveryCode } from "#utils/users.js";
  * Regenerates the recovery code if the user is authenticated, verified, and meets necessary conditions.
  *
  * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
@@ -25,6 +27,8 @@ export async function regenerateRecoveryCodeService(options) {
 	const { session, user } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
 	if (!session) {
 		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;

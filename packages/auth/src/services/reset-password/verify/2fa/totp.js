@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { CookiesProvider, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -7,12 +7,14 @@ import {
 } from "#utils/constants.js";
 import { verifyTOTP } from "#utils/index.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
-import { codeSchema } from "#utils/validations.js";
+import { verifyPasswordReset2FAViaTOTPServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the 2FA verification for a password reset using TOTP.
  *
- * @param {unknown} code - The TOTP code.
+ * @param {unknown} data
+ * @param {object} options - Options for the service.
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
@@ -21,14 +23,14 @@ import { codeSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function verifyPasswordReset2FAViaTOTPService(code) {
-	const input = codeSchema.safeParse(code);
+export async function verifyPasswordReset2FAViaTOTPService(data, options) {
+	const input = verifyPasswordReset2FAViaTOTPServiceInputSchema.safeParse(data);
 
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest(options.cookies);
 	if (!session) return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	if (
 		!user.twoFactorEnabledAt ||
@@ -41,7 +43,7 @@ export async function verifyPasswordReset2FAViaTOTPService(code) {
 
 	// const totpKey = await getUserTOTPKeyRepository(session.userId);
 	const totpKey = await authConfig.providers.users.getOneTOTPKey(user.id);
-	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data)) {
+	if (!totpKey || !verifyTOTP(totpKey, 30, 6, input.data.code)) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.INVALID_TOTP_CODE;
 	}
 

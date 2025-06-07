@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { CookiesProvider, MultiErrorSingleSuccessResponse } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -18,8 +18,10 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
 /**
  * Handles the password reset email verification process.
  *
- * @param {unknown} code - The verification code submitted by the user.
- * @param {{ tx: any }} options
+ * @param {unknown} data
+ * @param {object} options - Options for the service.
+ * @param {any} options.tx - Transaction object for database operations.
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
@@ -28,13 +30,13 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
  *  >
  * >}
  */
-export async function verifyPasswordResetEmailVerificationService(code, options) {
-	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse({ code });
+export async function verifyPasswordResetEmailVerificationService(data, options) {
+	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(data);
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest(options.cookies);
 
 	if (!session) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;

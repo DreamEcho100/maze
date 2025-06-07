@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider } from "#types.ts"; */
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
@@ -10,6 +10,8 @@ import { reset2FAServiceInputSchema } from "#utils/validations.js";
  *
  * @param {unknown} data
  * @param {object} options
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {any} options.tx - Transaction object for database operations
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
@@ -29,6 +31,8 @@ export async function reset2FAService(data, options) {
 	const { session, user } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
 	if (!session) {
 		return RESET_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;

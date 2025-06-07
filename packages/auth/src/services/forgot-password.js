@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -14,14 +14,14 @@ import {
 import { generateAuthSessionToken, getCurrentAuthSession } from "#utils/strategy/index.js";
 import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
-// import { generateSessionToken } from "#utils/sessions.js";
-
 /**
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
  * @param {unknown} data
- * @param {object} options
+ * @param {object} options - Options for the service.
  * @param {any} options.tx - Transaction object for database operations
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
@@ -37,6 +37,8 @@ export async function forgotPasswordService(data, options) {
 	const { session } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
 
 	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -46,9 +48,7 @@ export async function forgotPasswordService(data, options) {
 	}
 
 	const user = await authConfig.providers.users.findOneByEmail(input.data.email);
-	if (user === null) {
-		return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
-	}
+	if (!user) return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
@@ -73,8 +73,11 @@ export async function forgotPasswordService(data, options) {
 	]);
 
 	await sendPasswordResetEmail(passwordResetEmailSession.email, passwordResetEmailSession.code);
-
-	setPasswordResetSessionTokenCookie(sessionToken, passwordResetEmailSession.expiresAt);
+	setPasswordResetSessionTokenCookie(
+		sessionToken,
+		passwordResetEmailSession.expiresAt,
+		options.cookies,
+	);
 
 	return {
 		...FORGET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_EMAIL_SENT,

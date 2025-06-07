@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -16,13 +16,15 @@ import {
 	setOneAuthSessionToken,
 } from "#utils/strategy/index.js";
 import { updateUserPassword } from "#utils/users.js";
+import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the reset password process, including validation and session management.
  *
- * @param {string} password The new password to set for the user
- * @param {object} options
- * @param {any} options.tx - Transaction object for database operations
+ * @param {unknown} data
+ * @param {object} options - Options for the service.
+ * @param {any} options.tx - Transaction object for database operations.
+ * @param {CookiesProvider} options.cookies - Cookies provider for session management.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
@@ -33,8 +35,17 @@ import { updateUserPassword } from "#utils/users.js";
  *  >
  * >}
  */
-export async function resetPasswordService(password, options) {
-	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest();
+export async function resetPasswordService(data, options) {
+	const input = resetPasswordServiceInputSchema.safeParse(data);
+	if (!input.success) {
+		return RESET_PASSWORD_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
+	}
+
+	const { password } = input.data;
+
+	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest(
+		options.cookies,
+	);
 
 	if (!passwordResetSession) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -92,9 +103,11 @@ export async function resetPasswordService(password, options) {
 		),
 		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
 	]);
-	const result = setOneAuthSessionToken(session, options.userAgent);
-
-	deletePasswordResetSessionTokenCookie();
+	const result = setOneAuthSessionToken(session, {
+		cookies: options.cookies,
+		userAgent: options.userAgent,
+	});
+	deletePasswordResetSessionTokenCookie(options.cookies);
 
 	return {
 		...RESET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_SUCCESSFUL,

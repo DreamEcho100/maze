@@ -5,7 +5,7 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
-import { getIPAddressAndUserAgent } from "#server/libs/get-ip-address";
+import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -20,12 +20,10 @@ export async function setup2FAAction(_prev, formData) {
 		encodedKey: formData.get("key"),
 	};
 
-	const ipAddressAndUserAgent = await getIPAddressAndUserAgent();
-	const result = await db.transaction((tx) =>
+	const result = await db.transaction(async (tx) =>
 		setup2FAService(data, {
+			...(await getSessionOptionsBasics()),
 			tx,
-			ipAddress: ipAddressAndUserAgent.ipAddress,
-			userAgent: ipAddressAndUserAgent.userAgent,
 		}),
 	);
 	if (result.type === "success") {

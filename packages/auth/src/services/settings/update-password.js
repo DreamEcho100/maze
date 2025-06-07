@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts" */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -24,6 +24,8 @@ import { updateUserPassword } from "#utils/users.js";
  * @param {unknown} props.data.newPassword The new password to set for the user
  * @param {object} options
  * @param {any} options.tx - Transaction object for database operations
+ * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} options.headers - The headers provider to access the session token.
  * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
  * @returns {Promise<
@@ -38,6 +40,8 @@ export async function updatePasswordService(props, options) {
 	const { session, user } = await getCurrentAuthSession({
 		ipAddress: options.ipAddress,
 		userAgent: options.userAgent,
+		cookies: options.cookies,
+		headers: options.headers,
 	});
 
 	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -94,7 +98,10 @@ export async function updatePasswordService(props, options) {
 		},
 		{ tx: options.tx },
 	);
-	const result = setOneAuthSessionToken(newSession, options.userAgent);
+	const result = setOneAuthSessionToken(newSession, {
+		cookies: options.cookies,
+		userAgent: options.userAgent,
+	});
 
 	return {
 		...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,

@@ -5,6 +5,7 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "@de100/i18n-nextjs/server";
 
 import { db } from "#server/libs/db";
+import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -16,7 +17,12 @@ import { db } from "#server/libs/db";
 export async function forgotPasswordAction(_prev, formData) {
 	const data = { email: formData.get("email") };
 
-	const result = await db.transaction((tx) => forgotPasswordService(data, { tx }));
+	const result = await db.transaction(async (tx) =>
+		forgotPasswordService(data, {
+			...(await getSessionOptionsBasics()),
+			tx,
+		}),
+	);
 
 	if (result.type === "success") {
 		// Redirect for successful password reset email sending

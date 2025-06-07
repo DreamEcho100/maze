@@ -4,7 +4,7 @@ import { cache } from "react";
 
 import { getCurrentAuthSession } from "@de100/auth/utils/strategy";
 
-import { getIPAddressAndUserAgent } from "../get-ip-address";
+import { getSessionOptionsBasics } from "../get-session-options-basics";
 
 /**
  * Retrieves the current session from the request's cookies in a Next.js environment.
@@ -28,7 +28,7 @@ import { getIPAddressAndUserAgent } from "../get-ip-address";
 export const getCurrentSession = cache(
 	/** @param {Headers} [reqHeaders] - Optional headers from the request, typically used to access cookies. */
 	async (reqHeaders) => {
-		const ipAddressAndUserAgent = await getIPAddressAndUserAgent(reqHeaders);
+		const ipAddressAndUserAgent = await getSessionOptionsBasics(reqHeaders);
 		return getCurrentAuthSession(ipAddressAndUserAgent);
 	},
 );
