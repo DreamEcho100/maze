@@ -508,7 +508,7 @@ export interface SessionsProvider {
 	createOne: (
 		props: { data: DBSession },
 		options?: { tx?: TransactionClient },
-	) => Promise<(DBSession & { user: User }) | null>;
+	) => Promise<{ session: DBSession; user: User } | null>;
 	/**
 	 * Find a session by ID with associated user data
 	 * @param sessionId - The session ID to find
@@ -571,7 +571,7 @@ export interface SessionsProvider {
 		props: { where: { userId: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<void>;
-	isRefreshTokenRevokedById: (props: { where: { id: string } }) => Promise<boolean>;
+	isOneRevokedById: (props: { where: { id: string } }) => Promise<boolean>;
 	/**
 	 * Clean up expired refresh tokens
 	 * @returns {Promise<number>} Number of tokens cleaned up

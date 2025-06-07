@@ -73,8 +73,11 @@ export async function createJWTAuth(props, options) {
 		throw new Error("Failed to create JWT refresh token session");
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { user: _user, id, ...session } = result;
+	const {
+		user: _user,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		session: { id, ...session },
+	} = result;
 
 	/** @type {ClientSession} */
 	const clientSession = {

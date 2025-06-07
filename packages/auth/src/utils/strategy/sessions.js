@@ -48,8 +48,11 @@ export async function createSession(props, options) {
 		throw new Error("Failed to create session");
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { user, id, ...session } = result;
+	const {
+		user,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		session: { id, ...session },
+	} = result;
 
 	/** @type {ClientSession} */
 	const clientSession = {

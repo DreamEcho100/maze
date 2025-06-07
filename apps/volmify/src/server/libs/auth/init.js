@@ -363,22 +363,35 @@ export async function setDrizzlePgAuthProviders(props) {
 							options?.tx
 						) ?? db;
 					const createdAt = new Date();
-					return _db
-						.insert(dbSchema.session)
-						.values({
-							...props.data,
-							// id: props.data.id ?? (await authConfig.ids.createOneAsync()),
-							expiresAt: dateLikeToDate(props.data.expiresAt),
-							twoFactorVerifiedAt: props.data.twoFactorVerifiedAt
-								? dateLikeToDate(props.data.twoFactorVerifiedAt)
-								: null,
-							revokedAt: props.data.revokedAt ? dateLikeToDate(props.data.revokedAt) : null,
-							lastUsedAt: props.data.lastUsedAt ? dateLikeToDate(props.data.lastUsedAt) : null,
-							createdAt,
-							updatedAt: createdAt,
-						})
-						.returning(sessionReturnTemplate)
-						.then((result) => result[0] ?? null);
+					const [session, user] = await Promise.all([
+						_db
+							.insert(dbSchema.session)
+							.values({
+								...props.data,
+								// id: props.data.id ?? (await authConfig.ids.createOneAsync()),
+								expiresAt: dateLikeToDate(props.data.expiresAt),
+								twoFactorVerifiedAt: props.data.twoFactorVerifiedAt
+									? dateLikeToDate(props.data.twoFactorVerifiedAt)
+									: null,
+								revokedAt: props.data.revokedAt ? dateLikeToDate(props.data.revokedAt) : null,
+								lastUsedAt: props.data.lastUsedAt ? dateLikeToDate(props.data.lastUsedAt) : null,
+								createdAt,
+								updatedAt: createdAt,
+							})
+							.returning(sessionReturnTemplate)
+							.then((result) => result[0] ?? null),
+						_db
+							.select(userReturnTemplate)
+							.from(dbSchema.user)
+							.where(eq(dbSchema.user.id, props.data.userId))
+							.then((result) => result[0] ?? null),
+					]);
+
+					if (!session || !user) {
+						throw new Error("Failed to create session or find user.");
+					}
+
+					return { session, user };
 				},
 				findOneWithUser: async (sessionId) => {
 					return db.query.session
