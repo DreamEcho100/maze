@@ -1,6 +1,6 @@
 import { validatePasswordResetSessionRequest } from "@de100/auth/utils/password-reset";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { getCookies } from "#server/libs/get-cookies";
 import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";
 

@@ -212,7 +212,7 @@ export async function getCurrentJWTAuth(options) {
 
 	// If no refresh token or on mobile/tablet, we can't refresh
 	if (!refreshToken || isDeviceMobileOrTablet) {
-		deleteJWTTokenCookies(options.cookies);
+		// deleteJWTTokenCookies(options.cookies);
 		return { session: null, user: null };
 	}
 

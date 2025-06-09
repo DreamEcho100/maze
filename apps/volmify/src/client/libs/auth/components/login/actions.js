@@ -1,9 +1,11 @@
 "use server";
 
+import { authConfig } from "@de100/auth/init";
 import { loginUserService } from "@de100/auth/services/login";
 import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
+import { setDrizzlePgAuthProviders } from "#server/libs/auth/init";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
@@ -18,6 +20,7 @@ export async function loginAction(_prev, formData) {
 		email: formData.get("email"),
 		password: formData.get("password"),
 	};
+	await setDrizzlePgAuthProviders();
 
 	const result = await loginUserService(data, await getSessionOptionsBasics());
 

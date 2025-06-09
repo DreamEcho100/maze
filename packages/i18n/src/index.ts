@@ -229,7 +229,7 @@ type PathsWithParams = {
  * This function provides type safety for translation definitions
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function defineTranslation<
+export function defineTranslation<
 	TranslationKey extends string,
 	TranslationOptions extends ExtractParamOptions<TranslationKey>,
 >(string: TranslationKey, options: TranslationOptions): [TranslationKey, TranslationOptions] {

@@ -492,9 +492,7 @@ export const userRelations = relations(user, ({ many }) => ({
 	emailVerificationRequests: many(emailVerificationRequest),
 	passwordResetSessions: many(passwordResetSession),
 	organizationMemberships: many(organizationMember),
-	invitationsSent: many(organizationMemberInvitation, {
-		relationName: "invitedByUser",
-	}),
+	invitationsSent: many(organizationMemberInvitation),
 }));
 export const sessionRelations = relations(session, ({ one }) => ({
 	user: one(user, {

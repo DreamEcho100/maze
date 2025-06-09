@@ -1,8 +1,8 @@
 "use server";
 
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { db } from "#server/libs/db";
 import { getCookies } from "#server/libs/get-cookies";
 

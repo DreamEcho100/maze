@@ -4,7 +4,7 @@
  *  @import { ActionResult } from "./actions";
  * @import { ButtonHTMLAttributes } from "react";
  */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { logoutAction } from "./actions";
 
@@ -15,7 +15,7 @@ const initialState = {
 
 /** @param {ButtonHTMLAttributes<HTMLButtonElement>} props  */
 export function LogoutButton(props) {
-	const [, action] = useFormState(logoutAction, initialState);
+	const [, action] = useActionState(logoutAction, initialState);
 	return (
 		<form action={action} style={{ display: "contents" }}>
 			<button {...props} type="submit">

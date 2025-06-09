@@ -28,6 +28,7 @@ import { getSessionOptionsBasics } from "../get-session-options-basics";
 export const getCurrentSession = cache(
 	/** @param {Headers} [reqHeaders] - Optional headers from the request, typically used to access cookies. */
 	async (reqHeaders) => {
+		"use server";
 		const ipAddressAndUserAgent = await getSessionOptionsBasics(reqHeaders);
 		return getCurrentAuthSession(ipAddressAndUserAgent);
 	},

@@ -4,12 +4,11 @@
 		"lib": ["ES2022", "dom", "dom.iterable"],
 		"jsx": "preserve",
 		"baseUrl": ".",
-		"paths": {
-			"#*": ["./src/*"]
-		},
+		"paths": { "#*": ["./src/*"] },
 		"plugins": [{ "name": "next" }],
-		"module": "esnext"
+		"module": "esnext",
+		"allowImportingTsExtensions": true
 	},
-	"include": ["./next-env.d.ts", "./src/**/*", "./.next/types/**/*.ts"],
+	"include": ["./.next/types/**/*.ts", "./next-env.d.ts", "./src/**/*", ".next/types/**/*.ts"],
 	"exclude": ["node_modules"]
 }

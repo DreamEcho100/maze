@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { verify2FAAction } from "./actions";
 
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 export function TwoFactorVerificationForm() {
-	const [state, action] = useFormState(verify2FAAction, initialState);
+	const [state, action] = useActionState(verify2FAAction, initialState);
 
 	return (
 		<form action={action}>

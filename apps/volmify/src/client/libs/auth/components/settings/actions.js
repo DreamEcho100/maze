@@ -12,8 +12,8 @@ import { updateIsTwoFactorService } from "@de100/auth/services/settings/update-i
 
 import { updatePasswordService } from "@de100/auth/services/settings/update-password";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 

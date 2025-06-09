@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { signupAction } from "./actions";
 
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 export function SignUpForm() {
-	const [state, action] = useFormState(signupAction, initialState);
+	const [state, action] = useActionState(signupAction, initialState);
 
 	return (
 		<form action={action}>

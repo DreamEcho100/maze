@@ -1,8 +1,8 @@
 import { renderSVG } from "uqr";
 
 import { createTOTPKeyURI, encodeBase64 } from "@de100/auth/utils";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { TwoFactorSetUpForm } from "./components";
 

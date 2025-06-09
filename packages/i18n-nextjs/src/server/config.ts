@@ -13,20 +13,22 @@ export type AllowedLocale = Config["allowedLocales"][number];
 function initializeLocaleConfig() {
 	const value: {
 		locale?: Locale;
-		allowedLocales?: Locale[];
+		allowedLocales?: Locale[] | readonly Locale[];
 		defaultLocale?: Locale;
-	} = {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-explicit-any
+	} = ((global as unknown as { localeI18Config: Record<string, any> }).localeI18Config ??= {
 		locale: undefined,
 		allowedLocales: [],
 		defaultLocale: undefined,
-	};
+	});
 	return value;
 }
 
 export const initializeLocaleConfigCache = cache(initializeLocaleConfig);
 export function updateLocaleConfigCache(props: {
-	locale: Locale;
-	allowedLocales?: AllowedLocale[];
+	locale?: Locale;
+	allowedLocales?: AllowedLocale[] | readonly AllowedLocale[];
+	defaultLocale?: Locale;
 }) {
 	let key: keyof typeof props;
 	for (key in props) {

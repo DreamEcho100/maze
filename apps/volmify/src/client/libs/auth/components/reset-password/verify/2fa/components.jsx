@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import {
 	verifyPasswordReset2FAWithRecoveryCodeAction,
@@ -14,7 +14,7 @@ const initialPasswordResetTOTPState = {
 };
 
 export function PasswordResetTOTPForm() {
-	const [state, action] = useFormState(
+	const [state, action] = useActionState(
 		verifyPasswordReset2FAWithTOTPAction,
 		initialPasswordResetTOTPState,
 	);
@@ -36,7 +36,7 @@ const initialPasswordResetRecoveryCodeState = {
 };
 
 export function PasswordResetRecoveryCodeForm() {
-	const [state, action] = useFormState(
+	const [state, action] = useActionState(
 		verifyPasswordReset2FAWithRecoveryCodeAction,
 		initialPasswordResetRecoveryCodeState,
 	);

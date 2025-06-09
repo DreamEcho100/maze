@@ -1,13 +1,12 @@
-import { redirect } from "@de100/i18n-nextjs/server";
-
 import { Link } from "#client/components/link";
+import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { LoginForm } from "./components";
 
 export default async function AuthLoginPage() {
 	const { session, user } = await getCurrentSession();
 
-	if (session !== null) {
+	if (session) {
 		if (!user.emailVerifiedAt) {
 			return redirect("/auth/verify-email");
 		}

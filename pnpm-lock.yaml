@@ -381,6 +381,9 @@ importers:
       '@de100/env':
         specifier: workspace:^
         version: link:../../packages/env
+      '@de100/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@de100/i18n-nextjs':
         specifier: workspace:*
         version: link:../../packages/i18n-nextjs
@@ -390,6 +393,9 @@ importers:
       '@de100/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@formatjs/intl-localematcher':
+        specifier: ^0.6.1
+        version: 0.6.1
       '@orpc/client':
         specifier: ^1.2.0
         version: 1.3.0
@@ -411,6 +417,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      negotiator:
+        specifier: ^1.0.0
+        version: 1.0.0
       next:
         specifier: 'catalog:'
         version: 15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -423,6 +432,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.1.0(react@19.1.0)
+      tw-animate-css:
+        specifier: ^1.3.4
+        version: 1.3.4
       ulid:
         specifier: ^3.0.0
         version: 3.0.0
@@ -451,6 +463,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.9
         version: 9.0.9
+      '@types/negotiator':
+        specifier: ^0.6.4
+        version: 0.6.4
       '@types/node':
         specifier: 'catalog:'
         version: 22.13.17
@@ -662,6 +677,12 @@ importers:
       '@de100/i18n-reactjs':
         specifier: workspace:*
         version: link:../i18n-reactjs
+      '@formatjs/intl-localematcher':
+        specifier: ^0.6.1
+        version: 0.6.1
+      negotiator:
+        specifier: ^1.0.0
+        version: 1.0.0
       next:
         specifier: 'catalog:'
         version: 15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -681,6 +702,9 @@ importers:
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/negotiator':
+        specifier: ^0.6.4
+        version: 0.6.4
       '@types/react':
         specifier: catalog:react19
         version: 19.1.6
@@ -1077,7 +1101,7 @@ importers:
         version: 0.7.0(bufferutil@4.0.9)
       '@hookform/resolvers':
         specifier: ^4.1.3
-        version: 4.1.3(react-hook-form@7.55.0(react@19.1.0))
+        version: 4.1.3(react-hook-form@7.57.0(react@19.1.0))
       '@pinecone-database/pinecone':
         specifier: ^5.1.1
         version: 5.1.1
@@ -1107,7 +1131,7 @@ importers:
         version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: ^7.54.2
-        version: 7.55.0(react@19.1.0)
+        version: 7.57.0(react@19.1.0)
       zod:
         specifier: ^3.24.2
         version: 3.25.48
@@ -2842,6 +2866,9 @@ packages:
 
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
+
+  '@formatjs/intl-localematcher@0.6.1':
+    resolution: {integrity: sha512-ePEgLgVCqi2BBFnTMWPfIghu6FkbZnnBVhO2sSxvLfrdFw7wCHAHiDoM2h4NRgjbaY7+B7HgOLZGkK187pZTZg==}
 
   '@google/genai@0.7.0':
     resolution: {integrity: sha512-r+Fwj/emnXZN5R+4JCxDXboY4AGTmTn7+Wnori5dgyJiStP0P82f9YYL0CVsCnDIumNY2i0UIcZ1zGZdtHJ34w==}
@@ -4769,6 +4796,9 @@ packages:
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+
+  '@types/negotiator@0.6.4':
+    resolution: {integrity: sha512-elf6BsTq+AkyNsb2h5cGNst2Mc7dPliVoAPm1fXglC/BM3f2pFA40BaSSv3E5lyHteEawVKLP+8TwiY1DMNb3A==}
 
   '@types/node-fetch@2.6.12':
     resolution: {integrity: sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==}
@@ -8215,6 +8245,10 @@ packages:
     resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
     engines: {node: '>= 0.6'}
 
+  negotiator@1.0.0:
+    resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
+    engines: {node: '>= 0.6'}
+
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
@@ -8974,12 +9008,6 @@ packages:
     peerDependencies:
       react: ^16.6.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.6.0 || ^17.0.0 || ^18.0.0
-
-  react-hook-form@7.55.0:
-    resolution: {integrity: sha512-XRnjsH3GVMQz1moZTW53MxfoWN7aDpUg/GpVNc4A3eXRVNdGXfbzJ4vM4aLQ8g6XCUh1nIbx70aaNCl7kxnjog==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17 || ^18 || ^19
 
   react-hook-form@7.57.0:
     resolution: {integrity: sha512-RbEks3+cbvTP84l/VXGUZ+JMrKOS8ykQCRYdm5aYsxnDquL0vspsyNhGRO7pcH6hsZqWlPOjLye7rJqdtdAmlg==}
@@ -9956,6 +9984,9 @@ packages:
   turbo@2.4.4:
     resolution: {integrity: sha512-N9FDOVaY3yz0YCOhYIgOGYad7+m2ptvinXygw27WPLQvcZDl3+0Sa77KGVlLSiuPDChOUEnTKE9VJwLSi9BPGQ==}
     hasBin: true
+
+  tw-animate-css@1.3.4:
+    resolution: {integrity: sha512-dd1Ht6/YQHcNbq0znIT6dG8uhO7Ce+VIIhZUhjsryXsMPJQz3bZg7Q2eNzLwipb25bRZslGb2myio5mScd1TFg==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -12228,6 +12259,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
+  '@formatjs/intl-localematcher@0.6.1':
+    dependencies:
+      tslib: 2.8.1
+
   '@google/genai@0.7.0(bufferutil@4.0.9)':
     dependencies:
       google-auth-library: 9.15.1
@@ -12239,11 +12274,6 @@ snapshots:
       - utf-8-validate
 
   '@hexagon/base64@1.1.28': {}
-
-  '@hookform/resolvers@4.1.3(react-hook-form@7.55.0(react@19.1.0))':
-    dependencies:
-      '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.55.0(react@19.1.0)
 
   '@hookform/resolvers@4.1.3(react-hook-form@7.57.0(react@19.1.0))':
     dependencies:
@@ -14217,6 +14247,8 @@ snapshots:
   '@types/minimatch@5.1.2': {}
 
   '@types/ms@2.1.0': {}
+
+  '@types/negotiator@0.6.4': {}
 
   '@types/node-fetch@2.6.12':
     dependencies:
@@ -18375,6 +18407,8 @@ snapshots:
 
   negotiator@0.6.4: {}
 
+  negotiator@1.0.0: {}
+
   neo-async@2.6.2: {}
 
   nested-error-stacks@2.0.1: {}
@@ -19252,10 +19286,6 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
       react-fast-compare: 3.2.2
       shallowequal: 1.1.0
-
-  react-hook-form@7.55.0(react@19.1.0):
-    dependencies:
-      react: 19.1.0
 
   react-hook-form@7.57.0(react@19.1.0):
     dependencies:
@@ -20420,6 +20450,8 @@ snapshots:
       turbo-linux-arm64: 2.4.4
       turbo-windows-64: 2.4.4
       turbo-windows-arm64: 2.4.4
+
+  tw-animate-css@1.3.4: {}
 
   type-check@0.4.0:
     dependencies:

@@ -2,8 +2,8 @@
 
 import { registerService } from "@de100/auth/services/register";
 import { REGISTER_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**

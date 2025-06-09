@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { setup2FAAction } from "./actions";
 
@@ -12,7 +12,7 @@ const initialState = {
 
 /** @param {{ encodedTOTPKey: string }} props */
 export function TwoFactorSetUpForm(props) {
-	const [state, action] = useFormState(setup2FAAction, initialState);
+	const [state, action] = useActionState(setup2FAAction, initialState);
 	return (
 		<form action={action}>
 			<input name="key" value={props.encodedTOTPKey} hidden required />

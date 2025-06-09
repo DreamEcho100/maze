@@ -1,6 +1,5 @@
-import { redirect } from "@de100/i18n-nextjs/server";
-
 import { Link } from "#client/components/link";
+import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { SignUpForm } from "./components";
 

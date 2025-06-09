@@ -1,8 +1,8 @@
 "use server";
 
 import { resetPasswordService } from "@de100/auth/services/reset-password";
-import { redirect } from "@de100/i18n-nextjs/server";
 
+import { redirect } from "#i18n/server";
 import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 

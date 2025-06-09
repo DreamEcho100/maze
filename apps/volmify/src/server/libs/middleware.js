@@ -1,14 +1,26 @@
 /**
  * @import { NextRequest } from "next/server"
  * @import { ClientSession, User } from "@de100/auth/types"
+ * @import { AllowedLocale } from "#i18n/constants"
  */
 
+// import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+// import { NextResponse } from "next/server";
+import { match } from "@formatjs/intl-localematcher";
+import Negotiator from "negotiator";
+import {
+	I18N_HEADER_LOCALE_NAME,
+	setRequestLocale,
+} from "node_modules/@de100/i18n-nextjs/src/server";
 
 import { COOKIE_TOKEN_SESSION_KEY } from "@de100/auth/utils/constants"; // #server/utils/constants
 
 import { csrfProtection } from "@de100/auth/utils/csrf";
 
+import { allowedLocales, defaultLocale } from "#i18n/constants";
+import { getRequestLocale } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 
 /*
@@ -133,4 +145,66 @@ async function handleAuthMiddleware(request) {
 	} catch (error) {
 		return { status: "error", error };
 	}
+}
+
+// import createIntlMiddleware from "next-intl/middleware";
+
+// import type { AllowedLocale } from "./libs/i18n/navigation/type";
+// import { env } from "./env";
+// import { defaultLocale, locales } from "./libs/i18n/constants";
+
+// Get the preferred locale, similar to the above or using a library
+/** @param {NextRequest} request  */
+async function getLocale(request) {
+	const cookiesManager = await cookies();
+	const locale = cookiesManager.get("NEXT_LOCALE")?.value;
+
+	if (locale) {
+		return locale;
+	}
+
+	const headers = {
+		"accept-language":
+			(await getRequestLocale()) ?? request.headers.get("accept-language") ?? "en-US,en;q=0.5",
+	};
+	const languages = new Negotiator({ headers }).languages();
+
+	return match(languages, allowedLocales, defaultLocale); // -> 'en-US'
+}
+
+/** @param {NextRequest} request  */
+export async function customCreateIntlMiddleware(request) {
+	// Check if there is any supported locale in the pathname
+	const { pathname } = request.nextUrl;
+
+	let locale = allowedLocales.find(
+		(locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+	);
+
+	if (locale) {
+		(await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
+		await setRequestLocale(locale, request.headers);
+		return NextResponse.next();
+	}
+
+	// Redirect if there is no locale
+	const reqLocale = await getLocale(request);
+	locale = reqLocale
+		? allowedLocales.find(
+				/** @returns {cur is AllowedLocale} */
+				(cur) => reqLocale.startsWith(cur),
+			)
+		: defaultLocale;
+
+	if (!locale) {
+		throw new Error("");
+	}
+
+	(await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
+	await setRequestLocale(locale, request.headers);
+	request.nextUrl.pathname = `/${locale}${pathname}`;
+
+	// e.g. incoming request is /products
+	// The new URL is now /en-US/products
+	return Response.redirect(request.nextUrl);
 }

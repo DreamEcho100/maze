@@ -1,8 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useActionState, useState } from "react";
 
 import {
 	regenerateRecoveryCodeAction,
@@ -17,7 +16,7 @@ const initialUpdatePasswordState = {
 };
 
 export function UpdatePasswordForm() {
-	const [state, action] = useFormState(updatePasswordAction, initialUpdatePasswordState);
+	const [state, action] = useActionState(updatePasswordAction, initialUpdatePasswordState);
 
 	return (
 		<form action={action}>
@@ -51,7 +50,7 @@ const initialUpdateFormState = {
 };
 
 export function UpdateEmailForm() {
-	const [state, action] = useFormState(updateEmailAction, initialUpdateFormState);
+	const [state, action] = useActionState(updateEmailAction, initialUpdateFormState);
 
 	return (
 		<form action={action}>
@@ -71,7 +70,7 @@ const initialUpdateToggleIsTwoFactorEnabledState = {
 
 /** @param {{ twoFactorEnabledAt: boolean }} props */
 export function UpdateToggleIsTwoFactorEnabledForm(props) {
-	const [state, action] = useFormState(
+	const [state, action] = useActionState(
 		updateIsTwoFactorEnabledAction,
 		initialUpdateToggleIsTwoFactorEnabledState,
 	);
@@ -100,8 +99,7 @@ export function RecoveryCodeSection(props) {
 					if (result.type === "success") {
 						setRecoveryCode(result.data.recoveryCode);
 					}
-				}}
-			>
+				}}>
 				Generate new code
 			</button>
 		</section>

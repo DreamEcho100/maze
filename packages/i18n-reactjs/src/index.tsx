@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { StoreApi } from "zustand";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 import { createStore, useStore } from "zustand";
 import { mutative } from "zustand-mutative";
 
@@ -24,7 +24,7 @@ type BaseTranslationState = ReturnType<typeof initI18n>;
 interface State extends BaseTranslationState {
 	locale: string;
 	defaultLocale: string;
-	allowedLocales: string[];
+	allowedLocales: string[] | readonly string[];
 	fallbackLocale: string | string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
 }
@@ -33,14 +33,14 @@ interface Actions {
 	init: (props: {
 		locale: string;
 		defaultLocale: string;
-		allowedLocales: string[];
+		allowedLocales: string[] | readonly string[];
 		fallbackLocale: string | string[];
 		translations: Record<Lowercase<string>, LanguageMessages>;
 	}) => void;
 }
 const createI18nStore: () => StoreApi<State & Actions> = () =>
 	createStore<State & Actions>()(
-		mutative((set) => ({
+		mutative((set, get) => ({
 			// Initialize with safe defaults
 			locale: "",
 			defaultLocale: "",
@@ -67,18 +67,19 @@ const createI18nStore: () => StoreApi<State & Actions> = () =>
 				});
 			},
 			init: (props) => {
-				set((state) => {
-					state.defaultLocale = props.defaultLocale;
-					state.allowedLocales = props.allowedLocales;
-					const initRes = initI18n({
-						locale: props.locale,
-						fallbackLocale: props.fallbackLocale,
-						translations: props.translations,
-					});
-					state.locale = initRes.locale;
-					state.clearCache = initRes.clearCache;
-					state.t = initRes.t;
+				const state = get();
+				state.defaultLocale = props.defaultLocale;
+				state.allowedLocales = props.allowedLocales;
+				const initRes = initI18n({
+					locale: props.locale,
+					fallbackLocale: props.fallbackLocale,
+					translations: props.translations,
 				});
+				state.locale = initRes.locale;
+				state.clearCache = initRes.clearCache;
+				state.t = initRes.t;
+
+				set(state);
 			},
 		})),
 	);
@@ -97,26 +98,26 @@ export function I18nProvider({
 }: {
 	locale: string;
 	defaultLocale: string;
-	allowedLocales: string[];
+	allowedLocales: string[] | readonly string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
 	fallbackLocale: string | string[];
 	children: ReactNode;
 	isNew?: boolean;
 }) {
-	const store = useMemo(() => {
-		const store = isNew ? createI18nStore() : globalI18nStore;
+	const store = isNew ? createI18nStore() : globalI18nStore;
 
-		// Initialize only once or when dependencies change
-		store.getState().init({
-			locale,
-			defaultLocale,
-			allowedLocales,
-			fallbackLocale,
-			translations,
-		});
+	// Initialize only once or when dependencies change
+	store.getState().init({
+		locale,
+		defaultLocale,
+		allowedLocales,
+		fallbackLocale,
+		translations,
+	});
 
-		return store;
-	}, [locale, fallbackLocale, translations, isNew]);
+	// return store;
+	// const store = useMemo(() => {
+	// }, [locale, fallbackLocale, translations, isNew]);
 
 	return <I18nContext value={{ store }}>{children}</I18nContext>;
 }

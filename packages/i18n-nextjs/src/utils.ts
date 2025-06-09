@@ -62,19 +62,25 @@ export function buildUrl({
 // Helper to parse path and extract country code and locale
 export function parsePathname(
 	pathname: string,
-	config: { defaultLocale?: string; allowedLocales?: string[] },
+	config: {
+		defaultLocale?: string;
+		allowedLocales?: string[] | readonly string[];
+		locale?: string;
+	},
 ) {
 	const segments = pathname.split("/").filter(Boolean);
 
 	const defaultLocaleIndex = 0;
 
-	let locale = segments[defaultLocaleIndex];
+	let guessedLocale = segments[defaultLocaleIndex];
 	let restPath = "";
-	if (locale && config.allowedLocales?.includes(locale)) {
-		locale ??= config.defaultLocale;
-		restPath = `/${segments.slice(defaultLocaleIndex + 1).join("/")}`;
+	if (guessedLocale && config.allowedLocales?.includes(guessedLocale)) {
+		guessedLocale ??= config.locale ?? config.defaultLocale;
+		if (segments[defaultLocaleIndex + 1]) {
+			restPath = `/${segments.slice(defaultLocaleIndex + 1).join("/")}`;
+		}
 	} else {
-		locale ??= config.defaultLocale;
+		guessedLocale = config.locale ?? config.defaultLocale;
 		restPath = `/${segments.slice(defaultLocaleIndex).join("/")}`;
 	}
 
@@ -83,7 +89,7 @@ export function parsePathname(
 		// locale: segments[1] ?? config.defaultLocale,
 		// locale: segments[0] ?? config.defaultLocale,
 		// restPath: segments.slice(2).join("/"),
-		locale,
+		locale: guessedLocale,
 		restPath,
 	};
 }
@@ -95,7 +101,11 @@ export function getPathname(
 		countryCode?: string;
 		locale?: string;
 	},
-	config: { defaultLocale: string },
+	config: {
+		defaultLocale?: string;
+		allowedLocales?: string[] | readonly string[];
+		locale?: string;
+	},
 ) {
 	const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
 	const {

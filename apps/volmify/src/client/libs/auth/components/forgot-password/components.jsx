@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { forgotPasswordAction } from "./actions";
 
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 export function ForgotPasswordForm() {
-	const [state, action] = useFormState(forgotPasswordAction, initialState);
+	const [state, action] = useActionState(forgotPasswordAction, initialState);
 
 	return (
 		<form action={action}>

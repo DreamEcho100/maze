@@ -1,7 +1,7 @@
 "use client";
 
 /** @import { ActionResult } from "./actions"; */
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import { reset2FAAction } from "./actions";
 
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 export function TwoFactorResetForm() {
-	const [state, action] = useFormState(reset2FAAction, initialState);
+	const [state, action] = useActionState(reset2FAAction, initialState);
 	return (
 		<form action={action}>
 			<label htmlFor="form-totp.code">Recovery code</label>

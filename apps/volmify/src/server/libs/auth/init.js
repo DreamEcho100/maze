@@ -103,7 +103,7 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 	emailVerifiedAt: true,
 });
 
-/** @param {{ req?: NextRequest }} props */
+/** @param {{ req?: NextRequest }} [props] */
 export async function setDrizzlePgAuthProviders(props) {
 	const _global = /** @type {{ ___authConfig?: AuthConfig }} */ (globalThis);
 
@@ -117,7 +117,7 @@ export async function setDrizzlePgAuthProviders(props) {
 		strategy: process.env.AUTH_STRATEGY ?? "jwt",
 		cookies: async () => {
 			const jar =
-				props.req?.cookies ??
+				props?.req?.cookies ??
 				(await import("next/headers").then(async (mod) => await mod.cookies()));
 
 			if (!jar) {

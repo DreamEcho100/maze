@@ -2,6 +2,9 @@
 	"name": "@de100/i18n-nextjs",
 	"private": true,
 	"version": "0.1.0",
+	"imports": {
+		"#*": "./src/*"
+	},
 	"type": "module",
 	"exports": {
 		"./client/index": {
@@ -12,9 +15,9 @@
 			"types": "./dist/src/client/components/Link.d.ts",
 			"default": "./src/client/components/Link.tsx"
 		},
-		"./server": {
-			"types": "./dist/src/server/index.d.ts",
-			"default": "./src/server/index.ts"
+		"./server/init": {
+			"types": "./dist/src/server/init.d.ts",
+			"default": "./src/server/init.ts"
 		}
 	},
 	"license": "MIT",
@@ -30,6 +33,7 @@
 		"@de100/eslint-config": "workspace:*",
 		"@de100/prettier-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
+		"@types/negotiator": "^0.6.4",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
 		"eslint": "catalog:",
@@ -40,6 +44,8 @@
 	"dependencies": {
 		"@de100/i18n": "workspace:*",
 		"@de100/i18n-reactjs": "workspace:*",
+		"@formatjs/intl-localematcher": "^0.6.1",
+		"negotiator": "^1.0.0",
 		"next": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
