@@ -1,6 +1,5 @@
-/** @import { CookiesProvider, MultiErrorSingleSuccessResponse } from "#types.ts" */
+/** @import { CookiesProvider, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
 
-import { authConfig } from "#init/index.js";
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
@@ -18,10 +17,20 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
 /**
  * Handles the password reset email verification process.
  *
- * @param {unknown} data
- * @param {object} options - Options for the service.
- * @param {any} options.tx - Transaction object for database operations.
- * @param {CookiesProvider} options.cookies - Cookies provider for session management.
+ * @param {object} props
+ * @param {unknown} props.input
+ * @param {any} props.tx - Transaction object for database operations.
+ * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {{
+ * 	passwordResetSession: {
+ * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
+ * 	  deleteOne: PasswordResetSessionsProvider["deleteOne"];
+ * 	  markOneEmailAsVerified: PasswordResetSessionsProvider["markOneEmailAsVerified"];
+ * 	};
+ * 	users: {
+ * 		verifyOneEmailIfMatches: UsersProvider["verifyOneEmailIfMatches"];
+ * 	}
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
@@ -30,13 +39,20 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
  *  >
  * >}
  */
-export async function verifyPasswordResetEmailVerificationService(data, options) {
-	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(data);
+export async function verifyPasswordResetEmailVerificationService(props) {
+	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(props.input);
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest(options.cookies);
+	const { session, user } = await validatePasswordResetSessionRequest(props.cookies, {
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: props.authProviders.passwordResetSession.deleteOne,
+				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
+			},
+		},
+	});
 
 	if (!session) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -50,10 +66,10 @@ export async function verifyPasswordResetEmailVerificationService(data, options)
 
 	const [emailMatches] = await Promise.all([
 		// setUserAsEmailVerifiedIfEmailMatchesRepository(session.userId, session.email),
-		authConfig.providers.users
+		props.authProviders.users
 			.verifyOneEmailIfMatches(
 				{ where: { id: session.userId, email: session.email } },
-				{ tx: options.tx },
+				{ tx: props.tx },
 			)
 			.then((result) => {
 				if (!result) {
@@ -62,9 +78,9 @@ export async function verifyPasswordResetEmailVerificationService(data, options)
 				return true;
 			}),
 		// updateOnePasswordResetSessionAsEmailVerifiedRepository(session.id),
-		authConfig.providers.passwordResetSession.markOneEmailAsVerified(
+		props.authProviders.passwordResetSession.markOneEmailAsVerified(
 			{ where: { id: session.id } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
 	]).catch((err) => {
 		console.error("Error verifying email:", err);

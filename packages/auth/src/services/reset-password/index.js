@@ -1,6 +1,5 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
@@ -21,12 +20,24 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the reset password process, including validation and session management.
  *
- * @param {unknown} data
- * @param {object} options - Options for the service.
- * @param {any} options.tx - Transaction object for database operations.
- * @param {CookiesProvider} options.cookies - Cookies provider for session management.
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
+ * @param {object} props
+ * @param {unknown} props.input
+ * @param {any} props.tx - Transaction object for database operations.
+ * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {AuthStrategy} props.authStrategy
+ * @param {{
+ * 	passwordResetSession: {
+ * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
+ * 	  deleteOne: PasswordResetSessionsProvider["deleteOne"];
+ * 		deleteAllByUserId: PasswordResetSessionsProvider["deleteAllByUserId"];
+ * 	};
+ * 	sessions: {
+ * 		createOne: SessionsProvider['createOne'];
+ * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
+ * 	}
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
@@ -35,8 +46,8 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function resetPasswordService(data, options) {
-	const input = resetPasswordServiceInputSchema.safeParse(data);
+export async function resetPasswordService(props) {
+	const input = resetPasswordServiceInputSchema.safeParse(props.input);
 	if (!input.success) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
@@ -44,7 +55,15 @@ export async function resetPasswordService(data, options) {
 	const { password } = input.data;
 
 	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest(
-		options.cookies,
+		props.cookies,
+		{
+			authProviders: {
+				passwordResetSession: {
+					deleteOne: props.authProviders.passwordResetSession.deleteOne,
+					findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
+				},
+			},
+		},
 	);
 
 	if (!passwordResetSession) {
@@ -69,17 +88,18 @@ export async function resetPasswordService(data, options) {
 	}
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: options.ipAddress ?? null,
-		userAgent: options.userAgent ?? null,
+		ipAddress: props.ipAddress ?? null,
+		userAgent: props.userAgent ?? null,
 		twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: null,
 	};
 	const [session] = await Promise.all([
 		(async () => {
-			const sessionToken = generateAuthSessionToken({
-				data: { user: user, metadata: sessionInputBasicInfo },
-			});
+			const sessionToken = generateAuthSessionToken(
+				{ data: { user: user, metadata: sessionInputBasicInfo } },
+				{ authStrategy: props.authStrategy },
+			);
 			const session = await createAuthSession(
 				{
 					data: {
@@ -88,26 +108,35 @@ export async function resetPasswordService(data, options) {
 						user,
 					},
 				},
-				{ tx: options.tx },
+				{
+					tx: props.tx,
+					authStrategy: props.authStrategy,
+					authProviders: {
+						sessions: {
+							createOne: props.authProviders.sessions.createOne,
+						},
+					},
+				},
 			);
 
 			return session;
 		})(),
-		authConfig.providers.passwordResetSession.deleteAllByUserId(
+		props.authProviders.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
-		authConfig.providers.session.deleteAllByUserId(
+		props.authProviders.sessions.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
-		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: options.tx }),
+		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: props.tx }),
 	]);
 	const result = setOneAuthSessionToken(session, {
-		cookies: options.cookies,
-		userAgent: options.userAgent,
+		cookies: props.cookies,
+		userAgent: props.userAgent,
+		authStrategy: props.authStrategy,
 	});
-	deletePasswordResetSessionTokenCookie(options.cookies);
+	deletePasswordResetSessionTokenCookie(props.cookies);
 
 	return {
 		...RESET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_SUCCESSFUL,

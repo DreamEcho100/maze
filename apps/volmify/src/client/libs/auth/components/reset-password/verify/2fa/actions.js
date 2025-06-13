@@ -4,6 +4,15 @@ import { verifyPasswordReset2FAViaRecoveryCodeService } from "@de100/auth/servic
 import { verifyPasswordReset2FAViaTOTPService } from "@de100/auth/services/reset-password/verify/2fa/totp";
 
 import { redirect } from "#i18n/server";
+import {
+	deleteOnePasswordResetSession,
+	findOnePasswordResetSessionWithUser,
+	getOneUserRecoveryCodeRaw,
+	getOneUserTOTPKey,
+	markOnePasswordResetSessionTwoFactorAsVerified,
+	unMarkOneSession2FAForUser,
+	updateOneUserRecoveryCodeById,
+} from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { getCookies } from "#server/libs/get-cookies";
 
@@ -17,10 +26,20 @@ import { getCookies } from "#server/libs/get-cookies";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
-	const result = await verifyPasswordReset2FAViaTOTPService(
-		{ code: formData.get("code") },
-		{ cookies: await getCookies() },
-	);
+	const result = await verifyPasswordReset2FAViaTOTPService({
+		cookies: await getCookies(),
+		input: { code: formData.get("code") },
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: deleteOnePasswordResetSession,
+				findOneWithUser: findOnePasswordResetSessionWithUser,
+				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+			},
+			users: {
+				getOneTOTPKey: getOneUserTOTPKey,
+			},
+		},
+	});
 
 	if (result.type === "success") {
 		return redirect("/auth/reset-password");
@@ -37,7 +56,25 @@ export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
 export async function verifyPasswordReset2FAWithRecoveryCodeAction(_prev, formData) {
 	const code = formData.get("code");
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordReset2FAViaRecoveryCodeService({ code }, { tx, cookies: await getCookies() }),
+		verifyPasswordReset2FAViaRecoveryCodeService({
+			tx,
+			cookies: await getCookies(),
+			input: { code },
+			authProviders: {
+				passwordResetSession: {
+					deleteOne: deleteOnePasswordResetSession,
+					findOneWithUser: findOnePasswordResetSessionWithUser,
+					markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+				},
+				sessions: {
+					unMarkOne2FAForUser: unMarkOneSession2FAForUser,
+				},
+				users: {
+					getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
+					updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
+				},
+			},
+		}),
 	);
 
 	if (result.type === "success") {

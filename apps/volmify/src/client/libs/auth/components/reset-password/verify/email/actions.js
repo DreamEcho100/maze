@@ -3,6 +3,12 @@
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
 
 import { redirect } from "#i18n/server";
+import {
+	deleteOnePasswordResetSession,
+	findOnePasswordResetSessionWithUser,
+	markOnePasswordResetSessionEmailAsVerified,
+	verifyOneUserEmailIfMatches,
+} from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { getCookies } from "#server/libs/get-cookies";
 
@@ -15,10 +21,21 @@ import { getCookies } from "#server/libs/get-cookies";
  */
 export async function verifyPasswordResetEmailVerificationAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordResetEmailVerificationService(
-			{ code: formData.get("code") },
-			{ tx, cookies: await getCookies() },
-		),
+		verifyPasswordResetEmailVerificationService({
+			tx,
+			cookies: await getCookies(),
+			input: { code: formData.get("code") },
+			authProviders: {
+				passwordResetSession: {
+					deleteOne: deleteOnePasswordResetSession,
+					findOneWithUser: findOnePasswordResetSessionWithUser,
+					markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
+				},
+				users: {
+					verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
+				},
+			},
+		}),
 	);
 	if (result.type === "success") {
 		switch (result.data.nextStep) {

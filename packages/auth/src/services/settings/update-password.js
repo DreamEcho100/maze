@@ -96,7 +96,7 @@ export async function updatePasswordService(props, options) {
 				metadata: sessionInputBasicInfo,
 			},
 		},
-		{ tx: options.tx },
+		{  },
 	);
 	const result = setOneAuthSessionToken(newSession, {
 		cookies: options.cookies,

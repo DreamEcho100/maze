@@ -1,6 +1,6 @@
-/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession, CookiesProvider, HeadersProvider } from "#types.ts" */
+/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession, CookiesProvider, HeadersProvider, SessionsProvider } from "#types.ts" */
 
-import { authConfig } from "#init/index.js";
+// import { authConfig } from "#init/index.js";
 import { getAuthorizationTokenFromHeaders } from "#utils/get-authorization-token-from-headers.js";
 import { getSessionId } from "#utils/get-session-id.js";
 import { isDeviceMobileOrTablet as checkIsDeviceMobileOrTablet } from "#utils/is-device-mobile-or-tablet.js";
@@ -29,11 +29,15 @@ const REFRESH_TOKEN_EXPIRES_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
  * @param {object} props.data
  * @param {User} props.data.user
  * @param {SessionMetadata} props.data.metadata - Additional metadata to include in the JWT.
- * @param {object} [options]
- * * @param {any} [options.tx] - Optional transaction for database operations.
+ * @param {{
+ * 	tx?: any;
+ * 	authProviders: {
+ * 		sessions: { createOne: SessionsProvider['createOne'] }
+ * 	}
+ * }} ctx
  */
 // * @returns {Promise<{accessToken: string, refreshToken: string, refreshTokenHash: string, expiresAt: Date}>}
-export async function createJWTAuth(props, options) {
+export async function createJWTAuth(props, ctx) {
 	const { user } = props.data;
 
 	const accessExpiresAt = new Date(Date.now() + ACCESS_TOKEN_EXPIRES_DURATION);
@@ -67,7 +71,7 @@ export async function createJWTAuth(props, options) {
 		revokedAt: null,
 	};
 
-	const result = await authConfig.providers.session.createOne({ data: sessionData }, options);
+	const result = await ctx.authProviders.sessions.createOne({ data: sessionData }, ctx);
 
 	if (!result) {
 		throw new Error("Failed to create JWT refresh token session");
@@ -298,10 +302,10 @@ export async function validateJWTRefreshToken(token) {
 
 /**
  * Refresh JWT tokens -
- * @param {object} data
- * @param {string} data.refreshToken - The JWT refresh token to validate.
- * @param {string|null|undefined} data.ipAddress - Optional IP address for the session.
- * @param {UserAgent|null|undefined} data.userAgent - Optional user agent for the session.
+ * @param {object} input
+ * @param {string} input.refreshToken - The JWT refresh token to validate.
+ * @param {string|null|undefined} input.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} input.userAgent - Optional user agent for the session.
  * @param {object} [options] - Additional options
  * @param {any} [options.tx] - Optional transaction for database operations.
  */

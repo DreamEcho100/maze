@@ -1,11 +1,15 @@
 "use server";
 
-import { authConfig } from "@de100/auth/init";
 import { loginUserService } from "@de100/auth/services/login";
 import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import { setDrizzlePgAuthProviders } from "#server/libs/auth/init";
+import {
+	authStrategy,
+	createOneSession,
+	findOneUserByEmail,
+	getOneUserPasswordHash,
+} from "#server/libs/auth/init";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
@@ -16,13 +20,18 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  * @returns {Promise<ActionResult>}
  */
 export async function loginAction(_prev, formData) {
-	const data = {
-		email: formData.get("email"),
-		password: formData.get("password"),
-	};
-	await setDrizzlePgAuthProviders();
-
-	const result = await loginUserService(data, await getSessionOptionsBasics());
+	const result = await loginUserService({
+		...(await getSessionOptionsBasics()),
+		input: {
+			email: formData.get("email"),
+			password: formData.get("password"),
+		},
+		authStrategy,
+		authProviders: {
+			sessions: { createOne: createOneSession },
+			users: { findOneByEmail: findOneUserByEmail, getOnePasswordHash: getOneUserPasswordHash },
+		},
+	});
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_LOGIN);

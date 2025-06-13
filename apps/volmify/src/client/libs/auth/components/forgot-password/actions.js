@@ -4,6 +4,15 @@ import { forgotPasswordService } from "@de100/auth/services/forgot-password";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
+import {
+	authStrategy,
+	createOnePasswordResetSession,
+	deleteAllPasswordResetSessionsByUserId,
+	deleteOneSessionById,
+	extendOneSessionExpirationDate,
+	findOneSessionWithUser,
+	findOneUserByEmail,
+} from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
@@ -15,12 +24,26 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  * @returns {Promise<ActionResult>}
  */
 export async function forgotPasswordAction(_prev, formData) {
-	const data = { email: formData.get("email") };
-
 	const result = await db.transaction(async (tx) =>
-		forgotPasswordService(data, {
+		forgotPasswordService({
 			...(await getSessionOptionsBasics()),
 			tx,
+			input: { email: formData.get("email") },
+			authStrategy,
+			authProviders: {
+				passwordResetSession: {
+					createOne: createOnePasswordResetSession,
+					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+				},
+				sessions: {
+					deleteOneById: deleteOneSessionById,
+					extendOneExpirationDate: extendOneSessionExpirationDate,
+					findOneWithUser: findOneSessionWithUser,
+				},
+				users: {
+					findOneByEmail: findOneUserByEmail,
+				},
+			},
 		}),
 	);
 

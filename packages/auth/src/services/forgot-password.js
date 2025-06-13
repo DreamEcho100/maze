@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, SessionsProvider, UsersProvider, PasswordResetSessionsProvider } from "#types.ts"; */
 
 import { authConfig } from "#init/index.js";
 import {
@@ -17,13 +17,28 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
- * @param {unknown} data
- * @param {object} options - Options for the service.
- * @param {any} options.tx - Transaction object for database operations
- * @param {CookiesProvider} options.cookies - Cookies provider for session management.
- * @param {HeadersProvider} options.headers - The headers provider to access the session token.
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
+ * @param {object} props - Options for the service.
+ * @param {unknown} props.input
+ * @param {any} props.tx - Transaction object for database operations
+ * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {HeadersProvider} props.headers - The headers provider to access the session token.
+ * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {AuthStrategy} props.authStrategy
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 	};
+ *  users: {
+ * 		findOneByEmail: UsersProvider['findOneByEmail'];
+ * 	};
+ *  passwordResetSession: {
+ * 		createOne: PasswordResetSessionsProvider['createOne'];
+ * 		deleteAllByUserId: PasswordResetSessionsProvider['deleteAllByUserId'];
+ * 	};
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -32,14 +47,26 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function forgotPasswordService(data, options) {
-	const input = forgotPasswordServiceInputSchema.safeParse(data);
-	const { session } = await getCurrentAuthSession({
-		ipAddress: options.ipAddress,
-		userAgent: options.userAgent,
-		cookies: options.cookies,
-		headers: options.headers,
-	});
+export async function forgotPasswordService(props) {
+	const input = forgotPasswordServiceInputSchema.safeParse(props.input);
+	const { session } = await getCurrentAuthSession(
+		{
+			ipAddress: props.ipAddress,
+			userAgent: props.userAgent,
+			cookies: props.cookies,
+			headers: props.headers,
+		},
+		{
+			authStrategy: props.authStrategy,
+			authProviders: {
+				sessions: {
+					deleteOneById: props.authProviders.sessions.deleteOneById,
+					extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
+					findOneWithUser: props.authProviders.sessions.findOneWithUser,
+				},
+			},
+		},
+	);
 
 	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -47,13 +74,13 @@ export async function forgotPasswordService(data, options) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;
 	}
 
-	const user = await authConfig.providers.users.findOneByEmail(input.data.email);
+	const user = await props.authProviders.users.findOneByEmail(input.data.email);
 	if (!user) return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: options.ipAddress ?? null,
-		userAgent: options.userAgent ?? null,
+		ipAddress: props.ipAddress ?? null,
+		userAgent: props.userAgent ?? null,
 		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: session.metadata,
@@ -64,11 +91,16 @@ export async function forgotPasswordService(data, options) {
 	const [passwordResetEmailSession] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },
-			{ tx: options.tx },
+			{
+				tx: props.tx,
+				authProviders: {
+					passwordResetSession: { createOne: props.authProviders.passwordResetSession.createOne },
+				},
+			},
 		),
-		authConfig.providers.passwordResetSession.deleteAllByUserId(
+		props.authProviders.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: user.id } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
 	]);
 
@@ -76,7 +108,7 @@ export async function forgotPasswordService(data, options) {
 	setPasswordResetSessionTokenCookie(
 		sessionToken,
 		passwordResetEmailSession.expiresAt,
-		options.cookies,
+		props.cookies,
 	);
 
 	return {

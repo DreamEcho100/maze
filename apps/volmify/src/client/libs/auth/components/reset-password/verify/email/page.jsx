@@ -1,11 +1,22 @@
 import { validatePasswordResetSessionRequest } from "@de100/auth/utils/password-reset";
 
 import { redirect } from "#i18n/server";
+import {
+	deleteOnePasswordResetSession,
+	findOnePasswordResetSessionWithUser,
+} from "#server/libs/auth/init";
 import { getCookies } from "#server/libs/get-cookies";
 import { PasswordResetEmailVerificationForm } from "./components";
 
 export default async function AuthPasswordResetEmailVerificationPage() {
-	const { session } = await validatePasswordResetSessionRequest(await getCookies());
+	const { session } = await validatePasswordResetSessionRequest(await getCookies(), {
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: deleteOnePasswordResetSession,
+				findOneWithUser: findOnePasswordResetSessionWithUser,
+			},
+		},
+	});
 
 	if (session === null) {
 		return redirect("/auth/forgot-password");

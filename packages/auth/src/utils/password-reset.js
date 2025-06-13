@@ -1,6 +1,6 @@
-/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider } from "#types.ts"; */
+/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
+// import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
 	COOKIE_TOKEN_PASSWORD_RESET_KEY,
@@ -18,9 +18,12 @@ import { getSessionId } from "./get-session-id.js";
  * @param {string} props.data.userId - The user ID associated with the password reset session.
  * @param {string} props.data.email - The user email associated with the password reset session.
  * @returns {Promise<PasswordResetSession>} A promise that resolves to the created password reset session.
- * @param {{ tx?: any }} [options] - The properties for the password reset session.
+ * @param {{
+ * 	tx: any;
+ * 	authProviders: { passwordResetSession: { createOne: PasswordResetSessionsProvider['createOne']; } };
+ * }} ctx - The properties for the password reset session.
  */
-export async function createPasswordResetSession(props, options) {
+export async function createPasswordResetSession(props, ctx) {
 	const sessionId = getSessionId(props.data.token);
 
 	/** @type {PasswordResetSession} */
@@ -36,7 +39,7 @@ export async function createPasswordResetSession(props, options) {
 	};
 
 	// await createOnePasswordResetSessionRepository(session).then(
-	await authConfig.providers.passwordResetSession.createOne({ data: session }, options).then(
+	await ctx.authProviders.passwordResetSession.createOne({ data: session }, ctx).then(
 		/** @returns {PasswordResetSession} session */
 		(result) => {
 			if (!result) {
@@ -63,16 +66,23 @@ export async function createPasswordResetSession(props, options) {
 
 /**
  * @param {string} token - The token to be validated.
+ * @param {object} ctx
+ * @param {{
+ * 	passwordResetSession: {
+ * 		findOneWithUser: PasswordResetSessionsProvider['findOneWithUser'];
+ * 		deleteOne: PasswordResetSessionsProvider['deleteOne'];
+ * 	}
+ * }} ctx.authProviders
  * @returns {Promise<PasswordResetSessionValidationResult>} A promise that resolves to the validation result.
  */
-export async function validatePasswordResetSessionToken(token) {
+export async function validatePasswordResetSessionToken(token, ctx) {
 	const sessionId = getSessionId(token);
 	// const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
-	const result = await authConfig.providers.passwordResetSession.findOneWithUser(sessionId);
+	const result = await ctx.authProviders.passwordResetSession.findOneWithUser(sessionId);
 
 	if (!result.session || Date.now() >= dateLikeToNumber(result.session.expiresAt)) {
 		// await deleteOnePasswordResetSessionRepository(sessionId);
-		await authConfig.providers.passwordResetSession.deleteOne(sessionId);
+		await ctx.authProviders.passwordResetSession.deleteOne(sessionId);
 		return { session: null, user: null };
 	}
 
@@ -81,12 +91,19 @@ export async function validatePasswordResetSessionToken(token) {
 
 /**
  * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ * @param {object} ctx
+ * @param {{
+ * 	passwordResetSession: {
+ * 		findOneWithUser: PasswordResetSessionsProvider['findOneWithUser'];
+ * 		deleteOne: PasswordResetSessionsProvider['deleteOne'];
+ * 	}
+ * }} ctx.authProviders
  * @returns {Promise<PasswordResetSessionValidationResult>}
  */
-export async function validatePasswordResetSessionRequest(cookies) {
+export async function validatePasswordResetSessionRequest(cookies, ctx) {
 	const token = cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
 	if (!token) return { session: null, user: null };
-	const result = await validatePasswordResetSessionToken(token);
+	const result = await validatePasswordResetSessionToken(token, ctx);
 	if (!result.session) deletePasswordResetSessionTokenCookie(cookies);
 	return result;
 }

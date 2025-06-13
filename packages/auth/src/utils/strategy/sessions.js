@@ -1,8 +1,8 @@
-/** @import { UserAgent, DateLike, SessionValidationResult, DBSession, ClientSession, CookiesProvider } from "#types.ts" */
+/** @import { UserAgent, DateLike, SessionValidationResult, DBSession, ClientSession, CookiesProvider, SessionsProvider } from "#types.ts" */
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
-import { authConfig } from "#init/index.js";
+// import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
 	COOKIE_TOKEN_SESSION_KEY,
@@ -22,10 +22,12 @@ import { getSessionId } from "#utils/get-session-id.js";
  * @param {string|null|undefined} props.data.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} props.data.userAgent - Optional user agent for the session.
  * @param {{ twoFactorVerifiedAt?: DateLike | null; }} props.data.flags - Flags to set for the session.
- * @param {{ tx?: any }} [options] - Additional options, such as transaction context.
+ * @param {object} ctx
+ * @param {any} ctx.tx
+ * @param {{ sessions: { createOne: SessionsProvider['createOne'] }}} ctx.authProviders
  */
 //  * @returns {Promise<DBSession>} A promise that resolves to the created session object.
-export async function createSession(props, options) {
+export async function createSession(props, ctx) {
 	const sessionId = getSessionId(props.data.token);
 
 	/** @type {DBSession} */
@@ -42,7 +44,7 @@ export async function createSession(props, options) {
 		revokedAt: null, // Not revoked initially
 	};
 
-	const result = await authConfig.providers.session.createOne({ data: sessionData }, options);
+	const result = await ctx.authProviders.sessions.createOne({ data: sessionData }, { tx: ctx.tx });
 
 	if (!result) {
 		throw new Error("Failed to create session");
@@ -80,15 +82,23 @@ export function getTokenFromCookies(cookies) {
  * Retrieves the current session by validating the session token.
  *
  * @param {CookiesProvider} cookies - The cookies provider to access the session token.
+ * @param {object} ctx
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 	}
+ * }} ctx.providers
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data.
  */
-export async function getCurrentSession(cookies) {
+export async function getCurrentSession(cookies, ctx) {
 	const token = getTokenFromCookies(cookies);
 	if (!token) {
 		return { session: null, user: null };
 	}
 
-	return await validateSessionToken(token, cookies);
+	return await validateSessionToken(token, cookies, ctx);
 }
 
 /**
@@ -144,14 +154,22 @@ export function generateSessionToken() {
  * @param {object} param
  * @param {string | null} param.token - The session token extracted from cookies.
  * @param {CookiesProvider} param.cookies - The cookies provider to access the session token.
+ * @param {object} ctx
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 	}
+ * }} ctx.providers
  * @returns {Promise<SessionValidationResult>} The result of session validation.
  */
-export async function handleSessionMiddleware(param) {
+export async function handleSessionMiddleware(param, ctx) {
 	if (!param.token) {
 		return { session: null, user: null };
 	}
 
-	const result = await validateSessionToken(param.token, param.cookies);
+	const result = await validateSessionToken(param.token, param.cookies, ctx);
 
 	if (!result.session) {
 		// If the session is not found, delete the session token cookie
@@ -181,11 +199,19 @@ export async function handleSessionMiddleware(param) {
  *
  * @param {string} token - The session token to be validated.
  * @param {CookiesProvider} cookies - The cookies provider to access the session token.
+ * @param {object} ctx
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 	}
+ * }} ctx.providers
  * @returns {Promise<SessionValidationResult>} A promise that resolves to the session and user data, or null if the session is invalid or expired.
  */
-export async function validateSessionToken(token, cookies) {
+export async function validateSessionToken(token, cookies, ctx) {
 	const sessionId = getSessionId(token);
-	const result = await authConfig.providers.session
+	const result = await ctx.providers.sessions
 		.findOneWithUser(sessionId)
 		.catch((error) => console.error("Error:", error));
 
@@ -196,14 +222,14 @@ export async function validateSessionToken(token, cookies) {
 	const expiresAt = dateLikeToNumber(result.session.expiresAt);
 
 	if (Date.now() >= expiresAt) {
-		await authConfig.providers.session.deleteOneById(sessionId);
+		await ctx.providers.sessions.deleteOneById(sessionId);
 		deleteSessionTokenCookie(cookies);
 		return { session: null, user: null };
 	}
 
 	if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
 		result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
-		await authConfig.providers.session.extendOneExpirationDate(
+		await ctx.providers.sessions.extendOneExpirationDate(
 			sessionId,
 			new Date(result.session.expiresAt),
 		);

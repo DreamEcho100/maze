@@ -1,6 +1,6 @@
-/** @import { User, UserAgent, SessionValidationResult, SessionMetadata, CookiesProvider, HeadersProvider } from "#types.ts" */
+/** @import { User, UserAgent, SessionValidationResult, SessionMetadata, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy } from "#types.ts" */
 
-import { authConfig } from "#init/index.js";
+// import { authConfig } from "#init/index.js";
 // import { dateLikeToISOString } from "#utils/dates.js";
 import { isDeviceMobileOrTablet } from "#utils/is-device-mobile-or-tablet.js";
 import {
@@ -24,10 +24,13 @@ import {
  * @param {string} [props.data.token] - ClientSession token OR will create JWT
  * @param {User} props.data.user
  * @param {SessionMetadata} props.data.metadata - Optional IP address for the session
- * @param {object} [options]
+ * @param {object} ctx
+ * @param {any} [ctx.tx]
+ * @param {AuthStrategy} ctx.authStrategy
+ * @param {{ sessions: { createOne: SessionsProvider['createOne'] }}} ctx.authProviders
  */
-export async function createAuthSession(props, options) {
-	switch (authConfig.strategy) {
+export async function createAuthSession(props, ctx) {
+	switch (ctx?.authStrategy) {
 		case "jwt": {
 			// For JWT, we don't use the token from props, we generate our own
 			const data = await createJWTAuth(
@@ -37,7 +40,10 @@ export async function createAuthSession(props, options) {
 						user: props.data.user,
 					},
 				},
-				options,
+				{
+					tx: ctx.tx,
+					authProviders: { sessions: { createOne: ctx.authProviders.sessions.createOne } },
+				},
 			);
 
 			return /** @type {const} */ ({
@@ -62,7 +68,10 @@ export async function createAuthSession(props, options) {
 						userId: props.data.user.id,
 					},
 				},
-				options,
+				{
+					tx: ctx.tx,
+					authProviders: { sessions: { createOne: ctx.authProviders.sessions.createOne } },
+				},
 			);
 
 			return /** @type {const} */ ({
@@ -75,39 +84,50 @@ export async function createAuthSession(props, options) {
 		}
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx?.authStrategy}`);
 	}
 }
 
 /**
  * Strategy-aware current session/auth retrieval (replaces getCurrentSession)
- * @param {object} options
- * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} options.headers - The headers provider to access the session token.
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
+ * @param {object} props
+ * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} props.headers - The headers provider to access the session token.
+ * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {object} ctx
+ * @param {AuthStrategy} ctx.authStrategy
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 	}
+ * }} ctx.authProviders
  * @returns {Promise<SessionValidationResult>}
  */
-export async function getCurrentAuthSession(options) {
-	switch (authConfig.strategy) {
+export async function getCurrentAuthSession(props, ctx) {
+	switch (ctx.authStrategy) {
 		case "jwt":
-			return await getCurrentJWTAuth(options);
+			return await getCurrentJWTAuth(props);
 
 		case "session":
-			return await getCurrentSession(options.cookies);
+			return await getCurrentSession(props.cookies, { providers: ctx.authProviders });
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 
 /**
  * Strategy-aware token generation (replaces generateSessionToken)
  * @param {{ data: { user: User; metadata: SessionMetadata } }} props
+ * @param {object} ctx
+ * @param {AuthStrategy} ctx.authStrategy
  * @returns {string}
  */
-export function generateAuthSessionToken(props) {
-	switch (authConfig.strategy) {
+export function generateAuthSessionToken(props, ctx) {
+	switch (ctx.authStrategy) {
 		case "jwt":
 			return authConfig.jwt.createRefreshToken(props);
 
@@ -115,7 +135,7 @@ export function generateAuthSessionToken(props) {
 			return generateSessionToken();
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 
@@ -129,14 +149,15 @@ export function generateAuthSessionToken(props) {
 /**
  * Strategy-aware token setting (replaces setSessionTokenCookie)
  * @param {Awaited<ReturnType<typeof createAuthSession>>} param - ClientSession data from createAuthSession
- * @param {object} options
- * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
- * @param {UserAgent|null|undefined} options.userAgent - User agent for the session
+ * @param {object} ctx
+ * @param {CookiesProvider} ctx.cookies - The cookies provider to access the session token.
+ * @param {UserAgent|null|undefined} ctx.userAgent - User agent for the session
+ * @param {AuthStrategy} ctx.authStrategy - The authentication strategy being used
  */
-export function setOneAuthSessionToken(param, options) {
+export function setOneAuthSessionToken(param, ctx) {
 	switch (param.strategy) {
 		case "jwt": {
-			if (options.userAgent && isDeviceMobileOrTablet(options.userAgent)) {
+			if (ctx.userAgent && isDeviceMobileOrTablet(ctx.userAgent)) {
 				return /** @type {const} */ ({
 					strategy: "jwt",
 					platform: "mobile/tablet",
@@ -155,7 +176,7 @@ export function setOneAuthSessionToken(param, options) {
 					refreshToken: param.data.metadata.refreshToken,
 					refreshExpiresAt: param.data.metadata.refreshExpiresAt,
 				},
-				options.cookies,
+				ctx.cookies,
 			);
 			return /** @type {const} */ ({
 				strategy: "jwt",
@@ -167,7 +188,7 @@ export function setOneAuthSessionToken(param, options) {
 		}
 
 		case "session": {
-			if (options.userAgent && isDeviceMobileOrTablet(options.userAgent)) {
+			if (ctx.userAgent && isDeviceMobileOrTablet(ctx.userAgent)) {
 				return /** @type {const} */ ({
 					strategy: "session",
 					platform: "mobile/tablet",
@@ -178,7 +199,7 @@ export function setOneAuthSessionToken(param, options) {
 
 			setSessionTokenCookie(
 				{ token: param.token, expiresAt: param.session.expiresAt },
-				options.cookies,
+				ctx.cookies,
 			);
 			return /** @type {const} */ ({
 				strategy: "session",
@@ -188,7 +209,7 @@ export function setOneAuthSessionToken(param, options) {
 		}
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 
@@ -196,22 +217,31 @@ export function setOneAuthSessionToken(param, options) {
  * Strategy-aware token clearing (replaces deleteSessionTokenCookie)
  *
  * @param {{ where: { sessionId: string } }} props
- * @param {{ shouldDeleteCookie?: boolean; cookies: CookiesProvider }} options
+ * @param {object} ctx
+ * @param {boolean} [ctx.shouldDeleteCookie]
+ * @param {CookiesProvider} ctx.cookies
+ * @param {AuthStrategy} ctx.authStrategy
+ * @param {{
+ * 	sessions: {
+ * 		revokeOneById: SessionsProvider['revokeOneById'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ * 	};
+ * }} ctx.authProviders
  */
-export async function invalidateOneAuthSessionToken(props, options) {
-	const { shouldDeleteCookie: deleteCookie = true } = options;
+export async function invalidateOneAuthSessionToken(props, ctx) {
+	const { shouldDeleteCookie: deleteCookie = true } = ctx;
 
-	switch (authConfig.strategy) {
+	switch (ctx.authStrategy) {
 		case "jwt":
-			if (deleteCookie) deleteJWTTokenCookies(options.cookies);
-			return await authConfig.providers.session.revokeOneById(props.where.sessionId);
+			if (deleteCookie) deleteJWTTokenCookies(ctx.cookies);
+			return await ctx.authProviders.sessions.revokeOneById(props.where.sessionId);
 
 		case "session":
-			if (deleteCookie) deleteSessionTokenCookie(options.cookies);
-			return await authConfig.providers.session.deleteOneById(props.where.sessionId);
+			if (deleteCookie) deleteSessionTokenCookie(ctx.cookies);
+			return await ctx.authProviders.sessions.deleteOneById(props.where.sessionId);
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 

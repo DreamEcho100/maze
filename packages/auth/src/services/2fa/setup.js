@@ -1,6 +1,5 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy, UsersProvider } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getSessionId } from "#utils/get-session-id.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
@@ -11,13 +10,25 @@ import { setup2FAServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
  *
- * @param {unknown} data
- * @param {object} options
- * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} options.headers - The headers provider to access the session token.
- * @param {any} options.tx - Transaction object for database operations
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
+ * @param {object} props
+ * @param {unknown} props.input
+ * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} props.headers - The headers provider to access the session token.
+ * @param {any} props.tx - Transaction object for database operations
+ * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {AuthStrategy} props.authStrategy
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 		markOne2FAVerified: SessionsProvider['markOne2FAVerified'];
+ * 	};
+ * 	users: {
+ * 		updateOneTOTPKey: UsersProvider['updateOneTOTPKey'];
+ * 	}
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    SETUP_2FA_MESSAGES_ERRORS,
@@ -25,18 +36,30 @@ import { setup2FAServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function setup2FAService(data, options) {
-	const input = setup2FAServiceInputSchema.safeParse(data);
+export async function setup2FAService(props) {
+	const input = setup2FAServiceInputSchema.safeParse(props.input);
 	if (!input.success) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: options.ipAddress,
-		userAgent: options.userAgent,
-		cookies: options.cookies,
-		headers: options.headers,
-	});
+	const { session, user } = await getCurrentAuthSession(
+		{
+			ipAddress: props.ipAddress,
+			userAgent: props.userAgent,
+			cookies: props.cookies,
+			headers: props.headers,
+		},
+		{
+			authStrategy: props.authStrategy,
+			authProviders: {
+				sessions: {
+					deleteOneById: props.authProviders.sessions.deleteOneById,
+					extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
+					findOneWithUser: props.authProviders.sessions.findOneWithUser,
+				},
+			},
+		},
+	);
 	if (!session) {
 		return SETUP_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
@@ -65,11 +88,16 @@ export async function setup2FAService(data, options) {
 	}
 
 	await Promise.all([
-		updateUserTOTPKey({ data: { key }, where: { userId: user.id } }, { tx: options.tx }),
-		// markOne2FAVerifiedRepository(session.id),
-		authConfig.providers.session.markOne2FAVerified(
+		updateUserTOTPKey(
+			{ data: { key }, where: { userId: user.id } },
+			{
+				tx: props.tx,
+				authProviders: { users: { updateOneTOTPKey: props.authProviders.users.updateOneTOTPKey } },
+			},
+		),
+		props.authProviders.sessions.markOne2FAVerified(
 			{ where: { id: getSessionId(session.token) } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
 	]);
 

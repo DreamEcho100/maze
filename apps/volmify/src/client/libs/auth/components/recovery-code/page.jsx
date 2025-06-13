@@ -1,10 +1,9 @@
-import { authConfig } from "@de100/auth/init";
-
 import { Link } from "#client/components/link";
 import { redirect } from "#i18n/server";
 // import { getUserRecoveryCodeRepository } from "@de100/auth/repositories/users";
 
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
+import { getOneUserRecoveryCode } from "#server/libs/auth/init";
 
 // import { userProvider } from "@de100/auth/src/providers";
 
@@ -28,7 +27,7 @@ export default async function AuthRecoveryCodePage() {
 	if (!session.twoFactorVerifiedAt) {
 		return redirect("/auth/2fa");
 	}
-	const recoveryCode = await authConfig.providers.users.getOneRecoveryCode(user.id);
+	const recoveryCode = await getOneUserRecoveryCode(user.id);
 
 	return (
 		<>

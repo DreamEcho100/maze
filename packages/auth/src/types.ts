@@ -335,7 +335,7 @@ export interface UsersProvider {
 	 * @returns {Promise<User>} The updated user
 	 * @description Updates email and automatically sets emailVerifiedAt timestamp
 	 */
-	updateEmailAndVerify: (
+	updateOneEmailAndVerify: (
 		props: { data: { email: string }; where: { id: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<User | null>;
@@ -414,7 +414,7 @@ export interface UsersProvider {
 	 * @returns {Promise<Uint8Array | null>} The new encrypted recovery code or null if current code is invalid
 	 * @description Atomically updates recovery code only if current code matches
 	 */
-	updateOneRecoveryCodeByUserId: (
+	updateOneRecoveryCodeById: (
 		id: string,
 		encryptedNewRecoveryCode: Uint8Array,
 		userRecoveryCode: Uint8Array,
@@ -576,7 +576,7 @@ export interface SessionsProvider {
 	 * Clean up expired refresh tokens
 	 * @returns {Promise<number>} Number of tokens cleaned up
 	 */
-	cleanupExpired: () => Promise<number>;
+	cleanupAllExpired: () => Promise<number>;
 	markOne2FAVerified: (
 		props: { where: { id: string } },
 		options?: { tx?: TransactionClient },

@@ -77,7 +77,7 @@ export async function verifyEmailUserService(data, options) {
 			{ where: { userId: user.id } },
 			{ tx: options.tx },
 		),
-		authConfig.providers.users.updateEmailAndVerify(
+		authConfig.providers.users.updateOneEmailAndVerify(
 			{ data: { email: verificationRequest.email }, where: { id: user.id } },
 			{ tx: options.tx },
 		),

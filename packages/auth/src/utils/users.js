@@ -1,5 +1,5 @@
 /**
- * @import { DateLike, User } from "#types.ts";
+ * @import { DateLike, User, UsersProvider } from "#types.ts";
  */
 
 import { authConfig } from "#init/index.js";
@@ -74,7 +74,7 @@ export async function resetUserRecoveryCode(userId) {
  * @param {string} props.data.password - The new password to be set.
  * @param {Object} props.where - The properties to identify the user.
  * @param {string} props.where.id - The ID of the user to update.
- * @param {{ tx?: any }} [options] - Additional options for the operation.
+ * @param {{ tx: any }} [options] - Additional options for the operation.
  * @returns {Promise<User>}
  */
 export async function updateUserPassword(props, options) {
@@ -100,15 +100,20 @@ export async function updateUserPassword(props, options) {
  * @param {string} props.where.userId - The ID of the user.
  * @param {object} props.data - The data to be updated.
  * @param {Uint8Array} props.data.key - The TOTP key to be updated.
- * @param {{ tx?: any }} [options] - Additional options for the operation.
+ * @param {{
+ * 	tx: any;
+ * 	authProviders: {
+ * 		users: { updateOneTOTPKey: UsersProvider['updateOneTOTPKey']; }
+ * 	}
+ * }} ctx - Additional options for the operation.
  * @returns {Promise<User>}
  */
-export async function updateUserTOTPKey(props, options) {
+export async function updateUserTOTPKey(props, ctx) {
 	const encryptedKey = encrypt(props.data.key);
 	// const result = await updateUserTOTPKeyRepository(userId, encryptedKey);
-	const result = await authConfig.providers.users.updateOneTOTPKey(
+	const result = await ctx.authProviders.users.updateOneTOTPKey(
 		{ data: { totpKey: encryptedKey }, where: { id: props.where.userId } },
-		options,
+		ctx,
 	);
 
 	if (!result) {
