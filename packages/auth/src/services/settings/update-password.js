@@ -6,12 +6,7 @@ import {
 } from "#utils/constants.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
-import {
-	createAuthSession,
-	generateAuthSessionToken,
-	getCurrentAuthSession,
-	setOneAuthSessionToken,
-} from "#utils/strategy/index.js";
+import { createAuthSession, getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
 /**
@@ -23,6 +18,7 @@ import { updateUserPassword } from "#utils/users.js";
  * @param {unknown} props.input.currentPassword The user's current password
  * @param {unknown} props.input.newPassword The new password to set for the user
  * @param {any} props.tx - Transaction object for database operations
+ * @param {() => string} props.generateRandomId
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
  * @param {HeadersProvider} props.headers - The headers provider to access the session token.
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
@@ -44,7 +40,7 @@ import { updateUserPassword } from "#utils/users.js";
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_PASSWORD_MESSAGES_ERRORS,
  *    UPDATE_PASSWORD_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setOneAuthSessionToken> }
+ *    { session: Awaited<ReturnType<typeof createAuthSession>> }
  *  >
  * >}
  */
@@ -107,37 +103,22 @@ export async function updatePasswordService(props) {
 		userId: user.id,
 		metadata: session.metadata,
 	};
-	const sessionToken = generateAuthSessionToken(
-		{ data: { user: user, metadata: sessionInputBasicInfo } },
-		{
-			authStrategy: props.authStrategy,
-			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
-		},
-	);
-	const newSession = await createAuthSession(
-		{
-			data: {
-				token: sessionToken,
-				user: user,
-				metadata: sessionInputBasicInfo,
-			},
-		},
-		{
-			authStrategy: props.authStrategy,
-			authProviders: {
-				sessions: { createOne: props.authProviders.sessions.createOne },
-				jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
-			},
-		},
-	);
-	const result = setOneAuthSessionToken(newSession, {
+
+	const newSession = await createAuthSession({
+		generateRandomId: props.generateRandomId,
+		user: user,
+		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
 		userAgent: props.userAgent,
 		authStrategy: props.authStrategy,
+		authProviders: {
+			sessions: { createOne: props.authProviders.sessions.createOne },
+			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+		},
 	});
 
 	return {
 		...UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,
-		data: { session: result },
+		data: { session: newSession },
 	};
 }

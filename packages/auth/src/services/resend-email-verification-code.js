@@ -8,7 +8,7 @@ import {
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
-import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession } from "#utils/sessions/index.js";
 
 /**
  *

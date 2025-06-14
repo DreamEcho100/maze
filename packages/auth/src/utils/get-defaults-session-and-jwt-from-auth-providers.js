@@ -25,6 +25,8 @@ export function getDefaultSessionAndJWTFromAuthProviders(
 			...additionalAuthProviders?.jwt,
 			verifyAccessToken: authProvidersFromInput.jwt?.verifyAccessToken,
 			createTokenPair: authProvidersFromInput.jwt?.createTokenPair,
+			verifyRefreshToken: authProvidersFromInput.jwt?.verifyRefreshToken,
+			createAccessToken: authProvidersFromInput.jwt?.createAccessToken,
 		},
 	};
 }

@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 
-import { getCurrentAuthSession } from "@de100/auth/utils/strategy";
+import { getCurrentAuthSession } from "@de100/auth/utils/sessions";
 
 import { db } from "../db";
 import { getSessionOptionsBasics } from "../get-session-options-basics";

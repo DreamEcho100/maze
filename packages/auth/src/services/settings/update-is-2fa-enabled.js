@@ -5,7 +5,7 @@ import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
-import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 import { updateIsTwoFactorServiceInputSchema } from "#utils/validations.js";
 

@@ -1,6 +1,3 @@
-export const COOKIE_TOKEN_SESSION_KEY = "session";
-export const COOKIE_TOKEN_SESSION_EXPIRES_DURATION = 1000 * 60 * 60 * 24 * 30; // 30 days
-
 export const COOKIE_TOKEN_EMAIL_VERIFICATION_KEY = "email_verification";
 export const COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION = 1000 * 60 * 10; // 10 minutes
 

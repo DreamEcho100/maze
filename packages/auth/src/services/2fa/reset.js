@@ -3,7 +3,7 @@
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
-import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { reset2FAServiceInputSchema } from "#utils/validations.js";
 
 /**

@@ -11,22 +11,6 @@
 			"types": "./dist/src/src/env.d.ts",
 			"default": "./src/env.js"
 		},
-		"./repositories/sessions": {
-			"types": "./dist/src/repositories/sessions.d.ts",
-			"default": "./src/repositories/sessions.js"
-		},
-		"./repositories/users": {
-			"types": "./dist/src/repositories/users.d.ts",
-			"default": "./src/repositories/users.js"
-		},
-		"./repositories/email-verification": {
-			"types": "./dist/src/repositories/email-verification.d.ts",
-			"default": "./src/repositories/email-verification.js"
-		},
-		"./repositories/password-reset": {
-			"types": "./dist/src/repositories/password-reset.d.ts",
-			"default": "./src/repositories/password-reset.js"
-		},
 		"./services/login": {
 			"types": "./dist/src/services/login.d.ts",
 			"default": "./src/services/login.js"
@@ -151,9 +135,9 @@
 			"types": "./dist/src/utils/passwords.d.ts",
 			"default": "./src/utils/passwords.js"
 		},
-		"./utils/strategy": {
-			"types": "./dist/src/utils/strategy/index.d.ts",
-			"default": "./src/utils/strategy/index.js"
+		"./utils/sessions": {
+			"types": "./dist/src/utils/sessions/index.d.ts",
+			"default": "./src/utils/sessions/index.js"
 		},
 		"./init": {
 			"types": "./dist/src/init/index.d.ts",

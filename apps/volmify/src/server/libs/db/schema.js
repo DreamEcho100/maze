@@ -413,6 +413,8 @@ export const session = pgTable(
 	"session",
 	{
 		id: text("id").primaryKey().notNull().$default(createId), // The hashed session ID or the hashed JWT refresh token
+		// id: text("id").primaryKey(), // ✅ sess_abc123 format
+		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
@@ -425,7 +427,7 @@ export const session = pgTable(
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 
 		//
-		sessionType: varchar("session_type", { length: 50 }).notNull().default("session"), // 'session' | 'refresh_token'
+		authStrategy: varchar("auth_strategy", { length: 50 }).notNull().default("jwt"), // 'session' | 'refresh_token'
 		revokedAt: timestamp("revoked_at", { withTimezone: true }), // For token revocation
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }), // For refresh token tracking
 		metadata: /** @type {ReturnType<typeof sessionMetadataJsonb.$type<Record<string, any>>>} */ (
@@ -437,9 +439,12 @@ export const session = pgTable(
 		index("idx_session_updated_at").on(table.updatedAt),
 		index("idx_session_expires_at").on(table.expiresAt),
 		index("idx_session_user_id").on(table.userId),
-		index("idx_session_session_type").on(table.sessionType),
+		index("idx_session_session_type").on(table.authStrategy),
 		index("idx_session_revoked_at").on(table.revokedAt),
 		index("idx_session_last_used_at").on(table.lastUsedAt),
+		index("idx_session_user_id_expires_at").on(table.userId, table.expiresAt),
+		index("idx_session_expires_at_created_at").on(table.expiresAt, table.createdAt),
+		index("idx_session_expires_at_revoked_at").on(table.expiresAt, table.revokedAt),
 	],
 );
 export const userEmailVerificationRequests = pgTable(

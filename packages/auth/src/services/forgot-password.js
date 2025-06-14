@@ -5,13 +5,14 @@ import {
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
+import { generateRandomToken } from "#utils/generate-random-token.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import {
 	createPasswordResetSession,
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
-import { generateAuthSessionToken, getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -74,13 +75,7 @@ export async function forgotPasswordService(props) {
 		userId: user.id,
 		metadata: session.metadata,
 	};
-	const sessionToken = generateAuthSessionToken(
-		{ data: { user: user, metadata: sessionInputBasicInfo } },
-		{
-			authStrategy: props.authStrategy,
-			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
-		},
-	);
+	const sessionToken = generateRandomToken();
 	const [passwordResetEmailSession] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },

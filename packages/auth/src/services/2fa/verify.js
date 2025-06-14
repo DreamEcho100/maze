@@ -4,7 +4,7 @@ import { VERIFY_2FA_MESSAGES_ERRORS, VERIFY_2FA_MESSAGES_SUCCESS } from "#utils/
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { getSessionId } from "#utils/get-session-id.js";
 import { verifyTOTP } from "#utils/index.js";
-import { getCurrentAuthSession } from "#utils/strategy/index.js";
+import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { verify2FAServiceInputSchema } from "#utils/validations.js";
 
 /**

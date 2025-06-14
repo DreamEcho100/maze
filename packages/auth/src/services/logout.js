@@ -3,7 +3,7 @@
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { getSessionId } from "#utils/get-session-id.js";
-import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/strategy/index.js";
+import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/sessions/index.js";
 
 /**
  * Handles logout by deleting the user session and clearing session cookies.

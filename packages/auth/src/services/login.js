@@ -2,11 +2,7 @@
 
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
-import {
-	createAuthSession,
-	generateAuthSessionToken,
-	setOneAuthSessionToken,
-} from "#utils/strategy/index.js";
+import { createAuthSession } from "#utils/sessions/index.js";
 import { loginServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -18,6 +14,7 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session.
  * @param {AuthStrategy} props.authStrategy
+ * @param {() => string} [props.generateRandomId] - Function to create a unique ID synchronously, if available.
  * @param {{
  * 	sessions: {
  * 		createOne: SessionsProvider['createOne']
@@ -35,7 +32,7 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  *  MultiErrorSingleSuccessResponse<
  *    LOGIN_MESSAGES_ERRORS,
  *    LOGIN_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setOneAuthSessionToken> }
+ *    { result: Awaited<ReturnType<typeof createAuthSession>> }
  *  >
  * >}
  */
@@ -73,33 +70,18 @@ export async function loginUserService(props) {
 		userId: user.id,
 		metadata: null,
 	};
-	const sessionToken = generateAuthSessionToken(
-		{ data: { user: user, metadata: sessionInputBasicInfo } },
-		{
-			authStrategy: props.authStrategy,
-			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
-		},
-	);
-	const session = await createAuthSession(
-		{
-			data: {
-				token: sessionToken,
-				user,
-				metadata: sessionInputBasicInfo,
-			},
-		},
-		{
-			authStrategy: props.authStrategy,
-			authProviders: {
-				sessions: { createOne: props.authProviders.sessions.createOne },
-				jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
-			},
-		},
-	);
-	const result = setOneAuthSessionToken(session, {
+
+	const result = await createAuthSession({
+		user,
+		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
 		userAgent: props.userAgent,
+		generateRandomId: props.generateRandomId,
 		authStrategy: props.authStrategy,
+		authProviders: {
+			sessions: { createOne: props.authProviders.sessions.createOne },
+			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+		},
 	});
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
@@ -112,6 +94,6 @@ export async function loginUserService(props) {
 
 	return {
 		...LOGIN_MESSAGES_SUCCESS.LOGGED_IN_SUCCESSFULLY,
-		data: { session: result },
+		data: { result: result },
 	};
 }

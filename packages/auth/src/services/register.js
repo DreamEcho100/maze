@@ -7,11 +7,6 @@ import {
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
-import {
-	createAuthSession,
-	generateAuthSessionToken,
-	setOneAuthSessionToken,
-} from "#utils/strategy/index.js";
 import { createUser } from "#utils/users.js";
 import { registerServiceInputSchema } from "#utils/validations.js";
 
@@ -25,13 +20,6 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session.
  * @param {AuthStrategy} props.authStrategy
  * @param {{
- * 	sessions: {
- *		createOne: SessionsProvider['createOne'];
- * 	};
- *	jwt?: {
- * 		createTokenPair?: JWTProvider['createTokenPair']
- * 		createRefreshToken: JWTProvider['createRefreshToken'];
- * 	};
  * 	userEmailVerificationRequests: {
  * 		createOne: UserEmailVerificationRequestsProvider['createOne'];
  * 		deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
@@ -45,7 +33,6 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  *  MultiErrorSingleSuccessResponse<
  *    REGISTER_MESSAGES_ERRORS,
  *    REGISTER_MESSAGES_SUCCESS,
- *    { user: User; session: ReturnType<typeof setOneAuthSessionToken> }
  *  >
  * >}
  */
@@ -89,53 +76,52 @@ export async function registerService(props) {
 	);
 	setEmailVerificationRequestCookie(userEmailVerificationRequests, props.cookies);
 
-	/** @type {SessionMetadata} */
-	const sessionInputBasicInfo = {
-		ipAddress: props.ipAddress ?? null,
-		userAgent: props.userAgent ?? null,
-		twoFactorVerifiedAt: null,
-		userId: user.id,
-		metadata: null,
-	};
-	const sessionToken = generateAuthSessionToken(
-		{ data: { user: user, metadata: sessionInputBasicInfo } },
-		{
-			authStrategy: props.authStrategy,
-			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
-		},
-	);
-	const session = await createAuthSession(
-		{
-			data: {
-				token: sessionToken,
-				user,
-				metadata: sessionInputBasicInfo,
-			},
-		},
-		{
-			authStrategy: props.authStrategy,
-			authProviders: {
-				sessions: {
-					createOne: props.authProviders.sessions.createOne,
-				},
-				jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
-			},
-		},
-	);
-	const result = setOneAuthSessionToken(session, {
-		cookies: props.cookies,
-		userAgent: props.userAgent,
-		authStrategy: props.authStrategy,
-	});
+	return REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL;
 
-	if (user.twoFactorEnabledAt) {
-		return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
-	}
+	// /** @type {SessionMetadata} */
+	// const sessionInputBasicInfo = {
+	// 	ipAddress: props.ipAddress ?? null,
+	// 	userAgent: props.userAgent ?? null,
+	// 	twoFactorVerifiedAt: null,
+	// 	userId: user.id,
+	// 	metadata: null,
+	// };
+	// const sessionToken = generateAuthSessionToken(
+	// 	{ data: { user: user, metadata: sessionInputBasicInfo, sessionId: session.id } },
+	// 	{
+	// 		authStrategy: props.authStrategy,
+	// 		authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
+	// 	},
+	// );
+	// const session = await createAuthSession({
+	// 	// token: sessionToken,
+	// 	generateRandomId: props.generateRandomId,
+	// 	cookies: props.cookies,
+	// 	userAgent: props.userAgent,
+	// 	user,
+	// 	metadata: sessionInputBasicInfo,
+	// 	authStrategy: props.authStrategy,
+	// 	authProviders: {
+	// 		sessions: {
+	// 			createOne: props.authProviders.sessions.createOne,
+	// 		},
+	// 		jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+	// 	},
+	// });
+	// const result = setOneAuthSessionToken(session, {
+	// 	cookies: props.cookies,
+	// 	userAgent: props.userAgent,
+	// 	authStrategy: props.authStrategy,
+	// });
+
+	// if (user.twoFactorEnabledAt) {
+	// 	return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
+	// }
 
 	// redirect("/auth/2fa/setup");
 	// return redirect("/auth/login");
-	return {
-		...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
-		data: { user, session: result },
-	};
+	// return {
+	// 	...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
+	// 	data: { user, session: result },
+	// };
 }

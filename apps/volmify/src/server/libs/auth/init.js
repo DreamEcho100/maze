@@ -42,7 +42,7 @@ const sessionReturnTemplate = {
 	userAgent: dbSchema.session.userAgent,
 	twoFactorVerifiedAt: dbSchema.session.twoFactorVerifiedAt,
 	//
-	sessionType: dbSchema.session.sessionType,
+	authStrategy: dbSchema.session.authStrategy,
 	revokedAt: dbSchema.session.revokedAt,
 	lastUsedAt: dbSchema.session.lastUsedAt,
 	metadata: dbSchema.session.metadata,
@@ -57,7 +57,7 @@ const sessionReturnSchema = /** @type {const} */ ({
 	userAgent: true,
 	twoFactorVerifiedAt: true,
 	//
-	sessionType: true,
+	authStrategy: true,
 	revokedAt: true,
 	lastUsedAt: true,
 	metadata: true,
@@ -364,14 +364,17 @@ export const findOneSessionWithUser = async (sessionId) => {
 		});
 };
 /** @type {SessionsProvider['extendOneExpirationDate']} */
-export const extendOneSessionExpirationDate = async (sessionId, expiresAt) => {
+export const extendOneSessionExpirationDate = async (props, options) => {
+	const _db =
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
+		db;
 	return db
 		.update(dbSchema.session)
 		.set({
-			expiresAt: dateLikeToDate(expiresAt),
+			expiresAt: dateLikeToDate(props.data.expiresAt),
 			updatedAt: new Date(),
 		})
-		.where(eq(dbSchema.session.id, sessionId))
+		.where(eq(dbSchema.session.id, props.where.sessionId))
 		.returning(sessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };

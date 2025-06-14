@@ -72,7 +72,8 @@ interface User {
 }
 
 interface DBSession {
-	id: string; // Unique token for the session
+	id: string; // Unique session ID
+	tokenHash: Uint8Array<ArrayBufferLike>; // Hashed secret for the session
 	createdAt: DateLike;
 	userId: string;
 	expiresAt: DateLike;
@@ -83,14 +84,14 @@ interface DBSession {
 	ipAddress?: string | null;
 	userAgent?: UserAgent | null;
 	//
-	sessionType: "session" | "jwt_refresh_token" | (string & {});
+	authStrategy: AuthStrategy | (string & {});
 	revokedAt?: DateLike | null;
 	lastUsedAt?: DateLike | null;
 	metadata?: Record<string, any> | null;
 }
 
 interface ClientSession {
-	token: string; // Unique token for the session
+	id: string; // Unique session ID `${id}.${tokenHash}`
 	createdAt: DateLike;
 	userId: string;
 	expiresAt: DateLike;
@@ -99,7 +100,7 @@ interface ClientSession {
 	ipAddress?: string | null;
 	userAgent?: UserAgent | null;
 	//
-	sessionType: "session" | "jwt_refresh_token" | (string & {});
+	authStrategy: AuthStrategy | (string & {});
 	revokedAt?: DateLike | null;
 	lastUsedAt?: DateLike | null;
 	metadata?: Record<string, any> | null;
@@ -109,9 +110,9 @@ interface ClientSession {
 export interface SessionMetadata
 	extends Omit<
 		ClientSession,
-		"token" | "expiresAt" | "id" | "lastUsedAt" | "createdAt" | "sessionType" | "revokedAt"
+		"token" | "expiresAt" | "id" | "lastUsedAt" | "createdAt" | "authStrategy" | "revokedAt"
 	> {
-	// sessionType: "session" | "jwt_refresh_token";
+	// authStrategy: AuthStrategy;
 }
 
 interface SessionWithUser {
@@ -528,7 +529,10 @@ export interface SessionsProvider {
 	 * @returns {Promise<DBSession | null>} The updated session
 	 * @description Useful for implementing "remember me" functionality or session refresh
 	 */
-	extendOneExpirationDate: (sessionId: string, expiresAt: Date) => Promise<DBSession | null>;
+	extendOneExpirationDate: (
+		props: { data: { expiresAt: Date }; where: { sessionId: string } },
+		options?: { tx?: TransactionClient },
+	) => Promise<DBSession | null>;
 	/**
 	 * Delete a specific session (logout)
 	 * @param sessionId - The session ID to delete
@@ -598,6 +602,7 @@ export interface SessionsProvider {
 }
 
 export interface JWTRefreshTokenPayload {
+	sessionId: string;
 	user: User;
 	metadata: SessionMetadata;
 }
@@ -648,7 +653,7 @@ export interface JWTProvider {
 	 * @returns The JWT refresh token string
 	 */
 	createRefreshToken: (
-		props: { data: { user: User; metadata: SessionMetadata } },
+		props: { data: { user: User; metadata: SessionMetadata; sessionId: string } },
 		options?: {
 			expiresIn?: number;
 			audience?: string | string[];
@@ -668,6 +673,30 @@ export interface JWTProvider {
 	 * @returns {{ exp: number; iat: number; twoFactorVerifiedAt?: number; userId: string; sessionId?: string; } | null}
 	 */
 	verifyAccessToken: (
+		token: string,
+		options?: {
+			audience?: string | string[];
+			issuer?: string;
+			secret?: string;
+			ignoreExpiration?: boolean;
+		},
+	) => {
+		exp: number;
+		iat: number;
+		payload: JWTRefreshTokenPayload;
+	} | null;
+
+	/**
+	 * Verify and decode a JWT token
+	 * @param token - The JWT token to verify
+	 * @param [options] - Verification options
+	 * @param [options.audience] - Expected audience
+	 * @param [options.issuer] - Expected issuer
+	 * @param [options.secret] - JWT secret (defaults to env)
+	 * @param {boolean} [options.ignoreExpiration] - Skip expiration check
+	 * @returns {{ exp: number; iat: number; twoFactorVerifiedAt?: number; userId: string; sessionId?: string; } | null}
+	 */
+	verifyRefreshToken: (
 		token: string,
 		options?: {
 			audience?: string | string[];
@@ -779,6 +808,8 @@ interface SesHan {
 interface JWTHan {
 	verifyAccessToken?: JWTProvider["verifyAccessToken"];
 	createTokenPair?: JWTProvider["createTokenPair"];
+	verifyRefreshToken?: JWTProvider["verifyRefreshToken"];
+	createAccessToken?: JWTProvider["createAccessToken"];
 }
 
 export interface AuthProvidersShape {

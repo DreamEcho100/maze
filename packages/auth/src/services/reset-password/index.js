@@ -1,19 +1,16 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider, UsersProvider, JWTProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithSessionAndJWTDefaults, HeadersProvider } from "#types.ts"; */
 
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
+import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import {
 	deletePasswordResetSessionTokenCookie,
 	validatePasswordResetSessionRequest,
 } from "#utils/password-reset.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
-import {
-	createAuthSession,
-	generateAuthSessionToken,
-	setOneAuthSessionToken,
-} from "#utils/strategy/index.js";
+import { createAuthSession, getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
 import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 
@@ -24,10 +21,12 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * @param {unknown} props.input
  * @param {any} props.tx - Transaction object for database operations.
  * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {HeadersProvider} props.headers - Cookies provider for session management.
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {() => string} props.generateRandomId
  * @param {AuthStrategy} props.authStrategy
- * @param {{
+ * @param {AuthProvidersWithSessionAndJWTDefaults<{
  * 	sessions: {
  * 		createOne: SessionsProvider['createOne'];
  * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
@@ -44,16 +43,28 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * 	  deleteOne: PasswordResetSessionsProvider["deleteOne"];
  * 		deleteAllByUserId: PasswordResetSessionsProvider["deleteAllByUserId"];
  * 	};
- * }} props.authProviders
+ * }>} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
  *    RESET_PASSWORD_MESSAGES_SUCCESS,
- *    { session: ReturnType<typeof setOneAuthSessionToken> }
+ *    { session: Awaited<ReturnType<typeof newSession>> }
  *  >
  * >}
  */
 export async function resetPasswordService(props) {
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: props.ipAddress,
+		userAgent: props.userAgent,
+		cookies: props.cookies,
+		headers: props.headers,
+		tx: props.tx,
+		authStrategy: props.authStrategy,
+		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+	});
+
+	if (!session) return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+
 	const input = resetPasswordServiceInputSchema.safeParse(props.input);
 	if (!input.success) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
@@ -61,7 +72,7 @@ export async function resetPasswordService(props) {
 
 	const { password } = input.data;
 
-	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest(
+	const { session: passwordResetSession } = await validatePasswordResetSessionRequest(
 		props.cookies,
 		{
 			authProviders: {
@@ -101,39 +112,7 @@ export async function resetPasswordService(props) {
 		userId: user.id,
 		metadata: null,
 	};
-	const [session] = await Promise.all([
-		(async () => {
-			const sessionToken = generateAuthSessionToken(
-				{ data: { user: user, metadata: sessionInputBasicInfo } },
-				{
-					authStrategy: props.authStrategy,
-					authProviders: {
-						jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken },
-					},
-				},
-			);
-			const session = await createAuthSession(
-				{
-					data: {
-						token: sessionToken,
-						metadata: sessionInputBasicInfo,
-						user,
-					},
-				},
-				{
-					tx: props.tx,
-					authStrategy: props.authStrategy,
-					authProviders: {
-						sessions: {
-							createOne: props.authProviders.sessions.createOne,
-						},
-						jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
-					},
-				},
-			);
-
-			return session;
-		})(),
+	await Promise.all([
 		props.authProviders.passwordResetSession.deleteAllByUserId(
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: props.tx },
@@ -152,15 +131,26 @@ export async function resetPasswordService(props) {
 			},
 		),
 	]);
-	const result = setOneAuthSessionToken(session, {
+	deletePasswordResetSessionTokenCookie(props.cookies);
+
+	const newSession = await createAuthSession({
 		cookies: props.cookies,
 		userAgent: props.userAgent,
+		generateRandomId: props.generateRandomId,
+		metadata: sessionInputBasicInfo,
+		user,
+		tx: props.tx,
 		authStrategy: props.authStrategy,
+		authProviders: {
+			sessions: {
+				createOne: props.authProviders.sessions.createOne,
+			},
+			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+		},
 	});
-	deletePasswordResetSessionTokenCookie(props.cookies);
 
 	return {
 		...RESET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_SUCCESSFUL,
-		data: { session: result },
+		data: { session: newSession },
 	};
 }
