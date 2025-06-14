@@ -192,7 +192,8 @@ export function LocaleChooser({
 			onChange={(e) => setLocale(e.target.value)}
 			value={selectedLocale}
 			disabled={loading}
-			className={className}>
+			className={className}
+		>
 			<option value="" disabled>
 				{placeholder}
 			</option>

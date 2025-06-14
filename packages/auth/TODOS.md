@@ -20,10 +20,10 @@ const result = await authConfig.providers.sessions.createOne(data);
 
 // ✅ New: Explicit dependency injection
 const result = await loginUserService({
-  authProviders: {
-    sessions: { createOne: sessionProvider.createOne }
-  },
-  data
+	authProviders: {
+		sessions: { createOne: sessionProvider.createOne },
+	},
+	data,
 });
 ```
 
@@ -58,13 +58,13 @@ const result = await loginUserService({
 
   ```javascript
   export function validateAuthProviders(required, provided) {
-    for (const [provider, methods] of Object.entries(required)) {
-      for (const method of methods) {
-        if (!provided[provider]?.[method]) {
-          throw new Error(`Missing ${provider}.${method}`);
-        }
-      }
-    }
+  	for (const [provider, methods] of Object.entries(required)) {
+  		for (const method of methods) {
+  			if (!provided[provider]?.[method]) {
+  				throw new Error(`Missing ${provider}.${method}`);
+  			}
+  		}
+  	}
   }
   ```
 
@@ -83,12 +83,12 @@ const result = await loginUserService({
   ```javascript
   // Based on your current volmify implementation
   export function createNextJsAuthProviders(db) {
-    return {
-      users: createDrizzleUserProvider(db),
-      sessions: createDrizzleSessionProvider(db),
-      emailVerification: createDrizzleEmailVerificationProvider(db),
-      passwordReset: createDrizzlePasswordResetProvider(db)
-    };
+  	return {
+  		users: createDrizzleUserProvider(db),
+  		sessions: createDrizzleSessionProvider(db),
+  		emailVerification: createDrizzleEmailVerificationProvider(db),
+  		passwordReset: createDrizzlePasswordResetProvider(db),
+  	};
   }
   ```
 
@@ -203,20 +203,12 @@ const result = await loginUserService({
 
   ```javascript
   // Missing admin functionality:
-  export async function adminListUsersService({
-    authProviders,
-    filters,
-    pagination
-  }) {
-    // Implementation with proper provider injection
+  export async function adminListUsersService({ authProviders, filters, pagination }) {
+  	// Implementation with proper provider injection
   }
 
-  export async function adminDisableUserService({
-    authProviders,
-    userId,
-    reason
-  }) {
-    // Disable user and cleanup sessions
+  export async function adminDisableUserService({ authProviders, userId, reason }) {
+  	// Disable user and cleanup sessions
   }
   ```
 
@@ -256,10 +248,10 @@ const result = await loginUserService({
   ```javascript
   // Easy mocking with dependency injection
   const mockAuthProviders = {
-    users: {
-      findOneByEmail: jest.fn().mockResolvedValue(mockUser),
-      createOne: jest.fn().mockResolvedValue(mockUser)
-    }
+  	users: {
+  		findOneByEmail: jest.fn().mockResolvedValue(mockUser),
+  		createOne: jest.fn().mockResolvedValue(mockUser),
+  	},
   };
 
   await loginUserService({ authProviders: mockAuthProviders, data });

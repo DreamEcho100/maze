@@ -87,7 +87,8 @@ const QuestionForm = () => {
 										setCurrentQuestion(currentQuestion - 1);
 										form.setValue("answer", answers[currentQuestion - 1] ?? "");
 									}
-								}}>
+								}}
+							>
 								Previous
 							</Button>
 

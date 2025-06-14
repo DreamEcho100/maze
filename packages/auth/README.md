@@ -1,10 +1,13 @@
 # 🔐 Maze Auth
 
-A **framework-agnostic**, **dependency injection-based** authentication library for modern JavaScript applications.
+A **framework-agnostic**, **dependency injection-based** authentication library
+for modern JavaScript applications.
 
 ## 🎯 **Philosophy**
 
-Built on the principle of **explicit dependencies over implicit magic**. Unlike traditional auth libraries that rely on global configuration and hidden dependencies, Maze Auth uses **dependency injection** to provide:
+Built on the principle of **explicit dependencies over implicit magic**.  
+Unlike traditional auth libraries that rely on global configuration and hidden  
+dependencies, Maze Auth uses **dependency injection** to provide:
 
 - ✅ **Framework Agnostic** - Works with Next.js, SvelteKit, Express, Fastify, etc.
 - ✅ **Testable** - Easy to mock individual providers for testing
@@ -25,24 +28,42 @@ npm install @maze/auth
 ```javascript
 // Your database provider implementations
 const authProviders = {
-  users: {
-    createOne: async (data) => { /* your DB logic */ },
-    findOneByEmail: async (email) => { /* your DB logic */ },
-    updateOnePassword: async (userId, hash) => { /* your DB logic */ },
-    // ... other methods
-  },
-  sessions: {
-    createOne: async (data) => { /* your DB logic */ },
-    findOneWithUser: async (id) => { /* your DB logic */ },
-    deleteOne: async (id) => { /* your DB logic */ },
-    // ... other methods
-  },
-  emailVerification: {
-    createOne: async (data) => { /* your DB logic */ },
-    findOneByCode: async (code) => { /* your DB logic */ },
-    deleteOne: async (id) => { /* your DB logic */ },
-    // ... other methods
-  }
+	users: {
+		createOne: async (data) => {
+			/* your DB logic */
+		},
+		findOneByEmail: async (email) => {
+			/* your DB logic */
+		},
+		updateOnePassword: async (userId, hash) => {
+			/* your DB logic */
+		},
+		// ... other methods
+	},
+	sessions: {
+		createOne: async (data) => {
+			/* your DB logic */
+		},
+		findOneWithUser: async (id) => {
+			/* your DB logic */
+		},
+		deleteOne: async (id) => {
+			/* your DB logic */
+		},
+		// ... other methods
+	},
+	emailVerification: {
+		createOne: async (data) => {
+			/* your DB logic */
+		},
+		findOneByCode: async (code) => {
+			/* your DB logic */
+		},
+		deleteOne: async (id) => {
+			/* your DB logic */
+		},
+		// ... other methods
+	},
 };
 ```
 
@@ -53,34 +74,34 @@ import { loginUserService, registerUserService } from "@maze/auth/services";
 
 // Login user
 const loginResult = await loginUserService({
-  authProviders: {
-    users: { 
-      findOneByEmail: authProviders.users.findOneByEmail,
-      getOnePasswordHash: authProviders.users.getOnePasswordHash 
-    },
-    sessions: { 
-      createOne: authProviders.sessions.createOne 
-    }
-  },
-  data: { email, password },
-  cookies: yourCookieHandler,
-  headers: yourHeaders,
-  userAgent: yourUserAgent
+	authProviders: {
+		users: {
+			findOneByEmail: authProviders.users.findOneByEmail,
+			getOnePasswordHash: authProviders.users.getOnePasswordHash,
+		},
+		sessions: {
+			createOne: authProviders.sessions.createOne,
+		},
+	},
+	data: { email, password },
+	cookies: yourCookieHandler,
+	headers: yourHeaders,
+	userAgent: yourUserAgent,
 });
 
 // Register user
 const registerResult = await registerUserService({
-  authProviders: {
-    users: { 
-      createOne: authProviders.users.createOne,
-      findOneByEmail: authProviders.users.findOneByEmail 
-    },
-    emailVerification: { 
-      createOne: authProviders.emailVerification.createOne 
-    }
-  },
-  data: { email, password, name },
-  // ... other context
+	authProviders: {
+		users: {
+			createOne: authProviders.users.createOne,
+			findOneByEmail: authProviders.users.findOneByEmail,
+		},
+		emailVerification: {
+			createOne: authProviders.emailVerification.createOne,
+		},
+	},
+	data: { email, password, name },
+	// ... other context
 });
 ```
 
@@ -113,17 +134,17 @@ Each service declares exactly what it needs:
 ```javascript
 /**
  * @param {{
- *   users: { 
+ *   users: {
  *     findOneByEmail: (email: string) => Promise<User | null>;
  *     getOnePasswordHash: (userId: string) => Promise<string>;
  *   };
- *   sessions: { 
+ *   sessions: {
  *     createOne: (data: SessionData) => Promise<Session>;
  *   };
  * }} authProviders
  */
 export async function loginUserService({ authProviders, data, cookies }) {
-  // Service implementation with explicit dependencies
+	// Service implementation with explicit dependencies
 }
 ```
 
@@ -137,18 +158,19 @@ npm install @maze/auth-nextjs-drizzle
 
 ```javascript
 import { createNextJsAuthProviders } from "@maze/auth-nextjs-drizzle";
+
 import { db } from "./db";
 
 const authProviders = createNextJsAuthProviders(db);
 
 // Use in API routes, server actions, middleware
 export async function POST(request) {
-  return loginUserService({
-    authProviders,
-    data: await request.json(),
-    cookies: cookies(),
-    headers: headers()
-  });
+	return loginUserService({
+		authProviders,
+		data: await request.json(),
+		cookies: cookies(),
+		headers: headers(),
+	});
 }
 ```
 
@@ -160,19 +182,20 @@ npm install @maze/auth-sveltekit-prisma
 
 ```javascript
 import { createSvelteKitAuthProviders } from "@maze/auth-sveltekit-prisma";
+
 import { prisma } from "./db";
 
 const authProviders = createSvelteKitAuthProviders(prisma);
 
 // Use in server-side load functions and actions
 export const actions = {
-  login: async ({ request, cookies }) => {
-    return loginUserService({
-      authProviders,
-      data: await request.formData(),
-      cookies
-    });
-  }
+	login: async ({ request, cookies }) => {
+		return loginUserService({
+			authProviders,
+			data: await request.formData(),
+			cookies,
+		});
+	},
 };
 ```
 
@@ -204,7 +227,7 @@ export const actions = {
 ### **1.1 Provider Interface Standardization**
 
 - [x] **Implement dependency injection pattern** - ✅ **COMPLETED**
-- [x] **Remove global configuration dependencies** - ✅ **COMPLETED**  
+- [x] **Remove global configuration dependencies** - ✅ **COMPLETED**
 - [x] **Service-level provider specification** - ✅ **COMPLETED**
 
 ### **1.2 Input Validation Completion**
@@ -224,7 +247,7 @@ export const actions = {
 ### **2.1 Next.js Ecosystem**
 
 - [ ] **@maze/auth-nextjs-drizzle** - Complete Next.js + Drizzle integration
-- [ ] **@maze/auth-nextjs-prisma** - Next.js + Prisma integration  
+- [ ] **@maze/auth-nextjs-prisma** - Next.js + Prisma integration
 - [ ] **React hooks** for client-side auth state
 - [ ] **Server actions** for all auth flows
 
@@ -349,7 +372,7 @@ export const actions = {
 
 - ✅ **Zero global dependencies** - Pure dependency injection
 - ✅ **Framework adapters** for top 3 frameworks
-- ✅ **Database adapters** for top 3 ORMs  
+- ✅ **Database adapters** for top 3 ORMs
 - ✅ **Production usage** in 10+ applications
 - ✅ **Community adoption** with 1000+ stars
 - ✅ **Enterprise readiness** with security audits
@@ -363,4 +386,5 @@ The library is built on **modern software engineering principles**:
 - **Composition** over inheritance
 - **Framework agnostic** over framework lock-in
 
-This architectural foundation makes Maze Auth suitable for **enterprise applications** while maintaining **developer experience** simplicity.
+This architectural foundation makes Maze Auth suitable for **enterprise applications**
+while maintaining **developer experience** simplicity.

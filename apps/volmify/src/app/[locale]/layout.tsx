@@ -11,7 +11,6 @@ import { I18nProvider } from "@de100/i18n-reactjs";
 
 import { allowedLocales, defaultLocale, fallbackLocale } from "#i18n/constants";
 import { getTranslation } from "#i18n/getTranslations";
-import { setDrizzlePgAuthProviders } from "#server/libs/auth/init";
 
 // import { TRPCReactProvider } from "~/trpc/react";
 
@@ -42,7 +41,6 @@ export default async function RootLayout(
 		locale,
 	});
 
-	await setDrizzlePgAuthProviders();
 	const localeTranslations = await getTranslation(locale);
 
 	return (
@@ -54,7 +52,8 @@ export default async function RootLayout(
 					defaultLocale={defaultLocale}
 					fallbackLocale={fallbackLocale}
 					translations={{ [locale]: localeTranslations }}
-					locale={locale}>
+					locale={locale}
+				>
 					{props.children}
 				</I18nProvider>
 			</body>

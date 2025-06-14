@@ -37,7 +37,8 @@ export default async function AuthTwoFactorSetUpPage() {
 					width: "200px",
 					height: "200px",
 				}}
-				dangerouslySetInnerHTML={{ __html: qrcode }}></div>
+				dangerouslySetInnerHTML={{ __html: qrcode }}
+			></div>
 			<TwoFactorSetUpForm encodedTOTPKey={encodedTOTPKey} />
 		</>
 	);

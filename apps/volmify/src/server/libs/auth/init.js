@@ -1,13 +1,11 @@
 /**
  * @import { NextRequest } from 'next/server';
- * @import { AuthConfig } from "@de100/auth/init";
  * @import { UsersProvider, SessionsProvider, PasswordResetSessionsProvider, UserEmailVerificationRequestsProvider, AuthStrategy } from "@de100/auth/types";
  */
 
 import { and, eq, isNull, lt } from "drizzle-orm";
 import { ulid } from "ulid";
 
-import { authConfig, initAuth } from "@de100/auth/init";
 import { dateLikeToDate } from "@de100/auth/utils/dates";
 import { decrypt, decryptToString } from "@de100/auth/utils/encryption";
 
@@ -104,6 +102,13 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 	emailVerifiedAt: true,
 });
 
+/*************** ***************/
+/* ID */
+/*************** ***************/
+export const createOneIdSync = ulid;
+/** @returns {Promise<string>} */
+export const createOneIdAsync = async () => new Promise((resolve) => resolve(ulid()));
+
 /** @type {AuthStrategy} */
 export const authStrategy = process.env.AUTH_STRATEGY ?? "jwt";
 
@@ -118,7 +123,7 @@ export const createOneUser = async (values) => {
 		.insert(dbSchema.user)
 		.values({
 			...values,
-			id: values.id ?? (await authConfig.ids.createOneAsync()),
+			id: values.id ?? createOneIdSync(),
 			email: values.email,
 			name: values.name,
 			passwordHash: values.passwordHash,
@@ -315,7 +320,6 @@ export const createOneSession = async (props, options) => {
 			.insert(dbSchema.session)
 			.values({
 				...props.data,
-				// id: props.data.id ?? (await authConfig.ids.createOneAsync()),
 				expiresAt: dateLikeToDate(props.data.expiresAt),
 				twoFactorVerifiedAt: props.data.twoFactorVerifiedAt
 					? dateLikeToDate(props.data.twoFactorVerifiedAt)
@@ -388,7 +392,7 @@ export const revokeOneSessionById = async (id) => {
 		.update(dbSchema.session)
 		.set({ revokedAt: new Date(), updatedAt: new Date() })
 		.where(eq(dbSchema.session.id, id));
-	// authConfig.RedisTokenBlacklist.revokeOneById(id);
+	// RedisTokenBlacklist.revokeOneById(id);
 };
 /** @type {SessionsProvider['revokeAllByUserId']} */
 export const revokeAllSessionsByUserId = async (props, options) => {
@@ -407,12 +411,12 @@ export const revokeAllSessionsByUserId = async (props, options) => {
 			),
 		)
 		.returning({ id: dbSchema.session.id });
-	// authConfig.RedisTokenBlacklist.revokeManyByIds(result.map((session) => session.id));
+	// RedisTokenBlacklist.revokeManyByIds(result.map((session) => session.id));
 };
 /** @type {SessionsProvider['isOneRevokedById']} */
 // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars
 export const isOneSessionRevokedById = async (props) => {
-	// return authConfig.RedisTokenBlacklist.isOneRevokedById(props.where.id);
+	// return RedisTokenBlacklist.isOneRevokedById(props.where.id);
 	// For now, we don't use Redis for token revocation
 	// return db
 	// 	.select({ revokedAt: dbSchema.session.revokedAt })
@@ -430,7 +434,7 @@ export const cleanupAllSessionExpired = async () => {
 	const result = await db
 		.delete(dbSchema.session)
 		.where(lt(dbSchema.session.expiresAt, new Date()));
-	// authConfig.RedisTokenBlacklist.cleanupExpired();
+	// RedisTokenBlacklist.cleanupExpired();
 
 	return result.rowCount ?? 0;
 };
@@ -508,7 +512,7 @@ export const createOnePasswordResetSession = async (props, options) => {
 		.insert(dbSchema.passwordResetSession)
 		.values({
 			...props.data,
-			id: props.data.id ?? (await authConfig.ids.createOneAsync()),
+			id: props.data.id ?? createOneIdSync(),
 			emailVerifiedAt: props.data.emailVerifiedAt
 				? dateLikeToDate(props.data.emailVerifiedAt)
 				: null,
@@ -591,7 +595,7 @@ export const createOneEmailVerificationRequests = async (values) => {
 		.insert(dbSchema.userEmailVerificationRequests)
 		.values({
 			...values,
-			id: values.id ?? (await authConfig.ids.createOneAsync()),
+			id: values.id ?? createOneIdSync(),
 			expiresAt: dateLikeToDate(values.expiresAt),
 			createdAt,
 		})
@@ -622,114 +626,3 @@ export const findOneEmailVerificationRequestsByIdAndUserId = async (userId, id) 
 		)
 		.then((result) => result[0] ?? null);
 };
-
-/** @param {{ req?: NextRequest }} [props] */
-export async function setDrizzlePgAuthProviders(props) {
-	const _global = /** @type {{ ___authConfig?: AuthConfig }} */ (globalThis);
-
-	if (_global.___authConfig?.hasInitialized) {
-		// If authConfig is already initialized, we can skip re-initialization
-		return _global.___authConfig;
-	}
-
-	_global.___authConfig = await initAuth({
-		// The following is for testing purposes, it can be removed in production
-		strategy: process.env.AUTH_STRATEGY ?? "jwt",
-		cookies: async () => {
-			const jar =
-				props?.req?.cookies ??
-				(await import("next/headers").then(async (mod) => await mod.cookies()));
-
-			if (!jar) {
-				throw new Error("Cookies are not available in this context.");
-			}
-
-			return {
-				get: (name) => jar.get(name)?.value ?? null,
-				set: (name, value, options) => {
-					jar.set(
-						name,
-						value,
-						options
-							? {
-									...options,
-									expires: options.expires ? dateLikeToDate(options.expires) : undefined,
-								}
-							: undefined,
-					);
-				},
-				delete: (name, options) => {
-					jar.set(
-						name,
-						"",
-						options
-							? {
-									...options,
-									expires: options.expires ? dateLikeToDate(options.expires) : undefined,
-								}
-							: undefined,
-					);
-				},
-			};
-		},
-		headers: async () => {
-			const headers =
-				props?.req?.headers ??
-				(await import("next/headers").then(async (mod) => await mod.headers()));
-
-			if (!headers) {
-				throw new Error("Cookies are not available in this context.");
-			}
-
-			return headers;
-		},
-		ids: {
-			createOneSync: ulid,
-			createOneAsync: async () => new Promise((resolve) => resolve(ulid())),
-		},
-		providers: {
-			users: {
-				createOne: createOneUser,
-				findOneById: findOneUserById,
-				findOneByEmail: findOneUserByEmail,
-				getOnePasswordHash: getOneUserPasswordHash,
-				getOneRecoveryCode: getOneUserRecoveryCode,
-				getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
-				updateOneEmailAndVerify: updateOneUserEmailAndVerify,
-				updateOne2FAEnabled: updateOneUser2FAEnabled,
-				updateOnePassword: updateOneUserPassword,
-				updateOneRecoveryCode: updateOneUserRecoveryCode,
-				updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
-				updateOneTOTPKey: updateOneUserTOTPKey,
-				verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
-				getOneTOTPKey: getOneUserTOTPKey,
-			},
-			sessions: {
-				createOne: createOneSession,
-				findOneWithUser: findOneSessionWithUser,
-				extendOneExpirationDate: extendOneSessionExpirationDate,
-				deleteOneById: deleteOneSessionById,
-				deleteAllByUserId: deleteAllSessionsByUserId,
-				revokeOneById: revokeOneSessionById,
-				revokeAllByUserId: revokeAllSessionsByUserId,
-				isOneRevokedById: isOneSessionRevokedById,
-				cleanupAllExpired: cleanupAllSessionExpired,
-				markOne2FAVerified: markOneSession2FAVerified,
-				unMarkOne2FAForUser: unMarkOneSession2FAForUser,
-			},
-			passwordResetSessions: {
-				createOne: createOnePasswordResetSession,
-				findOneWithUser: findOnePasswordResetSessionWithUser,
-				markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
-				deleteOne: deleteOnePasswordResetSession,
-				deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
-				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
-			},
-			userEmailVerificationRequests: {
-				createOne: createOneEmailVerificationRequests,
-				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
-				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-			},
-		},
-	});
-}

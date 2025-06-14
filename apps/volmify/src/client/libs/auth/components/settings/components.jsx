@@ -99,7 +99,8 @@ export function RecoveryCodeSection(props) {
 					if (result.type === "success") {
 						setRecoveryCode(result.data.recoveryCode);
 					}
-				}}>
+				}}
+			>
 				Generate new code
 			</button>
 		</section>

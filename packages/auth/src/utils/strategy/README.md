@@ -105,13 +105,13 @@ Traditional session-based authentication with database storage.
 ```javascript
 // 1. Create session
 const result = await createSession({
-  data: {
-    token: generateSessionToken(),
-    userId: user.id,
-    ipAddress: req.ip,
-    userAgent: req.userAgent,
-    flags: { twoFactorVerifiedAt: null }
-  }
+	data: {
+		token: generateSessionToken(),
+		userId: user.id,
+		ipAddress: req.ip,
+		userAgent: req.userAgent,
+		flags: { twoFactorVerifiedAt: null },
+	},
 });
 
 // 2. Validate session
@@ -119,7 +119,7 @@ const validation = await validateSessionToken(token);
 
 // 3. Extend if needed (within 15 days of expiry)
 if (nearExpiry) {
-  await extendSession(sessionId, newExpiryDate);
+	await extendSession(sessionId, newExpiryDate);
 }
 ```
 
@@ -127,17 +127,17 @@ if (nearExpiry) {
 
 ```typescript
 interface DBSession {
-  id: string;                    // SHA-256 hash of token
-  userId: string;
-  createdAt: DateLike;
-  expiresAt: DateLike;
-  sessionType: "session";
-  ipAddress?: string | null;
-  userAgent?: UserAgent | null;
-  twoFactorVerifiedAt?: DateLike | null;
-  lastUsedAt?: DateLike | null;
-  revokedAt?: DateLike | null;
-  metadata?: Record<string, any> | null;
+	id: string; // SHA-256 hash of token
+	userId: string;
+	createdAt: DateLike;
+	expiresAt: DateLike;
+	sessionType: "session";
+	ipAddress?: string | null;
+	userAgent?: UserAgent | null;
+	twoFactorVerifiedAt?: DateLike | null;
+	lastUsedAt?: DateLike | null;
+	revokedAt?: DateLike | null;
+	metadata?: Record<string, any> | null;
 }
 ```
 
@@ -189,21 +189,21 @@ Modern JWT-based authentication with refresh token storage.
 ```javascript
 // 1. Create JWT pair
 const { accessToken, refreshToken } = createJWTAuth({
-  data: { user, metadata }
+	data: { user, metadata },
 });
 
 // 2. Validate access token (no DB call)
 const payload = validateJWTAccessToken(accessToken);
 if (payload) {
-  // Use embedded user data
-  const user = payload.user;
+	// Use embedded user data
+	const user = payload.user;
 }
 
 // 3. Refresh when access token expires
 const newTokens = await refreshJWTTokens({
-  refreshToken,
-  ipAddress,
-  userAgent
+	refreshToken,
+	ipAddress,
+	userAgent,
 });
 ```
 
@@ -211,11 +211,11 @@ const newTokens = await refreshJWTTokens({
 
 ```typescript
 interface DBSession {
-  id: string;                           // SHA-256 hash of refresh token
-  userId: string;
-  sessionType: "jwt_refresh_token";
-  expiresAt: DateLike;                 // 30 days from creation
-  // ... other session fields
+	id: string; // SHA-256 hash of refresh token
+	userId: string;
+	sessionType: "jwt_refresh_token";
+	expiresAt: DateLike; // 30 days from creation
+	// ... other session fields
 }
 ```
 
@@ -224,9 +224,8 @@ interface DBSession {
 ### Detection Logic
 
 ```javascript
-const isDeviceMobileOrTablet = (userAgent) => 
-  userAgent.device.type === "mobile" || 
-  userAgent.device.type === "tablet";
+const isDeviceMobileOrTablet = (userAgent) =>
+	userAgent.device.type === "mobile" || userAgent.device.type === "tablet";
 ```
 
 ### Delivery Strategies
@@ -235,20 +234,20 @@ const isDeviceMobileOrTablet = (userAgent) =>
 
 ```javascript
 // Set secure cookies
-authConfig.cookies.set('jwt_access_token', accessToken, {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  expires: accessExpiresAt,
-  path: '/'
+authConfig.cookies.set("jwt_access_token", accessToken, {
+	httpOnly: true,
+	sameSite: "lax",
+	secure: process.env.NODE_ENV === "production",
+	expires: accessExpiresAt,
+	path: "/",
 });
 
 // Return minimal data
 return {
-  strategy: "jwt",
-  platform: "web",
-  accessExpiresAt,
-  refreshExpiresAt
+	strategy: "jwt",
+	platform: "web",
+	accessExpiresAt,
+	refreshExpiresAt,
 };
 ```
 
@@ -257,12 +256,12 @@ return {
 ```javascript
 // Return actual tokens
 return {
-  strategy: "jwt",
-  platform: "mobile/tablet",
-  accessToken,
-  refreshToken,
-  accessExpiresAt,
-  refreshExpiresAt
+	strategy: "jwt",
+	platform: "mobile/tablet",
+	accessToken,
+	refreshToken,
+	accessExpiresAt,
+	refreshExpiresAt,
 };
 ```
 
@@ -297,14 +296,14 @@ return {
 
 ```typescript
 interface SessionsProvider {
-  createOne(props: { data: DBSession }): Promise<DBSession & { user: User }>;
-  findOneWithUser(sessionId: string): Promise<{ session: DBSession; user: User } | null>;
-  deleteOneById(sessionId: string): Promise<void>;
-  deleteAllByUserId(props: { where: { userId: string } }): Promise<void>;
-  revokeOneById(id: string): Promise<void>;
-  revokeAllByUserId(props: { where: { userId: string } }): Promise<void>;
-  extendOneExpirationDate(sessionId: string, expiresAt: Date): Promise<DBSession>;
-  markOne2FAVerified(props: { where: { id: string } }): Promise<DBSession>;
+	createOne(props: { data: DBSession }): Promise<DBSession & { user: User }>;
+	findOneWithUser(sessionId: string): Promise<{ session: DBSession; user: User } | null>;
+	deleteOneById(sessionId: string): Promise<void>;
+	deleteAllByUserId(props: { where: { userId: string } }): Promise<void>;
+	revokeOneById(id: string): Promise<void>;
+	revokeAllByUserId(props: { where: { userId: string } }): Promise<void>;
+	extendOneExpirationDate(sessionId: string, expiresAt: Date): Promise<DBSession>;
+	markOne2FAVerified(props: { where: { id: string } }): Promise<DBSession>;
 }
 ```
 
@@ -312,10 +311,10 @@ interface SessionsProvider {
 
 ```typescript
 interface UsersProvider {
-  findOneById(id: string): Promise<User | null>;
-  findOneByEmail(email: string): Promise<User | null>;
-  createOne(values: CreateUserData): Promise<User>;
-  // ... other user operations
+	findOneById(id: string): Promise<User | null>;
+	findOneByEmail(email: string): Promise<User | null>;
+	createOne(values: CreateUserData): Promise<User>;
+	// ... other user operations
 }
 ```
 
@@ -323,13 +322,13 @@ interface UsersProvider {
 
 ```typescript
 interface CookiesProvider {
-  get(name: string): string | null;
-  set(name: string, value: string, options?: CookieOptions): void;
+	get(name: string): string | null;
+	set(name: string, value: string, options?: CookieOptions): void;
 }
 
 interface HeadersProvider {
-  get(name: string): string | null;
-  set(name: string, value: string): void;
+	get(name: string): string | null;
+	set(name: string, value: string): void;
 }
 ```
 
@@ -338,20 +337,20 @@ interface HeadersProvider {
 ### Initialization
 
 ```javascript
-import { initAuth } from './init/index.js';
+import { initAuth } from "./init/index.js";
 
 const authConfig = initAuth({
-  strategy: 'jwt', // or 'session'
-  providers: {
-    users: userProvider,
-    sessions: sessionProvider,
-    passwordResetSessions: passwordResetProvider,
-    userEmailVerificationRequests: emailVerificationProvider
-  },
-  cookies: cookieProvider,
-  headers: headerProvider,
-  jwt: jwtProvider,
-  ids: idProvider
+	strategy: "jwt", // or 'session'
+	providers: {
+		users: userProvider,
+		sessions: sessionProvider,
+		passwordResetSessions: passwordResetProvider,
+		userEmailVerificationRequests: emailVerificationProvider,
+	},
+	cookies: cookieProvider,
+	headers: headerProvider,
+	jwt: jwtProvider,
+	ids: idProvider,
 });
 ```
 
@@ -359,9 +358,14 @@ const authConfig = initAuth({
 
 ```typescript
 interface JWTProvider {
-  createTokenPair(props: { data: JWTRefreshTokenPayload }): { accessToken: string; refreshToken: string };
-  verifyAccessToken(token: string): { exp: number; iat: number; payload: JWTRefreshTokenPayload } | null;
-  createRefreshToken(props: { data: { user: User; metadata: SessionMetadata } }): string;
+	createTokenPair(props: { data: JWTRefreshTokenPayload }): {
+		accessToken: string;
+		refreshToken: string;
+	};
+	verifyAccessToken(
+		token: string,
+	): { exp: number; iat: number; payload: JWTRefreshTokenPayload } | null;
+	createRefreshToken(props: { data: { user: User; metadata: SessionMetadata } }): string;
 }
 ```
 
@@ -375,24 +379,24 @@ const user = await authenticateUser(email, password);
 
 // 2. Create auth session
 const authSession = await createAuthSession({
-  data: {
-    user,
-    metadata: {
-      ipAddress: req.ip,
-      userAgent: req.userAgent,
-      twoFactorVerifiedAt: null
-    }
-  }
+	data: {
+		user,
+		metadata: {
+			ipAddress: req.ip,
+			userAgent: req.userAgent,
+			twoFactorVerifiedAt: null,
+		},
+	},
 });
 
 // 3. Set tokens based on platform
 const tokens = setOneAuthSessionToken(authSession, req.userAgent);
 
 // 4. Return appropriate response
-if (tokens.platform === 'mobile/tablet') {
-  return { tokens }; // Return tokens in response
+if (tokens.platform === "mobile/tablet") {
+	return { tokens }; // Return tokens in response
 } else {
-  return { success: true }; // Tokens are in cookies
+	return { success: true }; // Tokens are in cookies
 }
 ```
 
@@ -400,18 +404,18 @@ if (tokens.platform === 'mobile/tablet') {
 
 ```javascript
 export async function authMiddleware(req, res, next) {
-  const result = await getCurrentAuthSession({
-    ipAddress: req.ip,
-    userAgent: req.userAgent
-  });
+	const result = await getCurrentAuthSession({
+		ipAddress: req.ip,
+		userAgent: req.userAgent,
+	});
 
-  if (!result.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+	if (!result.user) {
+		return res.status(401).json({ error: "Unauthorized" });
+	}
 
-  req.user = result.user;
-  req.session = result.session;
-  next();
+	req.user = result.user;
+	req.session = result.session;
+	next();
 }
 ```
 
@@ -419,15 +423,10 @@ export async function authMiddleware(req, res, next) {
 
 ```javascript
 // Single session logout
-await invalidateOneAuthSessionToken(
-  { where: { sessionId: session.id } },
-  { deleteCookie: true }
-);
+await invalidateOneAuthSessionToken({ where: { sessionId: session.id } }, { deleteCookie: true });
 
 // All sessions logout
-await invalidateAllUserAuth(
-  { where: { userId: user.id } }
-);
+await invalidateAllUserAuth({ where: { userId: user.id } });
 ```
 
 ## Error Handling
@@ -475,15 +474,15 @@ Add custom data to JWT payloads:
 
 ```javascript
 const { accessToken } = authConfig.jwt.createTokenPair({
-  data: {
-    user,
-    metadata,
-    customClaims: {
-      role: 'admin',
-      permissions: ['read', 'write'],
-      organizationId: 'org123'
-    }
-  }
+	data: {
+		user,
+		metadata,
+		customClaims: {
+			role: "admin",
+			permissions: ["read", "write"],
+			organizationId: "org123",
+		},
+	},
 });
 ```
 
@@ -493,15 +492,15 @@ Store additional session information:
 
 ```javascript
 const authSession = await createAuthSession({
-  data: {
-    user,
-    metadata: {
-      ipAddress: req.ip,
-      userAgent: req.userAgent,
-      deviceFingerprint: generateFingerprint(req),
-      loginMethod: 'password' // or 'oauth', 'magic-link'
-    }
-  }
+	data: {
+		user,
+		metadata: {
+			ipAddress: req.ip,
+			userAgent: req.userAgent,
+			deviceFingerprint: generateFingerprint(req),
+			loginMethod: "password", // or 'oauth', 'magic-link'
+		},
+	},
 });
 ```
 
@@ -510,7 +509,7 @@ const authSession = await createAuthSession({
 Dynamically choose strategy based on client:
 
 ```javascript
-const strategy = req.headers['x-client-type'] === 'mobile' ? 'jwt' : 'session';
+const strategy = req.headers["x-client-type"] === "mobile" ? "jwt" : "session";
 ```
 
 This authentication system provides a robust, flexible foundation that can be extended and customized based on specific application requirements while maintaining security best practices.

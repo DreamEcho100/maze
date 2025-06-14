@@ -128,7 +128,8 @@ function FormMessage({ className, children, ...props }: HTMLAttributes<HTMLParag
 		<p
 			id={formMessageId}
 			className={cn("text-destructive text-[0.8rem] font-medium", className)}
-			{...props}>
+			{...props}
+		>
 			{body}
 		</p>
 	);

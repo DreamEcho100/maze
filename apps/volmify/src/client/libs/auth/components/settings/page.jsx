@@ -1,8 +1,7 @@
-import { authConfig } from "@de100/auth/init";
-
 import { Link } from "#client/components/link";
 import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
+import { getOneUserRecoveryCode } from "#server/libs/auth/init";
 import {
 	RecoveryCodeSection,
 	UpdateEmailForm,
@@ -24,7 +23,7 @@ export default async function AuthSettingsPage() {
 	let recoveryCode = null;
 	if (user.twoFactorRegisteredAt) {
 		// recoveryCode = await getUserRecoveryCodeRepository(user.id);
-		recoveryCode = await authConfig.providers.users.getOneRecoveryCode(user.id);
+		recoveryCode = await getOneUserRecoveryCode(user.id);
 	}
 
 	return (
