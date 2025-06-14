@@ -226,7 +226,14 @@ export async function validateSessionToken(token, cookies, ctx) {
 		return { session: null, user: null };
 	}
 
-	if (Date.now() >= expiresAt - 1000 * 60 * 60 * 24 * 15) {
+	const lastCheckpointAt = dateLikeToDate(
+		result.session.lastExtendedAt ?? result.session.createdAt,
+	).getTime();
+
+	const halfwayPoint =
+		(dateLikeToNumber(result.session.expiresAt) - lastCheckpointAt) / 2 + lastCheckpointAt;
+	if (Date.now() >= halfwayPoint) {
+		// If the session is nearing expiration, extend it by 30 days
 		result.session.expiresAt = new Date(Date.now() + COOKIE_TOKEN_SESSION_EXPIRES_DURATION);
 		await ctx.providers.sessions.extendOneExpirationDate(
 			sessionId,

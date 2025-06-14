@@ -76,6 +76,8 @@ interface DBSession {
 	createdAt: DateLike;
 	userId: string;
 	expiresAt: DateLike;
+	lastVerifiedAt?: DateLike | null;
+	lastExtendedAt?: DateLike | null;
 	twoFactorVerifiedAt?: DateLike | null;
 	// token: string;
 	ipAddress?: string | null;
