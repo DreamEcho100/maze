@@ -1,6 +1,6 @@
-/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession, CookiesProvider, HeadersProvider, SessionsProvider } from "#types.ts" */
+/** @import { UserAgent, DateLike, User, SessionMetadata, DBSession, SessionValidationResult, ClientSession, CookiesProvider, HeadersProvider, SessionsProvider, JWTProvider } from "#types.ts" */
 
-// import { authConfig } from "#init/index.js";
+import { jwtProvider } from "#services/jwt.js";
 import { getAuthorizationTokenFromHeaders } from "#utils/get-authorization-token-from-headers.js";
 import { getSessionId } from "#utils/get-session-id.js";
 import { isDeviceMobileOrTablet as checkIsDeviceMobileOrTablet } from "#utils/is-device-mobile-or-tablet.js";
@@ -32,7 +32,8 @@ const REFRESH_TOKEN_EXPIRES_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
  * @param {{
  * 	tx?: any;
  * 	authProviders: {
- * 		sessions: { createOne: SessionsProvider['createOne'] }
+ * 		sessions: { createOne: SessionsProvider['createOne'] };
+ * 		jwt?: { createTokenPair?: JWTProvider['createTokenPair'] }
  * 	}
  * }} ctx
  */
@@ -52,7 +53,11 @@ export async function createJWTAuth(props, ctx) {
 	};
 
 	// Create JWT token pair
-	const { accessToken, refreshToken } = authConfig.jwt.createTokenPair({
+
+	const createTokenPair = /** @type {JWTProvider['createTokenPair']} */ (
+		ctx.authProviders.jwt?.createTokenPair ?? jwtProvider.createTokenPair
+	);
+	const { accessToken, refreshToken } = createTokenPair({
 		data: {
 			user,
 			metadata,
@@ -168,18 +173,30 @@ export function deleteJWTTokenCookies(cookies) {
 /**
  * Get current JWT authentication (mirrors getCurrentSession)
  *
- * @param {object} options - Additional options
- * @param {CookiesProvider} options.cookies - Optional cookies provider to access session token cookies.
- * @param {HeadersProvider} options.headers - Optional headers provider to access authorization headers.
- * @param {any} [options.tx] - Optional transaction for database operations.
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session.
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session.
+ * @param {object} ctx - Additional options
+ * @param {CookiesProvider} ctx.cookies - Optional cookies provider to access session token cookies.
+ * @param {HeadersProvider} ctx.headers - Optional headers provider to access authorization headers.
+ * @param {string|null|undefined} ctx.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} ctx.userAgent - Optional user agent for the session.
+ * @param {any} ctx.tx
+ * @param {{
+ * 	sessions: {
+ * 		revokeOneById: SessionsProvider['revokeOneById'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		createOne: SessionsProvider['createOne'];
+ * 	};
+ * 	jwt: {
+ * 		verifyAccessToken?: JWTProvider['verifyAccessToken'];
+ * 		createTokenPair?: JWTProvider['createTokenPair'];
+ * 	};
+ * }} ctx.authProviders
  * @returns {Promise<SessionValidationResult>}
  *
  */
 // * @returns {Promise<{user: User | null, session: any | null, method?: string, newTokens?: object}>}
-export async function getCurrentJWTAuth(options) {
-	const userAgent = options.userAgent ?? null;
+export async function getCurrentJWTAuth(ctx) {
+	const userAgent = ctx.userAgent ?? null;
 	const isDeviceMobileOrTablet = userAgent && checkIsDeviceMobileOrTablet(userAgent);
 	/** @type {string|null|undefined} */
 	let accessToken = null;
@@ -187,17 +204,18 @@ export async function getCurrentJWTAuth(options) {
 	let refreshToken = null;
 
 	if (isDeviceMobileOrTablet) {
-		accessToken = getAuthorizationTokenFromHeaders(options.headers);
+		accessToken = getAuthorizationTokenFromHeaders(ctx.headers);
 	} else {
 		accessToken =
-			getAccessTokenFromCookies(options.cookies) ??
-			getAuthorizationTokenFromHeaders(options.headers);
-		refreshToken = getRefreshTokenFromCookies(options.cookies);
+			getAccessTokenFromCookies(ctx.cookies) ?? getAuthorizationTokenFromHeaders(ctx.headers);
+		refreshToken = getRefreshTokenFromCookies(ctx.cookies);
 	}
 
 	// ✅ Try access token first - NO DATABASE LOOKUP
 	if (accessToken) {
-		const result = validateJWTAccessToken(accessToken);
+		const result = validateJWTAccessToken(accessToken, {
+			authProviders: { jwt: { verifyAccessToken: ctx.authProviders.jwt.verifyAccessToken } },
+		});
 		if (result?.payload.metadata) {
 			const { exp, iat, payload } = result;
 
@@ -220,17 +238,24 @@ export async function getCurrentJWTAuth(options) {
 		return { session: null, user: null };
 	}
 
-	const refreshResult = await refreshJWTTokens(
-		{
-			refreshToken,
-			ipAddress: options.ipAddress ?? null,
-			userAgent: options.userAgent ?? null,
+	const refreshResult = await refreshJWTTokens({
+		refreshToken,
+		ipAddress: ctx.ipAddress ?? null,
+		userAgent: ctx.userAgent ?? null,
+		tx: ctx.tx,
+		authProviders: {
+			sessions: {
+				revokeOneById: ctx.authProviders.sessions.revokeOneById,
+				deleteOneById: ctx.authProviders.sessions.deleteOneById,
+				findOneWithUser: ctx.authProviders.sessions.findOneWithUser,
+				createOne: ctx.authProviders.sessions.createOne,
+			},
+			jwt: { createTokenPair: ctx.authProviders.jwt.createTokenPair },
 		},
-		options,
-	);
+	});
 
 	if (!refreshResult) {
-		deleteJWTTokenCookies(options.cookies);
+		deleteJWTTokenCookies(ctx.cookies);
 		return { session: null, user: null };
 	}
 
@@ -242,7 +267,7 @@ export async function getCurrentJWTAuth(options) {
 			accessExpiresAt: refreshResult.metadata.accessExpiresAt,
 			refreshExpiresAt: refreshResult.metadata.refreshExpiresAt,
 		},
-		options.cookies,
+		ctx.cookies,
 	);
 
 	return {
@@ -252,11 +277,16 @@ export async function getCurrentJWTAuth(options) {
 }
 
 /**
- * Validate JWT access token by checking from the `authConfig.providers.users.findOneById`
+ * Validate JWT access token by checking from the `JWTProvider['findOneById']`
  * @param {string} token
+ * @param {object} ctx
+ * @param {{ jwt?: { verifyAccessToken?: JWTProvider['verifyAccessToken'] } }} ctx.authProviders
  */
-export function validateJWTAccessToken(token) {
-	const result = authConfig.jwt.verifyAccessToken(token);
+export function validateJWTAccessToken(token, ctx) {
+	const verifyAccessToken = /** @type {JWTProvider['verifyAccessToken']} */ (
+		ctx.authProviders.jwt?.verifyAccessToken ?? jwtProvider.verifyAccessToken
+	);
+	const result = verifyAccessToken(token);
 
 	if (
 		typeof result === "object" &&
@@ -281,20 +311,27 @@ export function validateJWTAccessToken(token) {
 /**
  * Validate JWT refresh token
  * @param {string} token
+ * @param {object} ctx
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ * 	}
+ * }} ctx.authProviders
  */
-export async function validateJWTRefreshToken(token) {
+export async function validateJWTRefreshToken(token, ctx) {
 	const sessionId = getSessionId(token);
 
-	const result = await authConfig.providers.session.findOneWithUser(sessionId);
+	const result = await ctx.authProviders.sessions.findOneWithUser(sessionId);
 
 	if (!result?.session || Date.now() >= new Date(result.session.expiresAt).getTime()) {
 		// If the session is not found or expired, delete it
-		await authConfig.providers.session.deleteOneById(sessionId);
+		await ctx.authProviders.sessions.deleteOneById(sessionId);
 		return null;
 	}
 	if (result.session.revokedAt) {
 		// If the session is revoked, delete it
-		await authConfig.providers.session.deleteOneById(sessionId);
+		await ctx.authProviders.sessions.deleteOneById(sessionId);
 		return null;
 	}
 	return result;
@@ -302,22 +339,39 @@ export async function validateJWTRefreshToken(token) {
 
 /**
  * Refresh JWT tokens -
- * @param {object} input
- * @param {string} input.refreshToken - The JWT refresh token to validate.
- * @param {string|null|undefined} input.ipAddress - Optional IP address for the session.
- * @param {UserAgent|null|undefined} input.userAgent - Optional user agent for the session.
- * @param {object} [options] - Additional options
- * @param {any} [options.tx] - Optional transaction for database operations.
+ * @param {object} ctx
+ * @param {string} ctx.refreshToken - The JWT refresh token to validate.
+ * @param {string|null|undefined} ctx.ipAddress - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} ctx.userAgent - Optional user agent for the session.
+ * @param {any} [ctx.tx]
+ * @param {{
+ * 	sessions: {
+ * 		revokeOneById: SessionsProvider['revokeOneById'];
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ * 		createOne: SessionsProvider['createOne'];
+ * 	};
+ * 	jwt?: {
+ * 		createTokenPair?: JWTProvider['createTokenPair'];
+ * 	};
+ * }} ctx.authProviders
  */
-async function refreshJWTTokens(data, options) {
-	const result = await validateJWTRefreshToken(data.refreshToken);
+async function refreshJWTTokens(ctx) {
+	const result = await validateJWTRefreshToken(ctx.refreshToken, {
+		authProviders: {
+			sessions: {
+				findOneWithUser: ctx.authProviders.sessions.findOneWithUser,
+				deleteOneById: ctx.authProviders.sessions.deleteOneById,
+			},
+		},
+	});
 	if (!result) {
 		return null;
 	}
 
 	// ✅ Revoke old refresh token
-	const oldRefreshTokenHash = getSessionId(data.refreshToken);
-	await authConfig.providers.session.revokeOneById(oldRefreshTokenHash);
+	const oldRefreshTokenHash = getSessionId(ctx.refreshToken);
+	await ctx.authProviders.sessions.revokeOneById(oldRefreshTokenHash);
 
 	// TODO: Compare ip addresses and user agents
 
@@ -330,8 +384,8 @@ async function refreshJWTTokens(data, options) {
 	/** @type {SessionMetadata} */
 	const metadata = {
 		userId: user.id,
-		ipAddress: data.ipAddress ?? null,
-		userAgent: data.userAgent ?? null,
+		ipAddress: ctx.ipAddress ?? null,
+		userAgent: ctx.userAgent ?? null,
 		twoFactorVerifiedAt: session.twoFactorVerifiedAt ?? null,
 		metadata: session.metadata ?? null,
 	};
@@ -340,6 +394,16 @@ async function refreshJWTTokens(data, options) {
 		{
 			data: { user, metadata },
 		},
-		options,
+		{
+			tx: ctx.tx,
+			authProviders: {
+				sessions: {
+					createOne: ctx.authProviders.sessions.createOne,
+				},
+				jwt: {
+					createTokenPair: ctx.authProviders.jwt?.createTokenPair,
+				},
+			},
+		},
 	);
 }

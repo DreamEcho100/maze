@@ -1,8 +1,7 @@
-/** @import { EmailVerificationRequest, CookiesProvider } from "#types.ts"; */
+/** @import { EmailVerificationRequest, CookiesProvider, UserEmailVerificationRequestsProvider } from "#types.ts"; */
 
 import { encodeBase32 } from "@oslojs/encoding";
 
-import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
@@ -10,55 +9,43 @@ import {
 import { generateRandomOTP } from "./generate-randomotp.js";
 
 /**
- * Get the email verification request for a user.
- * @param {string} userId - The user ID.
- * @param {string} id - The request ID.
- * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
- */
-export async function getUserEmailVerificationRequest(userId, id) {
-	// return await findOneUserEmailVerificationRequestRepository(userId, id);
-	return await authConfig.providers.userEmailVerificationRequest.findOneByIdAndUserId(userId, id);
-}
-
-/**
  * Create an email verification request for a user.
  *
- * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[0]} props
- * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[1]} [options]
+ * @param {Parameters<UserEmailVerificationRequestsProvider['deleteOneByUserId']>[0]} props
+ * @param {object} ctx
+ * @param {any} [ctx.tx]
+ * @param {{
+ * 	userEmailVerificationRequests: {
+ * 		deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
+ * 		createOne: UserEmailVerificationRequestsProvider['createOne'];
+ * 	}
+ * }} ctx.authProviders
  * @returns {Promise<EmailVerificationRequest>} The email verification request.
  */
-export async function createEmailVerificationRequest(props, options) {
-	await deleteUserEmailVerificationRequest(props, options);
+export async function createEmailVerificationRequest(props, ctx) {
+	await ctx.authProviders.userEmailVerificationRequests.deleteOneByUserId(props, { tx: ctx.tx });
 	const idBytes = new Uint8Array(20);
 	crypto.getRandomValues(idBytes);
 	const id = encodeBase32(idBytes).toLowerCase();
 
 	const code = generateRandomOTP();
 	const expiresAt = new Date(Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION);
-	const result = await authConfig.providers.userEmailVerificationRequest.createOne({
-		id: id,
-		userId: props.where.userId,
-		code: code,
-		email: props.where.email,
-		expiresAt: expiresAt,
-	});
+	const result = await ctx.authProviders.userEmailVerificationRequests.createOne(
+		{
+			id: id,
+			userId: props.where.userId,
+			code: code,
+			email: props.where.email,
+			expiresAt: expiresAt,
+		},
+		{ tx: ctx.tx },
+	);
 
 	if (!result) {
 		throw new Error("Failed to create email verification request.");
 	}
 
 	return result;
-}
-
-/**
- * Delete all email verification requests for a user.
- *
- * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[0]} props
- * @param {Parameters<typeof authConfig.providers.userEmailVerificationRequest.deleteOneByUserId>[1]} [options]
- * @returns {Promise<void>} A promise that resolves when the requests have been deleted.
- */
-export async function deleteUserEmailVerificationRequest(props, options) {
-	await authConfig.providers.userEmailVerificationRequest.deleteOneByUserId(props, options);
 }
 
 /**
@@ -109,15 +96,20 @@ export function deleteEmailVerificationRequestCookie(cookies) {
 /**
  * Get the email verification request from the request.
  * @param {string} userId
- * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
+ * @param {object} ctx
+ * @param {CookiesProvider} ctx.cookies - The cookies provider to set the cookie.
+ * @param {{ userEmailVerificationRequests: { findOneByIdAndUserId: UserEmailVerificationRequestsProvider['findOneByIdAndUserId'] }}} ctx.authProviders
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
-export async function getUserEmailVerificationRequestFromRequest(userId, cookies) {
-	const id = cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
+export async function getUserEmailVerificationRequestFromRequest(userId, ctx) {
+	const id = ctx.cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
 	if (!id) return null;
 
-	const request = await getUserEmailVerificationRequest(userId, id);
-	if (!request) deleteEmailVerificationRequestCookie(cookies);
+	const request = await ctx.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
+		userId,
+		id,
+	);
+	if (!request) deleteEmailVerificationRequestCookie(ctx.cookies);
 	return request;
 }
 

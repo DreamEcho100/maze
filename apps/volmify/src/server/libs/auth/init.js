@@ -66,12 +66,12 @@ const sessionReturnSchema = /** @type {const} */ ({
 });
 
 const emailVerificationRequestReturnTemplate = {
-	id: dbSchema.emailVerificationRequest.id,
-	code: dbSchema.emailVerificationRequest.code,
-	userId: dbSchema.emailVerificationRequest.userId,
-	expiresAt: dbSchema.emailVerificationRequest.expiresAt,
-	createdAt: dbSchema.emailVerificationRequest.createdAt,
-	email: dbSchema.emailVerificationRequest.email,
+	id: dbSchema.userEmailVerificationRequests.id,
+	code: dbSchema.userEmailVerificationRequests.code,
+	userId: dbSchema.userEmailVerificationRequests.userId,
+	expiresAt: dbSchema.userEmailVerificationRequests.expiresAt,
+	createdAt: dbSchema.userEmailVerificationRequests.createdAt,
+	email: dbSchema.userEmailVerificationRequests.email,
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emailVerificationRequestReturnSchema = /** @type {const} */ ({
@@ -105,7 +105,7 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 });
 
 /** @type {AuthStrategy} */
-export const authStrategy = "jwt";
+export const authStrategy = process.env.AUTH_STRATEGY ?? "jwt";
 
 /*************** ***************/
 /* Users */
@@ -486,6 +486,14 @@ export const unMarkOneSession2FAForUser = async (userId, tx) => {
 // 		);
 // },
 
+export const defaultSessionsHandlers = {
+	deleteOneById: deleteOneSessionById,
+	extendOneExpirationDate: extendOneSessionExpirationDate,
+	findOneWithUser: findOneSessionWithUser,
+	revokeOneById: revokeOneSessionById,
+	createOne: createOneSession,
+};
+
 /*************** ***************/
 /* Password Reset Sessions */
 /*************** ***************/
@@ -580,7 +588,7 @@ export const deleteAllPasswordResetSessionsByUserId = async (props, options) => 
 export const createOneEmailVerificationRequests = async (values) => {
 	const createdAt = new Date();
 	return db
-		.insert(dbSchema.emailVerificationRequest)
+		.insert(dbSchema.userEmailVerificationRequests)
 		.values({
 			...values,
 			id: values.id ?? (await authConfig.ids.createOneAsync()),
@@ -597,19 +605,19 @@ export const deleteOneEmailVerificationRequestsByUserId = async (props, options)
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
 	await _db
-		.delete(dbSchema.emailVerificationRequest)
-		.where(eq(dbSchema.emailVerificationRequest.userId, props.where.userId));
+		.delete(dbSchema.userEmailVerificationRequests)
+		.where(eq(dbSchema.userEmailVerificationRequests.userId, props.where.userId));
 };
 
 /** @type {UserEmailVerificationRequestsProvider['findOneByIdAndUserId']} */
 export const findOneEmailVerificationRequestsByIdAndUserId = async (userId, id) => {
 	return db
 		.select(emailVerificationRequestReturnTemplate)
-		.from(dbSchema.emailVerificationRequest)
+		.from(dbSchema.userEmailVerificationRequests)
 		.where(
 			and(
-				eq(dbSchema.emailVerificationRequest.userId, userId),
-				eq(dbSchema.emailVerificationRequest.id, id),
+				eq(dbSchema.userEmailVerificationRequests.userId, userId),
+				eq(dbSchema.userEmailVerificationRequests.id, id),
 			),
 		)
 		.then((result) => result[0] ?? null);
@@ -717,7 +725,7 @@ export async function setDrizzlePgAuthProviders(props) {
 				deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
 				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
 			},
-			emailVerificationRequests: {
+			userEmailVerificationRequests: {
 				createOne: createOneEmailVerificationRequests,
 				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
 				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,

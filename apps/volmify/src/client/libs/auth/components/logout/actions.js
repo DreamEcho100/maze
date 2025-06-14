@@ -4,13 +4,8 @@ import { logoutService } from "@de100/auth/services/logout";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import {
-	authStrategy,
-	deleteOneSessionById,
-	extendOneSessionExpirationDate,
-	findOneSessionWithUser,
-	revokeOneSessionById,
-} from "#server/libs/auth/init";
+import { authStrategy, defaultSessionsHandlers } from "#server/libs/auth/init";
+import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
@@ -19,18 +14,16 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  * @returns {Promise<ActionResult>}
  */
 export async function logoutAction() {
-	const result = await logoutService({
-		...(await getSessionOptionsBasics()),
-		authStrategy,
-		authProviders: {
-			sessions: {
-				deleteOneById: deleteOneSessionById,
-				extendOneExpirationDate: extendOneSessionExpirationDate,
-				findOneWithUser: findOneSessionWithUser,
-				revokeOneById: revokeOneSessionById,
+	const result = await db.transaction(async (tx) =>
+		logoutService({
+			...(await getSessionOptionsBasics()),
+			tx,
+			authStrategy,
+			authProviders: {
+				sessions: defaultSessionsHandlers,
 			},
-		},
-	});
+		}),
+	);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_LOGOUT);

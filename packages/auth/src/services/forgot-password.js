@@ -1,11 +1,11 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, SessionsProvider, UsersProvider, PasswordResetSessionsProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, PasswordResetSessionsProvider, AuthProvidersWithSessionAndJWTDefaults, JWTProvider } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
+import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import {
 	createPasswordResetSession,
 	sendPasswordResetEmail,
@@ -25,11 +25,9 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
  * @param {AuthStrategy} props.authStrategy
- * @param {{
- * 	sessions: {
- * 		findOneWithUser: SessionsProvider['findOneWithUser'];
- * 		deleteOneById: SessionsProvider['deleteOneById'];
- *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * @param {AuthProvidersWithSessionAndJWTDefaults<{
+ * 	jwt?: {
+ * 		createRefreshToken: JWTProvider['createRefreshToken'];
  * 	};
  *  users: {
  * 		findOneByEmail: UsersProvider['findOneByEmail'];
@@ -38,7 +36,7 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  * 		createOne: PasswordResetSessionsProvider['createOne'];
  * 		deleteAllByUserId: PasswordResetSessionsProvider['deleteAllByUserId'];
  * 	};
- * }} props.authProviders
+ * }>} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -49,24 +47,15 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  */
 export async function forgotPasswordService(props) {
 	const input = forgotPasswordServiceInputSchema.safeParse(props.input);
-	const { session } = await getCurrentAuthSession(
-		{
-			ipAddress: props.ipAddress,
-			userAgent: props.userAgent,
-			cookies: props.cookies,
-			headers: props.headers,
-		},
-		{
-			authStrategy: props.authStrategy,
-			authProviders: {
-				sessions: {
-					deleteOneById: props.authProviders.sessions.deleteOneById,
-					extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
-					findOneWithUser: props.authProviders.sessions.findOneWithUser,
-				},
-			},
-		},
-	);
+	const { session } = await getCurrentAuthSession({
+		ipAddress: props.ipAddress,
+		userAgent: props.userAgent,
+		cookies: props.cookies,
+		headers: props.headers,
+		tx: props.tx,
+		authStrategy: props.authStrategy,
+		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+	});
 
 	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -85,9 +74,13 @@ export async function forgotPasswordService(props) {
 		userId: user.id,
 		metadata: session.metadata,
 	};
-	const sessionToken = generateAuthSessionToken({
-		data: { user: user, metadata: sessionInputBasicInfo },
-	});
+	const sessionToken = generateAuthSessionToken(
+		{ data: { user: user, metadata: sessionInputBasicInfo } },
+		{
+			authStrategy: props.authStrategy,
+			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
+		},
+	);
 	const [passwordResetEmailSession] = await Promise.all([
 		createPasswordResetSession(
 			{ data: { token: sessionToken, userId: user.id, email: user.email } },

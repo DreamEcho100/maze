@@ -6,9 +6,7 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "#i18n/server";
 import {
 	authStrategy,
-	deleteOneSessionById,
-	extendOneSessionExpirationDate,
-	findOneSessionWithUser,
+	defaultSessionsHandlers,
 	getOneUserRecoveryCodeRaw,
 	unMarkOneSession2FAForUser,
 	updateOneUserRecoveryCodeById,
@@ -32,9 +30,7 @@ export async function reset2FAAction(_prev, formData) {
 			authStrategy: authStrategy,
 			authProviders: {
 				sessions: {
-					deleteOneById: deleteOneSessionById,
-					extendOneExpirationDate: extendOneSessionExpirationDate,
-					findOneWithUser: findOneSessionWithUser,
+					...defaultSessionsHandlers,
 					unMarkOne2FAForUser: unMarkOneSession2FAForUser,
 				},
 				users: {

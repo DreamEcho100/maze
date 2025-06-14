@@ -1,6 +1,5 @@
-/** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, User, UserEmailVerificationRequestsProvider, UsersProvider } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
 import {
 	ADMIN_REGISTER_MESSAGES_ERRORS,
 	ADMIN_REGISTER_MESSAGES_SUCCESS,
@@ -16,7 +15,18 @@ import { adminRegisterServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles register by deleting the user session and clearing session cookies.
  *
- * @param {unknown} data
+ * @param {object} props
+ * @param {unknown} props.input
+ * @param {{
+ * 	userEmailVerificationRequests: {
+ * 		createOne: UserEmailVerificationRequestsProvider['createOne'];
+ * 		deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
+ * 	};
+ * 	users: {
+ * 		createOne: UsersProvider['createOne'];
+ * 		findOneByEmail: UsersProvider['findOneByEmail'];
+ * 	};
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    ADMIN_REGISTER_MESSAGES_ERRORS,
@@ -25,14 +35,14 @@ import { adminRegisterServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function adminRegisterService(data) {
-	const input = adminRegisterServiceInputSchema.safeParse(data);
+export async function adminRegisterService(props) {
+	const input = adminRegisterServiceInputSchema.safeParse(props.input);
 
 	if (!input.success) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await authConfig.providers.users.findOneByEmail(input.data.email);
+	const emailAvailable = await props.authProviders.users.findOneByEmail(input.data.email);
 
 	if (emailAvailable) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -44,16 +54,31 @@ export async function adminRegisterService(data) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 	}
 
-	const user = await createUser(input.data.email, input.data.name, input.data.password);
-
-	const emailVerificationRequest = await createEmailVerificationRequest({
-		where: { userId: user.id, email: user.email },
+	const user = await createUser(input.data.email, input.data.name, input.data.password, {
+		authProviders: { users: { createOne: props.authProviders.users.createOne } },
 	});
 
-	await sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
+	const userEmailVerificationRequests = await createEmailVerificationRequest(
+		{
+			where: { userId: user.id, email: user.email },
+		},
+		{
+			authProviders: {
+				userEmailVerificationRequests: {
+					createOne: props.authProviders.userEmailVerificationRequests.createOne,
+					deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+				},
+			},
+		},
+	);
+
+	await sendVerificationEmail(
+		userEmailVerificationRequests.email,
+		userEmailVerificationRequests.code,
+	);
 
 	// await setEmailVerificationRequestCookie(
-	//   emailVerificationRequest,
+	//   userEmailVerificationRequests,
 	//   options.setCookie,
 	// );
 

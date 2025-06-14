@@ -1,7 +1,8 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy, UsersProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy, UsersProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts"; */
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
+import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { reset2FAServiceInputSchema } from "#utils/validations.js";
 
@@ -16,18 +17,13 @@ import { reset2FAServiceInputSchema } from "#utils/validations.js";
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
  * @param {AuthStrategy} props.authStrategy
- * @param {{
- * 	sessions: {
- * 		findOneWithUser: SessionsProvider['findOneWithUser'];
- * 		deleteOneById: SessionsProvider['deleteOneById'];
- *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
- * 		unMarkOne2FAForUser: SessionsProvider['unMarkOne2FAForUser'];
- * 	};
+ * @param {AuthProvidersWithSessionAndJWTDefaults<{
+ * 	sessions: { unMarkOne2FAForUser: SessionsProvider['unMarkOne2FAForUser']; };
  *  users: {
  * 		getOneRecoveryCodeRaw: UsersProvider['getOneRecoveryCodeRaw'];
  * 		updateOneRecoveryCodeById: UsersProvider['updateOneRecoveryCodeById'];
  * 	};
- * }} props.authProviders
+ * }>} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_2FA_MESSAGES_ERRORS,
@@ -41,24 +37,15 @@ export async function reset2FAService(props) {
 		return RESET_2FA_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED;
 	}
 
-	const { session, user } = await getCurrentAuthSession(
-		{
-			ipAddress: props.ipAddress,
-			userAgent: props.userAgent,
-			cookies: props.cookies,
-			headers: props.headers,
-		},
-		{
-			authStrategy: props.authStrategy,
-			authProviders: {
-				sessions: {
-					deleteOneById: props.authProviders.sessions.deleteOneById,
-					extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
-					findOneWithUser: props.authProviders.sessions.findOneWithUser,
-				},
-			},
-		},
-	);
+	const { session, user } = await getCurrentAuthSession({
+		ipAddress: props.ipAddress,
+		userAgent: props.userAgent,
+		cookies: props.cookies,
+		headers: props.headers,
+		tx: props.tx,
+		authStrategy: props.authStrategy,
+		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+	});
 	if (!session) {
 		return RESET_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

@@ -9,6 +9,15 @@ import {
 } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
+import {
+	authStrategy,
+	createOneEmailVerificationRequests,
+	defaultSessionsHandlers,
+	deleteAllPasswordResetSessionsByUserId,
+	deleteOneEmailVerificationRequestsByUserId,
+	findOneEmailVerificationRequestsByIdAndUserId,
+	updateOneUserEmailAndVerify,
+} from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
@@ -24,13 +33,24 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  */
 export async function verifyEmailAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		verifyEmailUserService(
-			{ code: formData.get("code") },
-			{
-				...(await getSessionOptionsBasics()),
-				tx,
+		verifyEmailUserService({
+			...(await getSessionOptionsBasics()),
+			tx,
+			input: { code: formData.get("code") },
+			authStrategy,
+			authProviders: {
+				sessions: defaultSessionsHandlers,
+				passwordResetSessions: {
+					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+				},
+				users: { updateOneEmailAndVerify: updateOneUserEmailAndVerify },
+				userEmailVerificationRequests: {
+					findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+					createOne: createOneEmailVerificationRequests,
+					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+				},
 			},
-		),
+		}),
 	);
 	// setCookie: cookiesManager.set,
 	// getCookie: (name) => cookiesManager.get(name)?.value,
@@ -73,6 +93,15 @@ export async function resendEmailVerificationCodeAction(_prev) {
 		resendEmailVerificationCodeService({
 			...(await getSessionOptionsBasics()),
 			tx,
+			authStrategy,
+			authProviders: {
+				sessions: defaultSessionsHandlers,
+				userEmailVerificationRequests: {
+					findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+					createOne: createOneEmailVerificationRequests,
+					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+				},
+			},
 		}),
 	);
 

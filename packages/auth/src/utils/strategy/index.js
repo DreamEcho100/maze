@@ -1,7 +1,8 @@
-/** @import { User, UserAgent, SessionValidationResult, SessionMetadata, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy } from "#types.ts" */
+/** @import { User, UserAgent, SessionValidationResult, SessionMetadata, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy, JWTProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts" */
 
-// import { authConfig } from "#init/index.js";
 // import { dateLikeToISOString } from "#utils/dates.js";
+import { jwtProvider } from "#services/jwt.js";
+import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { isDeviceMobileOrTablet } from "#utils/is-device-mobile-or-tablet.js";
 import {
 	createJWTAuth,
@@ -27,10 +28,13 @@ import {
  * @param {object} ctx
  * @param {any} [ctx.tx]
  * @param {AuthStrategy} ctx.authStrategy
- * @param {{ sessions: { createOne: SessionsProvider['createOne'] }}} ctx.authProviders
+ * @param {{
+ * 	sessions: { createOne: SessionsProvider['createOne'] };
+ *	jwt?: { createTokenPair?: JWTProvider['createTokenPair'] }
+ * }} ctx.authProviders
  */
 export async function createAuthSession(props, ctx) {
-	switch (ctx?.authStrategy) {
+	switch (ctx.authStrategy) {
 		case "jwt": {
 			// For JWT, we don't use the token from props, we generate our own
 			const data = await createJWTAuth(
@@ -42,7 +46,10 @@ export async function createAuthSession(props, ctx) {
 				},
 				{
 					tx: ctx.tx,
-					authProviders: { sessions: { createOne: ctx.authProviders.sessions.createOne } },
+					authProviders: {
+						sessions: { createOne: ctx.authProviders.sessions.createOne },
+						jwt: { createTokenPair: ctx.authProviders.jwt?.createTokenPair },
+					},
 				},
 			);
 
@@ -84,7 +91,7 @@ export async function createAuthSession(props, ctx) {
 		}
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${ctx?.authStrategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 
@@ -95,27 +102,28 @@ export async function createAuthSession(props, ctx) {
  * @param {HeadersProvider} props.headers - The headers provider to access the session token.
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {object} ctx
- * @param {AuthStrategy} ctx.authStrategy
- * @param {{
- * 	sessions: {
- * 		findOneWithUser: SessionsProvider['findOneWithUser'];
- * 		deleteOneById: SessionsProvider['deleteOneById'];
- *		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
- * 	}
- * }} ctx.authProviders
+ * @param {any} props.tx
+ * @param {AuthStrategy} props.authStrategy
+ * @param {AuthProvidersWithSessionAndJWTDefaults} props.authProviders
  * @returns {Promise<SessionValidationResult>}
  */
-export async function getCurrentAuthSession(props, ctx) {
-	switch (ctx.authStrategy) {
+export async function getCurrentAuthSession(props) {
+	switch (props.authStrategy) {
 		case "jwt":
-			return await getCurrentJWTAuth(props);
+			return await getCurrentJWTAuth({
+				cookies: props.cookies,
+				headers: props.headers,
+				ipAddress: props.ipAddress,
+				userAgent: props.userAgent,
+				tx: props.tx,
+				authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+			});
 
 		case "session":
-			return await getCurrentSession(props.cookies, { providers: ctx.authProviders });
+			return await getCurrentSession(props.cookies, { providers: props.authProviders });
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
+			throw new Error(`Unsupported auth strategy: ${props.authStrategy}`);
 	}
 }
 
@@ -124,12 +132,17 @@ export async function getCurrentAuthSession(props, ctx) {
  * @param {{ data: { user: User; metadata: SessionMetadata } }} props
  * @param {object} ctx
  * @param {AuthStrategy} ctx.authStrategy
+ * @param {{ jwt?: { createRefreshToken?: JWTProvider['createRefreshToken'] } }} ctx.authProviders
  * @returns {string}
  */
 export function generateAuthSessionToken(props, ctx) {
 	switch (ctx.authStrategy) {
-		case "jwt":
-			return authConfig.jwt.createRefreshToken(props);
+		case "jwt": {
+			const createRefreshToken = /** @type {JWTProvider['createRefreshToken']} */ (
+				ctx.authProviders.jwt?.createRefreshToken ?? jwtProvider.createRefreshToken
+			);
+			return createRefreshToken(props);
+		}
 
 		case "session":
 			return generateSessionToken();
@@ -246,27 +259,35 @@ export async function invalidateOneAuthSessionToken(props, ctx) {
 }
 
 /**
- * Strategy-aware session invalidation (replaces authConfig.providers.session.invalidateAllByUserId)
+ * Strategy-aware session invalidation
  * @param {object} props
  * @param {object} props.where
  * @param {string} props.where.userId
- * @param {object} options
- * @param {any} options.tx - Optional transaction object for database operations
- * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
+ * @param {object} ctx
+ * @param {any} ctx.tx - Optional transaction object for database operations
+ * @param {CookiesProvider} ctx.cookies - The cookies provider to access the session token.
+ * @param {AuthStrategy} ctx.authStrategy
+ * @param {{
+ * 	sessions: {
+ * 		revokeAllByUserId: SessionsProvider['revokeAllByUserId'];
+ * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
+ * 	};
+ * }} ctx.authProviders
+ *
  * @returns {Promise<void>}
  */
-export async function invalidateAllUserAuth(props, options) {
-	switch (authConfig.strategy) {
+export async function invalidateAllUserAuth(props, ctx) {
+	switch (ctx.authStrategy) {
 		case "jwt":
-			await authConfig.providers.session.revokeAllByUserId(props, options);
-			return deleteJWTTokenCookies(options.cookies);
+			await ctx.authProviders.sessions.revokeAllByUserId(props, ctx);
+			return deleteJWTTokenCookies(ctx.cookies);
 
 		case "session":
-			await authConfig.providers.session.deleteAllByUserId(props, options);
-			return deleteSessionTokenCookie(options.cookies);
+			await ctx.authProviders.sessions.deleteAllByUserId(props, ctx);
+			return deleteSessionTokenCookie(ctx.cookies);
 
 		default:
-			throw new Error(`Unsupported auth strategy: ${authConfig.strategy}`);
+			throw new Error(`Unsupported auth strategy: ${ctx.authStrategy}`);
 	}
 }
 
@@ -287,7 +308,7 @@ export async function invalidateAllUserAuth(props, options) {
 // 		return result;
 // 	}
 
-// 	// For session authConfig.strategy, we set the cookie
+// 	// For session authStrategy, we set the cookie
 // 	// Set the session token cookie with the new expiration date
 // 	const token = getTokenFromCookies();
 // 	if (!token) {

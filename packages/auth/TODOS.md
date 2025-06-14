@@ -71,17 +71,17 @@ Based on my analysis of your authentication library, here's a comprehensive road
 
   ```javascript
   const authConfig = {
-  	security: {
-  		sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 days
-  		requireEmailVerification: true,
-  		require2FA: false,
-  		passwordStrength: "medium",
-  	},
-  	cookies: {
-  		secure: true,
-  		sameSite: "lax",
-  		httpOnly: true,
-  	},
+   security: {
+    sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 days
+    requireEmailVerification: true,
+    require2FA: false,
+    passwordStrength: "medium",
+   },
+   cookies: {
+    secure: true,
+    sameSite: "lax",
+    httpOnly: true,
+   },
   };
   ```
 

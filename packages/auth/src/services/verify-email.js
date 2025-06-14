@@ -1,28 +1,42 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, UserEmailVerificationRequestsProvider, AuthStrategy, PasswordResetSessionsProvider, UsersProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts"; */
 
-import { authConfig } from "#init/index.js";
 import { VERIFY_EMAIL_MESSAGES_ERRORS, VERIFY_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { dateLikeToNumber } from "#utils/dates.js";
 import {
 	createEmailVerificationRequest,
 	deleteEmailVerificationRequestCookie,
-	deleteUserEmailVerificationRequest,
 	getUserEmailVerificationRequestFromRequest,
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
+import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import { getCurrentAuthSession } from "#utils/strategy/index.js";
 import { verifyEmailServiceInputSchema } from "#utils/validations.js";
 
 /**
  *
- * @param {unknown} data
- * @param {object} options - Options for the service.
- * @param {CookiesProvider} options.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} options.headers - The headers provider to access the session token.
- * @param {any} options.tx - Transaction object for database operations
- * @param {string|null|undefined} options.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} options.userAgent - Optional user agent for the session
+ * @param {object} props - Options for the service.
+ * @param {unknown} props.input
+ * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
+ * @param {HeadersProvider} props.headers - The headers provider to access the session token.
+ * @param {any} props.tx - Transaction object for database operations
+ * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
+ * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
+ * @param {any} props.tx
+ * @param {AuthStrategy} props.authStrategy
+ * @param {AuthProvidersWithSessionAndJWTDefaults<{
+ * 	userEmailVerificationRequests: {
+ * 		findOneByIdAndUserId: UserEmailVerificationRequestsProvider['findOneByIdAndUserId'];
+ * 		deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
+ * 		createOne: UserEmailVerificationRequestsProvider['createOne'];
+ * 	};
+ *  passwordResetSessions: {
+ * 		deleteAllByUserId: PasswordResetSessionsProvider['deleteAllByUserId'];
+ * 	};
+ *  users: {
+ * 		updateOneEmailAndVerify: UsersProvider['updateOneEmailAndVerify'];
+ * 	};
+ * }>} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    VERIFY_EMAIL_MESSAGES_ERRORS,
@@ -30,17 +44,20 @@ import { verifyEmailServiceInputSchema } from "#utils/validations.js";
  *  >
  * >}
  */
-export async function verifyEmailUserService(data, options) {
-	const input = verifyEmailServiceInputSchema.safeParse(data);
+export async function verifyEmailUserService(props) {
+	const input = verifyEmailServiceInputSchema.safeParse(props.input);
 	if (!input.success) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
 	const { session, user } = await getCurrentAuthSession({
-		ipAddress: options.ipAddress,
-		userAgent: options.userAgent,
-		cookies: options.cookies,
-		headers: options.headers,
+		ipAddress: props.ipAddress,
+		userAgent: props.userAgent,
+		cookies: props.cookies,
+		headers: props.headers,
+		tx: props.tx,
+		authStrategy: props.authStrategy,
+		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
 	});
 	if (!session) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -48,20 +65,33 @@ export async function verifyEmailUserService(data, options) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(
-		user.id,
-		options.cookies,
-	);
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id, {
+		cookies: props.cookies,
+		authProviders: {
+			userEmailVerificationRequests: {
+				findOneByIdAndUserId:
+					props.authProviders.userEmailVerificationRequests.findOneByIdAndUserId,
+			},
+		},
+	});
 	if (!verificationRequest) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
 		const newVerificationRequest = await createEmailVerificationRequest(
 			{ where: { userId: user.id, email: verificationRequest.email } },
-			{ tx: options.tx },
+			{
+				tx: props.tx,
+				authProviders: {
+					userEmailVerificationRequests: {
+						createOne: props.authProviders.userEmailVerificationRequests.createOne,
+						deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+					},
+				},
+			},
 		);
 
 		await sendVerificationEmail(newVerificationRequest.email, newVerificationRequest.code);
-		setEmailVerificationRequestCookie(newVerificationRequest, options.cookies);
+		setEmailVerificationRequestCookie(newVerificationRequest, props.cookies);
 		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE;
 	}
 	if (verificationRequest.code !== input.data.code) {
@@ -69,21 +99,21 @@ export async function verifyEmailUserService(data, options) {
 	}
 
 	await Promise.all([
-		deleteUserEmailVerificationRequest(
+		props.authProviders.userEmailVerificationRequests.deleteOneByUserId(
 			{ where: { userId: user.id, email: verificationRequest.email } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
-		authConfig.providers.passwordResetSession.deleteAllByUserId(
+		props.authProviders.passwordResetSessions.deleteAllByUserId(
 			{ where: { userId: user.id } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
-		authConfig.providers.users.updateOneEmailAndVerify(
+		props.authProviders.users.updateOneEmailAndVerify(
 			{ data: { email: verificationRequest.email }, where: { id: user.id } },
-			{ tx: options.tx },
+			{ tx: props.tx },
 		),
 	]);
 
-	deleteEmailVerificationRequestCookie(options.cookies);
+	deleteEmailVerificationRequestCookie(props.cookies);
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		// return redirect("/2fa/setup");

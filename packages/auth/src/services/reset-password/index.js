@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider, UsersProvider, JWTProvider } from "#types.ts"; */
 
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
@@ -28,15 +28,22 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
  * @param {AuthStrategy} props.authStrategy
  * @param {{
+ * 	sessions: {
+ * 		createOne: SessionsProvider['createOne'];
+ * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
+ * 	};
+ *	jwt?: {
+ * 		createTokenPair?: JWTProvider['createTokenPair']
+ * 		createRefreshToken: JWTProvider['createRefreshToken'];
+ * 	};
+ * 	users: {
+ * 		updateOnePassword: UsersProvider['updateOnePassword'];
+ * 	};
  * 	passwordResetSession: {
  * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
  * 	  deleteOne: PasswordResetSessionsProvider["deleteOne"];
  * 		deleteAllByUserId: PasswordResetSessionsProvider["deleteAllByUserId"];
  * 	};
- * 	sessions: {
- * 		createOne: SessionsProvider['createOne'];
- * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
- * 	}
  * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
@@ -98,7 +105,12 @@ export async function resetPasswordService(props) {
 		(async () => {
 			const sessionToken = generateAuthSessionToken(
 				{ data: { user: user, metadata: sessionInputBasicInfo } },
-				{ authStrategy: props.authStrategy },
+				{
+					authStrategy: props.authStrategy,
+					authProviders: {
+						jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken },
+					},
+				},
 			);
 			const session = await createAuthSession(
 				{
@@ -115,6 +127,7 @@ export async function resetPasswordService(props) {
 						sessions: {
 							createOne: props.authProviders.sessions.createOne,
 						},
+						jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
 					},
 				},
 			);
@@ -129,7 +142,15 @@ export async function resetPasswordService(props) {
 			{ where: { userId: passwordResetSession.userId } },
 			{ tx: props.tx },
 		),
-		updateUserPassword({ data: { password }, where: { id: user.id } }, { tx: props.tx }),
+		updateUserPassword(
+			{ data: { password }, where: { id: user.id } },
+			{
+				tx: props.tx,
+				authProviders: {
+					users: { updateOnePassword: props.authProviders.users.updateOnePassword },
+				},
+			},
+		),
 	]);
 	const result = setOneAuthSessionToken(session, {
 		cookies: props.cookies,

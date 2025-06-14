@@ -442,7 +442,7 @@ export const session = pgTable(
 		index("idx_session_last_used_at").on(table.lastUsedAt),
 	],
 );
-export const emailVerificationRequest = pgTable(
+export const userEmailVerificationRequests = pgTable(
 	"email_verification_request",
 	{
 		id: text("id").primaryKey().notNull().$default(createId),
@@ -489,7 +489,7 @@ export const passwordResetSession = pgTable(
 
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
-	emailVerificationRequests: many(emailVerificationRequest),
+	userEmailVerificationRequests: many(userEmailVerificationRequests),
 	passwordResetSessions: many(passwordResetSession),
 	organizationMemberships: many(organizationMember),
 	invitationsSent: many(organizationMemberInvitation),
@@ -500,12 +500,15 @@ export const sessionRelations = relations(session, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
-export const emailVerificationRequestRelations = relations(emailVerificationRequest, ({ one }) => ({
-	user: one(user, {
-		fields: [emailVerificationRequest.userId],
-		references: [user.id],
+export const emailVerificationRequestRelations = relations(
+	userEmailVerificationRequests,
+	({ one }) => ({
+		user: one(user, {
+			fields: [userEmailVerificationRequests.userId],
+			references: [user.id],
+		}),
 	}),
-}));
+);
 export const passwordResetSessionRelations = relations(passwordResetSession, ({ one }) => ({
 	user: one(user, {
 		fields: [passwordResetSession.userId],

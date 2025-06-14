@@ -7,10 +7,8 @@ import { redirect } from "#i18n/server";
 import {
 	authStrategy,
 	createOnePasswordResetSession,
+	defaultSessionsHandlers,
 	deleteAllPasswordResetSessionsByUserId,
-	deleteOneSessionById,
-	extendOneSessionExpirationDate,
-	findOneSessionWithUser,
 	findOneUserByEmail,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
@@ -35,11 +33,7 @@ export async function forgotPasswordAction(_prev, formData) {
 					createOne: createOnePasswordResetSession,
 					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
 				},
-				sessions: {
-					deleteOneById: deleteOneSessionById,
-					extendOneExpirationDate: extendOneSessionExpirationDate,
-					findOneWithUser: findOneSessionWithUser,
-				},
+				sessions: defaultSessionsHandlers,
 				users: {
 					findOneByEmail: findOneUserByEmail,
 				},

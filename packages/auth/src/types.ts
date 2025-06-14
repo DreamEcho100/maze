@@ -182,14 +182,18 @@ export interface UserEmailVerificationRequestsProvider {
 	 * @param data.code - Verification code
 	 * @param data.email - Email to verify
 	 * @param data.expiresAt - Expiration date
+	 * @param [options] - Additional options (e.g. transaction)
 	 */
-	createOne: (data: {
-		id?: string;
-		userId: string;
-		code: string;
-		email: string;
-		expiresAt: DateLike;
-	}) => Promise<EmailVerificationRequest | null | undefined>;
+	createOne: (
+		data: {
+			id?: string;
+			userId: string;
+			code: string;
+			email: string;
+			expiresAt: DateLike;
+		},
+		options?: { tx?: TransactionClient },
+	) => Promise<EmailVerificationRequest | null | undefined>;
 	/**
 	 * Delete all email verification requests for a user
 	 *
@@ -732,7 +736,7 @@ export interface ProvidersInit {
 		passwordResetSessions:
 			| PasswordResetSessionsProvider
 			| (() => PasswordResetSessionsProvider | Promise<PasswordResetSessionsProvider>);
-		emailVerificationRequests:
+		userEmailVerificationRequests:
 			| UserEmailVerificationRequestsProvider
 			| (() =>
 					| UserEmailVerificationRequestsProvider
@@ -762,3 +766,32 @@ export type MultiErrorSingleSuccessResponse<
 	| (TData extends undefined
 			? TSuccessObj[keyof TSuccessObj]
 			: TSuccessObj[keyof TSuccessObj] & { data: TData });
+
+interface SesHan {
+	findOneWithUser: SessionsProvider["findOneWithUser"];
+	deleteOneById: SessionsProvider["deleteOneById"];
+	extendOneExpirationDate: SessionsProvider["extendOneExpirationDate"];
+	revokeOneById: SessionsProvider["revokeOneById"];
+	createOne: SessionsProvider["createOne"];
+}
+interface JWTHan {
+	verifyAccessToken?: JWTProvider["verifyAccessToken"];
+	createTokenPair?: JWTProvider["createTokenPair"];
+}
+
+export interface AuthProvidersShape {
+	sessions?: Partial<SessionsProvider>;
+	jwt?: Partial<JWTProvider>;
+	users?: Partial<UsersProvider>;
+	passwordResetSession?: Partial<PasswordResetSessionsProvider>;
+	userEmailVerificationRequests?: Partial<UserEmailVerificationRequestsProvider>;
+}
+
+export type AuthProvidersWithSessionAndJWTDefaults<
+	CustomAuthProvider extends AuthProvidersShape = object,
+> = Omit<CustomAuthProvider, "sessions" | "jwt"> & {
+	sessions: CustomAuthProvider["sessions"] extends undefined
+		? SesHan
+		: CustomAuthProvider["sessions"] & SesHan;
+	jwt?: CustomAuthProvider["jwt"] extends undefined ? JWTHan : CustomAuthProvider["jwt"] & JWTHan;
+};

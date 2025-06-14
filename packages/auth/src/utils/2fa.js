@@ -1,7 +1,6 @@
 // import { prisma as db } from "@de100/db/db";
 /** @import { UsersProvider, SessionsProvider } from "#types.ts"; */
 
-// import { authConfig } from "#init/index.js";
 import { decryptToString, encryptString } from "./encryption.js";
 import { generateRandomRecoveryCode } from "./generate-random-recovery-code.js";
 

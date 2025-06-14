@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, UsersProvider, AuthStrategy, SessionsProvider } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider } from "#types.ts" */
 
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
@@ -21,6 +21,10 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  * @param {{
  * 	sessions: {
  * 		createOne: SessionsProvider['createOne']
+ * 	};
+ *	jwt?: {
+ * 		createTokenPair?: JWTProvider['createTokenPair']
+ * 		createRefreshToken: JWTProvider['createRefreshToken'];
  * 	};
  * 	users: {
  * 		findOneByEmail: UsersProvider['findOneByEmail'];
@@ -71,7 +75,10 @@ export async function loginUserService(props) {
 	};
 	const sessionToken = generateAuthSessionToken(
 		{ data: { user: user, metadata: sessionInputBasicInfo } },
-		{ authStrategy: props.authStrategy },
+		{
+			authStrategy: props.authStrategy,
+			authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
+		},
 	);
 	const session = await createAuthSession(
 		{
@@ -85,6 +92,7 @@ export async function loginUserService(props) {
 			authStrategy: props.authStrategy,
 			authProviders: {
 				sessions: { createOne: props.authProviders.sessions.createOne },
+				jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
 			},
 		},
 	);

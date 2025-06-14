@@ -10,6 +10,7 @@ import {
 	deleteAllSessionsByUserId,
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,
+	updateOneUserPassword,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
@@ -38,6 +39,7 @@ export async function resetPasswordAction(_prev, formData) {
 					createOne: createOneSession,
 					deleteAllByUserId: deleteAllSessionsByUserId,
 				},
+				users: { updateOnePassword: updateOneUserPassword },
 			},
 		}),
 	);

@@ -2,7 +2,6 @@
  * @import { DateLike, User, UsersProvider } from "#types.ts";
  */
 
-import { authConfig } from "#init/index.js";
 import { encrypt, encryptString } from "#utils/encryption.js";
 import { generateRandomRecoveryCode } from "#utils/generate-random-recovery-code.js";
 import { hashPassword } from "#utils/passwords.js";
@@ -13,15 +12,17 @@ import { dateLikeToDate } from "./dates.js";
  * @param {string} email
  * @param {string} name
  * @param {string} password
+ * @param {Object} ctx - Context object containing auth providers.
+ * @param {{ users: { createOne: UsersProvider['createOne']; } }} ctx.authProviders
  * @returns {Promise<User>}
  */
-export async function createUser(email, name, password) {
+export async function createUser(email, name, password, ctx) {
 	const passwordHash = await hashPassword(password);
 	const recoveryCode = generateRandomRecoveryCode();
 	const encryptedRecoveryCode = encryptString(recoveryCode);
 
 	// const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
-	const result = await authConfig.providers.users.createOne({
+	const result = await ctx.authProviders.users.createOne({
 		email,
 		name,
 		passwordHash,
@@ -38,14 +39,16 @@ export async function createUser(email, name, password) {
 /**
  * Reset the user's recovery code and return it.
  * @param {string} userId
+ * @param {Object} ctx - Context object containing auth providers.
+ * @param {{ users: { updateOneRecoveryCode: UsersProvider['updateOneRecoveryCode']; } }} ctx.authProviders
  * @returns {Promise<string>}
  */
-export async function resetUserRecoveryCode(userId) {
+export async function resetUserRecoveryCode(userId, ctx) {
 	const recoveryCode = generateRandomRecoveryCode();
 	const encryptedCode = encryptString(recoveryCode);
 
 	// await updateOneUserRecoveryCodeRepository(userId, encryptedCode);
-	await authConfig.providers.users.updateOneRecoveryCode(userId, encryptedCode);
+	await ctx.authProviders.users.updateOneRecoveryCode(userId, encryptedCode);
 
 	return recoveryCode;
 }
@@ -74,15 +77,21 @@ export async function resetUserRecoveryCode(userId) {
  * @param {string} props.data.password - The new password to be set.
  * @param {Object} props.where - The properties to identify the user.
  * @param {string} props.where.id - The ID of the user to update.
- * @param {{ tx: any }} [options] - Additional options for the operation.
+ * @param {Object} ctx
+ * @param {any} [ctx.tx] - Additional options for the operation.
+ * @param {{
+ * 	users: {
+ * 		updateOnePassword: UsersProvider['updateOnePassword'];
+ * 	}
+ * }} ctx.authProviders
  * @returns {Promise<User>}
  */
-export async function updateUserPassword(props, options) {
+export async function updateUserPassword(props, ctx) {
 	const passwordHash = await hashPassword(props.data.password);
 	// const result = await updateUserPasswordRepository(id, passwordHash);
-	const result = await authConfig.providers.users.updateOnePassword(
+	const result = await ctx.authProviders.users.updateOnePassword(
 		{ data: { passwordHash }, where: { id: props.where.id } },
-		options,
+		{ tx: ctx.tx },
 	);
 
 	if (!result) {
@@ -127,9 +136,11 @@ export async function updateUserTOTPKey(props, ctx) {
  * Update the user's two factor enabled status in the database.
  * @param {string} userId
  * @param {DateLike | null} twoFactorEnabledAt
+ * @param {Object} ctx - Context object containing auth providers.
+ * @param {{ users: { updateOne2FAEnabled: UsersProvider['updateOne2FAEnabled']; } }} ctx.authProviders
  * @returns {Promise<User>}
  */
-export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabledAt) {
+export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabledAt, ctx) {
 	const encryptedRecoveryCode = twoFactorEnabledAt
 		? (() => {
 				const recoveryCode = generateRandomRecoveryCode();
@@ -140,7 +151,7 @@ export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabled
 		: null;
 
 	// return await updateUserTwoFactorEnabledRepository(
-	const result = await authConfig.providers.users.updateOne2FAEnabled(
+	const result = await ctx.authProviders.users.updateOne2FAEnabled(
 		{
 			twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
 			recoveryCode: encryptedRecoveryCode,

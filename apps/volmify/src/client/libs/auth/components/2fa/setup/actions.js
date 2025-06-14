@@ -6,9 +6,7 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "#i18n/server";
 import {
 	authStrategy,
-	deleteOneSessionById,
-	extendOneSessionExpirationDate,
-	findOneSessionWithUser,
+	defaultSessionsHandlers,
 	markOneSession2FAVerified,
 	updateOneUserTOTPKey,
 } from "#server/libs/auth/init";
@@ -34,9 +32,7 @@ export async function setup2FAAction(_prev, formData) {
 			authStrategy: authStrategy,
 			authProviders: {
 				sessions: {
-					deleteOneById: deleteOneSessionById,
-					extendOneExpirationDate: extendOneSessionExpirationDate,
-					findOneWithUser: findOneSessionWithUser,
+					...defaultSessionsHandlers,
 					markOne2FAVerified: markOneSession2FAVerified,
 				},
 				users: { updateOneTOTPKey: updateOneUserTOTPKey },

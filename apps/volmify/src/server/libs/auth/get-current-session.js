@@ -4,13 +4,9 @@ import { cache } from "react";
 
 import { getCurrentAuthSession } from "@de100/auth/utils/strategy";
 
+import { db } from "../db";
 import { getSessionOptionsBasics } from "../get-session-options-basics";
-import {
-	authStrategy,
-	deleteOneSessionById,
-	extendOneSessionExpirationDate,
-	findOneSessionWithUser,
-} from "./init";
+import { authStrategy, defaultSessionsHandlers } from "./init";
 
 /**
  * Retrieves the current session from the request's cookies in a Next.js environment.
@@ -35,15 +31,15 @@ export const getCurrentSession = cache(
 	/** @param {Headers} [reqHeaders] - Optional headers from the request, typically used to access cookies. */
 	async (reqHeaders) => {
 		"use server";
-		return getCurrentAuthSession(await getSessionOptionsBasics(reqHeaders), {
-			authStrategy,
-			authProviders: {
-				sessions: {
-					deleteOneById: deleteOneSessionById,
-					extendOneExpirationDate: extendOneSessionExpirationDate,
-					findOneWithUser: findOneSessionWithUser,
+		return db.transaction(async (tx) =>
+			getCurrentAuthSession({
+				...(await getSessionOptionsBasics(reqHeaders)),
+				tx,
+				authStrategy,
+				authProviders: {
+					sessions: defaultSessionsHandlers,
 				},
-			},
-		});
+			}),
+		);
 	},
 );

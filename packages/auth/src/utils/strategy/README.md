@@ -346,7 +346,7 @@ const authConfig = initAuth({
     users: userProvider,
     sessions: sessionProvider,
     passwordResetSessions: passwordResetProvider,
-    emailVerificationRequests: emailVerificationProvider
+    userEmailVerificationRequests: emailVerificationProvider
   },
   cookies: cookieProvider,
   headers: headerProvider,

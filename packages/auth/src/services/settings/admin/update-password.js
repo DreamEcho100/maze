@@ -1,4 +1,4 @@
-/** @import { MultiErrorSingleSuccessResponse, User } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, User, UsersProvider } from "#types.ts"; */
 
 import {
 	ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS,
@@ -11,10 +11,16 @@ import { updateUserPassword } from "#utils/users.js";
  *
  * Handles updating a user's password, including validation and session management.
  *
+ * @param {object} props
  * @param {{
  *  newPassword: string,
  *  userId: string,
- * }} data
+ * }} props.input
+ * @param {{
+ * 	users: {
+ * 		updateOnePassword: UsersProvider['updateOnePassword'];
+ * 	}
+ * }} props.authProviders
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS,
@@ -23,18 +29,23 @@ import { updateUserPassword } from "#utils/users.js";
  *  >
  * >}
  */
-export async function adminUpdatePasswordService(data) {
-	if (typeof data.newPassword !== "string") {
+export async function adminUpdatePasswordService(props) {
+	if (typeof props.input.newPassword !== "string") {
 		return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_REQUIRED;
 	}
 
-	const strongPassword = await verifyPasswordStrength(data.newPassword);
+	const strongPassword = await verifyPasswordStrength(props.input.newPassword);
 	if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-	const updatedUser = await updateUserPassword({
-		data: { password: data.newPassword },
-		where: { id: data.userId },
-	});
+	const updatedUser = await updateUserPassword(
+		{
+			data: { password: props.input.newPassword },
+			where: { id: props.input.userId },
+		},
+		{
+			authProviders: { users: { updateOnePassword: props.authProviders.users.updateOnePassword } },
+		},
+	);
 
 	return {
 		...ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS.PASSWORD_UPDATED_SUCCESSFULLY,

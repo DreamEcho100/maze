@@ -2,7 +2,6 @@
 
 import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 
-// import { authConfig } from "#init/index.js";
 import {
 	COOKIE_TOKEN_SESSION_EXPIRES_DURATION,
 	COOKIE_TOKEN_SESSION_KEY,
