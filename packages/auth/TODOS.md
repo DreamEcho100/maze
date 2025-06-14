@@ -1,124 +1,118 @@
 # 🛣️ Maze Auth Development Roadmap
 
-Based on my analysis of your authentication library, here's a comprehensive roadmap of TODOs organized by priority and implementation phase:
+Based on the **new dependency injection architecture**, here's the updated roadmap focused on completing and enhancing the core library:
 
-## 🚨 **Phase 1: Critical Fixes & Consistency**
+## ✅ **Architecture Transformation Completed**
 
-### **1.1 Message Constants Standardization**
+### **🎯 Dependency Injection Pattern - DONE**
 
-- [ ] **Fix inconsistent message constant names** across all services
-- [ ] **Update service references** to use new standardized names
-- [ ] **Remove old commented message objects** from constants.js
-- [ ] **Audit all services** for message constant mismatches
+- ✅ **Removed global authConfig dependencies**
+- ✅ **Implemented service-level provider specification**
+- ✅ **Created explicit dependency contracts**
+- ✅ **Framework-agnostic core library**
+- ✅ **Provider composition utilities**
 
-### **1.2 Provider Interface Corrections**
+Your refactor successfully moved from:
 
-- [ ] **Fix method naming inconsistencies** in provider calls:
+```javascript
+// ❌ Old: Global configuration (NextAuth.js style)
+const result = await authConfig.providers.sessions.createOne(data);
 
-  ```javascript
-  // Current inconsistencies found:
-  userProvider.getOneTOTPKey(); // Should be: getTOTPKey()
-  userProvider.findOneByEmail(); // Should be: findByEmail()
-  userProvider.getOnePasswordHash(); // Should be: getPasswordHash()
-  sessionProvider.invalidateAllByUserId(); // Should be: deleteByUser()
-  ```
+// ✅ New: Explicit dependency injection
+const result = await loginUserService({
+  authProviders: {
+    sessions: { createOne: sessionProvider.createOne }
+  },
+  data
+});
+```
 
-### **1.3 Error Code Fixes**
+## 🚨 **Phase 1: Core Library Polish**
 
-- [x] **Fix wrong error codes** in service implementations:
+### **1.1 Input Validation Completion**
 
-  ```javascript
-  // In TOTP service - using wrong error code:
-  return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED;
-  // Should be: TOTP_CODE_REQUIRED
-
-  // In recovery code service:
-  return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
-  // Should be: RECOVERY_CODE_REQUIRED
-  ```
-
-## 🏗️ **Phase 2: Core Implementation Completion**
-
-### **2.1 Missing Provider Methods**
-
-- [ ] **Complete all provider interfaces** with missing methods
-- [ ] **Add comprehensive JSDoc** for all provider methods
-- [ ] **Create provider validation utilities** to ensure all required methods exist
-
-### **2.2 Input Validation Enhancement**
-
-- [ ] **Add Zod validation** to all services (many still use manual validation)
-- [ ] **Create reusable validation schemas** for common inputs
-- [ ] **Standardize validation error responses**
-
-### **2.3 Authentication Flow Completion**
-
-- [ ] **Implement missing admin services**
-- [ ] **Complete 2FA setup/reset workflows**
-- [ ] **Add proper session cleanup mechanisms**
-
-## 🔧 **Phase 3: Developer Experience Improvements**
-
-### **3.1 TypeScript Enhancement**
-
-- [ ] **Create comprehensive type definitions** for all providers
-- [ ] **Add generic type support** for provider responses
-- [ ] **Improve JSDoc with better examples** and usage patterns
-
-### **3.2 Configuration System**
-
-- [ ] **Create central configuration object**:
+- [ ] **Complete Zod validation** for remaining services:
 
   ```javascript
-  const authConfig = {
-   security: {
-    sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 days
-    requireEmailVerification: true,
-    require2FA: false,
-    passwordStrength: "medium",
-   },
-   cookies: {
-    secure: true,
-    sameSite: "lax",
-    httpOnly: true,
-   },
-  };
+  // Services still using manual validation:
+  // - Some 2FA verification services
+  // - Admin management services
+  // - Password reset workflows
   ```
 
-### **3.3 Error Handling Standardization**
+- [ ] **Create reusable validation schemas**:
 
+  ```javascript
+  // #src/validation/schemas.js
+  export const emailSchema = z.string().email();
+  export const passwordSchema = z.string().min(8);
+  export const totpCodeSchema = z.string().length(6).regex(/^\d+$/);
+  export const recoveryCodeSchema = z.string().length(10);
+  ```
+
+### **1.2 Provider Interface Standardization**
+
+- [ ] **Ensure consistent method naming** across all providers
+- [ ] **Add comprehensive JSDoc** for provider interfaces
+- [ ] **Create provider validation utilities**:
+
+  ```javascript
+  export function validateAuthProviders(required, provided) {
+    for (const [provider, methods] of Object.entries(required)) {
+      for (const method of methods) {
+        if (!provided[provider]?.[method]) {
+          throw new Error(`Missing ${provider}.${method}`);
+        }
+      }
+    }
+  }
+  ```
+
+### **1.3 Error Handling Standardization**
+
+- [ ] **Fix remaining error code mismatches** in 2FA services
 - [ ] **Create AuthError class** for consistent error handling
-- [ ] **Add error code documentation**
-- [ ] **Implement error logging hooks**
+- [ ] **Document all error codes** and their contexts
 
-## 🚀 **Phase 4: Framework Adapters**
+## 🚀 **Phase 2: Framework Adapters**
 
-### **4.1 Next.js Adapter**
+### **2.1 Next.js + Drizzle Adapter (Priority)**
 
-- [ ] **Create @maze/auth-nextjs package**
-- [ ] **Implement server actions** for all auth flows
-- [ ] **Add middleware for route protection**
+- [ ] **Complete @maze/auth-nextjs-drizzle package**:
+
+  ```javascript
+  // Based on your current volmify implementation
+  export function createNextJsAuthProviders(db) {
+    return {
+      users: createDrizzleUserProvider(db),
+      sessions: createDrizzleSessionProvider(db),
+      emailVerification: createDrizzleEmailVerificationProvider(db),
+      passwordReset: createDrizzlePasswordResetProvider(db)
+    };
+  }
+  ```
+
+- [ ] **Add Next.js server actions** for all auth flows
 - [ ] **Create React hooks** for client-side auth state
+- [ ] **Add middleware utilities** for route protection
 
-### **4.2 Database Adapters**
+### **2.2 Additional Framework Adapters**
 
-- [ ] **Create @maze/auth-drizzle package** with complete provider implementations
-- [ ] **Create @maze/auth-prisma package** with complete provider implementations
-- [ ] **Add migration utilities** for easy setup
+- [ ] **@maze/auth-sveltekit** - SvelteKit integration
+- [ ] **@maze/auth-express** - Express.js integration
+- [ ] **@maze/auth-fastify** - Fastify integration
 
-### **4.3 Email Service Adapters**
+### **2.3 Database Adapters**
 
-- [ ] **Create email provider adapters** for popular services:
-  - Resend
-  - SendGrid
-  - Nodemailer
-  - AWS SES
+- [ ] **@maze/auth-prisma** - Prisma ORM integration
+- [ ] **@maze/auth-mongodb** - MongoDB integration
+- [ ] **@maze/auth-sqlite** - SQLite integration
 
-## 🛡️ **Phase 5: Security & Performance**
+## 🛡️ **Phase 3: Advanced Features**
 
-### **5.1 Rate Limiting System**
+### **3.1 Enhanced Security**
 
-- [ ] **Design flexible rate limiting interface**:
+- [ ] **Rate limiting provider interface**:
 
   ```javascript
   const rateLimitProvider = {
@@ -127,9 +121,7 @@ Based on my analysis of your authentication library, here's a comprehensive road
   };
   ```
 
-### **5.2 Audit & Logging**
-
-- [ ] **Add audit logging hooks**:
+- [ ] **Audit logging hooks**:
 
   ```javascript
   const auditProvider = {
@@ -137,79 +129,209 @@ Based on my analysis of your authentication library, here's a comprehensive road
   };
   ```
 
-### **5.3 Security Enhancements**
+- [ ] **CSRF protection utilities**
+- [ ] **Suspicious activity detection hooks**
 
-- [ ] **Add CSRF token utilities**
-- [ ] **Implement session fingerprinting**
-- [ ] **Add suspicious activity detection hooks**
-
-## 📚 **Phase 6: Documentation & Examples**
-
-### **6.1 Comprehensive Documentation**
-
-- [ ] **Write detailed provider implementation guides**
-- [ ] **Create migration guides** from other auth solutions
-- [ ] **Add security best practices** documentation
-
-### **6.2 Example Applications**
-
-- [ ] **Next.js + Drizzle full example**
-
-### **6.3 Testing Suite**
-
-- [ ] **Create comprehensive test suite** with provider mocks
-- [ ] **Add integration tests** for common workflows
-- [ ] **Performance benchmarks** for crypto operations
-
-## 🔮 **Phase 7: Advanced Features**
-
-### **7.1 Multi-tenancy Support**
-
-- [ ] **Add organization/tenant provider**
-- [ ] **Implement tenant-scoped authentication**
-- [ ] **Add tenant invitation workflows**
-
-### **7.2 Social Authentication**
-
-- [ ] **Design OAuth provider interface**
-- [ ] **Add popular OAuth providers** (Google, GitHub, Discord)
-- [ ] **Account linking workflows**
-
-### **7.3 Advanced 2FA**
+### **3.2 Multi-Factor Authentication Enhancement**
 
 - [ ] **WebAuthn/Passkey support**
 - [ ] **SMS-based 2FA provider interface**
 - [ ] **Backup authentication methods**
+- [ ] **Device trust management**
+- [ ] **QR code generation utilities**
 
-## 📦 **Phase 8: Ecosystem & Tooling**
+### **3.3 Social Authentication**
 
-### **8.1 CLI Tools**
+- [ ] **OAuth provider interface design**:
 
-- [ ] **Create setup CLI** for quick project initialization
-- [ ] **Migration tools** between different providers
-- [ ] **Configuration validation tools**
+  ```javascript
+  const oauthProvider = {
+    getAuthorizationUrl: (provider, redirectUri) => Promise<string>,
+    exchangeCodeForTokens: (provider, code) => Promise<TokenSet>,
+    getUserProfile: (provider, accessToken) => Promise<UserProfile>
+  };
+  ```
 
-### **8.2 Monitoring & Analytics**
+- [ ] **Popular OAuth providers** (Google, GitHub, Discord, Twitter)
+- [ ] **Account linking workflows**
+- [ ] **Social profile synchronization**
+
+## 📱 **Phase 4: Multi-Platform Support**
+
+### **4.1 Mobile Integration**
+
+- [ ] **React Native adapter**:
+
+  ```javascript
+  // Handle mobile-specific concerns:
+  // - Secure storage for tokens
+  // - Biometric authentication
+  // - Deep linking for OAuth
+  ```
+
+- [ ] **Expo integration**
+- [ ] **Mobile security patterns**
+
+### **4.2 Desktop Applications**
+
+- [ ] **Electron adapter**
+- [ ] **Tauri integration**
+- [ ] **Desktop security considerations**
+
+## 🏢 **Phase 5: Enterprise Features**
+
+### **5.1 Multi-Tenancy Support**
+
+- [ ] **Organization/tenant provider interface**:
+
+  ```javascript
+  const organizationProvider = {
+    createOne: (data) => Promise<Organization>,
+    findOneById: (id) => Promise<Organization | null>,
+    addMember: (orgId, userId, role) => Promise<void>,
+    removeMember: (orgId, userId) => Promise<void>
+  };
+  ```
+
+- [ ] **Tenant-scoped authentication**
+- [ ] **Cross-tenant security**
+- [ ] **Organization invitation workflows**
+
+### **5.2 Advanced Administration**
+
+- [ ] **Complete admin services**:
+
+  ```javascript
+  // Missing admin functionality:
+  export async function adminListUsersService({
+    authProviders,
+    filters,
+    pagination
+  }) {
+    // Implementation with proper provider injection
+  }
+
+  export async function adminDisableUserService({
+    authProviders,
+    userId,
+    reason
+  }) {
+    // Disable user and cleanup sessions
+  }
+  ```
+
+- [ ] **Admin dashboard components**
+- [ ] **Security analytics**
+- [ ] **User management APIs**
+
+## 📚 **Phase 6: Developer Experience**
+
+### **6.1 Documentation & Examples**
+
+- [ ] **Comprehensive provider implementation guides**
+- [ ] **Migration guides** from NextAuth.js, Auth0, etc.
+- [ ] **Example applications** for each framework adapter
+- [ ] **Security best practices** documentation
+- [ ] **TypeScript usage examples**
+
+### **6.2 Developer Tooling**
+
+- [ ] **CLI tools** for project setup:
+
+  ```bash
+  npx @maze/auth-cli init --framework nextjs --database drizzle
+  ```
+
+- [ ] **Provider validation utilities**
+- [ ] **Migration tools** between providers
+- [ ] **Configuration validation**
+- [ ] **Development debugging tools**
+
+## 🧪 **Phase 7: Testing & Quality**
+
+### **7.1 Testing Infrastructure**
+
+- [ ] **Comprehensive test suite** with provider mocks:
+
+  ```javascript
+  // Easy mocking with dependency injection
+  const mockAuthProviders = {
+    users: {
+      findOneByEmail: jest.fn().mockResolvedValue(mockUser),
+      createOne: jest.fn().mockResolvedValue(mockUser)
+    }
+  };
+
+  await loginUserService({ authProviders: mockAuthProviders, data });
+  ```
+
+- [ ] **Integration tests** for auth workflows
+- [ ] **Performance benchmarks**
+- [ ] **Security penetration testing**
+
+### **7.2 Monitoring & Analytics**
 
 - [ ] **Auth metrics provider interface**
-- [ ] **Security monitoring hooks**
-- [ ] **Performance tracking utilities**
+- [ ] **Performance monitoring hooks**
+- [ ] **Error tracking integration**
+- [ ] **Usage analytics**
 
-## 🎯 **Immediate Action Items (This Week)**
+## 🎯 **Immediate Action Items (This Sprint)**
 
-1. **Fix provider method naming inconsistencies**
-2. **Correct error code mismatches** in services
-3. **Standardize message constants** across all files
-4. **Add missing Zod validations** where marked with TODO
-5. **Complete JSDoc documentation** for all provider interfaces
+### **Week 1-2: Core Polish**
+
+1. **Complete Zod validation** for all remaining services
+2. **Fix any remaining error code mismatches**
+3. **Standardize provider interface documentation**
+4. **Add provider validation utilities**
+
+### **Week 3-4: Next.js Adapter**
+
+1. **Extract and package** the Drizzle providers from volmify app
+2. **Create @maze/auth-nextjs-drizzle** package
+3. **Add React hooks** for client-side usage
+4. **Create comprehensive examples**
 
 ## 🏆 **Success Metrics**
 
-- ✅ All provider interfaces fully documented and implemented
-- ✅ Zero naming inconsistencies across the codebase
-- ✅ Complete test coverage for all authentication flows
-- ✅ Framework adapters for top 3 frameworks (Next.js, SvelteKit, Express)
-- ✅ Database adapters for top 3 ORMs (Prisma, Drizzle, TypeORM)
-- ✅ 10+ production applications using the library
+### **Architecture Quality**
 
-This roadmap balances immediate fixes with long-term vision, ensuring your authentication library becomes a robust, production-ready solution for the JavaScript ecosystem.
+- ✅ **Zero global dependencies** - Pure dependency injection
+- ✅ **100% explicit contracts** - No hidden dependencies
+- ✅ **Framework agnostic** - Works with any framework
+
+### **Ecosystem Growth**
+
+- 🎯 **Framework adapters** for top 3 frameworks (Next.js, SvelteKit, Express)
+- 🎯 **Database adapters** for top 3 ORMs (Drizzle, Prisma, TypeORM)
+- 🎯 **Production usage** in 10+ applications
+- 🎯 **Community adoption** with 1000+ GitHub stars
+
+### **Enterprise Readiness**
+
+- 🎯 **Security audit** completion
+- 🎯 **Performance benchmarks** established
+- 🎯 **Enterprise features** (multi-tenancy, audit logs)
+- 🎯 **Professional support** options
+
+## 💡 **Key Architectural Principles**
+
+Your refactor established these principles that should guide all future development:
+
+1. **Explicit > Implicit** - Always declare dependencies
+2. **Composition > Configuration** - Build providers from smaller pieces
+3. **Injection > Globals** - Pass dependencies, don't rely on globals
+4. **Contracts > Implementation** - Define clear provider interfaces
+5. **Testing > Hope** - Make everything easily mockable
+
+## 🚀 **Next Major Milestone**
+
+**Goal**: Release `@maze/auth-nextjs-drizzle` v1.0 with:
+
+- ✅ Complete provider implementations
+- ✅ React hooks for client-side auth
+- ✅ Server actions for all flows
+- ✅ Comprehensive documentation
+- ✅ Production-ready example app
+
+This establishes Maze Auth as a **serious alternative** to NextAuth.js with **superior architecture** and **better testability**.
