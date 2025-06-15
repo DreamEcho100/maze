@@ -1,10 +1,10 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, AuthStrategy, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts" */
 
 import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 import { updateIsTwoFactorServiceInputSchema } from "#utils/validations.js";
@@ -18,19 +18,14 @@ import { updateIsTwoFactorServiceInputSchema } from "#utils/validations.js";
 /**
  * Toggles two-factor authentication based on the input.
  *
- * @param {object} props - Options for the service.
- * @param {any} props.tx
- * @param {unknown} props.input
- * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	users: {
- * 		updateOne2FAEnabled: UsersProvider['updateOne2FAEnabled'];
- * 	}
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		users: {
+ * 			updateOne2FAEnabled: UsersProvider['updateOne2FAEnabled'];
+ * 		}
+ * 	}>;
+ * 	input: unknown;
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
@@ -46,15 +41,9 @@ export async function updateIsTwoFactorService(props) {
 
 	const isTwoFactorEnabled = input.data.isTwoFactorEnabled;
 
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const { session, user } = await getCurrentAuthSession(
+		await generateGetCurrentAuthSessionProps(props),
+	);
 	if (!session) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	await updateUserTwoFactorEnabledService(user.id, isTwoFactorEnabled ? new Date() : null, {

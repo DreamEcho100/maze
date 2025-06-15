@@ -820,7 +820,7 @@ export interface AuthProvidersShape {
 	userEmailVerificationRequests?: Partial<UserEmailVerificationRequestsProvider>;
 }
 
-export type AuthProvidersWithSessionAndJWTDefaults<
+export type AuthProvidersWithGetSessionProviders<
 	CustomAuthProvider extends AuthProvidersShape = object,
 > = Omit<CustomAuthProvider, "sessions" | "jwt"> & {
 	sessions: CustomAuthProvider["sessions"] extends undefined
@@ -828,3 +828,14 @@ export type AuthProvidersWithSessionAndJWTDefaults<
 		: CustomAuthProvider["sessions"] & SesHan;
 	jwt?: CustomAuthProvider["jwt"] extends undefined ? JWTHan : CustomAuthProvider["jwt"] & JWTHan;
 };
+
+export interface AuthProvidersWithGetSessionUtils {
+	authStrategy: AuthStrategy;
+	cookies: CookiesProvider;
+	headers: HeadersProvider;
+	// ids: IdsProvider;
+	generateRandomId: () => string;
+	ipAddress?: string | (() => string | Promise<string>) | undefined | null;
+	userAgent?: UserAgent | (() => UserAgent | Promise<UserAgent>) | undefined | null;
+	tx: any;
+}

@@ -1,10 +1,10 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, PasswordResetSessionsProvider, AuthStrategy, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithSessionAndJWTDefaults, HeadersProvider } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, PasswordResetSessionsProvider, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import {
 	deletePasswordResetSessionTokenCookie,
 	validatePasswordResetSessionRequest,
@@ -17,33 +17,27 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the reset password process, including validation and session management.
  *
- * @param {object} props
- * @param {unknown} props.input
- * @param {any} props.tx - Transaction object for database operations.
- * @param {CookiesProvider} props.cookies - Cookies provider for session management.
- * @param {HeadersProvider} props.headers - Cookies provider for session management.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {() => string} props.generateRandomId
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	sessions: {
- * 		createOne: SessionsProvider['createOne'];
- * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
- * 	};
- *	jwt?: {
- * 		createTokenPair?: JWTProvider['createTokenPair']
- * 		createRefreshToken: JWTProvider['createRefreshToken'];
- * 	};
- * 	users: {
- * 		updateOnePassword: UsersProvider['updateOnePassword'];
- * 	};
- * 	passwordResetSession: {
- * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
- * 	  deleteOne: PasswordResetSessionsProvider["deleteOne"];
- * 		deleteAllByUserId: PasswordResetSessionsProvider["deleteAllByUserId"];
- * 	};
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		sessions: {
+ * 			createOne: SessionsProvider['createOne'];
+ * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
+ * 		};
+ *		jwt?: {
+ * 			createTokenPair?: JWTProvider['createTokenPair']
+ * 			createRefreshToken: JWTProvider['createRefreshToken'];
+ * 		};
+ * 		users: {
+ * 			updateOnePassword: UsersProvider['updateOnePassword'];
+ * 		};
+ * 		passwordResetSession: {
+ * 		  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
+ * 		  deleteOne: PasswordResetSessionsProvider["deleteOne"];
+ * 			deleteAllByUserId: PasswordResetSessionsProvider["deleteAllByUserId"];
+ * 		};
+ * 	}>;
+ * 	input: unknown;
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    RESET_PASSWORD_MESSAGES_ERRORS,
@@ -53,15 +47,8 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * >}
  */
 export async function resetPasswordService(props) {
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const getCurrentAuthSessionInput = await generateGetCurrentAuthSessionProps(props);
+	const { session, user } = await getCurrentAuthSession(getCurrentAuthSessionInput);
 
 	if (!session) return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -106,8 +93,8 @@ export async function resetPasswordService(props) {
 	}
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: props.ipAddress ?? null,
-		userAgent: props.userAgent ?? null,
+		ipAddress: getCurrentAuthSessionInput.ipAddress ?? null,
+		userAgent: getCurrentAuthSessionInput.userAgent ?? null,
 		twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: null,
@@ -135,8 +122,8 @@ export async function resetPasswordService(props) {
 
 	const newSession = await createAuthSession({
 		cookies: props.cookies,
-		userAgent: props.userAgent,
-		generateRandomId: props.generateRandomId,
+		userAgent: getCurrentAuthSessionInput.userAgent,
+		generateRandomId: getCurrentAuthSessionInput.generateRandomId,
 		metadata: sessionInputBasicInfo,
 		user,
 		tx: props.tx,

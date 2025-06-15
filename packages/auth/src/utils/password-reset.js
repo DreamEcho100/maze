@@ -1,12 +1,14 @@
 /** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider } from "#types.ts"; */
 
+import { sha256 } from "@oslojs/crypto/sha2";
+import { encodeHexLowerCase } from "@oslojs/encoding";
+
 import {
 	COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
 	COOKIE_TOKEN_PASSWORD_RESET_KEY,
 } from "./constants.js";
 import { dateLikeToDate, dateLikeToNumber } from "./dates.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
-import { getSessionId } from "./get-session-id.js";
 
 /**
  * Creates a password reset session.
@@ -23,7 +25,7 @@ import { getSessionId } from "./get-session-id.js";
  * }} ctx - The properties for the password reset session.
  */
 export async function createPasswordResetSession(props, ctx) {
-	const sessionId = getSessionId(props.data.token);
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
 
 	/** @type {PasswordResetSession} */
 	const session = {
@@ -75,7 +77,7 @@ export async function createPasswordResetSession(props, ctx) {
  * @returns {Promise<PasswordResetSessionValidationResult>} A promise that resolves to the validation result.
  */
 export async function validatePasswordResetSessionToken(token, ctx) {
-	const sessionId = getSessionId(token);
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	// const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
 	const result = await ctx.authProviders.passwordResetSession.findOneWithUser(sessionId);
 

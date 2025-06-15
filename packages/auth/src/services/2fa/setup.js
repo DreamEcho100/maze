@@ -1,8 +1,7 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, SessionsProvider, AuthStrategy, UsersProvider, JWTProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
-import { getSessionId } from "#utils/get-session-id.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
@@ -11,22 +10,17 @@ import { setup2FAServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
  *
- * @param {object} props
- * @param {unknown} props.input
- * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {any} props.tx - Transaction object for database operations
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	sessions: {
- * 		markOne2FAVerified: SessionsProvider['markOne2FAVerified'];
- * 	};
- * 	users: {
- * 		updateOneTOTPKey: UsersProvider['updateOneTOTPKey'];
- * 	}
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		sessions: {
+ * 			markOne2FAVerified: SessionsProvider['markOne2FAVerified'];
+ * 		};
+ * 		users: {
+ * 			updateOneTOTPKey: UsersProvider['updateOneTOTPKey'];
+ * 		}
+ * 	}>;
+ * 	input: unknown;
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    SETUP_2FA_MESSAGES_ERRORS,
@@ -40,15 +34,9 @@ export async function setup2FAService(props) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const { session, user } = await getCurrentAuthSession(
+		await generateGetCurrentAuthSessionProps(props),
+	);
 	if (!session) {
 		return SETUP_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
@@ -85,7 +73,7 @@ export async function setup2FAService(props) {
 			},
 		),
 		props.authProviders.sessions.markOne2FAVerified(
-			{ where: { id: getSessionId(session.token) } },
+			{ where: { id: session.id } },
 			{ tx: props.tx },
 		),
 	]);

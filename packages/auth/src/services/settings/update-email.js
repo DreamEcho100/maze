@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, UserEmailVerificationRequestsProvider, AuthProvidersWithSessionAndJWTDefaults } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, UsersProvider, UserEmailVerificationRequestsProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts" */
 
 import { UPDATE_EMAIL_MESSAGES_ERRORS, UPDATE_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -6,30 +6,25 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateEmailServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles updating a user's email by validating input and creating a verification request.
  *
- * @param {object} props - Options for the service.
- * @param {any} props.tx
- * @param {unknown} props.input
- * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	users: {
- * 		findOneByEmail: UsersProvider['findOneByEmail'];
- * 	}
- * 	userEmailVerificationRequests: {
- * 		deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
- * 		createOne: UserEmailVerificationRequestsProvider['createOne'];
- * 	}
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		users: {
+ * 			findOneByEmail: UsersProvider['findOneByEmail'];
+ * 		}
+ * 		userEmailVerificationRequests: {
+ * 			deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
+ * 			createOne: UserEmailVerificationRequestsProvider['createOne'];
+ * 		}
+ * 	}>;
+ * 	input: unknown;
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_EMAIL_MESSAGES_ERRORS,
@@ -44,15 +39,9 @@ export async function updateEmailService(props) {
 
 	const validatedEmail = input.data.email;
 
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const { session, user } = await getCurrentAuthSession(
+		await generateGetCurrentAuthSessionProps(props),
+	);
 	if (!session) return UPDATE_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {

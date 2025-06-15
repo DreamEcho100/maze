@@ -1,8 +1,8 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, User, SessionMetadata, CookiesProvider, UserEmailVerificationRequestsProvider, SessionsProvider, UsersProvider, AuthStrategy, JWTProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy } from "#types.ts"; */
 
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
-	createEmailVerificationRequest,
+	createEmailVerificationRequest, 
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";

@@ -1,10 +1,10 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, SessionsProvider, UsersProvider, AuthProvidersWithSessionAndJWTDefaults, JWTProvider } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "#types.ts" */
 
 import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
 import { createAuthSession, getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
@@ -13,29 +13,21 @@ import { updateUserPassword } from "#utils/users.js";
  *
  * Handles updating a user's password, including validation and session management.
  *
- * @param {Object} props
- * @param {Object} props.input The data containing the current and new passwords
- * @param {unknown} props.input.currentPassword The user's current password
- * @param {unknown} props.input.newPassword The new password to set for the user
- * @param {any} props.tx - Transaction object for database operations
- * @param {() => string} props.generateRandomId
- * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	sessions: {
- * 		deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
- * 	};
- * 	jwt?: {
- * 		createRefreshToken: JWTProvider['createRefreshToken'];
- * 	};
- * 	users: {
- * 		updateOnePassword: UsersProvider['updateOnePassword'];
- * 		getOnePasswordHash: UsersProvider['getOnePasswordHash'];
- * 	};
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		sessions: {
+ * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
+ * 		};
+ * 		jwt?: {
+ * 			createRefreshToken: JWTProvider['createRefreshToken'];
+ * 		};
+ * 		users: {
+ * 			updateOnePassword: UsersProvider['updateOnePassword'];
+ * 			getOnePasswordHash: UsersProvider['getOnePasswordHash'];
+ * 		};
+ * 	}>;
+ * 	input: { currentPassword: unknown; newPassword: unknown };
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    UPDATE_PASSWORD_MESSAGES_ERRORS,
@@ -45,15 +37,8 @@ import { updateUserPassword } from "#utils/users.js";
  * >}
  */
 export async function updatePasswordService(props) {
-	const { session, user } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const getCurrentAuthSessionInput = await generateGetCurrentAuthSessionProps(props);
+	const { session, user } = await getCurrentAuthSession(getCurrentAuthSessionInput);
 
 	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -97,8 +82,8 @@ export async function updatePasswordService(props) {
 
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: props.ipAddress ?? null,
-		userAgent: props.userAgent ?? null,
+		ipAddress: getCurrentAuthSessionInput.ipAddress ?? null,
+		userAgent: getCurrentAuthSessionInput.userAgent ?? null,
 		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: session.metadata,
@@ -109,7 +94,7 @@ export async function updatePasswordService(props) {
 		user: user,
 		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
-		userAgent: props.userAgent,
+		userAgent: getCurrentAuthSessionInput.userAgent,
 		authStrategy: props.authStrategy,
 		authProviders: {
 			sessions: { createOne: props.authProviders.sessions.createOne },

@@ -1,4 +1,4 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithSessionAndJWTDefaults, HeadersProvider, SessionValidationResult } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils } from "#types.ts" */
 
 import { z } from "zod/v4-mini";
 
@@ -187,18 +187,16 @@ async function refreshAuthTokens(ctx) {
 
 /**
  * Strategy-aware current session/auth retrieval (replaces getCurrentSession)
- * @param {object} props
- * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {any} props.tx
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults} props.authProviders
+ * @param {Omit<AuthProvidersWithGetSessionUtils, 'ipAddress' | 'userAgent'> & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders
+ * 	ipAddress: string|null|undefined;
+ * 	userAgent: UserAgent|null|undefined;
+ * }} props
  * @returns {Promise<SessionValidationResult>}
  */
 export async function getCurrentAuthSession(props) {
-	const userAgent = props.userAgent ?? null;
+	const userAgent = props.userAgent;
+	const ipAddress = props.ipAddress;
 	const isDeviceMobileOrTablet = userAgent && checkIsDeviceMobileOrTablet(userAgent);
 
 	switch (props.authStrategy) {
@@ -267,8 +265,8 @@ export async function getCurrentAuthSession(props) {
 				const refreshResult = await refreshAuthTokens({
 					authStrategy: props.authStrategy,
 					validatedJWTRefreshTokenResult,
-					ipAddress: props.ipAddress ?? null,
-					userAgent: props.userAgent ?? null,
+					ipAddress: ipAddress ?? null,
+					userAgent: userAgent ?? null,
 					tx: props.tx,
 					authProviders: {
 						sessions: {
@@ -349,8 +347,8 @@ export async function getCurrentAuthSession(props) {
 				const sessionTokenResult = await refreshAuthTokens({
 					authStrategy: props.authStrategy,
 					validatedJWTRefreshTokenResult: validatedSessionTokenResult,
-					ipAddress: props.ipAddress ?? null,
-					userAgent: props.userAgent ?? null,
+					ipAddress: ipAddress ?? null,
+					userAgent: userAgent ?? null,
 					tx: props.tx,
 					authProviders: {
 						sessions: {

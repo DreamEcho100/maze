@@ -1,12 +1,12 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, PasswordResetSessionsProvider, AuthProvidersWithSessionAndJWTDefaults, JWTProvider } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, PasswordResetSessionsProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
+import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { generateRandomToken } from "#utils/generate-random-token.js";
-import { getDefaultSessionAndJWTFromAuthProviders } from "#utils/get-defaults-session-and-jwt-from-auth-providers.js";
 import {
 	createPasswordResetSession,
 	sendPasswordResetEmail,
@@ -18,26 +18,21 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 /**
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
  *
- * @param {object} props - Options for the service.
- * @param {unknown} props.input
- * @param {any} props.tx - Transaction object for database operations
- * @param {CookiesProvider} props.cookies - Cookies provider for session management.
- * @param {HeadersProvider} props.headers - The headers provider to access the session token.
- * @param {string|null|undefined} props.ipAddress - Optional IP address for the session
- * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session
- * @param {AuthStrategy} props.authStrategy
- * @param {AuthProvidersWithSessionAndJWTDefaults<{
- * 	jwt?: {
- * 		createRefreshToken: JWTProvider['createRefreshToken'];
- * 	};
- *  users: {
- * 		findOneByEmail: UsersProvider['findOneByEmail'];
- * 	};
- *  passwordResetSession: {
- * 		createOne: PasswordResetSessionsProvider['createOne'];
- * 		deleteAllByUserId: PasswordResetSessionsProvider['deleteAllByUserId'];
- * 	};
- * }>} props.authProviders
+ * @param {AuthProvidersWithGetSessionUtils & {
+ * 	authProviders: AuthProvidersWithGetSessionProviders<{
+ * 		jwt?: {
+ * 			createRefreshToken: JWTProvider['createRefreshToken'];
+ * 		};
+ * 	 users: {
+ * 			findOneByEmail: UsersProvider['findOneByEmail'];
+ * 		};
+ * 	 passwordResetSession: {
+ * 			createOne: PasswordResetSessionsProvider['createOne'];
+ * 			deleteAllByUserId: PasswordResetSessionsProvider['deleteAllByUserId'];
+ * 		};
+ * 	}>;
+ * 	input: unknown;
+ * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
  *    FORGET_PASSWORD_MESSAGES_ERRORS,
@@ -48,15 +43,7 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  */
 export async function forgotPasswordService(props) {
 	const input = forgotPasswordServiceInputSchema.safeParse(props.input);
-	const { session } = await getCurrentAuthSession({
-		ipAddress: props.ipAddress,
-		userAgent: props.userAgent,
-		cookies: props.cookies,
-		headers: props.headers,
-		tx: props.tx,
-		authStrategy: props.authStrategy,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
-	});
+	const { session } = await getCurrentAuthSession(await generateGetCurrentAuthSessionProps(props));
 
 	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -67,14 +54,6 @@ export async function forgotPasswordService(props) {
 	const user = await props.authProviders.users.findOneByEmail(input.data.email);
 	if (!user) return FORGET_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
-	/** @type {SessionMetadata} */
-	const sessionInputBasicInfo = {
-		ipAddress: props.ipAddress ?? null,
-		userAgent: props.userAgent ?? null,
-		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
-		userId: user.id,
-		metadata: session.metadata,
-	};
 	const sessionToken = generateRandomToken();
 	const [passwordResetEmailSession] = await Promise.all([
 		createPasswordResetSession(
