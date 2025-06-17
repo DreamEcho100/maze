@@ -9,7 +9,6 @@ import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/ses
  *
  * @param {AuthProvidersWithGetSessionUtils & {
  * 	authProviders: AuthProvidersWithGetSessionProviders
- * 	input: unknown;
  * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<

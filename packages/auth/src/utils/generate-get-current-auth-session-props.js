@@ -7,7 +7,9 @@ import { isPromise } from "util/types";
  */
 export function getDefaultSessionAndJWTFromAuthProviders(authProvidersFromInput) {
 	return {
+		...authProvidersFromInput,
 		sessions: {
+			...authProvidersFromInput.sessions,
 			deleteOneById: authProvidersFromInput.sessions.deleteOneById,
 			extendOneExpirationDate: authProvidersFromInput.sessions.extendOneExpirationDate,
 			findOneWithUser: authProvidersFromInput.sessions.findOneWithUser,
@@ -15,6 +17,7 @@ export function getDefaultSessionAndJWTFromAuthProviders(authProvidersFromInput)
 			createOne: authProvidersFromInput.sessions.createOne,
 		},
 		jwt: {
+			...authProvidersFromInput.jwt,
 			verifyAccessToken: authProvidersFromInput.jwt?.verifyAccessToken,
 			createTokenPair: authProvidersFromInput.jwt?.createTokenPair,
 			verifyRefreshToken: authProvidersFromInput.jwt?.verifyRefreshToken,

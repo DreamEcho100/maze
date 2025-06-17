@@ -4,9 +4,8 @@ import { logoutService } from "@de100/auth/services/logout";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import { authStrategy, defaultSessionsHandlers } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -15,14 +14,11 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  */
 export async function logoutAction() {
 	const result = await db.transaction(async (tx) =>
-		logoutService({
-			...(await getSessionOptionsBasics()),
-			tx,
-			authStrategy,
-			authProviders: {
-				sessions: defaultSessionsHandlers,
-			},
-		}),
+		logoutService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+			}),
+		),
 	);
 
 	if (result.type === "success") {

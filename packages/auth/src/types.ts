@@ -89,6 +89,7 @@ interface DBSession {
 	lastUsedAt?: DateLike | null;
 	metadata?: Record<string, any> | null;
 }
+interface DBSessionOutput extends Omit<DBSession, "tokenHash"> {}
 
 interface ClientSession {
 	id: string; // Unique session ID `${id}.${tokenHash}`
@@ -163,6 +164,7 @@ export type {
 	Organization,
 	User,
 	DBSession,
+	DBSessionOutput,
 	ClientSession,
 	SessionWithUser,
 	ValidSessionResult,
@@ -510,29 +512,29 @@ export interface SessionsProvider {
 	 * @param props.data - The session data
 	 * @param {DateLike | null} [props.data.twoFactorVerifiedAt] - 2FA verification timestamp
 	 * @param [options] - Additional options (e.g. transaction)
-	 * @returns {Promise<DBSession | null>} The created session
+	 * @returns {Promise<DBSessionOutput | null>} The created session
 	 */
 	createOne: (
 		props: { data: DBSession },
 		options?: { tx?: TransactionClient },
-	) => Promise<{ session: DBSession; user: User } | null>;
+	) => Promise<{ session: DBSessionOutput; user: User } | null>;
 	/**
 	 * Find a session by ID with associated user data
 	 * @param sessionId - The session ID to find
-	 * @returns {Promise<{session: DBSession, user: User}
+	 * @returns {Promise<{session: DBSessionOutput, user: User}
 	 */
-	findOneWithUser: (sessionId: string) => Promise<{ session: DBSession; user: User } | null>;
+	findOneWithUser: (sessionId: string) => Promise<{ session: DBSessionOutput; user: User } | null>;
 	/**
 	 * Extend a session's expiration time
 	 * @param sessionId - The session ID to extend
 	 * @param {Date} expiresAt - New expiration date
-	 * @returns {Promise<DBSession | null>} The updated session
+	 * @returns {Promise<DBSessionOutput | null>} The updated session
 	 * @description Useful for implementing "remember me" functionality or session refresh
 	 */
 	extendOneExpirationDate: (
 		props: { data: { expiresAt: Date }; where: { sessionId: string } },
 		options?: { tx?: TransactionClient },
-	) => Promise<DBSession | null>;
+	) => Promise<DBSessionOutput | null>;
 	/**
 	 * Delete a specific session (logout)
 	 * @param sessionId - The session ID to delete
@@ -561,7 +563,7 @@ export interface SessionsProvider {
 	 * @param props.where - Where conditions
 	 * @param props.where.id - The session ID to update
 	 * @param [options] - Additional options (e.g. transaction)
-	 * @returns {Promise<DBSession | null>} The updated session
+	 * @returns {Promise<DBSessionOutput | null>} The updated session
 	 */
 	/**
 	 * Delete/revoke a specific refresh token
@@ -590,15 +592,15 @@ export interface SessionsProvider {
 	markOne2FAVerified: (
 		props: { where: { id: string } },
 		options?: { tx?: TransactionClient },
-	) => Promise<DBSession | null>;
+	) => Promise<DBSessionOutput | null>;
 	/**
 	 * Remove 2FA verification from all user sessions
 	 * @param userId - The user ID
 	 * @param {any} [transaction] - Optional database transaction
-	 * @returns {Promise<DBSession | null>} The updated session
+	 * @returns {Promise<DBSessionOutput | null>} The updated session
 	 * @description Used when 2FA is disabled or when security requires re-verification
 	 */
-	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<DBSession | null>;
+	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<DBSessionOutput | null>;
 }
 
 export interface JWTRefreshTokenPayload {
@@ -708,31 +710,7 @@ export interface JWTProvider {
 		exp: number;
 		iat: number;
 		payload: JWTRefreshTokenPayload;
-	} | null;
-
-	// TODO: Add more payload data like the `email`
-	// * @param props.data.email - User email
-	/**
-	 * Create token pair (access + refresh)
-	 * @param props - The parameters
-	 * @param props.data - Token payload data
-	 * @param props.data.user
-	 * @param [props.data.sessionId] - Optional session ID
-	 * @param [props.data.customClaims] - Additional custom claims
-	 * @param [options] - Token options
-	 * @returns {{ accessToken: string; refreshToken: string }} Token pair
-	 */
-	createTokenPair: (
-		props: {
-			data: JWTRefreshTokenPayload;
-		},
-		options?: {
-			accessTokenExpiry?: number;
-			refreshTokenExpiry?: number;
-			audience?: string | string[];
-			issuer?: string;
-		},
-	) => { accessToken: string; refreshToken: string };
+	} | null; 
 }
 
 // Add RefreshToken interface
@@ -807,7 +785,7 @@ interface SesHan {
 }
 interface JWTHan {
 	verifyAccessToken?: JWTProvider["verifyAccessToken"];
-	createTokenPair?: JWTProvider["createTokenPair"];
+	createRefreshToken?: JWTProvider["createRefreshToken"];
 	verifyRefreshToken?: JWTProvider["verifyRefreshToken"];
 	createAccessToken?: JWTProvider["createAccessToken"];
 }

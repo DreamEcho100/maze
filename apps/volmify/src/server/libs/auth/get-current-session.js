@@ -5,8 +5,7 @@ import { cache } from "react";
 import { getCurrentAuthSession } from "@de100/auth/utils/sessions";
 
 import { db } from "../db";
-import { getSessionOptionsBasics } from "../get-session-options-basics";
-import { authStrategy, defaultSessionsHandlers } from "./init";
+import { generateGetCurrentAuthSessionProps } from "../generate-get-current-auth-session-props";
 
 /**
  * Retrieves the current session from the request's cookies in a Next.js environment.
@@ -32,14 +31,12 @@ export const getCurrentSession = cache(
 	async (reqHeaders) => {
 		"use server";
 		return db.transaction(async (tx) =>
-			getCurrentAuthSession({
-				...(await getSessionOptionsBasics(reqHeaders)),
-				tx,
-				authStrategy,
-				authProviders: {
-					sessions: defaultSessionsHandlers,
-				},
-			}),
+			getCurrentAuthSession(
+				await generateGetCurrentAuthSessionProps({
+					tx,
+					reqHeaders,
+				}),
+			),
 		);
 	},
 );

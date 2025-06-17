@@ -18,9 +18,6 @@ import { updateUserPassword } from "#utils/users.js";
  * 		sessions: {
  * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
  * 		};
- * 		jwt?: {
- * 			createRefreshToken: JWTProvider['createRefreshToken'];
- * 		};
  * 		users: {
  * 			updateOnePassword: UsersProvider['updateOnePassword'];
  * 			getOnePasswordHash: UsersProvider['getOnePasswordHash'];
@@ -98,7 +95,10 @@ export async function updatePasswordService(props) {
 		authStrategy: props.authStrategy,
 		authProviders: {
 			sessions: { createOne: props.authProviders.sessions.createOne },
-			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+			jwt: {
+				createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+				createAccessToken: props.authProviders.jwt?.createAccessToken,
+			},
 		},
 	});
 

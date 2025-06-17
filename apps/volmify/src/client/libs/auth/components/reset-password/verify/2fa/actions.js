@@ -14,11 +14,13 @@ import {
 	updateOneUserRecoveryCodeById,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getCookies } from "#server/libs/get-cookies";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
  */
+
+// TODO: Make sure every service needs the auth verification to have it
 
 /**
  * @param {ActionResult} _prev
@@ -26,20 +28,21 @@ import { getCookies } from "#server/libs/get-cookies";
  * @returns {Promise<ActionResult>}
  */
 export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
-	const result = await verifyPasswordReset2FAViaTOTPService({
-		cookies: await getCookies(),
-		input: { code: formData.get("code") },
-		authProviders: {
-			passwordResetSession: {
-				deleteOne: deleteOnePasswordResetSession,
-				findOneWithUser: findOnePasswordResetSessionWithUser,
-				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+	const result = await verifyPasswordReset2FAViaTOTPService(
+		await generateGetCurrentAuthSessionProps({
+			input: { code: formData.get("code") },
+			authProviders: {
+				passwordResetSession: {
+					deleteOne: deleteOnePasswordResetSession,
+					findOneWithUser: findOnePasswordResetSessionWithUser,
+					markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+				},
+				users: {
+					getOneTOTPKey: getOneUserTOTPKey,
+				},
 			},
-			users: {
-				getOneTOTPKey: getOneUserTOTPKey,
-			},
-		},
-	});
+		}),
+	);
 
 	if (result.type === "success") {
 		return redirect("/auth/reset-password");
@@ -56,25 +59,26 @@ export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
 export async function verifyPasswordReset2FAWithRecoveryCodeAction(_prev, formData) {
 	const code = formData.get("code");
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordReset2FAViaRecoveryCodeService({
-			tx,
-			cookies: await getCookies(),
-			input: { code },
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: deleteOnePasswordResetSession,
-					findOneWithUser: findOnePasswordResetSessionWithUser,
-					markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+		verifyPasswordReset2FAViaRecoveryCodeService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				input: { code },
+				authProviders: {
+					passwordResetSession: {
+						deleteOne: deleteOnePasswordResetSession,
+						findOneWithUser: findOnePasswordResetSessionWithUser,
+						markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+					},
+					sessions: {
+						unMarkOne2FAForUser: unMarkOneSession2FAForUser,
+					},
+					users: {
+						getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
+						updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
+					},
 				},
-				sessions: {
-					unMarkOne2FAForUser: unMarkOneSession2FAForUser,
-				},
-				users: {
-					getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
-					updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
-				},
-			},
-		}),
+			}),
+		),
 	);
 
 	if (result.type === "success") {

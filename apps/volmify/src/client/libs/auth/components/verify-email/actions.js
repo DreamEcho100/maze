@@ -10,16 +10,14 @@ import {
 
 import { redirect } from "#i18n/server";
 import {
-	authStrategy,
 	createOneEmailVerificationRequests,
-	defaultSessionsHandlers,
 	deleteAllPasswordResetSessionsByUserId,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneEmailVerificationRequestsByIdAndUserId,
 	updateOneUserEmailAndVerify,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -33,13 +31,10 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  */
 export async function verifyEmailAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		verifyEmailUserService({
-			...(await getSessionOptionsBasics()),
+		verifyEmailUserService(await generateGetCurrentAuthSessionProps({
 			tx,
 			input: { code: formData.get("code") },
-			authStrategy,
 			authProviders: {
-				sessions: defaultSessionsHandlers,
 				passwordResetSessions: {
 					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
 				},
@@ -50,11 +45,8 @@ export async function verifyEmailAction(_prev, formData) {
 					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
 				},
 			},
-		}),
+		})),
 	);
-	// setCookie: cookiesManager.set,
-	// getCookie: (name) => cookiesManager.get(name)?.value,
-	// getCurrentSession: getCurrentSession,
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);

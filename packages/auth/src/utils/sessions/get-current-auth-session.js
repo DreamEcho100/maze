@@ -142,7 +142,7 @@ function shouldRefreshAuthTokens(ctx) {
  * 		createOne: SessionsProvider['createOne'];
  * 	};
  * 	jwt?: {
- * 		createTokenPair?: JWTProvider['createTokenPair'];
+ *		createRefreshToken?: JWTProvider['createRefreshToken'],
  * 	};
  * }} ctx.authProviders
  */
@@ -177,7 +177,7 @@ async function refreshAuthTokens(ctx) {
 				createOne: ctx.authProviders.sessions.createOne,
 			},
 			jwt: {
-				createTokenPair: ctx.authProviders.jwt?.createTokenPair,
+				createRefreshToken: props.authProviders.jwt?.createRefreshToken,
 			},
 		},
 		generateRandomId: ctx.generateRandomId,
@@ -274,7 +274,7 @@ export async function getCurrentAuthSession(props) {
 							createOne: props.authProviders.sessions.createOne,
 						},
 						jwt: {
-							createTokenPair: props.authProviders.jwt?.createTokenPair,
+							createRefreshToken: props.authProviders.jwt?.createRefreshToken,
 						},
 					},
 				});
@@ -356,7 +356,7 @@ export async function getCurrentAuthSession(props) {
 							createOne: props.authProviders.sessions.createOne,
 						},
 						jwt: {
-							createTokenPair: props.authProviders.jwt?.createTokenPair,
+							createRefreshToken: props.authProviders.jwt?.createRefreshToken,
 						},
 					},
 				});

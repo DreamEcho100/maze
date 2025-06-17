@@ -5,9 +5,3 @@ declare module "@de100/i18n" {
 		translations: typeof enMessages;
 	}
 }
-
-declare module "@de100/i18n-next" {
-	export interface Register {
-		translations: typeof enMessages;
-	}
-}

@@ -77,34 +77,34 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 			return null;
 		}
 	},
-	createTokenPair: (props, options = {}) => {
-		// const tokenId = idsProvider.createOneSync();
+	// createTokenPair: (props, options = {}) => {
+	// 	// const tokenId = idsProvider.createOneSync();
 
-		// Create access token
-		const accessToken = jwtProvider.createAccessToken(props, {
-			// "15m"
-			expiresIn: options.accessTokenExpiry ?? 1000 * 60 * 15, // 15 minutes in milliseconds
-			// audience: options.audience,
-			issuer: options.issuer,
-		});
+	// 	// Create access token
+	// 	const accessToken = jwtProvider.createAccessToken(props, {
+	// 		// "15m"
+	// 		expiresIn: options.accessTokenExpiry ?? 1000 * 60 * 15, // 15 minutes in milliseconds
+	// 		// audience: options.audience,
+	// 		issuer: options.issuer,
+	// 	});
 
-		// Create refresh token with the generated tokenId
-		const refreshToken = jwtProvider.createRefreshToken(
-			{
-				data: {
-					sessionId: props.data.sessionId,
-					user: props.data.user,
-					metadata: props.data.metadata,
-				},
-			},
-			{
-				// "30d"
-				expiresIn: options.refreshTokenExpiry ?? 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
-				// audience: options.audience,
-				issuer: options.issuer,
-			},
-		);
+	// 	// Create refresh token with the generated tokenId
+	// 	const refreshToken = jwtProvider.createRefreshToken(
+	// 		{
+	// 			data: {
+	// 				sessionId: props.data.sessionId,
+	// 				user: props.data.user,
+	// 				metadata: props.data.metadata,
+	// 			},
+	// 		},
+	// 		{
+	// 			// "30d"
+	// 			expiresIn: options.refreshTokenExpiry ?? 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
+	// 			// audience: options.audience,
+	// 			issuer: options.issuer,
+	// 		},
+	// 	);
 
-		return { accessToken, refreshToken };
-	},
+	// 	return { accessToken, refreshToken };
+	// },
 });

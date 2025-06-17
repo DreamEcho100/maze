@@ -20,9 +20,6 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  *
  * @param {AuthProvidersWithGetSessionUtils & {
  * 	authProviders: AuthProvidersWithGetSessionProviders<{
- * 		jwt?: {
- * 			createRefreshToken: JWTProvider['createRefreshToken'];
- * 		};
  * 	 users: {
  * 			findOneByEmail: UsersProvider['findOneByEmail'];
  * 		};

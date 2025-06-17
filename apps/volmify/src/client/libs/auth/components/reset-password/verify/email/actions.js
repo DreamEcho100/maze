@@ -10,7 +10,7 @@ import {
 	verifyOneUserEmailIfMatches,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getCookies } from "#server/libs/get-cookies";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -21,21 +21,22 @@ import { getCookies } from "#server/libs/get-cookies";
  */
 export async function verifyPasswordResetEmailVerificationAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordResetEmailVerificationService({
-			tx,
-			cookies: await getCookies(),
-			input: { code: formData.get("code") },
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: deleteOnePasswordResetSession,
-					findOneWithUser: findOnePasswordResetSessionWithUser,
-					markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
+		verifyPasswordResetEmailVerificationService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				input: { code: formData.get("code") },
+				authProviders: {
+					passwordResetSession: {
+						deleteOne: deleteOnePasswordResetSession,
+						findOneWithUser: findOnePasswordResetSessionWithUser,
+						markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
+					},
+					users: {
+						verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
+					},
 				},
-				users: {
-					verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
-				},
-			},
-		}),
+			}),
+		),
 	);
 	if (result.type === "success") {
 		switch (result.data.nextStep) {

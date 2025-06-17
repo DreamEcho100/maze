@@ -50,13 +50,13 @@ export interface LanguageMessages {
  * Users can extend this to get type safety for their specific translations
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface Register {}
+export interface Register {}
 
 /**
  * Extract registered translations from the Register interface
  * Falls back to generic LanguageMessages if no specific translations are registered
  */
-type RegisteredTranslations = Register extends { translations: infer T }
+export type RegisteredTranslations = Register extends { translations: infer T }
 	? T extends infer Translations
 		? Translations
 		: never

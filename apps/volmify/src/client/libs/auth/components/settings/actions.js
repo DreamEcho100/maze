@@ -15,10 +15,8 @@ import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
 import {
-	authStrategy,
 	createOneEmailVerificationRequests,
 	createOneSession,
-	defaultSessionsHandlers,
 	deleteAllSessionsByUserId,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
@@ -28,7 +26,7 @@ import {
 	updateOneUserRecoveryCode,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  *
@@ -51,23 +49,22 @@ export async function updatePasswordAction(_prev, formData) {
 	}
 
 	const result = await db.transaction(async (tx) =>
-		updatePasswordService({
-			...(await getSessionOptionsBasics()),
-			tx,
-			input: { currentPassword, newPassword },
-			authStrategy,
-			authProviders: {
-				sessions: {
-					...defaultSessionsHandlers,
-					createOne: createOneSession,
-					deleteAllByUserId: deleteAllSessionsByUserId,
+		updatePasswordService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				input: { currentPassword, newPassword },
+				authProviders: {
+					sessions: {
+						createOne: createOneSession,
+						deleteAllByUserId: deleteAllSessionsByUserId,
+					},
+					users: {
+						updateOnePassword: updateOneUserPassword,
+						getOnePasswordHash: getOneUserPasswordHash,
+					},
 				},
-				users: {
-					updateOnePassword: updateOneUserPassword,
-					getOnePasswordHash: getOneUserPasswordHash,
-				},
-			},
-		}),
+			}),
+		),
 	);
 
 	return result;
@@ -89,20 +86,19 @@ export async function updateEmailAction(_prev, formData) {
 	}
 
 	const result = await db.transaction(async (tx) =>
-		updateEmailService({
-			...(await getSessionOptionsBasics()),
-			input: { email },
-			tx,
-			authStrategy,
-			authProviders: {
-				sessions: defaultSessionsHandlers,
-				userEmailVerificationRequests: {
-					createOne: createOneEmailVerificationRequests,
-					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+		updateEmailService(
+			await generateGetCurrentAuthSessionProps({
+				input: { email },
+				tx,
+				authProviders: {
+					userEmailVerificationRequests: {
+						createOne: createOneEmailVerificationRequests,
+						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+					},
+					users: { findOneByEmail: findOneUserByEmail },
 				},
-				users: { findOneByEmail: findOneUserByEmail },
-			},
-		}),
+			}),
+		),
 	);
 
 	if (result.type === "success") {
@@ -117,15 +113,14 @@ export async function updateEmailAction(_prev, formData) {
  */
 export async function regenerateRecoveryCodeAction() {
 	return db.transaction(async (tx) =>
-		regenerateRecoveryCodeService({
-			...(await getSessionOptionsBasics()),
-			tx,
-			authStrategy,
-			authProviders: {
-				sessions: defaultSessionsHandlers,
-				users: { updateOneRecoveryCode: updateOneUserRecoveryCode },
-			},
-		}),
+		regenerateRecoveryCodeService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				authProviders: {
+					users: { updateOneRecoveryCode: updateOneUserRecoveryCode },
+				},
+			}),
+		),
 	);
 }
 
@@ -136,16 +131,15 @@ export async function regenerateRecoveryCodeAction() {
  */
 export async function updateIsTwoFactorEnabledAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		updateIsTwoFactorService({
-			...(await getSessionOptionsBasics()),
-			input: { isTwoFactorEnabled: formData.get("is_two_factor_enabled") },
-			tx,
-			authStrategy,
-			authProviders: {
-				sessions: defaultSessionsHandlers,
-				users: { updateOne2FAEnabled: updateOneUser2FAEnabled },
-			},
-		}),
+		updateIsTwoFactorService(
+			await generateGetCurrentAuthSessionProps({
+				input: { isTwoFactorEnabled: formData.get("is_two_factor_enabled") },
+				tx,
+				authProviders: {
+					users: { updateOne2FAEnabled: updateOneUser2FAEnabled },
+				},
+			}),
+		),
 	);
 
 	if (result.type === "success") {

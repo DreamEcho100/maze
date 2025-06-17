@@ -24,8 +24,8 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
  * 		};
  *		jwt?: {
- * 			createTokenPair?: JWTProvider['createTokenPair']
- * 			createRefreshToken: JWTProvider['createRefreshToken'];
+	 * 			createRefreshToken: JWTProvider['createRefreshToken'];
+ * 			createAccessToken?: JWTProvider['createAccessToken']
  * 		};
  * 		users: {
  * 			updateOnePassword: UsersProvider['updateOnePassword'];
@@ -132,7 +132,10 @@ export async function resetPasswordService(props) {
 			sessions: {
 				createOne: props.authProviders.sessions.createOne,
 			},
-			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+			jwt: {
+				createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+				createAccessToken: props.authProviders.jwt?.createAccessToken,
+			},
 		},
 	});
 

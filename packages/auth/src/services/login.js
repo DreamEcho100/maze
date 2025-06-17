@@ -20,8 +20,8 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  * 		createOne: SessionsProvider['createOne']
  * 	};
  *	jwt?: {
- * 		createTokenPair?: JWTProvider['createTokenPair']
  * 		createRefreshToken: JWTProvider['createRefreshToken'];
+ * 		createAccessToken?: JWTProvider['createAccessToken']
  * 	};
  * 	users: {
  * 		findOneByEmail: UsersProvider['findOneByEmail'];
@@ -80,7 +80,10 @@ export async function loginUserService(props) {
 		authStrategy: props.authStrategy,
 		authProviders: {
 			sessions: { createOne: props.authProviders.sessions.createOne },
-			jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+			jwt: {
+				createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+				createAccessToken: props.authProviders.jwt?.createAccessToken,
+			},
 		},
 	});
 

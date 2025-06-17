@@ -19,9 +19,7 @@ import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants";
  * @param {{
  * 	sessions: { createOne: SessionsProvider['createOne'] };
  *	jwt?: {
- * 		createTokenPair?: JWTProvider['createTokenPair'];
  * 		createRefreshToken?: JWTProvider['createRefreshToken'];
- * 		createAccessToken?: JWTProvider['createAccessToken'];
  * 	}
  * }} props.authProviders
  */
