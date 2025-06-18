@@ -20,7 +20,6 @@ import { getCurrentAuthSession } from "#utils/sessions/index.js";
  * 			deleteOneByUserId: UserEmailVerificationRequestsProvider['deleteOneByUserId'];
  * 		};
  * 	}>;
- * 	input: unknown;
  * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<

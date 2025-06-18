@@ -46,12 +46,6 @@ export async function loginUserService(props) {
 	if (!user) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
-
-	if (!user.emailVerifiedAt) {
-		// return redirect("/auth/verify-email");
-		return LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
-	}
-
 	const passwordHash = await props.authProviders.users.getOnePasswordHash(user.id);
 	if (!passwordHash) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
@@ -86,6 +80,11 @@ export async function loginUserService(props) {
 			},
 		},
 	});
+
+	if (!user.emailVerifiedAt) {
+		// return redirect("/auth/verify-email");
+		return LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED;
+	}
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		return LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED;

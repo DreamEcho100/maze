@@ -46,6 +46,8 @@ const sessionReturnTemplate = {
 	revokedAt: dbSchema.session.revokedAt,
 	lastUsedAt: dbSchema.session.lastUsedAt,
 	metadata: dbSchema.session.metadata,
+	lastVerifiedAt: dbSchema.session.lastVerifiedAt,
+	lastExtendedAt: dbSchema.session.lastExtendedAt,
 };
 const sessionReturnSchema = /** @type {const} */ ({
 	id: true,
@@ -328,6 +330,8 @@ export const createOneSession = async (props, options) => {
 				lastUsedAt: props.data.lastUsedAt ? dateLikeToDate(props.data.lastUsedAt) : null,
 				createdAt,
 				updatedAt: createdAt,
+				lastVerifiedAt: createdAt,
+				lastExtendedAt: createdAt, // null
 			})
 			.returning(sessionReturnTemplate)
 			.then((result) => result[0] ?? null),
@@ -368,13 +372,15 @@ export const extendOneSessionExpirationDate = async (props, options) => {
 	const _db =
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
+	const updatedAt = new Date();
 	return db
 		.update(dbSchema.session)
 		.set({
 			expiresAt: dateLikeToDate(props.data.expiresAt),
-			updatedAt: new Date(),
+			lastExtendedAt: updatedAt,
+			updatedAt,
 		})
-		.where(eq(dbSchema.session.id, props.where.sessionId))
+		.where(eq(dbSchema.session.id, props.where.id))
 		.returning(sessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
@@ -618,6 +624,7 @@ export const deleteOneEmailVerificationRequestsByUserId = async (props, options)
 
 /** @type {UserEmailVerificationRequestsProvider['findOneByIdAndUserId']} */
 export const findOneEmailVerificationRequestsByIdAndUserId = async (userId, id) => {
+	console.log("___  findOneEmailVerificationRequestsByIdAndUserId userId, id", userId, id);
 	return db
 		.select(emailVerificationRequestReturnTemplate)
 		.from(dbSchema.userEmailVerificationRequests)

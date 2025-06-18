@@ -12,7 +12,7 @@ export const formBoolSchema = z.union([
 	z.boolean(),
 	z.stringbool({ truthy: ["on"], falsy: ["off"] }),
 ]);
-export const codeSchema = z.string().check(z.minLength(6), z.maxLength(6), z.regex(/^\d+$/));
+export const codeSchema = z.string().check(z.minLength(6), z.maxLength(8), z.regex(/^[\d\w]+$/));
 export const emailSchema = z.email();
 // z
 // .union([z.boolean(), z.string()])

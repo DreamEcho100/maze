@@ -7,7 +7,6 @@ import { redirect } from "#i18n/server";
 import {
 	authStrategy,
 	createOneEmailVerificationRequests,
-	createOneSession,
 	createOneUser,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
@@ -36,7 +35,6 @@ export async function signupAction(_prev, formData) {
 				createOne: createOneEmailVerificationRequests,
 				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
 			},
-			sessions: { createOne: createOneSession },
 			users: { createOne: createOneUser, findOneByEmail: findOneUserByEmail },
 		},
 	});

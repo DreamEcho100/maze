@@ -12,7 +12,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
 		}
 
-		return jwt.sign(payload, secret, {
+		return jwt.sign({ payload }, secret, {
 			expiresIn: options.expiresIn ?? "15m",
 			// audience: options.audience,
 			issuer: options.issuer ?? "volmify.com",
@@ -28,7 +28,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
 		}
 
-		return jwt.sign(payload, secret, {
+		return jwt.sign({ payload }, secret, {
 			expiresIn: options.expiresIn ?? "30d",
 			// audience: options.audience,
 			// issuer: options.issuer ?? "volmify.com",

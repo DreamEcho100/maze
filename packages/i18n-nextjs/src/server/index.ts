@@ -84,11 +84,11 @@ export async function getCurrentRequestConfig(
 	};
 }
 
-export async function setRequestLocale(locale: Locale, _headers?: Headers) {
-	const headers = _headers ?? (await getHeaders());
-	// const _cookies = (await cookies()).set(I18N_HEADER_LOCALE_NAME, locale)
-	// Set the locale in the headers
-	headers.set(I18N_HEADER_LOCALE_NAME, locale);
+export function setRequestLocale(locale: Locale, _headers?: Headers) {
+	// const headers = _headers ?? (await getHeaders());
+	// // const _cookies = (await cookies()).set(I18N_HEADER_LOCALE_NAME, locale)
+	// // Set the locale in the headers
+	// headers.set(I18N_HEADER_LOCALE_NAME, locale);
 	// (await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
 
 	// Update the locale in the cache

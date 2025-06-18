@@ -10,17 +10,17 @@ import { NextResponse } from "next/server";
 // import { NextResponse } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
-import {
-	I18N_HEADER_LOCALE_NAME,
-	setRequestLocale,
-} from "node_modules/@de100/i18n-nextjs/src/server";
 
-import { COOKIE_TOKEN_SESSION_KEY } from "@de100/auth/utils/constants"; // #server/utils/constants
+// import {
+// 	I18N_HEADER_LOCALE_NAME,
+// 	setRequestLocale,
+// } from "node_modules/@de100/i18n-nextjs/src/server";
 
-import { csrfProtection } from "@de100/auth/utils/csrf";
+// import { csrfProtection } from "@de100/auth/utils/csrf";
+import { I18N_HEADER_LOCALE_NAME, updateLocaleConfigCache } from "@de100/i18n-nextjs/server/init";
 
 import { allowedLocales, defaultLocale } from "#i18n/constants";
-import { getRequestLocale } from "#i18n/server";
+import { getRequestLocale, setRequestLocale } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 
 /*
@@ -113,21 +113,16 @@ async function handleAuthMiddleware(request) {
 		// Handle session token for GET requests
 		if (request.method === "GET") {
 			// const response = NextResponse.next();
-			const token = request.cookies.get(COOKIE_TOKEN_SESSION_KEY)?.value ?? null;
 
-			if (token !== null) {
-				// const result = await handleSessionMiddleware({
-				// 	token,
-				// 	// eslint-disable-next-line @typescript-eslint/unbound-method
-				// 	setCookie: response.cookies.set,
-				// });
-				const result = await getCurrentSession();
+			// const result = await handleSessionMiddleware({
+			// 	token,
+			// 	// eslint-disable-next-line @typescript-eslint/unbound-method
+			// 	setCookie: response.cookies.set,
+			// });
+			const result = await getCurrentSession();
 
-				if (result.session) {
-					return { status: "authorized", result };
-				} else {
-					return { status: "unauthorized", result: null };
-				}
+			if (result.session) {
+				return { status: "authorized", result };
 			}
 
 			return { status: "unauthorized", result: null };
@@ -182,11 +177,16 @@ export async function customCreateIntlMiddleware(request) {
 	);
 
 	if (locale) {
-		(await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
-		await setRequestLocale(locale, request.headers);
+		// (await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
+		// await setRequestLocale(locale, request.headers);
 		return NextResponse.next();
 	}
 
+	updateLocaleConfigCache({
+		locale: defaultLocale,
+		allowedLocales,
+		defaultLocale,
+	});
 	// Redirect if there is no locale
 	const reqLocale = await getLocale(request);
 	locale = reqLocale
@@ -200,8 +200,8 @@ export async function customCreateIntlMiddleware(request) {
 		throw new Error("");
 	}
 
-	(await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
-	await setRequestLocale(locale, request.headers);
+	// (await cookies()).set(I18N_HEADER_LOCALE_NAME, locale);
+	setRequestLocale(locale, request.headers);
 	request.nextUrl.pathname = `/${locale}${pathname}`;
 
 	// e.g. incoming request is /products

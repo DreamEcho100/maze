@@ -31,7 +31,7 @@ export function LoginForm() {
 				required
 			/>
 			<br />
-			<button>Continue</button>
+			<button type="submit">Continue</button>
 			<p>{state.message}</p>
 		</form>
 	);

@@ -20,6 +20,7 @@ import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants";
  * 	sessions: { createOne: SessionsProvider['createOne'] };
  *	jwt?: {
  * 		createRefreshToken?: JWTProvider['createRefreshToken'];
+ * 		createAccessToken?: JWTProvider['createAccessToken'];
  * 	}
  * }} props.authProviders
  */
@@ -71,10 +72,7 @@ export async function generateRefreshToken(props) {
 	if (!result) {
 		throw new Error("Failed to create JWT refresh token session");
 	}
-	const {
-		user: _user,
-		session: { tokenHash: _, ...session },
-	} = result;
+	const { user: _user, session } = result;
 
 	return {
 		user: _user,

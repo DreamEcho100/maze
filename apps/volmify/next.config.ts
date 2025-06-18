@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
 	// outputFileTracingIncludes: {},
 
 	experimental: {
+		nodeMiddleware: true,
+		//
 		useWasmBinary: true,
 		workerThreads: true,
 		// outputFileTracingIncludes: {},

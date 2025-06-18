@@ -80,6 +80,14 @@ export function setEmailVerificationRequestCookie(request, cookies) {
 }
 
 /**
+ * Get the email verification request cookie.
+ * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
+ */
+export function getEmailVerificationRequestCookie(cookies) {
+	return cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY);
+}
+
+/**
  * Delete the email verification request cookie.
  * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
  */
@@ -102,14 +110,20 @@ export function deleteEmailVerificationRequestCookie(cookies) {
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
 export async function getUserEmailVerificationRequestFromRequest(userId, ctx) {
-	const id = ctx.cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY) ?? null;
+	const id = getEmailVerificationRequestCookie(ctx.cookies) ?? null;
+
+	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 	if (!id) return null;
 
 	const request = await ctx.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
 		userId,
 		id,
 	);
+	console.log("____ getUserEmailVerificationRequestFromRequest request", request);
+	console.log("____ getUserEmailVerificationRequestFromRequest !request", !request);
 	if (!request) deleteEmailVerificationRequestCookie(ctx.cookies);
+	console.log("____ getUserEmailVerificationRequestFromRequest request", request);
+	console.log("____ getUserEmailVerificationRequestFromRequest !request", !request);
 	return request;
 }
 

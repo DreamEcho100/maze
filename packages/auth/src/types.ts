@@ -89,6 +89,7 @@ interface DBSession {
 	lastUsedAt?: DateLike | null;
 	metadata?: Record<string, any> | null;
 }
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DBSessionOutput extends Omit<DBSession, "tokenHash"> {}
 
 interface ClientSession {
@@ -304,7 +305,7 @@ export interface UsersProvider {
 		email: string;
 		name: string;
 		passwordHash: string;
-		encryptedRecoveryCode?: Uint8Array;
+		encryptedRecoveryCode?: Uint8Array | null;
 	}) => Promise<User | null>;
 	/**
 	 * Find a user by email address
@@ -532,7 +533,7 @@ export interface SessionsProvider {
 	 * @description Useful for implementing "remember me" functionality or session refresh
 	 */
 	extendOneExpirationDate: (
-		props: { data: { expiresAt: Date }; where: { sessionId: string } },
+		props: { data: { expiresAt: Date }; where: { id: string } },
 		options?: { tx?: TransactionClient },
 	) => Promise<DBSessionOutput | null>;
 	/**
@@ -710,7 +711,7 @@ export interface JWTProvider {
 		exp: number;
 		iat: number;
 		payload: JWTRefreshTokenPayload;
-	} | null; 
+	} | null;
 }
 
 // Add RefreshToken interface

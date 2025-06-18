@@ -1,10 +1,11 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput } from "#types.ts" */
 
 import { z } from "zod/v4-mini";
 
 import { jwtProvider } from "#services/jwt.js";
 import { checkIsDeviceMobileOrTablet } from "#utils/check-is-device-mobile-or-tablet.js";
 import { dateLikeToNumber } from "#utils/dates.js";
+import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants";
 import {
 	deleteAuthTokenCookies,
 	getAccessTokenFromCookies,
@@ -40,14 +41,8 @@ export function validateJWTAccessToken(token, ctx) {
 		const verifyAccessToken =
 			ctx.authProviders.jwt?.verifyAccessToken ?? jwtProvider.verifyAccessToken;
 		const result = verifyAccessToken(token);
-		if (process.env.NODE_ENV === "development") {
-			console.log("___ validateJWTAccessToken result", result);
-		}
 
 		const validation = validateJWTAccessTokenSchema.safeParse(result);
-		if (process.env.NODE_ENV === "development") {
-			console.log("___ validateJWTAccessToken validation", validation);
-		}
 		return validation.success ? result : null;
 	} catch (error) {
 		console.error("JWT validation error:", error);
@@ -74,10 +69,8 @@ export async function validateJWTRefreshToken(token, ctx) {
 			ctx.authProviders.jwt?.verifyRefreshToken ?? jwtProvider.verifyRefreshToken
 		);
 		const verifyRefreshTokenResult = verifyRefreshToken(token);
-		console.log("___ validateJWTRefreshToken verifyRefreshTokenResult", verifyRefreshTokenResult);
 
 		const validation = validateJWTRefreshTokenSchema.safeParse(verifyRefreshTokenResult);
-		console.log("___ validateJWTRefreshToken validation", validation);
 
 		if (!validation.success) {
 			return null;
@@ -116,7 +109,7 @@ export async function validateJWTRefreshToken(token, ctx) {
  * @param {NonNullable<Awaited<ReturnType<typeof validateJWTRefreshToken>>>} ctx.validationResult
  * @returns {boolean}
  */
-function shouldRefreshAuthTokens(ctx) {
+function getShouldExtendRefreshAuthTokens(ctx) {
 	const lastCheckpointAt = dateLikeToNumber(
 		ctx.validationResult.session.lastExtendedAt ?? ctx.validationResult.session.createdAt,
 	);
@@ -177,7 +170,7 @@ async function refreshAuthTokens(ctx) {
 				createOne: ctx.authProviders.sessions.createOne,
 			},
 			jwt: {
-				createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+				createRefreshToken: ctx.authProviders.jwt?.createRefreshToken,
 			},
 		},
 		generateRandomId: ctx.generateRandomId,
@@ -250,34 +243,55 @@ export async function getCurrentAuthSession(props) {
 
 			if (!validatedJWTRefreshTokenResult) {
 				if (!isDeviceMobileOrTablet) {
-					deleteAuthTokenCookies({
-						authStrategy: props.authStrategy,
-						cookies: props.cookies,
-					});
+					// deleteAuthTokenCookies({
+					// 	authStrategy: props.authStrategy,
+					// 	cookies: props.cookies,
+					// });
 				}
 				return { session: null, user: null };
 			}
 
-			if (
-				!isDeviceMobileOrTablet &&
-				shouldRefreshAuthTokens({ validationResult: validatedJWTRefreshTokenResult })
-			) {
-				const refreshResult = await refreshAuthTokens({
-					authStrategy: props.authStrategy,
-					validatedJWTRefreshTokenResult,
-					ipAddress: ipAddress ?? null,
-					userAgent: userAgent ?? null,
-					tx: props.tx,
-					authProviders: {
-						sessions: {
-							revokeOneById: props.authProviders.sessions.revokeOneById,
-							createOne: props.authProviders.sessions.createOne,
+			const shouldRefresh = getShouldExtendRefreshAuthTokens({
+				validationResult: validatedJWTRefreshTokenResult,
+			});
+
+			if (!isDeviceMobileOrTablet) {
+				/** @type {{ user: User; session: DBSessionOutput; token: string; expiresAt: Date; }} */
+				let refreshResult;
+
+				if (shouldRefresh) {
+					const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
+					const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
+						data: { expiresAt: refreshTokenExpiresAt },
+						where: { id: validatedJWTRefreshTokenResult.session.id },
+					});
+					if (!updatedSession) {
+						throw new Error("Failed to update session expiration date");
+					}
+					refreshResult = {
+						user: validatedJWTRefreshTokenResult.user,
+						session: updatedSession,
+						expiresAt: refreshTokenExpiresAt,
+						token: refreshToken,
+					};
+				} else {
+					refreshResult = await refreshAuthTokens({
+						authStrategy: props.authStrategy,
+						validatedJWTRefreshTokenResult,
+						ipAddress: ipAddress ?? null,
+						userAgent: userAgent ?? null,
+						tx: props.tx,
+						authProviders: {
+							sessions: {
+								revokeOneById: props.authProviders.sessions.revokeOneById,
+								createOne: props.authProviders.sessions.createOne,
+							},
+							jwt: {
+								createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+							},
 						},
-						jwt: {
-							createRefreshToken: props.authProviders.jwt?.createRefreshToken,
-						},
-					},
-				});
+					});
+				}
 
 				const generateAccessTokenResult = generateAccessToken(refreshResult, {
 					authStrategy: props.authStrategy,
@@ -332,34 +346,57 @@ export async function getCurrentAuthSession(props) {
 
 			if (!validatedSessionTokenResult) {
 				if (!isDeviceMobileOrTablet) {
-					deleteAuthTokenCookies({
-						authStrategy: props.authStrategy,
-						cookies: props.cookies,
-					});
+					// deleteAuthTokenCookies({
+					// 	authStrategy: props.authStrategy,
+					// 	cookies: props.cookies,
+					// });
 				}
 				return { session: null, user: null };
 			}
 
+			const shouldRefresh = getShouldExtendRefreshAuthTokens({
+				validationResult: validatedSessionTokenResult,
+			});
 			if (
 				!isDeviceMobileOrTablet &&
-				shouldRefreshAuthTokens({ validationResult: validatedSessionTokenResult })
+				getShouldExtendRefreshAuthTokens({ validationResult: validatedSessionTokenResult })
 			) {
-				const sessionTokenResult = await refreshAuthTokens({
-					authStrategy: props.authStrategy,
-					validatedJWTRefreshTokenResult: validatedSessionTokenResult,
-					ipAddress: ipAddress ?? null,
-					userAgent: userAgent ?? null,
-					tx: props.tx,
-					authProviders: {
-						sessions: {
-							revokeOneById: props.authProviders.sessions.revokeOneById,
-							createOne: props.authProviders.sessions.createOne,
+				/** @type {{ user: User; session: DBSessionOutput; token: string; expiresAt: Date; }} */
+				let sessionTokenResult;
+
+				if (shouldRefresh) {
+					const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
+					const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
+						data: { expiresAt: refreshTokenExpiresAt },
+						where: { id: validatedSessionTokenResult.session.id },
+					});
+					if (!updatedSession) {
+						throw new Error("Failed to update session expiration date");
+					}
+					sessionTokenResult = {
+						user: validatedSessionTokenResult.user,
+						session: updatedSession,
+						expiresAt: refreshTokenExpiresAt,
+						token: sessionToken,
+					};
+				} else {
+					sessionTokenResult = await refreshAuthTokens({
+						authStrategy: props.authStrategy,
+						validatedJWTRefreshTokenResult: validatedSessionTokenResult,
+						ipAddress: ipAddress ?? null,
+						userAgent: userAgent ?? null,
+						tx: props.tx,
+						authProviders: {
+							sessions: {
+								revokeOneById: props.authProviders.sessions.revokeOneById,
+								createOne: props.authProviders.sessions.createOne,
+							},
+							jwt: {
+								createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+							},
 						},
-						jwt: {
-							createRefreshToken: props.authProviders.jwt?.createRefreshToken,
-						},
-					},
-				});
+					});
+				}
 				// For web, we set the session token cookie
 				setAuthTokenCookies({
 					authStrategy: "session",

@@ -5,6 +5,7 @@ import { dateLikeToNumber } from "#utils/dates.js";
 import {
 	createEmailVerificationRequest,
 	deleteEmailVerificationRequestCookie,
+	getEmailVerificationRequestCookie,
 	getUserEmailVerificationRequestFromRequest,
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
@@ -39,7 +40,9 @@ import { verifyEmailServiceInputSchema } from "#utils/validations.js";
  * >}
  */
 export async function verifyEmailUserService(props) {
+	console.log("___  verifyEmailUserService props.input", props.input);
 	const input = verifyEmailServiceInputSchema.safeParse(props.input);
+	console.log("___  verifyEmailUserService input", input);
 	if (!input.success) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
@@ -47,11 +50,15 @@ export async function verifyEmailUserService(props) {
 	const { session, user } = await getCurrentAuthSession(
 		await generateGetCurrentAuthSessionProps(props),
 	);
+
+	console.log("___ verifyEmailUserService session, user", session, user);
 	if (!session) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
+	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
+	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 
 	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id, {
 		cookies: props.cookies,
@@ -62,6 +69,8 @@ export async function verifyEmailUserService(props) {
 			},
 		},
 	});
+
+	console.log("___ verifyEmailUserService verificationRequest", verificationRequest);
 	if (!verificationRequest) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {
@@ -99,6 +108,7 @@ export async function verifyEmailUserService(props) {
 			{ data: { email: verificationRequest.email }, where: { id: user.id } },
 			{ tx: props.tx },
 		),
+		// Needs to refresh the tokens
 	]);
 
 	deleteEmailVerificationRequestCookie(props.cookies);

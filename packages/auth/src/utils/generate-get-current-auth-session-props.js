@@ -1,6 +1,6 @@
 /** @import { AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
-import { isPromise } from "util/types";
+import { isPromise } from "#utils/is-promise.js";
 
 /**
  * @param {AuthProvidersWithGetSessionProviders} authProvidersFromInput
@@ -19,7 +19,7 @@ export function getDefaultSessionAndJWTFromAuthProviders(authProvidersFromInput)
 		jwt: {
 			...authProvidersFromInput.jwt,
 			verifyAccessToken: authProvidersFromInput.jwt?.verifyAccessToken,
-			createTokenPair: authProvidersFromInput.jwt?.createTokenPair,
+			createRefreshToken: authProvidersFromInput.jwt?.createRefreshToken,
 			verifyRefreshToken: authProvidersFromInput.jwt?.verifyRefreshToken,
 			createAccessToken: authProvidersFromInput.jwt?.createAccessToken,
 		},

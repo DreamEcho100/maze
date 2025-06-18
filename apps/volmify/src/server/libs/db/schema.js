@@ -418,6 +418,8 @@ export const session = pgTable(
 		createdAt: timestamp("created_at", { precision: 3 }).notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		lastVerifiedAt: timestamp("last_verified_at", { precision: 3 }).notNull(),
+		lastExtendedAt: timestamp("last_extended_at", { precision: 3 }),
 		ipAddress: varchar("ip_address", { length: 45 }),
 		// userAgent: varchar("user_agent", { length: 512 }),
 		userAgent: /** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (userAgentJsonb),

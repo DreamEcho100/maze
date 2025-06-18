@@ -1,5 +1,3 @@
-"use server";
-
 /** @import { AuthProvidersShape, AuthProvidersWithGetSessionUtils } from "@de100/auth/types"; */
 import { cookies as _cookies, headers as _headers } from "next/headers";
 
@@ -15,30 +13,6 @@ import {
 import { getSessionOptionsBasics } from "./get-session-options-basics";
 
 /**
- * @param {AuthProvidersShape} [authProvidersFromInput]
- */
-export function getDefaultSessionAndJWTFromAuthProviders(authProvidersFromInput) {
-	return {
-		...authProvidersFromInput,
-		sessions: {
-			...authProvidersFromInput?.sessions,
-			deleteOneById: deleteOneSessionById,
-			extendOneExpirationDate: extendOneSessionExpirationDate,
-			findOneWithUser: findOneSessionWithUser,
-			revokeOneById: revokeOneSessionById,
-			createOne: createOneSession,
-		},
-		jwt: {
-			...authProvidersFromInput?.jwt,
-			// createRefreshToken: authProvidersFromInput.jwt?.createRefreshToken,
-			// verifyRefreshToken: authProvidersFromInput.jwt?.verifyRefreshToken,
-			// createAccessToken: authProvidersFromInput.jwt?.createAccessToken,
-			// verifyAccessToken: authProvidersFromInput.jwt?.verifyAccessToken,
-		},
-	};
-}
-
-/**
  * @template {Partial<AuthProvidersWithGetSessionUtils> & {
  * 	authProviders?: AuthProvidersShape
  * 	reqHeaders?: Headers;
@@ -51,6 +25,23 @@ export async function generateGetCurrentAuthSessionProps(props) {
 		...props,
 		authStrategy: authStrategy,
 		generateRandomId: createOneIdSync,
-		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+		authProviders: {
+			...props.authProviders,
+			sessions: {
+				...props.authProviders?.sessions,
+				deleteOneById: deleteOneSessionById,
+				extendOneExpirationDate: extendOneSessionExpirationDate,
+				findOneWithUser: findOneSessionWithUser,
+				revokeOneById: revokeOneSessionById,
+				createOne: createOneSession,
+			},
+			jwt: {
+				...props.authProviders?.jwt,
+				// createRefreshToken: props.authProviders?.jwt?.createRefreshToken,
+				// verifyRefreshToken: props.authProviders?.jwt?.verifyRefreshToken,
+				// createAccessToken: props.authProviders?.jwt?.createAccessToken,
+				// verifyAccessToken: props.authProviders?.jwt?.verifyAccessToken,
+			},
+		},
 	};
 }

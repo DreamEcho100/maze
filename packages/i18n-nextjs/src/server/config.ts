@@ -24,7 +24,7 @@ function initializeLocaleConfig() {
 	return value;
 }
 
-export const initializeLocaleConfigCache = cache(initializeLocaleConfig);
+export const initializeLocaleConfigCache = cache(() => initializeLocaleConfig());
 export function updateLocaleConfigCache(props: {
 	locale?: Locale;
 	allowedLocales?: AllowedLocale[] | readonly AllowedLocale[];
@@ -36,7 +36,7 @@ export function updateLocaleConfigCache(props: {
 		if (Object.prototype.hasOwnProperty.call(props, key) && value !== undefined) {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
-			initializeLocaleConfigCache()[key] = value;
+			initializeLocaleConfig()[key] = value;
 		}
 	}
 }

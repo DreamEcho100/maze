@@ -4,13 +4,13 @@ import type { Metadata } from "next";
 import type { PropsWithChildren } from "react";
 import { notFound } from "next/navigation";
 import { GeistSans } from "geist/font/sans";
-import { updateLocaleConfigCache } from "node_modules/@de100/i18n-nextjs/src/server/config";
 
 // import { initAuth } from "@de100/auth/init";
 import { I18nProvider } from "@de100/i18n-reactjs";
 
 import { allowedLocales, defaultLocale, fallbackLocale } from "#i18n/constants";
 import { getTranslation } from "#i18n/getTranslations";
+import { getCurrentSession } from "#server/libs/auth/get-current-session";
 
 // import { TRPCReactProvider } from "~/trpc/react";
 
@@ -35,11 +35,13 @@ export default async function RootLayout(
 		return notFound();
 	}
 
-	updateLocaleConfigCache({
-		allowedLocales,
-		defaultLocale,
-		locale,
-	});
+	// updateLocaleConfigCache({
+	// 	allowedLocales,
+	// 	defaultLocale,
+	// 	locale,
+	// });
+
+	const currentSession = await getCurrentSession();
 
 	const localeTranslations = await getTranslation(locale);
 
@@ -52,8 +54,7 @@ export default async function RootLayout(
 					defaultLocale={defaultLocale}
 					fallbackLocale={fallbackLocale}
 					translations={{ [locale]: localeTranslations }}
-					locale={locale}
-				>
+					locale={locale}>
 					{props.children}
 				</I18nProvider>
 			</body>

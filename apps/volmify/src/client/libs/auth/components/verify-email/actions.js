@@ -10,7 +10,9 @@ import {
 
 import { redirect } from "#i18n/server";
 import {
+	authStrategy,
 	createOneEmailVerificationRequests,
+	defaultSessionsHandlers,
 	deleteAllPasswordResetSessionsByUserId,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneEmailVerificationRequestsByIdAndUserId,
@@ -18,6 +20,7 @@ import {
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
+import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -31,22 +34,26 @@ import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-cu
  */
 export async function verifyEmailAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		verifyEmailUserService(await generateGetCurrentAuthSessionProps({
-			tx,
-			input: { code: formData.get("code") },
-			authProviders: {
-				passwordResetSessions: {
-					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+		verifyEmailUserService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				input: { code: formData.get("code") },
+				authProviders: {
+					passwordResetSessions: {
+						deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+					},
+					users: { updateOneEmailAndVerify: updateOneUserEmailAndVerify },
+					userEmailVerificationRequests: {
+						findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+						createOne: createOneEmailVerificationRequests,
+						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+					},
 				},
-				users: { updateOneEmailAndVerify: updateOneUserEmailAndVerify },
-				userEmailVerificationRequests: {
-					findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-					createOne: createOneEmailVerificationRequests,
-					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
-				},
-			},
-		})),
+			}),
+		),
 	);
+
+	console.log("___ verifyEmailAction result", result);
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);
@@ -82,19 +89,18 @@ export async function verifyEmailAction(_prev, formData) {
  */
 export async function resendEmailVerificationCodeAction(_prev) {
 	const result = await db.transaction(async (tx) =>
-		resendEmailVerificationCodeService({
-			...(await getSessionOptionsBasics()),
-			tx,
-			authStrategy,
-			authProviders: {
-				sessions: defaultSessionsHandlers,
-				userEmailVerificationRequests: {
-					findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-					createOne: createOneEmailVerificationRequests,
-					deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+		resendEmailVerificationCodeService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				authProviders: {
+					userEmailVerificationRequests: {
+						findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+						createOne: createOneEmailVerificationRequests,
+						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+					},
 				},
-			},
-		}),
+			}),
+		),
 	);
 
 	if (result.type === "success") {

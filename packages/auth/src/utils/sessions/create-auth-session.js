@@ -62,6 +62,7 @@ export async function createOneAuthSession(props) {
 		generateRandomId: props.generateRandomId,
 		authStrategy: props.authStrategy,
 	});
+
 	switch (props.authStrategy) {
 		case "session": {
 			// For session authStrategy, we return the session and user data

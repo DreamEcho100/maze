@@ -2,7 +2,8 @@
 
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
-	createEmailVerificationRequest, 
+	createEmailVerificationRequest,
+	getEmailVerificationRequestCookie,
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
@@ -75,6 +76,9 @@ export async function registerService(props) {
 		userEmailVerificationRequests.code,
 	);
 	setEmailVerificationRequestCookie(userEmailVerificationRequests, props.cookies);
+
+	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
+	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 
 	return REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL;
 
