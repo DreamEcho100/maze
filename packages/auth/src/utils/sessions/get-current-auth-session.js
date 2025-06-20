@@ -1,4 +1,4 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput, ValidSessionResultMetadata } from "#types.ts" */
 
 import { z } from "zod/v4-mini";
 
@@ -14,7 +14,7 @@ import {
 } from "./cookies";
 import { generateAccessToken } from "./generate-access-token";
 import { generateRefreshToken } from "./generate-refresh-token";
-import { getAuthorizationTokenFromHeaders } from "./headers";
+import { getAuthorizationTokenFromHeaders, getRefreshTokenFromHeaders } from "./headers";
 
 const validateJWTAccessTokenSchema = z.object({
 	exp: z.number(),
@@ -30,6 +30,53 @@ const validateJWTRefreshTokenSchema = z.object({
 	iat: z.number(),
 	payload: z.object({ sessionId: z.string() }),
 });
+
+// export interface UserAgent {
+// 	isBot: boolean;
+// 	ua: string;
+// 	browser: {
+// 		name?: string;
+// 		version?: string;
+// 		major?: string;
+// 	};
+// 	device: {
+// 		model?: string;
+// 		type?: string;
+// 		vendor?: string;
+// 	};
+// 	engine: {
+// 		name?: string;
+// 		version?: string;
+// 	};
+// 	os: {
+// 		name?: string;
+// 		version?: string;
+// 	};
+// 	cpu: {
+// 		architecture?: string;
+// 	};
+// }
+/**
+ *
+ * @param {UserAgent|null|undefined} userAgent1
+ * @param {UserAgent|null|undefined} userAgent2
+ * @returns
+ */
+function compareUserAgents(userAgent1, userAgent2) {
+	if (!userAgent1 || !userAgent2) return false;
+
+	return (
+		userAgent1.isBot === userAgent2.isBot &&
+		userAgent1.ua === userAgent2.ua &&
+		userAgent1.browser.name === userAgent2.browser.name &&
+		userAgent1.device.model === userAgent2.device.model &&
+		userAgent1.device.type === userAgent2.device.type &&
+		userAgent1.device.vendor === userAgent2.device.vendor &&
+		userAgent1.engine.name === userAgent2.engine.name &&
+		userAgent1.os.name === userAgent2.os.name
+	);
+}
+
 /**
  * Validate JWT access token by checking from the `JWTProvider['findOneById']`
  * @param {string} token
@@ -61,10 +108,11 @@ export function validateJWTAccessToken(token, ctx) {
  * 	};
  * 	jwt?: { verifyRefreshToken?: JWTProvider['verifyRefreshToken'] };
  * }} ctx.authProviders
+ * @param {string|null|undefined} [ctx.ipAddress] - Optional IP address for the session.
+ * @param {UserAgent|null|undefined} [ctx.userAgent] - Optional user agent
  */
 export async function validateJWTRefreshToken(token, ctx) {
 	try {
-		// const sessionId = getSessionId(token);
 		const verifyRefreshToken = /** @type {JWTProvider['verifyRefreshToken']} */ (
 			ctx.authProviders.jwt?.verifyRefreshToken ?? jwtProvider.verifyRefreshToken
 		);
@@ -80,7 +128,13 @@ export async function validateJWTRefreshToken(token, ctx) {
 
 		const result = await ctx.authProviders.sessions.findOneWithUser(sessionId);
 
-		if (!result?.session || Date.now() >= new Date(result.session.expiresAt).getTime()) {
+		if (
+			!result?.session ||
+			Date.now() >= new Date(result.session.expiresAt).getTime() ||
+			((result.session.ipAddress || ctx.ipAddress) && result.session.ipAddress !== ctx.ipAddress) ||
+			((result.session.userAgent || ctx.userAgent) &&
+				!compareUserAgents(ctx.userAgent, result.session.userAgent))
+		) {
 			// If the session is not found or expired, delete it
 			await ctx.authProviders.sessions.deleteOneById(sessionId);
 			return null;
@@ -139,7 +193,7 @@ function getShouldExtendRefreshAuthTokens(ctx) {
  * 	};
  * }} ctx.authProviders
  */
-async function refreshAuthTokens(ctx) {
+async function regenerateRefreshAuthTokens(ctx) {
 	const {
 		tokenInfo,
 		user,
@@ -149,8 +203,6 @@ async function refreshAuthTokens(ctx) {
 
 	// ✅ Revoke old refresh token
 	await ctx.authProviders.sessions.revokeOneById(tokenInfo.payload.sessionId);
-
-	// TODO: Compare ip addresses and user agents
 
 	/** @type {SessionMetadata} */
 	const metadata = {
@@ -184,22 +236,25 @@ async function refreshAuthTokens(ctx) {
  * 	authProviders: AuthProvidersWithGetSessionProviders
  * 	ipAddress: string|null|undefined;
  * 	userAgent: UserAgent|null|undefined;
+ * 	canMutateCookies: boolean;
  * }} props
  * @returns {Promise<SessionValidationResult>}
  */
 export async function getCurrentAuthSession(props) {
 	const userAgent = props.userAgent;
 	const ipAddress = props.ipAddress;
-	const isDeviceMobileOrTablet = userAgent && checkIsDeviceMobileOrTablet(userAgent);
+	const isDeviceMobileOrTablet = !!(userAgent && checkIsDeviceMobileOrTablet(userAgent));
 
+	let refreshToken;
 	switch (props.authStrategy) {
 		case "jwt": {
-			const refreshToken = getRefreshTokenFromCookies(props.cookies);
+			refreshToken =
+				getRefreshTokenFromCookies(props.cookies) ?? getRefreshTokenFromHeaders(props.headers);
 			const accessToken =
 				getAccessTokenFromCookies(props.cookies) ?? getAuthorizationTokenFromHeaders(props.headers);
 
 			// Try access token first (if valid and not expired)
-			if (accessToken) {
+			if (refreshToken && accessToken) {
 				const result = validateJWTAccessToken(accessToken, {
 					authProviders: {
 						jwt: {
@@ -219,90 +274,217 @@ export async function getCurrentAuthSession(props) {
 							authStrategy: props.authStrategy,
 							id: payload.sessionId,
 						},
+						metadata: null,
 					};
 				}
 			}
+			break;
+		}
 
-			// If no refresh token or on mobile/tablet, we can't refresh
-			if (!refreshToken) {
-				// deleteJWTTokenCookies(options.cookies);
-				return { session: null, user: null };
-			}
+		case "session": {
+			refreshToken =
+				getAuthorizationTokenFromHeaders(props.headers) ??
+				getRefreshTokenFromCookies(props.cookies);
+			break;
+		}
 
-			const validatedJWTRefreshTokenResult = await validateJWTRefreshToken(refreshToken, {
+		default: {
+			throw new Error(`Unsupported auth strategy: ${props.authStrategy}`);
+		}
+	}
+
+	const result = await resolveAuthSession({
+		authStrategy: props.authStrategy,
+		refreshToken,
+		shouldExtendRefreshAuthTokensOnNeed: !isDeviceMobileOrTablet,
+		canMutateCookies: props.canMutateCookies,
+		ipAddress,
+		userAgent,
+		tx: props.tx,
+		authProviders: {
+			sessions: {
+				findOneWithUser: props.authProviders.sessions.findOneWithUser,
+				deleteOneById: props.authProviders.sessions.deleteOneById,
+				extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
+				revokeOneById: props.authProviders.sessions.revokeOneById,
+				createOne: props.authProviders.sessions.createOne,
+			},
+			jwt: {
+				verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
+			},
+		},
+		cookies: props.cookies,
+	});
+
+	if (!result.session) {
+		if (props.canMutateCookies) {
+			// Delete cookies for web
+			// it's an optional props for now as it case issues with next js server
+			deleteAuthTokenCookies({
+				authStrategy: props.authStrategy,
+				cookies: props.cookies,
+			});
+		}
+		return {
+			user: null,
+			session: null,
+			metadata: null,
+		};
+	}
+
+	return result;
+}
+
+/**
+ * 🔄 Resolves authentication session to a valid, fresh state.
+ *
+ * The Swiss Army knife of session management! This function:
+ * 1. 🔍 **Validates** your token (structure, expiration, IP, device fingerprinting)
+ * 2. 🤔 **Decides** whether to extend (fast) or regenerate (secure)
+ * 3. 🚀 **Returns** a fresh session ready for action
+ *
+ * ## Smart Decision Making:
+ * - **Fresh token** (< 50% lifetime used) → Extend expiration only (1 DB query ⚡)
+ * - **Stale token** (≥ 50% lifetime used) → Full regeneration (2 DB queries 🔒)
+ * - **Force refresh** (`shouldExtendRefreshAuthTokensOnNeed: true`) → Always regenerate on need
+ *
+ * ## Strategy Differences:
+ * - **JWT**: Returns refresh + access tokens with expiration metadata
+ * - **Session**: Returns refresh token only (simpler, but still secure)
+ *
+ * ## Security Features:
+ * 🛡️ IP validation, 📱 device fingerprinting, 🧹 automatic cleanup, 🔄 token rotation
+ *
+ * @param {object} props - Configuration and dependencies
+ * @param {AuthStrategy} props.authStrategy - Authentication strategy ("jwt" or "session")
+ * @param {string|null|undefined} props.refreshToken - The refresh/session token to validate and potentially refresh
+ * @param {string|null|undefined} props.ipAddress - Client IP address for security validation
+ * @param {UserAgent|null|undefined} props.userAgent - Parsed user agent for device fingerprinting
+ * @param {boolean} [props.shouldExtendRefreshAuthTokensOnNeed] - Whether to allow token extension/regeneration based on freshness. Set to `true` to allow token lifecycle management.
+ * @param {boolean} [props.canMutateCookies=true] - Whether to set authentication cookies. Set to false for mobile/API-only usage.
+ * @param {any} [props.tx] - Optional database transaction for atomic operations
+ * @param {CookiesProvider} props.cookies - Cookie management interface for setting authentication cookies
+ * @param {{
+ * 	sessions: {
+ * 		findOneWithUser: SessionsProvider['findOneWithUser'];
+ * 		deleteOneById: SessionsProvider['deleteOneById'];
+ * 		extendOneExpirationDate: SessionsProvider['extendOneExpirationDate'];
+ * 		revokeOneById: SessionsProvider['revokeOneById'];
+ * 		createOne: SessionsProvider['createOne'];
+ * 	};
+ * 	jwt?: {
+ * 			verifyRefreshToken?: JWTProvider['verifyRefreshToken'];
+ * 			createRefreshToken?: JWTProvider['createRefreshToken'];
+ * 			createAccessToken?: JWTProvider['createAccessToken'];
+ * 	};
+ * }} props.authProviders - Provider interfaces for external dependencies
+ *
+ * @returns {Promise<SessionValidationResult>} Resolved session state
+ *
+ * @throws {Error} When session extension fails due to database errors
+ * @throws {Error} When unsupported authentication strategy is provided
+ *
+ *
+ * @example
+ * ```js
+ * // Basic usage - let it decide what's best
+ * const session = await resolveAuthSession({
+ *   authStrategy: "jwt",
+ *   refreshToken: token,
+ *   shouldExtendRefreshAuthTokensOnNeed: true, // 🔄 Force it on need!
+ *   authProviders: { sessions, jwt },
+ *   cookies
+ * });
+ * ```
+ *
+ * @example
+ * ```js
+ * // Force refresh (perfect for /refresh endpoints)
+ * const session = await resolveAuthSession({
+ *   authStrategy: "session",
+ *   refreshToken: token,
+ *   shouldExtendRefreshAuthTokensOnNeed: false,
+ *   authProviders: { sessions },
+ *   cookies
+ * });
+ * ```
+ */
+export async function resolveAuthSession(props) {
+	if (!props.refreshToken) {
+		return { session: null, user: null, metadata: null };
+	}
+
+	const validatedRefreshToken = await validateJWTRefreshToken(props.refreshToken, {
+		authProviders: {
+			sessions: {
+				findOneWithUser: props.authProviders.sessions.findOneWithUser,
+				deleteOneById: props.authProviders.sessions.deleteOneById,
+			},
+			jwt: {
+				verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
+			},
+		},
+	});
+	if (!validatedRefreshToken) {
+		return { session: null, user: null, metadata: null };
+	}
+
+	/** @type {{ user: User; session: DBSessionOutput; token: string; expiresAt: Date; }} */
+	let newRefreshTokenDetails;
+	const shouldExtendRefreshAuthTokens =
+		!!props.shouldExtendRefreshAuthTokensOnNeed &&
+		getShouldExtendRefreshAuthTokens({
+			validationResult: validatedRefreshToken,
+		});
+
+	if (shouldExtendRefreshAuthTokens) {
+		newRefreshTokenDetails = await regenerateRefreshAuthTokens({
+			authStrategy: props.authStrategy,
+			validatedJWTRefreshTokenResult: validatedRefreshToken,
+			ipAddress: props.ipAddress ?? null,
+			userAgent: props.userAgent ?? null,
+			tx: props.tx,
+			authProviders: {
+				sessions: {
+					revokeOneById: props.authProviders.sessions.revokeOneById,
+					createOne: props.authProviders.sessions.createOne,
+				},
+				jwt: {
+					createRefreshToken: props.authProviders.jwt?.createRefreshToken,
+				},
+			},
+		});
+	} else {
+		const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
+		const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
+			data: { expiresAt: refreshTokenExpiresAt },
+			where: { id: validatedRefreshToken.session.id },
+		});
+		if (!updatedSession) {
+			throw new Error(
+				`Failed to extend session ${validatedRefreshToken.session.id}: session may have been deleted or database error occurred`,
+			);
+		}
+		newRefreshTokenDetails = {
+			user: validatedRefreshToken.user,
+			session: updatedSession,
+			expiresAt: refreshTokenExpiresAt,
+			token: props.refreshToken,
+		};
+	}
+
+	switch (props.authStrategy) {
+		case "jwt": {
+			const generateAccessTokenResult = generateAccessToken(newRefreshTokenDetails, {
+				authStrategy: props.authStrategy,
 				authProviders: {
-					sessions: {
-						findOneWithUser: props.authProviders.sessions.findOneWithUser,
-						deleteOneById: props.authProviders.sessions.deleteOneById,
-					},
 					jwt: {
-						verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
+						createAccessToken: props.authProviders.jwt?.createAccessToken,
 					},
 				},
 			});
 
-			if (!validatedJWTRefreshTokenResult) {
-				if (!isDeviceMobileOrTablet) {
-					// deleteAuthTokenCookies({
-					// 	authStrategy: props.authStrategy,
-					// 	cookies: props.cookies,
-					// });
-				}
-				return { session: null, user: null };
-			}
-
-			const shouldRefresh = getShouldExtendRefreshAuthTokens({
-				validationResult: validatedJWTRefreshTokenResult,
-			});
-
-			if (!isDeviceMobileOrTablet) {
-				/** @type {{ user: User; session: DBSessionOutput; token: string; expiresAt: Date; }} */
-				let refreshResult;
-
-				if (shouldRefresh) {
-					const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
-					const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
-						data: { expiresAt: refreshTokenExpiresAt },
-						where: { id: validatedJWTRefreshTokenResult.session.id },
-					});
-					if (!updatedSession) {
-						throw new Error("Failed to update session expiration date");
-					}
-					refreshResult = {
-						user: validatedJWTRefreshTokenResult.user,
-						session: updatedSession,
-						expiresAt: refreshTokenExpiresAt,
-						token: refreshToken,
-					};
-				} else {
-					refreshResult = await refreshAuthTokens({
-						authStrategy: props.authStrategy,
-						validatedJWTRefreshTokenResult,
-						ipAddress: ipAddress ?? null,
-						userAgent: userAgent ?? null,
-						tx: props.tx,
-						authProviders: {
-							sessions: {
-								revokeOneById: props.authProviders.sessions.revokeOneById,
-								createOne: props.authProviders.sessions.createOne,
-							},
-							jwt: {
-								createRefreshToken: props.authProviders.jwt?.createRefreshToken,
-							},
-						},
-					});
-				}
-
-				const generateAccessTokenResult = generateAccessToken(refreshResult, {
-					authStrategy: props.authStrategy,
-					authProviders: {
-						jwt: {
-							createAccessToken: props.authProviders.jwt?.createAccessToken,
-						},
-					},
-				});
-
-				// Set new cookies for web
+			if (props.canMutateCookies) {
 				setAuthTokenCookies({
 					accessToken: generateAccessTokenResult.accessToken,
 					refreshToken: generateAccessTokenResult.refreshToken,
@@ -311,111 +493,43 @@ export async function getCurrentAuthSession(props) {
 					cookies: props.cookies,
 					authStrategy: props.authStrategy,
 				});
-
-				return {
-					user: refreshResult.user,
-					session: refreshResult.session,
-				};
 			}
 
 			return {
-				user: validatedJWTRefreshTokenResult.user,
-				session: validatedJWTRefreshTokenResult.session,
+				user: newRefreshTokenDetails.user,
+				session: newRefreshTokenDetails.session,
+				metadata: {
+					authStrategy: props.authStrategy,
+					accessToken: generateAccessTokenResult.accessToken,
+					accessTokenExpiresAt: generateAccessTokenResult.accessTokenExpiresAt.getTime(),
+					refreshToken: generateAccessTokenResult.refreshToken,
+					refreshTokenExpiresAt: generateAccessTokenResult.refreshTokenExpiresAt.getTime(),
+				},
 			};
 		}
-
 		case "session": {
-			const sessionToken =
-				getAuthorizationTokenFromHeaders(props.headers) ??
-				getRefreshTokenFromCookies(props.cookies);
-			if (!sessionToken) {
-				return { session: null, user: null };
-			}
-
-			const validatedSessionTokenResult = await validateJWTRefreshToken(sessionToken, {
-				authProviders: {
-					sessions: {
-						findOneWithUser: props.authProviders.sessions.findOneWithUser,
-						deleteOneById: props.authProviders.sessions.deleteOneById,
-					},
-					jwt: {
-						verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
-					},
-				},
-			});
-
-			if (!validatedSessionTokenResult) {
-				if (!isDeviceMobileOrTablet) {
-					// deleteAuthTokenCookies({
-					// 	authStrategy: props.authStrategy,
-					// 	cookies: props.cookies,
-					// });
-				}
-				return { session: null, user: null };
-			}
-
-			const shouldRefresh = getShouldExtendRefreshAuthTokens({
-				validationResult: validatedSessionTokenResult,
-			});
-			if (
-				!isDeviceMobileOrTablet &&
-				getShouldExtendRefreshAuthTokens({ validationResult: validatedSessionTokenResult })
-			) {
-				/** @type {{ user: User; session: DBSessionOutput; token: string; expiresAt: Date; }} */
-				let sessionTokenResult;
-
-				if (shouldRefresh) {
-					const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
-					const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
-						data: { expiresAt: refreshTokenExpiresAt },
-						where: { id: validatedSessionTokenResult.session.id },
-					});
-					if (!updatedSession) {
-						throw new Error("Failed to update session expiration date");
-					}
-					sessionTokenResult = {
-						user: validatedSessionTokenResult.user,
-						session: updatedSession,
-						expiresAt: refreshTokenExpiresAt,
-						token: sessionToken,
-					};
-				} else {
-					sessionTokenResult = await refreshAuthTokens({
-						authStrategy: props.authStrategy,
-						validatedJWTRefreshTokenResult: validatedSessionTokenResult,
-						ipAddress: ipAddress ?? null,
-						userAgent: userAgent ?? null,
-						tx: props.tx,
-						authProviders: {
-							sessions: {
-								revokeOneById: props.authProviders.sessions.revokeOneById,
-								createOne: props.authProviders.sessions.createOne,
-							},
-							jwt: {
-								createRefreshToken: props.authProviders.jwt?.createRefreshToken,
-							},
-						},
-					});
-				}
-				// For web, we set the session token cookie
+			if (props.canMutateCookies) {
 				setAuthTokenCookies({
-					authStrategy: "session",
-					refreshToken: sessionTokenResult.token,
-					refreshTokenExpiresAt: sessionTokenResult.expiresAt,
+					authStrategy: props.authStrategy,
+					refreshToken: newRefreshTokenDetails.token,
+					refreshTokenExpiresAt: newRefreshTokenDetails.expiresAt,
 					cookies: props.cookies,
 				});
-				return {
-					user: sessionTokenResult.user,
-					session: sessionTokenResult.session,
-				};
 			}
 
 			return {
-				user: validatedSessionTokenResult.user,
-				session: validatedSessionTokenResult.session,
+				user: newRefreshTokenDetails.user,
+				session: newRefreshTokenDetails.session,
+				metadata: {
+					authStrategy: props.authStrategy,
+					token: newRefreshTokenDetails.token,
+					expiresAt: newRefreshTokenDetails.expiresAt.getTime(),
+				},
 			};
 		}
-		default:
+
+		default: {
 			throw new Error(`Unsupported auth strategy: ${props.authStrategy}`);
+		}
 	}
 }

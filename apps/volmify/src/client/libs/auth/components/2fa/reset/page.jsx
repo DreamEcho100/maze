@@ -3,7 +3,7 @@ import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { TwoFactorResetForm } from "./components";
 
 export default async function AuthTwoFactorResetPage() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
 	if (session === null) {
 		return redirect("/auth/login");

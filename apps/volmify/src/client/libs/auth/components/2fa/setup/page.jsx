@@ -7,7 +7,7 @@ import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { TwoFactorSetUpForm } from "./components";
 
 export default async function AuthTwoFactorSetUpPage() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
 	if (session === null) {
 		return redirect("/auth/login");
@@ -37,8 +37,7 @@ export default async function AuthTwoFactorSetUpPage() {
 					width: "200px",
 					height: "200px",
 				}}
-				dangerouslySetInnerHTML={{ __html: qrcode }}
-			></div>
+				dangerouslySetInnerHTML={{ __html: qrcode }}></div>
 			<TwoFactorSetUpForm encodedTOTPKey={encodedTOTPKey} />
 		</>
 	);

@@ -8,14 +8,19 @@ import { db } from "../db";
 import { generateGetCurrentAuthSessionProps } from "../generate-get-current-auth-session-props";
 
 export const getUncachedCurrentSession =
-	/** @param {Headers} [reqHeaders] - Optional headers from the request, typically used to access cookies. */
-	async (reqHeaders) => {
+	/**
+	 * @param {object} [props]
+	 * @param {Headers} [props.reqHeaders] - Optional headers from the request, typically used to access cookies.
+	 *  @param {boolean} [props.canMutateCookies] - Indicates whether the function can modify cookies.
+	 */
+	async (props) => {
 		"use server";
 		return db.transaction(async (tx) =>
 			getCurrentAuthSession(
 				await generateGetCurrentAuthSessionProps({
 					tx,
-					reqHeaders,
+					reqHeaders: props?.reqHeaders,
+					canMutateCookies: props?.canMutateCookies,
 				}),
 			),
 		);

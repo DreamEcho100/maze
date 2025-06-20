@@ -22,6 +22,7 @@ import { getSessionOptionsBasics } from "./get-session-options-basics";
 export async function generateGetCurrentAuthSessionProps(props) {
 	return {
 		...(await getSessionOptionsBasics(props.reqHeaders)),
+		canMutateCookies: true,
 		...props,
 		authStrategy: authStrategy,
 		generateRandomId: createOneIdSync,

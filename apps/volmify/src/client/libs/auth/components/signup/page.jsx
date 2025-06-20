@@ -4,7 +4,7 @@ import { getCurrentSession } from "#server/libs/auth/get-current-session";
 import { SignUpForm } from "./components";
 
 export default async function AuthSignUpPage() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
 	if (session !== null) {
 		if (!user.emailVerifiedAt) {

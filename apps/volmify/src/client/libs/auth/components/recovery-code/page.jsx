@@ -8,7 +8,7 @@ import { getOneUserRecoveryCode } from "#server/libs/auth/init";
 // import { userProvider } from "@de100/auth/src/providers";
 
 export default async function AuthRecoveryCodePage() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
 	if (session === null) {
 		return redirect("/auth/login");

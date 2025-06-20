@@ -56,6 +56,7 @@ export async function generateGetCurrentAuthSessionProps(props) {
 		headers: props.headers,
 		tx: props.tx,
 		authStrategy: props.authStrategy,
+		canMutateCookies: props.canMutateCookies,
 		generateRandomId: props.generateRandomId,
 		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
 	};

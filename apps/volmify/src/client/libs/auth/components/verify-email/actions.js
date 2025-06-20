@@ -10,9 +10,7 @@ import {
 
 import { redirect } from "#i18n/server";
 import {
-	authStrategy,
 	createOneEmailVerificationRequests,
-	defaultSessionsHandlers,
 	deleteAllPasswordResetSessionsByUserId,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneEmailVerificationRequestsByIdAndUserId,
@@ -20,7 +18,6 @@ import {
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
-import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult

@@ -122,14 +122,30 @@ interface SessionWithUser {
 	user: User;
 }
 
+export type ValidSessionResultMetadata =
+	| {
+			authStrategy: "jwt";
+			accessToken: string;
+			refreshToken: string;
+			accessTokenExpiresAt: number;
+			refreshTokenExpiresAt: number;
+	  }
+	| {
+			authStrategy: "session";
+			token: string;
+			expiresAt: DateLike;
+	  };
+
 interface ValidSessionResult {
 	session: ClientSession;
 	user: User;
+	metadata: ValidSessionResultMetadata | null;
 }
 
 interface InvalidSessionResult {
 	session: null;
 	user: null;
+	metadata: null;
 }
 
 type SessionValidationResult = ValidSessionResult | InvalidSessionResult;
@@ -812,7 +828,7 @@ export interface AuthProvidersWithGetSessionUtils {
 	authStrategy: AuthStrategy;
 	cookies: CookiesProvider;
 	headers: HeadersProvider;
-	// ids: IdsProvider;
+	canMutateCookies: boolean;
 	generateRandomId: () => string;
 	ipAddress?: string | (() => string | Promise<string>) | undefined | null;
 	userAgent?: UserAgent | (() => UserAgent | Promise<UserAgent>) | undefined | null;

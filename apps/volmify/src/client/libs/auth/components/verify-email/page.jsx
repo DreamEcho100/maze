@@ -8,7 +8,7 @@ import { getCookies } from "#server/libs/get-cookies";
 import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components";
 
 export default async function AuthVerifyEmailPage() {
-	const { user } = await getCurrentSession();
+	const { user } = await getCurrentSession({ canMutateCookies: false });
 	if (user === null) {
 		return redirect("/auth/login");
 	}

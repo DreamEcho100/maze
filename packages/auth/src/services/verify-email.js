@@ -40,9 +40,7 @@ import { verifyEmailServiceInputSchema } from "#utils/validations.js";
  * >}
  */
 export async function verifyEmailUserService(props) {
-	console.log("___  verifyEmailUserService props.input", props.input);
 	const input = verifyEmailServiceInputSchema.safeParse(props.input);
-	console.log("___  verifyEmailUserService input", input);
 	if (!input.success) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}

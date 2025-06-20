@@ -10,7 +10,7 @@ import {
 } from "./components";
 
 export default async function AuthSettingsPage() {
-	const { session, user } = await getCurrentSession();
+	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
 	if (session === null) {
 		return redirect("/auth/login");

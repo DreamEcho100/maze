@@ -1,5 +1,3 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider } from "#types.ts" */
-
 // import { dateLikeToISOString } from "#utils/dates.js";
 
 export { createOneAuthSession as createAuthSession } from "../sessions/create-auth-session.js";
