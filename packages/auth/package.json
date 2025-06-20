@@ -87,6 +87,10 @@
 			"types": "./dist/src/services/settings/admin/register.d.ts",
 			"default": "./src/services/settings/admin/register.js"
 		},
+		"./services/resolve-auth-session": {
+			"types": "./dist/src/services/resolve-auth-session.d.ts",
+			"default": "./src/services/resolve-auth-session.js"
+		},
 		"./utils": {
 			"types": "./dist/src/utils/index.d.ts",
 			"default": "./src/utils/index.js"

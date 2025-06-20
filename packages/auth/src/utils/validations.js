@@ -109,3 +109,9 @@ export const adminRegisterServiceInputSchema = z.object({
 export const forgotPasswordServiceInputSchema = z.object({
 	email: emailSchema,
 });
+
+export const resolveAuthSessionServiceInputSchema = z.optional(
+	z.object({
+		shouldExtendRefreshAuthTokensOnNeed: z.optional(z.boolean()),
+	}),
+);

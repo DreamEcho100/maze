@@ -744,6 +744,35 @@ export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS = /** @type {co
 	},
 });
 
+export const RESOLVE_AUTH_SESSION_MESSAGES_ERRORS = /** @type {const} */ ({
+	INVALID_OR_MISSING_FIELDS: {
+		type: "error",
+		statusCode: 400,
+		message: "Invalid or missing fields",
+		messageCode: "INVALID_OR_MISSING_FIELDS",
+	},
+	AUTHENTICATION_REQUIRED: {
+		type: "error",
+		statusCode: 401,
+		message: "Please log in first",
+		messageCode: "AUTHENTICATION_REQUIRED",
+	},
+	UNSUPPORTED_AUTH_STRATEGY: {
+		type: "error",
+		statusCode: 400,
+		message: "Unsupported authentication strategy",
+		messageCode: "UNSUPPORTED_AUTH_STRATEGY",
+	},
+});
+export const RESOLVE_AUTH_SESSION_MESSAGES_SUCCESS = /** @type {const} */ ({
+	RESOLVED_AUTH_SESSION_SUCCESSFULLY: {
+		type: "success",
+		statusCode: 200,
+		message: "Authentication session resolved successfully",
+		messageCode: "RESOLVE_AUTH_SESSION_SUCCESSFULLY",
+	},
+});
+
 // /** @constant */
 // export const LOGIN_MESSAGES = /** @type {const} */ ({
 //   ...LOGIN_MESSAGES_ERRORS,
