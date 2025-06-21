@@ -5,6 +5,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryClient } from "#client/libs/orpc";
+import { extendCurrentSession } from "#server/libs/auth/extend-current-session";
+import { refreshCurrentSession } from "#server/libs/auth/refresh-current-session";
 import { getCurrentSession } from "../../../../server/libs/auth/get-current-session";
 
 export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
@@ -16,11 +18,15 @@ export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
 /**
  * @typedef {typeof CLIENT_CURRENT_SESSION_STATUS[keyof typeof CLIENT_CURRENT_SESSION_STATUS]} ClientCurrentSessionStatus
  * @typedef {typeof CLIENT_CURRENT_SESSION_STATUS} TCLIENT_CURRENT_SESSION_STATUS
- * @typedef {{ update: (user: Partial<SessionWithUser["user"]>) => Promise<void> }} SharedClientUserSession
+ * @typedef {{
+ * 	updateUser: (user: Partial<SessionWithUser["user"]>) => Promise<void>;
+ * 	refreshCurrentSession: typeof refreshCurrentSession;
+ * 	extendCurrentSession: typeof extendCurrentSession;
+ * }} Utils
  *
- * @typedef {{ update: (user: Partial<SessionWithUser["user"]>) => Promise<void>; data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
- * @typedef {{update?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
- * @typedef {{update?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["INITIAL_LOADING"] }} ClientInitialLoadingUserSession
+ * @typedef {Utils & { data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
+ * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
+ * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["INITIAL_LOADING"] }} ClientInitialLoadingUserSession
  *
  * @typedef {ClientAuthenticatedUserSession
  * 	| ClientUnauthenticatedUserSession
@@ -58,7 +64,7 @@ export function useGetCurrentSession(props) {
 			}
 
 			/** @param {Partial<SessionWithUser['user']>} user */
-			async function updateUserSession(user) {
+			async function updateUser(user) {
 				// const queryClient = getQueryClient({});
 				queryClient.setQueryData(
 					getCurrentSessionQueryKey,
@@ -97,7 +103,9 @@ export function useGetCurrentSession(props) {
 			return {
 				status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
 				data: result,
-				update: updateUserSession,
+				updateUser: updateUser,
+				refreshCurrentSession: refreshCurrentSession,
+				extendCurrentSession: extendCurrentSession,
 			};
 		},
 		refetchOnWindowFocus: true,

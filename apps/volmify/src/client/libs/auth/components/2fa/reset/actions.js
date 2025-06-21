@@ -4,13 +4,13 @@ import { reset2FAService } from "@de100/auth/services/2fa/reset";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	getOneUserRecoveryCodeRaw,
 	unMarkOneSession2FAForUser,
 	updateOneUserRecoveryCodeById,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult

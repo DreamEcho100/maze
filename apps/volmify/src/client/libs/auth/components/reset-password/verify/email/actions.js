@@ -3,6 +3,7 @@
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
 
 import { redirect } from "#i18n/server";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,
@@ -10,7 +11,6 @@ import {
 	verifyOneUserEmailIfMatches,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult

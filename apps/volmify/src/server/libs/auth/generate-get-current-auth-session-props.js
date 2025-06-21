@@ -1,6 +1,7 @@
 /** @import { AuthProvidersShape, AuthProvidersWithGetSessionUtils } from "@de100/auth/types"; */
 import { cookies as _cookies, headers as _headers } from "next/headers";
 
+import { getSessionOptionsBasics } from "../get-session-options-basics";
 import {
 	authStrategy,
 	createOneIdSync,
@@ -9,8 +10,7 @@ import {
 	extendOneSessionExpirationDate,
 	findOneSessionWithUser,
 	revokeOneSessionById,
-} from "./auth/init";
-import { getSessionOptionsBasics } from "./get-session-options-basics";
+} from "./init";
 
 /**
  * @template {Partial<AuthProvidersWithGetSessionUtils> & {

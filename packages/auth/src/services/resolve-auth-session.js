@@ -19,7 +19,7 @@ import { resolveAuthSessionServiceInputSchema } from "#utils/validations.js";
  *
  * @param {AuthProvidersWithGetSessionUtils & {
  * 	authProviders: AuthProvidersWithGetSessionProviders;
- * 	input: unknown;
+ * 	input?: unknown;
  * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<

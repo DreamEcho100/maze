@@ -5,7 +5,7 @@ import { cache } from "react";
 import { getCurrentAuthSession } from "@de100/auth/utils/sessions";
 
 import { db } from "../db";
-import { generateGetCurrentAuthSessionProps } from "../generate-get-current-auth-session-props";
+import { generateGetCurrentAuthSessionProps } from "./generate-get-current-auth-session-props";
 
 export const getUncachedCurrentSession =
 	/**

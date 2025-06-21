@@ -14,6 +14,7 @@ import { updatePasswordService } from "@de100/auth/services/settings/update-pass
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	createOneEmailVerificationRequests,
 	createOneSession,
@@ -26,7 +27,6 @@ import {
 	updateOneUserRecoveryCode,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/generate-get-current-auth-session-props";
 
 /**
  *
