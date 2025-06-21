@@ -120,6 +120,7 @@ export interface SessionMetadata
 interface SessionWithUser {
 	session: ClientSession;
 	user: User;
+	metadata: SessionMetadata | null;
 }
 
 export type ValidSessionResultMetadata =

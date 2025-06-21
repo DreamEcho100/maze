@@ -1,7 +1,7 @@
 /** @import { ValidSessionResult, InvalidSessionResult } from "@de100/auth/types" */
 /** @import { SessionWithUser } from "@de100/auth/types";  */
 
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { queryClient } from "#client/libs/orpc";
@@ -18,9 +18,9 @@ export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
  * @typedef {typeof CLIENT_CURRENT_SESSION_STATUS} TCLIENT_CURRENT_SESSION_STATUS
  * @typedef {{ update: (user: Partial<SessionWithUser["user"]>) => Promise<void> }} SharedClientUserSession
  *
- * @typedef {SharedClientUserSession & { data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
- * @typedef {SharedClientUserSession & { data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
- * @typedef {SharedClientUserSession & { data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["INITIAL_LOADING"] }} ClientInitialLoadingUserSession
+ * @typedef {{ update: (user: Partial<SessionWithUser["user"]>) => Promise<void>; data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
+ * @typedef {{update?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
+ * @typedef {{update?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["INITIAL_LOADING"] }} ClientInitialLoadingUserSession
  *
  * @typedef {ClientAuthenticatedUserSession
  * 	| ClientUnauthenticatedUserSession
@@ -30,6 +30,11 @@ export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
  */
 
 const getCurrentSessionQueryKey = ["current-session"];
+const INITIAL_INVALID_DATA = /** @type {InvalidSessionResult} */ ({
+	session: null,
+	user: null,
+	metadata: null,
+});
 
 /**
  * @template {true|undefined} [Required=undefined]
@@ -39,50 +44,6 @@ const getCurrentSessionQueryKey = ["current-session"];
  *
  */
 export function useGetCurrentSession(props) {
-	// const utils = api.useUtils()
-	// utils.client.query
-	const update = useCallback(
-		/** @param {Partial<SessionWithUser['user']>} user */
-		async (user) => {
-			// const queryClient = getQueryClient({});
-
-			queryClient.setQueryData(
-				getCurrentSessionQueryKey,
-				/**
-				 * @param {ClientUserSession | null} prev
-				 * @returns {ClientUserSession}
-				 */
-				(prev) => {
-					if (!prev) {
-						return {
-							status: CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED,
-							data: { session: null, user: null },
-							update,
-						};
-					}
-
-					if (prev.status !== CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED) {
-						return prev;
-					}
-
-					return {
-						...prev,
-						data: {
-							...prev.data,
-							user: {
-								...prev.data.user,
-								...user,
-							},
-						},
-					};
-				},
-			);
-
-			await query.refetch();
-		},
-		[],
-	);
-
 	const query = useQuery({
 		queryKey: getCurrentSessionQueryKey,
 		/** @returns {Promise<ClientUserSession>} */
@@ -92,48 +53,95 @@ export function useGetCurrentSession(props) {
 			if (!result.session) {
 				return {
 					status: CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED,
-					data: { session: null, user: null },
-					update,
+					data: INITIAL_INVALID_DATA,
 				};
+			}
+
+			/** @param {Partial<SessionWithUser['user']>} user */
+			async function updateUserSession(user) {
+				// const queryClient = getQueryClient({});
+				queryClient.setQueryData(
+					getCurrentSessionQueryKey,
+					/**
+					 * @param {ClientUserSession | null} prev
+					 * @returns {ClientUserSession}
+					 */
+					(prev) => {
+						if (!prev) {
+							return {
+								status: CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED,
+								data: INITIAL_INVALID_DATA,
+							};
+						}
+
+						if (prev.status !== CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED) {
+							return prev;
+						}
+
+						return {
+							...prev,
+							data: {
+								...prev.data,
+								user: {
+									...prev.data.user,
+									...user,
+								},
+							},
+						};
+					},
+				);
+
+				await refetch();
 			}
 
 			return {
 				status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
 				data: result,
-				update,
+				update: updateUserSession,
 			};
 		},
 		refetchOnWindowFocus: true,
 		refetchOnReconnect: true,
-		/** @type {ClientAuthenticatedUserSession|ClientUnauthenticatedUserSession|undefined} */
-		placeholderData: props?.data?.user && {
-			status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
-			data: props.data,
-			update,
-		},
+		// /** @type {ClientAuthenticatedUserSession|ClientUnauthenticatedUserSession|undefined} */
+		// placeholderData: props?.data?.user && {
+		// 	status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
+		// 	data: /** @type {import("@de100/auth/types").ValidSessionResult} */ (props.data),
+		// 	update: updateUserSession,
+		// },
 	});
 
-	if (props?.required) {
-		if (query.data?.status === CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED) {
-			// eslint-disable-next-line react-compiler/react-compiler
-			window.location.href = "/auth/login";
-			throw new Error("Redirecting to login...");
+	const data = query.data;
+	const refetch = query.refetch;
+
+	const res = useMemo(() => {
+		if (props?.required) {
+			if (data?.status === CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED) {
+				// eslint-disable-next-line react-compiler/react-compiler
+				window.location.href = "/auth/login";
+				throw new Error("Redirecting to login...");
+			}
+			console.log(
+				data ?? {
+					status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
+					data: INITIAL_INVALID_DATA,
+				},
+			);
+
+			return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ (
+				data ?? {
+					status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
+					data: INITIAL_INVALID_DATA,
+				}
+			);
 		}
 
 		return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ (
-			query.data ?? {
+			data ?? {
 				status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
-				data: { session: null, user: null },
-				update,
+				data: INITIAL_INVALID_DATA,
 			}
 		);
-	}
+	}, [props?.required, data]);
 
-	return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ (
-		query.data ?? {
-			status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
-			data: { session: null, user: null },
-			update,
-		}
-	);
+	return res;
 }
