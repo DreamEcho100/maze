@@ -7,12 +7,12 @@ import { Input } from "@de100/ui/components/input";
 import { Label } from "@de100/ui/components/label";
 import { toast } from "@de100/ui/components/sonner";
 
-import { authClient } from "#client/libs/auth-client";
+import { useGetCurrentSession } from "#client/libs/auth/hooks/get-current-session";
 import Loader from "./loader";
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
 	const router = useRouter();
-	const { isPending } = authClient.useSession();
+	const { status } = useGetCurrentSession();
 
 	const form = useForm({
 		defaultValues: {
@@ -20,21 +20,21 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 			password: "",
 		},
 		onSubmit: async ({ value }) => {
-			await authClient.signIn.email(
-				{
-					email: value.email,
-					password: value.password,
-				},
-				{
-					onSuccess: () => {
-						router.push("/dashboard");
-						toast.success("Sign in successful");
-					},
-					onError: (error) => {
-						toast.error(error.error.message);
-					},
-				},
-			);
+			// await authClient.signIn.email(
+			// 	{
+			// 		email: value.email,
+			// 		password: value.password,
+			// 	},
+			// 	{
+			// 		onSuccess: () => {
+			// 			router.push("/dashboard");
+			// 			toast.success("Sign in successful");
+			// 		},
+			// 		onError: (error) => {
+			// 			toast.error(error.error.message);
+			// 		},
+			// 	},
+			// );
 		},
 		validators: {
 			onSubmit: z.object({
@@ -44,7 +44,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 		},
 	});
 
-	if (isPending) {
+	if (status === "PENDING") {
 		return <Loader />;
 	}
 
@@ -58,8 +58,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 					e.stopPropagation();
 					void form.handleSubmit();
 				}}
-				className="space-y-4"
-			>
+				className="space-y-4">
 				<div>
 					<form.Field name="email">
 						{(field) => (
@@ -111,8 +110,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
-						>
+							disabled={!state.canSubmit || state.isSubmitting}>
 							{state.isSubmitting ? "Submitting..." : "Sign In"}
 						</Button>
 					)}
@@ -123,8 +121,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 				<Button
 					variant="link"
 					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800"
-				>
+					className="text-indigo-600 hover:text-indigo-800">
 					Need an account? Sign Up
 				</Button>
 			</div>

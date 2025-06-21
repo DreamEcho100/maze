@@ -4,7 +4,7 @@
  */
 import { Geist, Geist_Mono } from "next/font/google";
 
-import "#client/index.css";
+import "#client/styles/globals.css";
 
 import { notFound } from "next/navigation";
 

@@ -16,12 +16,12 @@ export default function Dashboard() {
 	const privateData = useQuery(orpc.privateData.queryOptions());
 
 	useEffect(() => {
-		if (status !== "INITIAL_LOADING") {
+		if (status !== "PENDING") {
 			router.push("/login");
 		}
 	}, [router, session, status]);
 
-	if (status === "INITIAL_LOADING") {
+	if (status === "PENDING") {
 		return <div>Loading...</div>;
 	}
 

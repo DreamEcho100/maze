@@ -35,11 +35,8 @@ export async function resolveAuthSessionService(props) {
 	if (!input.success) {
 		return RESOLVE_AUTH_SESSION_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
+	const { session } = await getCurrentAuthSession(await generateGetCurrentAuthSessionProps(props));
 
-	console.log("___ verifyEmailUserService session, user", session, user);
 	if (!session) return RESOLVE_AUTH_SESSION_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	const [userAgent, ipAddress] = await Promise.all([

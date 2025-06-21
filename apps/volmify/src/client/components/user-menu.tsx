@@ -12,17 +12,17 @@ import {
 } from "@de100/ui/components/dropdown-menu";
 import { Skeleton } from "@de100/ui/components/skeleton";
 
-import { authClient } from "#client/libs/auth-client";
+import { useGetCurrentSession } from "#client/libs/auth/hooks/get-current-session";
 
 export default function UserMenu() {
 	const router = useRouter();
-	const { data: session, isPending } = authClient.useSession();
+	const { data: session, status } = useGetCurrentSession();
 
-	if (isPending) {
+	if (status === "PENDING") {
 		return <Skeleton className="h-9 w-24" />;
 	}
 
-	if (!session) {
+	if (status === "UNAUTHENTICATED") {
 		return (
 			<Button variant="outline" asChild>
 				<Link href="/login">Sign In</Link>
@@ -44,16 +44,15 @@ export default function UserMenu() {
 						variant="destructive"
 						className="w-full"
 						onClick={() => {
-							// eslint-disable-next-line @typescript-eslint/no-floating-promises
-							authClient.signOut({
-								fetchOptions: {
-									onSuccess: () => {
-										router.push("/");
-									},
-								},
-							});
-						}}
-					>
+							// // eslint-disable-next-line @typescript-eslint/no-floating-promises
+							// authClient.signOut({
+							// 	fetchOptions: {
+							// 		onSuccess: () => {
+							// 			router.push("/");
+							// 		},
+							// 	},
+							// });
+						}}>
 						Sign Out
 					</Button>
 				</DropdownMenuItem>

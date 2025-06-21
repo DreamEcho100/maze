@@ -12,7 +12,7 @@ import { getCurrentSession } from "../../../../server/libs/auth/get-current-sess
 export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
 	AUTHENTICATED: "AUTHENTICATED",
 	UNAUTHENTICATED: "UNAUTHENTICATED",
-	INITIAL_LOADING: "INITIAL_LOADING",
+	PENDING: "PENDING",
 });
 
 /**
@@ -26,7 +26,7 @@ export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
  *
  * @typedef {Utils & { data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
  * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
- * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["INITIAL_LOADING"] }} ClientInitialLoadingUserSession
+ * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["PENDING"] }} ClientInitialLoadingUserSession
  *
  * @typedef {ClientAuthenticatedUserSession
  * 	| ClientUnauthenticatedUserSession
@@ -84,7 +84,7 @@ export function useGetCurrentSession(props) {
 							return prev;
 						}
 
-						return {
+						return /** @type {ClientUserSession} */ ({
 							...prev,
 							data: {
 								...prev.data,
@@ -93,7 +93,7 @@ export function useGetCurrentSession(props) {
 									...user,
 								},
 							},
-						};
+						});
 					},
 				);
 
@@ -130,14 +130,14 @@ export function useGetCurrentSession(props) {
 			}
 			console.log(
 				data ?? {
-					status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
+					status: CLIENT_CURRENT_SESSION_STATUS.PENDING,
 					data: INITIAL_INVALID_DATA,
 				},
 			);
 
 			return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ (
 				data ?? {
-					status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
+					status: CLIENT_CURRENT_SESSION_STATUS.PENDING,
 					data: INITIAL_INVALID_DATA,
 				}
 			);
@@ -145,7 +145,7 @@ export function useGetCurrentSession(props) {
 
 		return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ (
 			data ?? {
-				status: CLIENT_CURRENT_SESSION_STATUS.INITIAL_LOADING,
+				status: CLIENT_CURRENT_SESSION_STATUS.PENDING,
 				data: INITIAL_INVALID_DATA,
 			}
 		);
