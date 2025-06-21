@@ -32,7 +32,7 @@ export function SignUpForm() {
 			<br />
 			<label htmlFor="form-signup.enable-2fa">Enable 2FA</label>
 			<input type="checkbox" id="form-signup.enable-2fa" name="enable_2fa" />
-			<button>Continue</button>
+			<button type="submit">Continue</button>
 			<p>{state.message}</p>
 		</form>
 	);

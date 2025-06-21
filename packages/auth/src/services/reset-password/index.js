@@ -20,12 +20,7 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * @param {AuthProvidersWithGetSessionUtils & {
  * 	authProviders: AuthProvidersWithGetSessionProviders<{
  * 		sessions: {
- * 			createOne: SessionsProvider['createOne'];
  * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
- * 		};
- *		jwt?: {
-	 * 			createRefreshToken: JWTProvider['createRefreshToken'];
- * 			createAccessToken?: JWTProvider['createAccessToken']
  * 		};
  * 		users: {
  * 			updateOnePassword: UsersProvider['updateOnePassword'];
@@ -59,17 +54,15 @@ export async function resetPasswordService(props) {
 
 	const { password } = input.data;
 
-	const { session: passwordResetSession } = await validatePasswordResetSessionRequest(
-		props.cookies,
-		{
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: props.authProviders.passwordResetSession.deleteOne,
-					findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
-				},
+	const { session: passwordResetSession } = await validatePasswordResetSessionRequest({
+		cookies: props.cookies,
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: props.authProviders.passwordResetSession.deleteOne,
+				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
 			},
 		},
-	);
+	});
 
 	if (!passwordResetSession) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;

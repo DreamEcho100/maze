@@ -37,6 +37,7 @@ export default async function AuthTwoFactorSetUpPage() {
 					width: "200px",
 					height: "200px",
 				}}
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
 				dangerouslySetInnerHTML={{ __html: qrcode }}></div>
 			<TwoFactorSetUpForm encodedTOTPKey={encodedTOTPKey} />
 		</>

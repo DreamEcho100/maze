@@ -17,7 +17,7 @@ export function TwoFactorResetForm() {
 			<label htmlFor="form-totp.code">Recovery code</label>
 			<input id="form-totp.code" name="code" required />
 			<br />
-			<button>Verify</button>
+			<button type="submit">Verify</button>
 			<p>{state.message ?? ""}</p>
 		</form>
 	);

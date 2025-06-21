@@ -44,7 +44,8 @@ export async function verifyPasswordReset2FAViaRecoveryCodeService(props) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest(props.cookies, {
+	const { session, user } = await validatePasswordResetSessionRequest({
+		cookies: props.cookies,
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,

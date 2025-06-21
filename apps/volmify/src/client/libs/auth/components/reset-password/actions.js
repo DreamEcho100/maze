@@ -3,9 +3,8 @@
 import { resetPasswordService } from "@de100/auth/services/reset-password";
 
 import { redirect } from "#i18n/server";
+import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
-	authStrategy,
-	createOneSession,
 	deleteAllPasswordResetSessionsByUserId,
 	deleteAllSessionsByUserId,
 	deleteOnePasswordResetSession,
@@ -13,7 +12,6 @@ import {
 	updateOneUserPassword,
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
-import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
  * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
@@ -24,24 +22,23 @@ import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics
  */
 export async function resetPasswordAction(_prev, formData) {
 	const result = await db.transaction(async (tx) =>
-		resetPasswordService({
-			...(await getSessionOptionsBasics()),
-			tx,
-			input: { password: formData.get("password") },
-			authStrategy,
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: deleteOnePasswordResetSession,
-					findOneWithUser: findOnePasswordResetSessionWithUser,
-					deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+		resetPasswordService(
+			await generateGetCurrentAuthSessionProps({
+				tx,
+				input: { password: formData.get("password") },
+				authProviders: {
+					passwordResetSession: {
+						deleteOne: deleteOnePasswordResetSession,
+						findOneWithUser: findOnePasswordResetSessionWithUser,
+						deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+					},
+					sessions: {
+						deleteAllByUserId: deleteAllSessionsByUserId,
+					},
+					users: { updateOnePassword: updateOneUserPassword },
 				},
-				sessions: {
-					createOne: createOneSession,
-					deleteAllByUserId: deleteAllSessionsByUserId,
-				},
-				users: { updateOnePassword: updateOneUserPassword },
-			},
-		}),
+			}),
+		),
 	);
 
 	if (result.type === "success") {

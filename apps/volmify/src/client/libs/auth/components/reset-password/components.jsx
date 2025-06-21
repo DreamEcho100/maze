@@ -24,7 +24,7 @@ export function PasswordResetForm() {
 				required
 			/>
 			<br />
-			<button>Reset password</button>
+			<button type="submit">Reset password</button>
 			<p>{state.message}</p>
 		</form>
 	);

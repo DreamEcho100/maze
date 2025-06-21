@@ -16,7 +16,7 @@ export function EmailVerificationForm() {
 		<form action={action}>
 			<label htmlFor="form-verify.code">Code</label>
 			<input id="form-verify.code" name="code" required />
-			<button>Verify</button>
+			<button type="submit">Verify</button>
 			<p>{state.message}</p>
 		</form>
 	);
@@ -34,7 +34,7 @@ export function ResendEmailVerificationCodeForm() {
 	);
 	return (
 		<form action={action}>
-			<button>Resend code</button>
+			<button type="submit">Resend code</button>
 			<p>{state.message}</p>
 		</form>
 	);

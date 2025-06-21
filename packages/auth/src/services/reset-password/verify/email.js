@@ -45,7 +45,8 @@ export async function verifyPasswordResetEmailVerificationService(props) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
 
-	const { session, user } = await validatePasswordResetSessionRequest(props.cookies, {
+	const { session, user } = await validatePasswordResetSessionRequest({
+		cookies: props.cookies,
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,

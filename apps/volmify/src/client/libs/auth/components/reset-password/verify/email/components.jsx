@@ -17,7 +17,7 @@ export function PasswordResetEmailVerificationForm() {
 		<form action={action}>
 			<label htmlFor="form-verify.code">Code</label>
 			<input id="form-verify.code" name="code" required />
-			<button>verify</button>
+			<button type="submit">verify</button>
 			<p>{state.message}</p>
 		</form>
 	);

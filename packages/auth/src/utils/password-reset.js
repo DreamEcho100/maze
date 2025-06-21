@@ -91,8 +91,8 @@ export async function validatePasswordResetSessionToken(token, ctx) {
 }
 
 /**
- * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  * @param {object} ctx
+ * @param {CookiesProvider} ctx.cookies - The cookies provider to access the session token cookie.
  * @param {{
  * 	passwordResetSession: {
  * 		findOneWithUser: PasswordResetSessionsProvider['findOneWithUser'];
@@ -101,11 +101,11 @@ export async function validatePasswordResetSessionToken(token, ctx) {
  * }} ctx.authProviders
  * @returns {Promise<PasswordResetSessionValidationResult>}
  */
-export async function validatePasswordResetSessionRequest(cookies, ctx) {
-	const token = cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
+export async function validatePasswordResetSessionRequest(ctx) {
+	const token = ctx.cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
 	if (!token) return { session: null, user: null };
 	const result = await validatePasswordResetSessionToken(token, ctx);
-	if (!result.session) deletePasswordResetSessionTokenCookie(cookies);
+	if (!result.session) deletePasswordResetSessionTokenCookie(ctx.cookies);
 	return result;
 }
 

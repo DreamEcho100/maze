@@ -18,7 +18,7 @@ export function ForgotPasswordForm() {
 			<label htmlFor="form-forgot.email">Email</label>
 			<input type="email" id="form-forgot.email" name="email" required />
 			<br />
-			<button>Send</button>
+			<button type="submit">Send</button>
 			<p>{state.message}</p>
 		</form>
 	);

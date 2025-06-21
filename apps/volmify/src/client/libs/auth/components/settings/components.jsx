@@ -38,7 +38,7 @@ export function UpdatePasswordForm() {
 				required
 			/>
 			<br />
-			<button>Update</button>
+			<button type="submit">Update</button>
 			<p>{state.message}</p>
 		</form>
 	);
@@ -57,7 +57,7 @@ export function UpdateEmailForm() {
 			<label htmlFor="form-email.email">New email</label>
 			<input type="email" id="form-email.email" name="email" required />
 			<br />
-			<button>Update</button>
+			<button type="submit">Update</button>
 			<p>{state.message}</p>
 		</form>
 	);
@@ -77,7 +77,10 @@ export function UpdateToggleIsTwoFactorEnabledForm(props) {
 
 	return (
 		<form action={action}>
-			<button name="is_two_factor_enabled" value={props.twoFactorEnabledAt ? "off" : "on"}>
+			<button
+				type="button"
+				name="is_two_factor_enabled"
+				value={props.twoFactorEnabledAt ? "off" : "on"}>
 				Toggle two-factor authentication (currently{" "}
 				{props.twoFactorEnabledAt ? "enabled" : "disabled"})
 			</button>
@@ -94,13 +97,13 @@ export function RecoveryCodeSection(props) {
 			<h1>Recovery code</h1>
 			<p>Your recovery code is: {recoveryCode}</p>
 			<button
+				type="button"
 				onClick={async () => {
 					const result = await regenerateRecoveryCodeAction();
 					if (result.type === "success") {
 						setRecoveryCode(result.data.recoveryCode);
 					}
-				}}
-			>
+				}}>
 				Generate new code
 			</button>
 		</section>

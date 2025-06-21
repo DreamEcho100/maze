@@ -19,7 +19,7 @@ export function TwoFactorSetUpForm(props) {
 			<label htmlFor="form-totp.code">Verify the code from the app</label>
 			<input id="form-totp.code" name="code" required />
 			<br />
-			<button>Save</button>
+			<button type="submit">Save</button>
 			<p>{state.message}</p>
 		</form>
 	);

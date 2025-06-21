@@ -18,7 +18,7 @@ export function TwoFactorVerificationForm() {
 			<label htmlFor="form-totp.code">Code</label>
 			<input id="form-totp.code" name="code" autoComplete="one-time-code" required />
 			<br />
-			<button>Verify</button>
+			<button type="submit">Verify</button>
 			<p>{state.message}</p>
 		</form>
 	);

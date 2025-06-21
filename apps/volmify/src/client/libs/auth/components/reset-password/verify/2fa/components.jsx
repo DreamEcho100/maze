@@ -24,7 +24,7 @@ export function PasswordResetTOTPForm() {
 			<label htmlFor="form-totp.code">Code</label>
 			<input id="form-totp.code" name="code" required />
 			<br />
-			<button>Verify</button>
+			<button type="submit">Verify</button>
 			<p>{state.message}</p>
 		</form>
 	);
@@ -47,7 +47,7 @@ export function PasswordResetRecoveryCodeForm() {
 			<input id="form-recovery-code.code" name="code" required />
 			<br />
 			<br />
-			<button>Verify</button>
+			<button type="submit">Verify</button>
 			<p>{state.message}</p>
 		</form>
 	);

@@ -9,7 +9,8 @@ import { getCookies } from "#server/libs/get-cookies";
 import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";
 
 export default async function AuthPasswordReset2FAVerificationPage() {
-	const { session, user } = await validatePasswordResetSessionRequest(await getCookies(), {
+	const { session, user } = await validatePasswordResetSessionRequest({
+		cookies: await getCookies(),
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: deleteOnePasswordResetSession,
