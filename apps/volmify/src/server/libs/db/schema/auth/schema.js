@@ -3,7 +3,7 @@
 import { index, jsonb, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 import { bytea } from "../_utils/bytea.js";
-import { createdAt, deletedAt, id, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/helpers.js";
 
 export const user = table(
 	"user",
@@ -13,7 +13,7 @@ export const user = table(
 		updatedAt,
 		deletedAt,
 		lastLoginAt: timestamp("last_login_at", { precision: 3 }),
-		name: varchar("name", { length: 100 }).notNull().unique("uq_user_name"),
+		name: name.notNull().unique("uq_user_name"),
 		displayName: varchar("display_name", { length: 100 }),
 		email: varchar("email", { length: 256 }).notNull().unique("uq_user_email"),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),

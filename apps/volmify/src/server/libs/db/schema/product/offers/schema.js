@@ -285,7 +285,7 @@ export const promotionDiscount = table(
 		discountId: text("discount_id")
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
+		createdAt,
 	},
 	(t) => [uniqueIndex("uq_promotion_discount").on(t.promotionId, t.discountId)],
 );

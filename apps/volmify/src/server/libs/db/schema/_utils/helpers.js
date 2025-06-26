@@ -5,7 +5,7 @@ const createId = ulid;
 
 export const id = text("id").primaryKey().notNull().$default(createId);
 export const name = varchar("name", { length: 100 }).notNull();
-export const slug = varchar("slug", { length: 100 }).notNull().unique();
+export const slug = varchar("slug", { length: 100 }).notNull();
 export const createdAt = timestamp("created_at", { precision: 3 }).notNull().defaultNow();
 export const updatedAt = timestamp("updated_at", { precision: 3 });
 export const deletedAt = timestamp("deleted_at", { precision: 3 });

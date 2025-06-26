@@ -10,7 +10,7 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
 import { currency, market } from "../currency-and-market/schema.js";
 import { organization, pricingZone } from "../organization/schema.js";
 import { discount } from "./offers/schema.js";
@@ -34,7 +34,7 @@ export const product = table(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
-		slug: varchar("slug", { length: 128 }).notNull(),
+		slug: slug.notNull(),
 		title: varchar("title", { length: 256 }).notNull(),
 		description: text("description"),
 		status: productStatusEnum("status").default("draft").notNull(),

@@ -16,7 +16,7 @@ export const currency = table(
 	"currency",
 	{
 		code: text("code").primaryKey(), // ISO 4217 code
-		name,
+		name: name.notNull(),
 		symbol: text("symbol").notNull(),
 		numericCode: text("numeric_code"), // ISO 4217 numeric code (e.g., "840" for USD)
 		minorUnit: integer("minor_unit").notNull().default(2), // decimal places
@@ -40,7 +40,7 @@ export const market = table(
 	{
 		id,
 		organizationId: text("organization_id").references(() => organization.id), // null for global markets
-		name, // e.g., "Global", "US Market"
+		name: name.notNull(), // e.g., "Global", "US Market"
 		slug, // for URLs
 		currencyCode: text("currency_code")
 			.notNull()
@@ -90,7 +90,7 @@ export const marketTranslation = table(
 			.references(() => market.id, { onDelete: "cascade" }),
 		organizationId: text("organization_id").references(() => organization.id), // null for global markets
 		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
-		name,
+		name: name.notNull(),
 		description: text("description"),
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
@@ -110,7 +110,7 @@ export const country = table(
 		isoCode: text("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
 		isoCode3: text("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3 (e.g., "USA")
 		numericCode: text("numeric_code").notNull(), // ISO 3166-1 numeric
-		name: text("name").notNull(),
+		name: name.notNull(),
 		nativeName: text("native_name"),
 		currencyCode: text("currency_code")
 			.notNull()
@@ -155,7 +155,7 @@ export const exchangeRate = table(
 		validFrom: timestamp("valid_from").notNull(),
 		validTo: timestamp("valid_to"),
 		deletedAt,
-		createdAt: timestamp("created_at").defaultNow().notNull(),
+		createdAt,
 		precision: integer("precision").default(2),
 		rateType: text("rate_type"), // mid-market, retail, cash, etc
 	},

@@ -12,7 +12,7 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { user } from "../auth/schema.js";
 import { country, currency, market } from "../currency-and-market/schema.js";
 import { systemPermission } from "../system/schema.js";
@@ -32,8 +32,8 @@ export const organization = table(
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
-		name: varchar("name", { length: 100 }).notNull().unique("uq_organization_name"),
-		slug: varchar("slug", { length: 100 }).notNull().unique("uq_organization_slug"),
+		name: name.notNull().unique("uq_organization_name"),
+		slug: slug.notNull().unique("uq_organization_slug"),
 		logo: varchar("logo", { length: 2096 }),
 		metadata:
 			/** @type {ReturnType<typeof organizationMetadataJsonb.$type<Record<string, any>>>} */ (
@@ -63,7 +63,7 @@ export const organizationTeam = table(
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
-		name: varchar("name", { length: 100 }).notNull(),
+		name: name.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -154,7 +154,7 @@ export const organizationPermissionsGroup = table(
 		updatedAt,
 		deletedAt,
 		createdBy: text("created_by").references(() => user.id), // It's nullable since it's seeded at first
-		name: varchar("name", { length: 100 }).notNull(),
+		name: name.notNull(),
 		description: varchar("description", { length: 256 }),
 		organizationId: text("organization_id")
 			.notNull()
@@ -290,7 +290,7 @@ export const organizationMarket = table(
 			.notNull()
 			.references(() => market.id),
 		isActive: boolean("is_active").default(true),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
+		createdAt,
 	},
 	(t) => [
 		primaryKey({ columns: [t.organizationId, t.marketId] }),
@@ -304,7 +304,7 @@ export const pricingZone = table(
 	{
 		id,
 		organizationId: text("organization_id").references(() => organization.id),
-		name: text("name").notNull(),
+		name: name.notNull(),
 		description: text("description"),
 		currencyCode: text("currency_code")
 			.notNull()
@@ -312,7 +312,7 @@ export const pricingZone = table(
 		taxRate: decimal("tax_rate", { precision: 5, scale: 4 }),
 		isActive: boolean("is_active").default(true),
 		priority: integer("priority").default(0),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
+		createdAt,
 	},
 	(t) => [
 		index("idx_pricing_zone_organization").on(t.organizationId),
