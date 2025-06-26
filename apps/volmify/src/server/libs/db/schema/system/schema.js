@@ -13,6 +13,7 @@ export const systemPermissionCategory = table(
 	(table) => [
 		index("idx_system_permission_category_created_at").on(table.createdAt),
 		index("idx_system_permission_category_name").on(table.name),
+		index("idx_system_permission_category_name_lookup").on(table.name), // For fast lookups
 	],
 );
 export const systemPermission = table(
@@ -29,5 +30,6 @@ export const systemPermission = table(
 	(table) => [
 		index("idx_system_permission_created_at").on(table.createdAt),
 		index("idx_system_permission_name").on(table.name),
+		index("idx_system_permission_category").on(table.categoryId),
 	],
 );

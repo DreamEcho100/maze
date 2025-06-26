@@ -237,15 +237,23 @@ export const organizationMemberInvitation = table(
 	],
 );
 
-export const organizationLocale = table("organization_locale", {
-	organizationId: text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"
-	isDefault: boolean("is_default").default(false),
-	isActive: boolean("is_active").default(true),
-	createdAt,
-});
+export const organizationLocale = table(
+	"organization_locale",
+	{
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"
+		isDefault: boolean("is_default").default(false),
+		isActive: boolean("is_active").default(true),
+		createdAt,
+	},
+	(t) => [
+		primaryKey({ columns: [t.organizationId, t.locale] }),
+		index("idx_org_locale_default").on(t.organizationId, t.isDefault),
+		index("idx_org_locale_active").on(t.organizationId, t.isActive),
+	],
+);
 
 // Organization-specific currency settings
 export const organizationCurrencySettings = table(
@@ -284,7 +292,10 @@ export const organizationMarket = table(
 		isActive: boolean("is_active").default(true),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(t) => [primaryKey({ columns: [t.organizationId, t.marketId] })],
+	(t) => [
+		primaryKey({ columns: [t.organizationId, t.marketId] }),
+		index("idx_org_market_active").on(t.organizationId, t.isActive),
+	],
 );
 
 // Geo-location based pricing zones
@@ -303,7 +314,13 @@ export const pricingZone = table(
 		priority: integer("priority").default(0),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-	(t) => [index("idx_pricing_zone_organization").on(t.organizationId)],
+	(t) => [
+		index("idx_pricing_zone_organization").on(t.organizationId),
+		index("idx_pricing_zone_currency").on(t.currencyCode),
+		index("idx_pricing_zone_active").on(t.isActive),
+		index("idx_pricing_zone_priority").on(t.priority),
+		index("idx_pricing_zone_name").on(t.name),
+	],
 );
 
 // Countries in pricing zones

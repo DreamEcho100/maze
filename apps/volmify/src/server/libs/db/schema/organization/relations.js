@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { user } from "../auth/schema";
 import { country, currency, market } from "../currency-and-market/schema";
+import { productZonePrice } from "../product/schema";
 import { systemPermission } from "../system/schema";
 import {
 	organization,

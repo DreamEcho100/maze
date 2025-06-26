@@ -12,31 +12,54 @@ import {
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { organization } from "../organization/schema.js";
 
-export const currency = table("currency", {
-	code: text("code").primaryKey(), // ISO 4217 code
-	name,
-	symbol: text("symbol").notNull(),
-	numericCode: text("numeric_code"), // ISO 4217 numeric code (e.g., "840" for USD)
-	minorUnit: integer("minor_unit").notNull().default(2), // decimal places
-	deletedAt,
-	createdAt,
-	updatedAt,
-});
+export const currency = table(
+	"currency",
+	{
+		code: text("code").primaryKey(), // ISO 4217 code
+		name,
+		symbol: text("symbol").notNull(),
+		numericCode: text("numeric_code"), // ISO 4217 numeric code (e.g., "840" for USD)
+		minorUnit: integer("minor_unit").notNull().default(2), // decimal places
+		isActive: boolean("is_active").default(true),
+		deletedAt,
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index("idx_currency_name").on(t.name),
+		index("idx_currency_symbol").on(t.symbol),
+		index("idx_currency_active").on(t.isActive),
+		index("idx_currency_deleted_at").on(t.deletedAt),
+		index("idx_currency_created_at").on(t.createdAt),
+		index("idx_currency_updated_at").on(t.updatedAt),
+	],
+);
 
-export const market = table("market", {
-	id,
-	organizationId: text("organization_id").references(() => organization.id), // null for global markets
-	name, // e.g., "Global", "US Market"
-	slug, // for URLs
-	currencyCode: text("currency_code")
-		.notNull()
-		.references(() => currency.code),
-	defaultLocale: text("default_locale").notNull(),
-	priority: integer("priority").default(0), // for ordering
-	deletedAt,
-	createdAt,
-	updatedAt,
-});
+export const market = table(
+	"market",
+	{
+		id,
+		organizationId: text("organization_id").references(() => organization.id), // null for global markets
+		name, // e.g., "Global", "US Market"
+		slug, // for URLs
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+		defaultLocale: text("default_locale").notNull(),
+		priority: integer("priority").default(0), // for ordering
+		deletedAt,
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index("idx_market_organization").on(t.organizationId),
+		index("idx_market_currency").on(t.currencyCode),
+		index("idx_market_locale").on(t.defaultLocale),
+		index("idx_market_priority").on(t.priority),
+		index("idx_market_deleted_at").on(t.deletedAt),
+		uniqueIndex("uq_market_org_slug").on(t.organizationId, t.slug), // Ensure unique slug per org
+	],
+);
 
 // Market-Country relationship (many-to-many)
 export const marketCountry = table(
@@ -72,7 +95,11 @@ export const marketTranslation = table(
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
 	},
-	(t) => [uniqueIndex("uq_market_translation_unique").on(t.marketId, t.locale)],
+	(t) => [
+		uniqueIndex("uq_market_translation_unique").on(t.marketId, t.locale),
+		index("idx_market_translation_organization").on(t.organizationId),
+		index("idx_market_translation_locale").on(t.locale),
+	],
 );
 
 // Enhanced country with more details
@@ -102,7 +129,14 @@ export const country = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => [index("idx_country_iso").on(t.isoCode), index("idx_country_currency").on(t.currencyCode)],
+	(t) => [
+		index("idx_country_iso").on(t.isoCode),
+		index("idx_country_currency").on(t.currencyCode),
+		index("idx_country_name").on(t.name),
+		index("idx_country_active").on(t.isActive),
+		index("idx_country_continent").on(t.continent),
+		index("idx_country_region").on(t.region),
+	],
 );
 
 // Enhanced exchange rates with historical tracking
@@ -126,7 +160,17 @@ export const exchangeRate = table(
 		rateType: text("rate_type"), // mid-market, retail, cash, etc
 	},
 	(t) => [
+		uniqueIndex("uq_exchange_rate_period").on(
+			t.baseCurrency,
+			t.targetCurrency,
+			t.validFrom,
+			t.source,
+		),
 		index("idx_exchange_rate_currencies").on(t.baseCurrency, t.targetCurrency),
 		index("idx_exchange_rate_date").on(t.validFrom, t.validTo),
+		index("idx_exchange_rate_active_date").on(t.validFrom, t.validTo, t.deletedAt),
+		index("idx_exchange_rate_source").on(t.source),
+		index("idx_exchange_rate_type").on(t.rateType),
+		index("idx_exchange_rate_deleted_at").on(t.deletedAt),
 	],
 );

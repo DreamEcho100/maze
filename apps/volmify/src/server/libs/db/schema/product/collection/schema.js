@@ -1,4 +1,4 @@
-import { primaryKey, text } from "drizzle-orm/pg-core";
+import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers.js";
 import { organization } from "../../organization/schema.js";
@@ -8,19 +8,28 @@ import { product } from "../schema.js";
 // -------------------------------------
 // COLLECTIONS
 // -------------------------------------
-export const collection = table("collection", {
-	id,
-	organizationId: text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	name: text("name").notNull(),
-	slug: text("slug").notNull().unique(),
-	description: text("description"),
-	image: text("image"),
-	deletedAt,
-	createdAt,
-	updatedAt,
-});
+export const collection = table(
+	"collection",
+	{
+		id,
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		name: text("name").notNull(),
+		slug: text("slug").notNull(),
+		description: text("description"),
+		image: text("image"),
+		deletedAt,
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index("idx_collection_organization").on(t.organizationId),
+		index("idx_collection_deleted_at").on(t.deletedAt),
+		index("idx_collection_name").on(t.name),
+		uniqueIndex("uq_collection_slug_org").on(t.organizationId, t.slug), // ✅ Per-org unique
+	],
+);
 export const productCollection = table(
 	"product_collection",
 	{

@@ -5,6 +5,7 @@ import {
 	organizationCurrencySettings,
 	organizationMarket,
 	pricingZone,
+	pricingZoneCountry,
 } from "../organization/schema.js";
 import { discount, giftCard } from "../product/offers/schema.js";
 import { productPrice, productZonePrice } from "../product/schema.js";

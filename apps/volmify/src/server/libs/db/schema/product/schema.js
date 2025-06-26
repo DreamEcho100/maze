@@ -48,6 +48,11 @@ export const product = table(
 	(t) => [
 		index("idx_product_organization").on(t.organizationId),
 		uniqueIndex("uq_product_slug_org").on(t.organizationId, t.slug),
+		index("idx_product_status").on(t.status),
+		index("idx_product_type").on(t.type),
+		index("idx_product_deleted_at").on(t.deletedAt),
+		index("idx_product_created_at").on(t.createdAt),
+		index("idx_product_status_type").on(t.status, t.type),
 	],
 );
 
@@ -68,7 +73,11 @@ export const productTranslation = table(
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
 	},
-	(t) => [uniqueIndex("uq_product_translation_locale").on(t.productId, t.locale)],
+	(t) => [
+		index("idx_product_translation_product").on(t.productId),
+		index("idx_product_translation_locale").on(t.locale),
+		uniqueIndex("uq_product_translation_product_locale").on(t.productId, t.locale),
+	],
 );
 
 // -------------------------------------
@@ -90,8 +99,9 @@ export const productVariant = table(
 		updatedAt,
 	},
 	(t) => [
+		uniqueIndex("uq_product_variant_sku_org").on(t.productId, t.sku),
 		index("idx_product_variant_product_id").on(t.productId),
-		uniqueIndex("uq_product_variant_sku").on(t.sku),
+		index("idx_product_variant_price").on(t.price), // For price-based queries
 	],
 );
 
@@ -102,6 +112,7 @@ export const productVariant = table(
 export const productPrice = table(
 	"product_price",
 	{
+		id,
 		productId: text("product_id")
 			.references(() => product.id, { onDelete: "cascade" })
 			.notNull(),
@@ -119,7 +130,18 @@ export const productPrice = table(
 		endsAt: timestamp("ends_at"),
 		createdAt,
 	},
-	(t) => [primaryKey({ columns: [t.variantId, t.currencyCode, t.marketId] })],
+	(t) => [
+		uniqueIndex("uq_product_price_variant_market_currency").on(
+			t.variantId,
+			t.marketId,
+			t.currencyCode,
+		),
+		index("idx_product_price_product").on(t.productId),
+		index("idx_product_price_market").on(t.marketId),
+		index("idx_product_price_currency").on(t.currencyCode),
+		index("idx_product_price_dates").on(t.startsAt, t.endsAt),
+		index("idx_product_price_active").on(t.startsAt, t.endsAt, t.currencyCode), // For active price lookups
+	],
 );
 
 // -------------------------------------
@@ -137,7 +159,12 @@ export const productZonePrice = table(
 		compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
 		createdAt,
 	},
-	(t) => [primaryKey({ columns: [t.variantId, t.zoneId, t.currencyCode] })],
+	(t) => [
+		primaryKey({ columns: [t.variantId, t.zoneId, t.currencyCode] }),
+		index("idx_product_zone_price_product").on(t.productId),
+		index("idx_product_zone_price_zone").on(t.zoneId),
+		index("idx_product_zone_price_currency").on(t.currencyCode),
+	],
 );
 
 // Join Tables for Product/Variant-Discounts
