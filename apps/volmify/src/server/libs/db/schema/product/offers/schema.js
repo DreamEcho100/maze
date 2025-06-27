@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -75,11 +76,18 @@ export const discountTranslation = table(
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
-
+		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
 	},
-	(t) => [uniqueIndex("uq_discount_translation").on(t.discountId, t.locale)],
+	(t) => [
+		uniqueIndex("uq_discount_translation").on(t.discountId, t.locale),
+		uniqueIndex("uq_discount_translation_default")
+			.on(t.discountId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_discount_translation_locale").on(t.locale),
+		index("idx_discount_translation_default").on(t.isDefault),
+	],
 );
 
 // 👥 discount_usage (track who used wha
@@ -145,10 +153,18 @@ export const couponTranslation = table(
 			.notNull()
 			.references(() => coupon.id, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
+		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
 	},
-	(t) => [uniqueIndex("uq_coupon_translation").on(t.couponId, t.locale)],
+	(t) => [
+		uniqueIndex("uq_coupon_translation").on(t.couponId, t.locale),
+		uniqueIndex("uq_coupon_translation_default")
+			.on(t.couponId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_coupon_translation_locale").on(t.locale),
+		index("idx_coupon_translation_default").on(t.isDefault),
+	],
 );
 
 // 🎁 gift_card
@@ -199,11 +215,18 @@ export const giftCardTranslation = table(
 			.notNull()
 			.references(() => giftCard.id, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
-
+		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
 	},
-	(t) => [uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.locale)],
+	(t) => [
+		uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.locale),
+		uniqueIndex("uq_gift_card_translation_default")
+			.on(t.giftCardId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_gift_card_translation_locale").on(t.locale),
+		index("idx_gift_card_translation_default").on(t.isDefault),
+	],
 );
 
 // 🏷️ gift_card_usage (track who used what)
@@ -265,13 +288,20 @@ export const promotionTranslation = table(
 			.notNull()
 			.references(() => promotion.id, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
-
+		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
 	},
-	(t) => [uniqueIndex("uq_promotion_translation").on(t.promotionId, t.locale)],
+	(t) => [
+		uniqueIndex("uq_promotion_translation").on(t.promotionId, t.locale),
+		uniqueIndex("uq_promotion_translation_default")
+			.on(t.promotionId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_promotion_translation_locale").on(t.locale),
+		index("idx_promotion_translation_default").on(t.isDefault),
+	],
 );
 
 // 🔗 promotion_discount  (link discounts to promotions)

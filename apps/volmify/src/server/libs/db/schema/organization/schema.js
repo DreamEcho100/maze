@@ -1,3 +1,4 @@
+import { eq, isNotNull } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -14,7 +15,7 @@ import {
 
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { user } from "../auth/schema.js";
-import { country, currency, market } from "../currency-and-market/schema.js";
+import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 
 export const memberBaseRoleEnum = pgEnum("member_base_role", [
@@ -246,11 +247,16 @@ export const organizationLocale = table(
 		locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"
 		isDefault: boolean("is_default").default(false),
 		isActive: boolean("is_active").default(true),
+		dateFormat: text("date_format").default("MM/DD/YYYY"),
+		timeFormat: text("time_format").default("12h"),
+		weekStart: integer("week_start").default(0), // 0 = Sunday
 		createdAt,
 	},
 	(t) => [
 		primaryKey({ columns: [t.organizationId, t.locale] }),
-		index("idx_org_locale_default").on(t.organizationId, t.isDefault),
+		uniqueIndex("uq_org_default_locale")
+			.on(t.organizationId, t.isDefault)
+			.where(eq(t.isDefault, true)),
 		index("idx_org_locale_active").on(t.organizationId, t.isActive),
 	],
 );
@@ -275,26 +281,90 @@ export const organizationCurrencySettings = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.organizationId, t.currencyCode] }),
-		index("idx_organization_currency_default").on(t.organizationId, t.isDefault),
+		uniqueIndex("uq_organization_currency_default")
+			.on(t.organizationId, t.isDefault)
+			.where(eq(t.isDefault, true)),
 	],
 );
 
-// Organizations choose which markets they operate in
 export const organizationMarket = table(
 	"organization_market",
 	{
+		id,
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
-		marketId: text("market_id")
+		templateId: text("template_id").references(() => marketTemplate.id), // nullable
+		isCustom: boolean("is_custom").default(false),
+		name, // ✅ Should be nullable for template fallback
+		slug, // ✅ Should be nullable for template fallback
+		currencyCode: text("currency_code").references(() => currency.code),
+		defaultLocale: text("default_locale"),
+		priority: integer("priority").default(0), // for ordering
+		deletedAt,
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index("idx_organization_market_organization").on(t.organizationId),
+		index("idx_organization_market_currency").on(t.currencyCode),
+		index("idx_organization_market_locale").on(t.defaultLocale),
+		index("idx_organization_market_priority").on(t.priority),
+		index("idx_organization_market_deleted_at").on(t.deletedAt),
+		// Unique slug per organization when slug exists
+		uniqueIndex("uq_organization_market_org_slug")
+			.on(t.organizationId, t.slug)
+			.where(isNotNull(t.slug)),
+		index("idx_organization_market_template_custom").on(t.templateId, t.isCustom),
+	],
+);
+
+// Market-Country relationship (many-to-many)
+export const organizationMarketCountry = table(
+	"organization_market_country",
+	{
+		organizationMarketId: text("organization_market_id")
 			.notNull()
-			.references(() => market.id),
-		isActive: boolean("is_active").default(true),
+			.references(() => organizationMarket.id, { onDelete: "cascade" }),
+		countryId: text("country_id")
+			.notNull()
+			.references(() => country.id, { onDelete: "cascade" }),
+		isDefault: boolean("is_default").default(false),
 		createdAt,
 	},
 	(t) => [
-		primaryKey({ columns: [t.organizationId, t.marketId] }),
-		index("idx_org_market_active").on(t.organizationId, t.isActive),
+		primaryKey({ columns: [t.organizationMarketId, t.countryId] }),
+		uniqueIndex("uq_organization_market_country_default")
+			.on(t.organizationMarketId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+	],
+);
+
+// Market localization
+export const organizationMarketTranslation = table(
+	"organization_market_translation",
+	{
+		id,
+		organizationMarketId: text("organization_market_id")
+			.notNull()
+			.references(() => organizationMarket.id, { onDelete: "cascade" }),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id), // null for global organizationMarkets
+		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
+		isDefault: boolean("is_default").default(false),
+		name: name.notNull(),
+		description: text("description"),
+		seoTitle: text("seo_title"),
+		seoDescription: text("seo_description"),
+	},
+	(t) => [
+		uniqueIndex("uq_organization_market_translation_unique").on(t.organizationMarketId, t.locale),
+		uniqueIndex("uq_organization_market_translation_default")
+			.on(t.organizationMarketId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_organization_market_translation_organization").on(t.organizationId),
+		index("idx_organization_market_translation_locale").on(t.locale),
 	],
 );
 

@@ -1,14 +1,16 @@
 import { relations } from "drizzle-orm";
 
-import { user } from "../auth/schema";
-import { country, currency, market } from "../currency-and-market/schema";
-import { productZonePrice } from "../product/schema";
-import { systemPermission } from "../system/schema";
+import { user } from "../auth/schema.js";
+import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
+import { productZonePrice } from "../product/schema.js";
+import { systemPermission } from "../system/schema.js";
 import {
 	organization,
 	organizationCurrencySettings,
 	organizationLocale,
 	organizationMarket,
+	organizationMarketCountry,
+	organizationMarketTranslation,
 	organizationMember,
 	organizationMemberInvitation,
 	organizationMemberPermissionsGroup,
@@ -18,7 +20,7 @@ import {
 	organizationTeam,
 	pricingZone,
 	pricingZoneCountry,
-} from "./schema";
+} from "./schema.js";
 
 export const organizationRelations = relations(organization, ({ many }) => ({
 	members: many(organizationMember),
@@ -140,16 +142,52 @@ export const organizationCurrencySettingsRelations = relations(
 	}),
 );
 
-export const organizationMarketRelations = relations(organizationMarket, ({ one }) => ({
+// Organization Market Relations
+export const organizationMarketRelations = relations(organizationMarket, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [organizationMarket.organizationId],
 		references: [organization.id],
 	}),
-	market: one(market, {
-		fields: [organizationMarket.marketId],
-		references: [market.id],
+	template: one(marketTemplate, {
+		fields: [organizationMarket.templateId],
+		references: [marketTemplate.id],
 	}),
+	currency: one(currency, {
+		fields: [organizationMarket.currencyCode],
+		references: [currency.code],
+	}),
+	countries: many(organizationMarketCountry),
+	translations: many(organizationMarketTranslation),
+	productPrices: many(productPrice),
 }));
+
+export const organizationMarketCountryRelations = relations(
+	organizationMarketCountry,
+	({ one }) => ({
+		organizationMarket: one(organizationMarket, {
+			fields: [organizationMarketCountry.organizationMarketId],
+			references: [organizationMarket.id],
+		}),
+		country: one(country, {
+			fields: [organizationMarketCountry.countryId],
+			references: [country.id],
+		}),
+	}),
+);
+
+export const organizationMarketTranslationRelations = relations(
+	organizationMarketTranslation,
+	({ one }) => ({
+		organizationMarket: one(organizationMarket, {
+			fields: [organizationMarketTranslation.organizationMarketId],
+			references: [organizationMarket.id],
+		}),
+		organization: one(organization, {
+			fields: [organizationMarketTranslation.organizationId],
+			references: [organization.id],
+		}),
+	}),
+);
 
 export const pricingZoneRelations = relations(pricingZone, ({ one, many }) => ({
 	organization: one(organization, {

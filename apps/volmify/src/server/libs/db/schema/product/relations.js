@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 
-import { currency, market } from "../currency-and-market/schema.js";
-import { organization, pricingZone } from "../organization/schema.js";
+import { currency } from "../currency-and-market/schema.js";
+import { organization, organizationMarket, pricingZone } from "../organization/schema.js";
 import { productCollection } from "./collection/schema.js";
 import { discount } from "./offers/schema.js";
 import {
@@ -53,9 +53,9 @@ export const productPriceRelations = relations(productPrice, ({ one }) => ({
 		fields: [productPrice.variantId],
 		references: [productVariant.id],
 	}),
-	market: one(market, {
+	market: one(organizationMarket, {
 		fields: [productPrice.marketId],
-		references: [market.id],
+		references: [organizationMarket.id],
 	}),
 	currency: one(currency, {
 		fields: [productPrice.currencyCode],

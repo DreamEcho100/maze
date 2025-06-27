@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -10,7 +11,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
-import { organization } from "../organization/schema.js";
 
 export const currency = table(
 	"currency",
@@ -32,73 +32,6 @@ export const currency = table(
 		index("idx_currency_deleted_at").on(t.deletedAt),
 		index("idx_currency_created_at").on(t.createdAt),
 		index("idx_currency_updated_at").on(t.updatedAt),
-	],
-);
-
-export const market = table(
-	"market",
-	{
-		id,
-		organizationId: text("organization_id").references(() => organization.id), // null for global markets
-		name: name.notNull(), // e.g., "Global", "US Market"
-		slug, // for URLs
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
-		defaultLocale: text("default_locale").notNull(),
-		priority: integer("priority").default(0), // for ordering
-		deletedAt,
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		index("idx_market_organization").on(t.organizationId),
-		index("idx_market_currency").on(t.currencyCode),
-		index("idx_market_locale").on(t.defaultLocale),
-		index("idx_market_priority").on(t.priority),
-		index("idx_market_deleted_at").on(t.deletedAt),
-		uniqueIndex("uq_market_org_slug").on(t.organizationId, t.slug), // Ensure unique slug per org
-	],
-);
-
-// Market-Country relationship (many-to-many)
-export const marketCountry = table(
-	"market_country",
-	{
-		marketId: text("market_id")
-			.notNull()
-			.references(() => market.id, { onDelete: "cascade" }),
-		countryId: text("country_id")
-			.notNull()
-			.references(() => country.id, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
-	},
-	(t) => [
-		primaryKey({ columns: [t.marketId, t.countryId] }),
-		index("idx_market_country_default").on(t.isDefault),
-	],
-);
-
-// Market localization
-export const marketTranslation = table(
-	"market_translation",
-	{
-		id,
-		marketId: text("market_id")
-			.notNull()
-			.references(() => market.id, { onDelete: "cascade" }),
-		organizationId: text("organization_id").references(() => organization.id), // null for global markets
-		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
-		name: name.notNull(),
-		description: text("description"),
-		seoTitle: text("seo_title"),
-		seoDescription: text("seo_description"),
-	},
-	(t) => [
-		uniqueIndex("uq_market_translation_unique").on(t.marketId, t.locale),
-		index("idx_market_translation_organization").on(t.organizationId),
-		index("idx_market_translation_locale").on(t.locale),
 	],
 );
 
@@ -172,5 +105,73 @@ export const exchangeRate = table(
 		index("idx_exchange_rate_source").on(t.source),
 		index("idx_exchange_rate_type").on(t.rateType),
 		index("idx_exchange_rate_deleted_at").on(t.deletedAt),
+	],
+);
+
+export const marketTemplate = table(
+	"market_template",
+	{
+		id,
+		name: name.notNull(), // e.g., "Global", "US Market"
+		description: text("description"),
+		slug, // for URLs
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+		defaultLocale: text("default_locale").notNull(),
+		deletedAt,
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index("idx_market_template_slug").on(t.slug),
+		index("idx_market_template_currency").on(t.currencyCode),
+		index("idx_market_template_locale").on(t.defaultLocale),
+		index("idx_market_template_deleted_at").on(t.deletedAt),
+	],
+);
+
+// Market-Country relationship (many-to-many)
+export const marketTemplateCountry = table(
+	"market_template_country",
+	{
+		marketTemplateId: text("market_template_id")
+			.notNull()
+			.references(() => marketTemplate.id, { onDelete: "cascade" }),
+		countryId: text("country_id")
+			.notNull()
+			.references(() => country.id, { onDelete: "cascade" }),
+		isDefault: boolean("is_default").default(false),
+		createdAt,
+	},
+	(t) => [
+		primaryKey({ columns: [t.marketTemplateId, t.countryId] }),
+		uniqueIndex("uq_market_template_country_default")
+			.on(t.marketTemplateId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+	],
+);
+
+// Market localization
+export const marketTemplateTranslation = table(
+	"market_template_translation",
+	{
+		id,
+		marketTemplateId: text("market_template_id")
+			.notNull()
+			.references(() => marketTemplate.id, { onDelete: "cascade" }),
+		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
+		isDefault: boolean("is_default").default(false),
+		name: name.notNull(),
+		description: text("description"),
+		seoTitle: text("seo_title"),
+		seoDescription: text("seo_description"),
+	},
+	(t) => [
+		uniqueIndex("uq_market_template_translation_unique").on(t.marketTemplateId, t.locale),
+		uniqueIndex("uq_market_template_translation_default")
+			.on(t.marketTemplateId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_market_template_translation_locale").on(t.locale),
 	],
 );

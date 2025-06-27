@@ -1,4 +1,6 @@
+import { eq, isNotNull, isNull } from "drizzle-orm";
 import {
+	boolean,
 	decimal,
 	index,
 	jsonb,
@@ -11,8 +13,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
-import { currency, market } from "../currency-and-market/schema.js";
-import { organization, pricingZone } from "../organization/schema.js";
+import { currency } from "../currency-and-market/schema.js";
+import { organization, organizationMarket, pricingZone } from "../organization/schema.js";
 import { discount } from "./offers/schema.js";
 
 // -------------------------------------
@@ -68,15 +70,19 @@ export const productTranslation = table(
 			.notNull()
 			.references(() => product.id, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
+		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
 	},
 	(t) => [
+		uniqueIndex("uq_product_translation_product_locale").on(t.productId, t.locale),
+		uniqueIndex("uq_product_translation_default")
+			.on(t.productId, t.isDefault)
+			.where(eq(t.isDefault, true)),
 		index("idx_product_translation_product").on(t.productId),
 		index("idx_product_translation_locale").on(t.locale),
-		uniqueIndex("uq_product_translation_product_locale").on(t.productId, t.locale),
 	],
 );
 
@@ -119,7 +125,7 @@ export const productPrice = table(
 		variantId: text("variant_id")
 			.references(() => productVariant.id, { onDelete: "cascade" })
 			.notNull(),
-		marketId: text("market_id").references(() => market.id),
+		marketId: text("market_id").references(() => organizationMarket.id),
 		currencyCode: text("currency_code")
 			.references(() => currency.code)
 			.notNull(),
@@ -131,11 +137,14 @@ export const productPrice = table(
 		createdAt,
 	},
 	(t) => [
-		uniqueIndex("uq_product_price_variant_market_currency").on(
-			t.variantId,
-			t.marketId,
-			t.currencyCode,
-		),
+		// Use conditional unique index or handle nulls properly
+		uniqueIndex("uq_product_price_variant_market_currency")
+			.on(t.variantId, t.marketId, t.currencyCode)
+			.where(isNotNull(t.marketId)),
+		// Separate unique index for global pricing (null market)
+		uniqueIndex("uq_product_price_variant_global_currency")
+			.on(t.variantId, t.currencyCode)
+			.where(isNull(t.marketId)),
 		index("idx_product_price_product").on(t.productId),
 		index("idx_product_price_market").on(t.marketId),
 		index("idx_product_price_currency").on(t.currencyCode),

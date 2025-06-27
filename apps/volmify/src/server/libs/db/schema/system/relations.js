@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 
-import { organizationPermissionsGroupPermission } from "../organization/schema";
-import { systemPermission, systemPermissionCategory } from "./schema";
+import { organizationPermissionsGroupPermission } from "../organization/schema.js";
+import { systemPermission, systemPermissionCategory } from "./schema.js";
 
 export const systemPermissionCategoryRelations = relations(
 	systemPermissionCategory,
