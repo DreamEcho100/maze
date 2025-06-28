@@ -24,6 +24,7 @@ export async function invalidateOneAuthSessionToken(props) {
 		deleteAuthTokenCookies({
 			authStrategy: props.authStrategy,
 			cookies: props.cookies,
+			cookiesOptions: props.cookiesOptions,
 		});
 	}
 

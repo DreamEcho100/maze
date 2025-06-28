@@ -1,4 +1,4 @@
-/** @import { EmailVerificationRequest, CookiesProvider, UserEmailVerificationRequestsProvider } from "#types.ts"; */
+/** @import { EmailVerificationRequest, CookiesProvider, UserEmailVerificationRequestsProvider, DynamicCookiesOptions } from "#types.ts"; */
 
 import { encodeBase32 } from "@oslojs/encoding";
 
@@ -66,17 +66,20 @@ export async function sendVerificationEmail(email, code) {
 
 /**
  * Set the email verification request cookie.
- * @param {EmailVerificationRequest} request - The email verification request.
- * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
+ * @param {object} props
+ * @param {EmailVerificationRequest} props.request - The email verification request.
+ * @param {CookiesProvider} props.cookies - The cookies provider to set the cookie.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - The options for the cookies.
  */
-export function setEmailVerificationRequestCookie(request, cookies) {
-	cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, request.id, {
-		httpOnly: true,
-		path: "/",
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
-		expires: request.expiresAt,
-	});
+export function setEmailVerificationRequestCookie(props) {
+	const cookiesOptions = {
+		...defaultEmailVerificationRequestCookieOptions,
+		expires: props.request.expiresAt,
+		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST === "function"
+			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST({ expiresAt: props.request.expiresAt })
+			: props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST),
+	};
+	props.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, props.request.id, cookiesOptions);
 }
 
 /**
@@ -87,43 +90,53 @@ export function getEmailVerificationRequestCookie(cookies) {
 	return cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY);
 }
 
+const defaultEmailVerificationRequestCookieOptions = {
+	httpOnly: true,
+	path: "/",
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "lax",
+};
+
 /**
  * Delete the email verification request cookie.
- * @param {CookiesProvider} cookies - The cookies provider to set the cookie.
+ * @param {object} props
+ * @param {CookiesProvider} props.cookies - The cookies provider to set the cookie.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - The options for the cookies.
  */
-export function deleteEmailVerificationRequestCookie(cookies) {
-	cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", {
-		httpOnly: true,
-		path: "/",
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
+export function deleteEmailVerificationRequestCookie(props) {
+	const cookiesOptions = {
+		...defaultEmailVerificationRequestCookieOptions,
 		maxAge: 0,
-	});
+		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST === "function"
+			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST()
+			: props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST),
+	};
+	props.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, "", cookiesOptions);
 }
 
 /**
  * Get the email verification request from the request.
- * @param {string} userId
- * @param {object} ctx
- * @param {CookiesProvider} ctx.cookies - The cookies provider to set the cookie.
- * @param {{ userEmailVerificationRequests: { findOneByIdAndUserId: UserEmailVerificationRequestsProvider['findOneByIdAndUserId'] }}} ctx.authProviders
+ * @param {object} props
+ * @param {string} props.userId
+ * @param {CookiesProvider} props.cookies - The cookies provider to set the cookie.
+ * @param {DynamicCookiesOptions} props.cookiesOptions - The options for the cookies.
+ * @param {{ userEmailVerificationRequests: { findOneByIdAndUserId: UserEmailVerificationRequestsProvider['findOneByIdAndUserId'] }}} props.authProviders
  * @returns {Promise<EmailVerificationRequest | null>} The email verification request, or null if not found.
  */
-export async function getUserEmailVerificationRequestFromRequest(userId, ctx) {
-	const id = getEmailVerificationRequestCookie(ctx.cookies) ?? null;
+export async function getUserEmailVerificationRequestFromRequest(props) {
+	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
 
-	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 	if (!id) return null;
 
-	const request = await ctx.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
-		userId,
+	const request = await props.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
+		props.userId,
 		id,
 	);
-	console.log("____ getUserEmailVerificationRequestFromRequest request", request);
-	console.log("____ getUserEmailVerificationRequestFromRequest !request", !request);
-	if (!request) deleteEmailVerificationRequestCookie(ctx.cookies);
-	console.log("____ getUserEmailVerificationRequestFromRequest request", request);
-	console.log("____ getUserEmailVerificationRequestFromRequest !request", !request);
+	if (!request)
+		deleteEmailVerificationRequestCookie({
+			cookies: props.cookies,
+			cookiesOptions: props.cookiesOptions,
+		});
 	return request;
 }
 

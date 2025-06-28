@@ -1,5 +1,5 @@
 /**
- * @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider } from "#types.ts"
+ * @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DynamicCookiesOptions } from "#types.ts"
  * @import { CreateRefreshTokenResult } from "./generate-refresh-token.js";
  */
 
@@ -15,6 +15,7 @@ import { generateRefreshToken } from "./generate-refresh-token";
  * @param {SessionMetadata} props.metadata - Optional IP address for the session
  * @param {any} [props.tx]
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
+ * @param {DynamicCookiesOptions} props.cookiesOptions
  * @param {UserAgent|null|undefined} props.userAgent - User agent for the session
  * @param {() => string} [props.generateRandomId] - Function to create a unique ID synchronously, if available.
  * @param {AuthStrategy} props.authStrategy
@@ -77,6 +78,7 @@ export async function createOneAuthSession(props) {
 					refreshTokenExpiresAt: result.session.expiresAt,
 					authStrategy: props.authStrategy,
 					cookies: props.cookies,
+					cookiesOptions: props.cookiesOptions,
 				});
 			}
 
@@ -111,6 +113,7 @@ export async function createOneAuthSession(props) {
 					...generateAccessTokenResult,
 					authStrategy: props.authStrategy,
 					cookies: props.cookies,
+					cookiesOptions: props.cookiesOptions,
 				});
 			}
 

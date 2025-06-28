@@ -69,6 +69,7 @@ export async function loginUserService(props) {
 		user,
 		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		userAgent: props.userAgent,
 		generateRandomId: props.generateRandomId,
 		authStrategy: props.authStrategy,

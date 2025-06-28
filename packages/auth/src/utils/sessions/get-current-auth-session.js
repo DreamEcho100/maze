@@ -135,6 +135,7 @@ export async function getCurrentAuthSession(props) {
 			deleteAuthTokenCookies({
 				authStrategy: props.authStrategy,
 				cookies: props.cookies,
+				cookiesOptions: props.cookiesOptions,
 			});
 		}
 		return {

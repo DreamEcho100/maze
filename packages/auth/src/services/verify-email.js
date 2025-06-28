@@ -58,8 +58,10 @@ export async function verifyEmailUserService(props) {
 	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
 	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id, {
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest({
+		userId: user.id,
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		authProviders: {
 			userEmailVerificationRequests: {
 				findOneByIdAndUserId:
@@ -86,7 +88,11 @@ export async function verifyEmailUserService(props) {
 		);
 
 		await sendVerificationEmail(newVerificationRequest.email, newVerificationRequest.code);
-		setEmailVerificationRequestCookie(newVerificationRequest, props.cookies);
+		setEmailVerificationRequestCookie({
+			request: newVerificationRequest,
+			cookies: props.cookies,
+			cookiesOptions: props.cookiesOptions,
+		});
 		return VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE;
 	}
 	if (verificationRequest.code !== input.data.code) {
@@ -109,7 +115,11 @@ export async function verifyEmailUserService(props) {
 		// Needs to refresh the tokens
 	]);
 
-	deleteEmailVerificationRequestCookie(props.cookies);
+	deleteEmailVerificationRequestCookie({
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+		W,
+	});
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {
 		// return redirect("/2fa/setup");

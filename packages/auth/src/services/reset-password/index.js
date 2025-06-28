@@ -111,10 +111,14 @@ export async function resetPasswordService(props) {
 			},
 		),
 	]);
-	deletePasswordResetSessionTokenCookie(props.cookies);
+	deletePasswordResetSessionTokenCookie({
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+	});
 
 	const newSession = await createAuthSession({
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		userAgent: getCurrentAuthSessionInput.userAgent,
 		generateRandomId: getCurrentAuthSessionInput.generateRandomId,
 		metadata: sessionInputBasicInfo,

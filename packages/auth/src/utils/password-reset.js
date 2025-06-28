@@ -1,4 +1,4 @@
-/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider } from "#types.ts"; */
+/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider, DynamicCookiesOptions } from "#types.ts"; */
 
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
@@ -109,33 +109,47 @@ export async function validatePasswordResetSessionRequest(ctx) {
 	return result;
 }
 
+const defaultPasswordResetSessionOptions = {
+	sameSite: "lax",
+	httpOnly: true,
+	path: "/",
+	secure: process.env.NODE_ENV === "production",
+};
+
 /**
- * @param {string} token - The token to be used to create the password reset session.
- * @param {DateLike} expiresAt - The date at which the password reset session expires.
- * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ * @param {object} props
+ * @param {string} props.token - The token to be used to create the password reset session.
+ * @param {DateLike} props.expiresAt - The date at which the password reset session expires.
+ * @param {CookiesProvider} props.cookies - The cookies provider to access the session token cookie.
+ * @param {DynamicCookiesOptions} props.cookiesOptions - The options for the cookies.
  */
-export function setPasswordResetSessionTokenCookie(token, expiresAt, cookies) {
-	cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, token, {
-		expires: dateLikeToDate(expiresAt),
-		sameSite: "lax",
-		httpOnly: true,
-		path: "/",
-		secure: process.env.NODE_ENV === "production",
-	});
+export function setPasswordResetSessionTokenCookie(props) {
+	const expiresAt = dateLikeToDate(props.expiresAt);
+	const cookiesOptions = {
+		...defaultPasswordResetSessionOptions,
+		expires: expiresAt,
+		...(typeof props.cookiesOptions.PASSWORD_RESET_SESSION === "function"
+			? props.cookiesOptions.PASSWORD_RESET_SESSION({ expiresAt })
+			: props.cookiesOptions.PASSWORD_RESET_SESSION),
+	};
+	props.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, props.token, cookiesOptions);
 }
 
 /**
  * @warning needs refactor to be able to work with mobile tablet devices
- * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
+ * @param {object} props
+ * @param {CookiesProvider} props.cookies - The cookies provider to access the session token cookie.
+ * @param {DynamicCookiesOptions} props.cookiesOptions - The options for the cookies.
  */
-export function deletePasswordResetSessionTokenCookie(cookies) {
-	cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", {
+export function deletePasswordResetSessionTokenCookie(props) {
+	const cookiesOptions = {
+		...defaultPasswordResetSessionOptions,
 		maxAge: 0,
-		sameSite: "lax",
-		httpOnly: true,
-		path: "/",
-		secure: process.env.NODE_ENV === "production",
-	});
+		...(typeof props.cookiesOptions.PASSWORD_RESET_SESSION === "function"
+			? props.cookiesOptions.PASSWORD_RESET_SESSION()
+			: props.cookiesOptions.PASSWORD_RESET_SESSION),
+	};
+	props.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", cookiesOptions);
 }
 
 /**

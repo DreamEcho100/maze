@@ -91,6 +91,7 @@ export async function updatePasswordService(props) {
 		user: user,
 		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		userAgent: getCurrentAuthSessionInput.userAgent,
 		authStrategy: props.authStrategy,
 		authProviders: {

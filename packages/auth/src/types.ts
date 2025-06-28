@@ -488,33 +488,29 @@ export interface UsersProvider {
 	) => Promise<User | null>;
 }
 
+export interface CookiesOptions {
+	expires?: DateLike;
+	maxAge?: number;
+	path?: string;
+	domain?: string;
+	secure?: boolean;
+	httpOnly?: boolean;
+	sameSite?: "lax" | "strict" | "none";
+}
+
 export interface CookiesProvider {
 	get: (name: string) => string | null | undefined;
-	set: (
-		name: string,
-		value: string,
-		options?: {
-			expires?: DateLike;
-			maxAge?: number;
-			path?: string;
-			domain?: string;
-			secure?: boolean;
-			httpOnly?: boolean;
-			sameSite?: "lax" | "strict" | "none";
-		},
-	) => void;
-	delete: (
-		name: string,
-		options?: {
-			expires?: DateLike;
-			maxAge?: number;
-			path?: string;
-			domain?: string;
-			secure?: boolean;
-			httpOnly?: boolean;
-			sameSite?: "lax" | "strict" | "none";
-		},
-	) => void;
+	set: (name: string, value: string, options?: CookiesOptions) => void;
+	delete: (name: string, options?: CookiesOptions) => void;
+}
+
+export interface DynamicCookiesOptions {
+	REFRESH_TOKEN?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
+	ACCESS_TOKEN?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
+	PASSWORD_RESET_SESSION?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
+	USER_EMAIL_VERIFICATION_REQUEST?:
+		| CookiesOptions
+		| ((props?: { expiresAt: Date }) => CookiesOptions);
 }
 
 export interface HeadersProvider {
@@ -828,6 +824,7 @@ export type AuthProvidersWithGetSessionProviders<
 export interface AuthProvidersWithGetSessionUtils {
 	authStrategy: AuthStrategy;
 	cookies: CookiesProvider;
+	cookiesOptions: DynamicCookiesOptions;
 	headers: HeadersProvider;
 	canMutateCookies: boolean;
 	generateRandomId: () => string;

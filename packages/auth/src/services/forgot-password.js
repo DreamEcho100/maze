@@ -69,11 +69,12 @@ export async function forgotPasswordService(props) {
 	]);
 
 	await sendPasswordResetEmail(passwordResetEmailSession.email, passwordResetEmailSession.code);
-	setPasswordResetSessionTokenCookie(
-		sessionToken,
-		passwordResetEmailSession.expiresAt,
-		props.cookies,
-	);
+	setPasswordResetSessionTokenCookie({
+		token: sessionToken,
+		expiresAt: passwordResetEmailSession.expiresAt,
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+	});
 
 	return {
 		...FORGET_PASSWORD_MESSAGES_SUCCESS.PASSWORD_RESET_EMAIL_SENT,

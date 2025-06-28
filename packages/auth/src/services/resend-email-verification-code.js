@@ -38,8 +38,10 @@ export async function resendEmailVerificationCodeService(props) {
 		return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	let verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id, {
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest({
+		userId: user.id,
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		authProviders: {
 			userEmailVerificationRequests: {
 				findOneByIdAndUserId:
@@ -81,7 +83,11 @@ export async function resendEmailVerificationCodeService(props) {
 	}
 
 	await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-	setEmailVerificationRequestCookie(verificationRequest, props.cookies);
+	setEmailVerificationRequestCookie({
+		request: verificationRequest,
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+	});
 
 	return RESEND_EMAIL_MESSAGES_SUCCESS.VERIFICATION_EMAIL_SENT;
 }

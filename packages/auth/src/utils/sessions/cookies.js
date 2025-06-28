@@ -1,37 +1,57 @@
-/** @import { AuthStrategy, CookiesProvider, DateLike } from "#types.ts"; */
+/** @import { AuthStrategy, CookiesProvider, DateLike, DynamicCookiesOptions } from "#types.ts"; */
+
+import { dateLikeToDate } from "#utils/dates.js";
 
 const accessTokenCookieName = "access_token";
 const refreshTokenCookieName = "refresh_token";
+
+const defaultRefreshTokenOptions = {
+	httpOnly: true,
+	sameSite: "lax",
+	secure: process.env.NODE_ENV === "production",
+	path: "/",
+};
+export const defaultAccessTokenOptions = {
+	httpOnly: true,
+	sameSite: "lax",
+	secure: process.env.NODE_ENV === "production",
+	path: "/",
+};
 
 /**
  * Delete JWT token cookies
  * @param {object} props
  * @param {AuthStrategy} props.authStrategy
  * @param {CookiesProvider} props.cookies
+ * @param {DynamicCookiesOptions} props.cookiesOptions
  */
 export function deleteAuthTokenCookies(props) {
-	props.cookies.set(refreshTokenCookieName, "", {
-		httpOnly: true,
-		sameSite: "lax",
-		secure: process.env.NODE_ENV === "production",
+	const refreshTokenCookieOptions = {
+		...defaultRefreshTokenOptions,
 		maxAge: 0,
-		path: "/",
-	});
+		...(typeof props.cookiesOptions.REFRESH_TOKEN === "function"
+			? props.cookiesOptions.REFRESH_TOKEN()
+			: props.cookiesOptions.REFRESH_TOKEN),
+	};
+
+	props.cookies.set(refreshTokenCookieName, "", refreshTokenCookieOptions);
 
 	if (props.authStrategy === "jwt") {
-		props.cookies.set(accessTokenCookieName, "", {
-			httpOnly: true,
-			sameSite: "lax",
-			secure: process.env.NODE_ENV === "production",
+		const accessTokenCookieOptions = {
+			...defaultAccessTokenOptions,
 			maxAge: 0,
-			path: "/",
-		});
+			...(typeof props.cookiesOptions.ACCESS_TOKEN === "function"
+				? props.cookiesOptions.ACCESS_TOKEN()
+				: props.cookiesOptions.ACCESS_TOKEN),
+		};
+		props.cookies.set(accessTokenCookieName, "", accessTokenCookieOptions);
 	}
 }
 /**
  * Set JWT token cookies (like setSessionTokenCookie)
  * @param {{
  * 	cookies: CookiesProvider;
+ * 	cookiesOptions: DynamicCookiesOptions;
  * } & ({
  * 	authStrategy: "session";
  * 	refreshToken: string;
@@ -45,24 +65,28 @@ export function deleteAuthTokenCookies(props) {
  * })} props
  */
 export function setAuthTokenCookies(props) {
+	const refreshTokenCookieExpiresAt = dateLikeToDate(props.refreshTokenExpiresAt);
+	const refreshTokenCookieOptions = {
+		...defaultRefreshTokenOptions,
+		expires: refreshTokenCookieExpiresAt,
+		...(typeof props.cookiesOptions.REFRESH_TOKEN === "function"
+			? props.cookiesOptions.REFRESH_TOKEN({ expiresAt: refreshTokenCookieExpiresAt })
+			: props.cookiesOptions.REFRESH_TOKEN),
+	};
 	// Set refresh token cookie (long-lived, httpOnly)
-	props.cookies.set(refreshTokenCookieName, props.refreshToken, {
-		httpOnly: true,
-		sameSite: "lax",
-		secure: process.env.NODE_ENV === "production",
-		expires: new Date(props.refreshTokenExpiresAt),
-		path: "/",
-	});
+	props.cookies.set(refreshTokenCookieName, props.refreshToken, refreshTokenCookieOptions);
 
 	if (props.authStrategy === "jwt") {
+		const accessTokenCookieExpiresAt = dateLikeToDate(props.accessTokenExpiresAt);
+		const accessTokenCookieOptions = {
+			...defaultAccessTokenOptions,
+			expires: accessTokenCookieExpiresAt,
+			...(typeof props.cookiesOptions.ACCESS_TOKEN === "function"
+				? props.cookiesOptions.ACCESS_TOKEN({ expiresAt: accessTokenCookieExpiresAt })
+				: props.cookiesOptions.ACCESS_TOKEN),
+		};
 		// Set access token cookie (short-lived)
-		props.cookies.set(accessTokenCookieName, props.accessToken, {
-			httpOnly: true,
-			sameSite: "lax",
-			secure: process.env.NODE_ENV === "production",
-			expires: new Date(props.accessTokenExpiresAt),
-			path: "/",
-		});
+		props.cookies.set(accessTokenCookieName, props.accessToken, accessTokenCookieOptions);
 	}
 }
 

@@ -17,6 +17,7 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  * @param {object} props - Options for the service.
  * @param {unknown} props.input
  * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {DynamicCookiesOptions} props.cookiesOptions
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session.
  * @param {AuthStrategy} props.authStrategy
@@ -75,7 +76,11 @@ export async function registerService(props) {
 		userEmailVerificationRequests.email,
 		userEmailVerificationRequests.code,
 	);
-	setEmailVerificationRequestCookie(userEmailVerificationRequests, props.cookies);
+	setEmailVerificationRequestCookie({
+		request: userEmailVerificationRequests,
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+	});
 
 	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
 	console.log("___ getUserEmailVerificationRequestFromRequest id", id);

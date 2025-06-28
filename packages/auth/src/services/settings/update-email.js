@@ -66,7 +66,11 @@ export async function updateEmailService(props) {
 		},
 	);
 	await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-	setEmailVerificationRequestCookie(verificationRequest, props.cookies);
+	setEmailVerificationRequestCookie({
+		request: verificationRequest,
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+	});
 
 	return UPDATE_EMAIL_MESSAGES_SUCCESS.VERIFICATION_EMAIL_SENT;
 }

@@ -1,4 +1,4 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput, ValidSessionResultMetadata } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput, ValidSessionResultMetadata, DynamicCookiesOptions } from "#types.ts" */
 
 import { z } from "zod/v4-mini";
 
@@ -223,6 +223,7 @@ async function regenerateRefreshAuthTokens(ctx) {
  * @param {boolean} [props.canMutateCookies=true] - Whether to set authentication cookies. Set to false for mobile/API-only usage.
  * @param {any} [props.tx] - Optional database transaction for atomic operations
  * @param {CookiesProvider} props.cookies - Cookie management interface for setting authentication cookies
+ * @param {DynamicCookiesOptions} props.cookiesConfig
  * @param {{
  * 	sessions: {
  * 		findOneWithUser: SessionsProvider['findOneWithUser'];
@@ -351,6 +352,7 @@ export async function resolveAuthSession(props) {
 					refreshTokenExpiresAt: generateAccessTokenResult.refreshTokenExpiresAt,
 					cookies: props.cookies,
 					authStrategy: props.authStrategy,
+					cookiesOptions: props.cookiesOptions,
 				});
 			}
 
@@ -373,6 +375,7 @@ export async function resolveAuthSession(props) {
 					refreshToken: newRefreshTokenDetails.token,
 					refreshTokenExpiresAt: newRefreshTokenDetails.expiresAt,
 					cookies: props.cookies,
+					cookiesOptions: props.cookiesOptions,
 				});
 			}
 

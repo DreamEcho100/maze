@@ -109,6 +109,7 @@ export async function resolveAuthSessionService(props) {
 		deleteAuthTokenCookies({
 			authStrategy: props.authStrategy,
 			cookies: props.cookies,
+			cookiesOptions: props.cookiesOptions,
 		});
 		return RESOLVE_AUTH_SESSION_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
