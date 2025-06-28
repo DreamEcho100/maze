@@ -614,7 +614,7 @@ export interface SessionsProvider {
 	 * @returns {Promise<DBSessionOutput | null>} The updated session
 	 * @description Used when 2FA is disabled or when security requires re-verification
 	 */
-	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<DBSessionOutput | null>;
+	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<number>;
 }
 
 export interface JWTRefreshTokenPayload {

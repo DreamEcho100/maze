@@ -24,9 +24,6 @@ export const user = table(
 		totpKey: bytea("totp_key"),
 		recoveryCode: bytea("recovery_code"),
 		twoFactorRegisteredAt: timestamp("two_factor_registered_at", { precision: 3 }),
-		// twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
-		// recoveryCodeUsedAt: timestamp("recovery_code_used_at", { precision: 3 }),
-		// recoveryCodeExpiresAt: timestamp("recovery_code_expires_at", { precision: 3 }),
 	},
 	(table) => [
 		index("idx_user_created_at").on(table.createdAt),
@@ -41,8 +38,7 @@ const userAgentJsonb = jsonb("user_agent_metadata");
 export const session = table(
 	"session",
 	{
-		id, // The hashed session ID or the hashed JWT refresh token
-		// id: text("id").primaryKey(), // ✅ sess_abc123 format
+		id,
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
 		createdAt,
 		updatedAt,
@@ -50,7 +46,6 @@ export const session = table(
 		lastVerifiedAt: timestamp("last_verified_at", { precision: 3 }).notNull(),
 		lastExtendedAt: timestamp("last_extended_at", { precision: 3 }),
 		ipAddress: varchar("ip_address", { length: 45 }),
-		// userAgent: varchar("user_agent", { length: 512 }),
 		userAgent: /** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (userAgentJsonb),
 		userId: text("user_id")
 			.notNull()
@@ -99,7 +94,7 @@ export const userEmailVerificationRequests = table(
 export const passwordResetSession = table(
 	"password_reset_session",
 	{
-		id: text("id").primaryKey().notNull(), // .$default(createId),
+		id: text("id").primaryKey().notNull(),
 		createdAt,
 		code: varchar("code", { length: 256 }).notNull().unique("uq_password_reset_session_code"),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
@@ -107,8 +102,6 @@ export const passwordResetSession = table(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		// isEmailVerified: boolean("is_email_verified").default(false),
-		// isTwoFactorVerified: boolean("is_two_factor_verified").default(false),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 	},
