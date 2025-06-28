@@ -121,14 +121,14 @@ const defaultPasswordResetSessionOptions = {
  * @param {string} props.token - The token to be used to create the password reset session.
  * @param {DateLike} props.expiresAt - The date at which the password reset session expires.
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token cookie.
- * @param {DynamicCookiesOptions} props.cookiesOptions - The options for the cookies.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - The options for the cookies.
  */
 export function setPasswordResetSessionTokenCookie(props) {
 	const expiresAt = dateLikeToDate(props.expiresAt);
 	const cookiesOptions = {
 		...defaultPasswordResetSessionOptions,
 		expires: expiresAt,
-		...(typeof props.cookiesOptions.PASSWORD_RESET_SESSION === "function"
+		...(typeof props.cookiesOptions?.PASSWORD_RESET_SESSION === "function"
 			? props.cookiesOptions.PASSWORD_RESET_SESSION({ expiresAt })
 			: props.cookiesOptions.PASSWORD_RESET_SESSION),
 	};
@@ -139,13 +139,13 @@ export function setPasswordResetSessionTokenCookie(props) {
  * @warning needs refactor to be able to work with mobile tablet devices
  * @param {object} props
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token cookie.
- * @param {DynamicCookiesOptions} props.cookiesOptions - The options for the cookies.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - The options for the cookies.
  */
 export function deletePasswordResetSessionTokenCookie(props) {
 	const cookiesOptions = {
 		...defaultPasswordResetSessionOptions,
 		maxAge: 0,
-		...(typeof props.cookiesOptions.PASSWORD_RESET_SESSION === "function"
+		...(typeof props.cookiesOptions?.PASSWORD_RESET_SESSION === "function"
 			? props.cookiesOptions.PASSWORD_RESET_SESSION()
 			: props.cookiesOptions.PASSWORD_RESET_SESSION),
 	};

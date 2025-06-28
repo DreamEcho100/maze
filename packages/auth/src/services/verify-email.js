@@ -118,7 +118,6 @@ export async function verifyEmailUserService(props) {
 	deleteEmailVerificationRequestCookie({
 		cookies: props.cookies,
 		cookiesOptions: props.cookiesOptions,
-		W,
 	});
 
 	if (user.twoFactorEnabledAt && !user.twoFactorRegisteredAt) {

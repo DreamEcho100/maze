@@ -53,7 +53,6 @@ export async function createEmailVerificationRequest(props, ctx) {
  * @param {string} email - The email address.
  * @param {string} code - The verification code.
  *
- * TODO: Add rate limiting for Volmify production:
  * - Max 3 emails per 10 minutes per email address
  * - Per-tenant rate limiting for enterprise customers
  * - IP-based rate limiting for additional security

@@ -23,13 +23,13 @@ export const defaultAccessTokenOptions = {
  * @param {object} props
  * @param {AuthStrategy} props.authStrategy
  * @param {CookiesProvider} props.cookies
- * @param {DynamicCookiesOptions} props.cookiesOptions
+ * @param {DynamicCookiesOptions} [props.cookiesOptions]
  */
 export function deleteAuthTokenCookies(props) {
 	const refreshTokenCookieOptions = {
 		...defaultRefreshTokenOptions,
 		maxAge: 0,
-		...(typeof props.cookiesOptions.REFRESH_TOKEN === "function"
+		...(typeof props.cookiesOptions?.REFRESH_TOKEN === "function"
 			? props.cookiesOptions.REFRESH_TOKEN()
 			: props.cookiesOptions.REFRESH_TOKEN),
 	};
@@ -40,7 +40,7 @@ export function deleteAuthTokenCookies(props) {
 		const accessTokenCookieOptions = {
 			...defaultAccessTokenOptions,
 			maxAge: 0,
-			...(typeof props.cookiesOptions.ACCESS_TOKEN === "function"
+			...(typeof props.cookiesOptions?.ACCESS_TOKEN === "function"
 				? props.cookiesOptions.ACCESS_TOKEN()
 				: props.cookiesOptions.ACCESS_TOKEN),
 		};
@@ -51,7 +51,7 @@ export function deleteAuthTokenCookies(props) {
  * Set JWT token cookies (like setSessionTokenCookie)
  * @param {{
  * 	cookies: CookiesProvider;
- * 	cookiesOptions: DynamicCookiesOptions;
+ * 	cookiesOptions?: DynamicCookiesOptions;
  * } & ({
  * 	authStrategy: "session";
  * 	refreshToken: string;
@@ -69,7 +69,7 @@ export function setAuthTokenCookies(props) {
 	const refreshTokenCookieOptions = {
 		...defaultRefreshTokenOptions,
 		expires: refreshTokenCookieExpiresAt,
-		...(typeof props.cookiesOptions.REFRESH_TOKEN === "function"
+		...(typeof props.cookiesOptions?.REFRESH_TOKEN === "function"
 			? props.cookiesOptions.REFRESH_TOKEN({ expiresAt: refreshTokenCookieExpiresAt })
 			: props.cookiesOptions.REFRESH_TOKEN),
 	};
@@ -81,7 +81,7 @@ export function setAuthTokenCookies(props) {
 		const accessTokenCookieOptions = {
 			...defaultAccessTokenOptions,
 			expires: accessTokenCookieExpiresAt,
-			...(typeof props.cookiesOptions.ACCESS_TOKEN === "function"
+			...(typeof props.cookiesOptions?.ACCESS_TOKEN === "function"
 				? props.cookiesOptions.ACCESS_TOKEN({ expiresAt: accessTokenCookieExpiresAt })
 				: props.cookiesOptions.ACCESS_TOKEN),
 		};
