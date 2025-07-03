@@ -1,9 +1,7 @@
 /** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
 import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
 import { setup2FAServiceInputSchema } from "#utils/validations.js";
 
@@ -34,12 +32,7 @@ export async function setup2FAService(props) {
 		return SETUP_2FA_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
-	if (!session) {
-		return SETUP_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-	}
+	const { session, user } = props;
 
 	if (!user.twoFactorEnabledAt) {
 		return SETUP_2FA_MESSAGES_ERRORS.TWO_FACTOR_NOT_ENABLED;

@@ -9,7 +9,7 @@ import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./compon
 
 export default async function AuthVerifyEmailPage() {
 	const { user } = await getCurrentSession({ canMutateCookies: false });
-	if (user === null) {
+	if (!user) {
 		return redirect("/auth/login");
 	}
 
@@ -25,7 +25,7 @@ export default async function AuthVerifyEmailPage() {
 			},
 		},
 	});
-	if (verificationRequest === null && user.emailVerifiedAt) {
+	if (!verificationRequest && user.emailVerifiedAt) {
 		return redirect("/");
 	}
 	return (

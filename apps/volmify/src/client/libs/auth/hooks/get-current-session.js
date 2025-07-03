@@ -1,9 +1,8 @@
 /** @import { ValidSessionResult, InvalidSessionResult } from "@de100/auth/types" */
 /** @import { SessionWithUser } from "@de100/auth/types";  */
 
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-
+import { useMemo } from "react";
 import { queryClient } from "#client/libs/orpc";
 import { extendCurrentSession } from "#server/libs/auth/extend-current-session";
 import { refreshCurrentSession } from "#server/libs/auth/refresh-current-session";
@@ -44,7 +43,7 @@ const INITIAL_INVALID_DATA = /** @type {InvalidSessionResult} */ ({
 
 /**
  * @template {true|undefined} [Required=undefined]
- * @param {{ data?: SessionWithUser | null; required?: Required }} [props]
+ * @param {{ authData?: ValidSessionResult | null; required?: Required }} [props]
  *
  * @returns {Required extends true ? RequiredClientUserSession : ClientUserSession}
  *
@@ -65,7 +64,6 @@ export function useGetCurrentSession(props) {
 
 			/** @param {Partial<SessionWithUser['user']>} user */
 			async function updateUser(user) {
-				// const queryClient = getQueryClient({});
 				queryClient.setQueryData(
 					getCurrentSessionQueryKey,
 					/**
@@ -113,7 +111,7 @@ export function useGetCurrentSession(props) {
 		// /** @type {ClientAuthenticatedUserSession|ClientUnauthenticatedUserSession|undefined} */
 		// placeholderData: props?.data?.user && {
 		// 	status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
-		// 	data: /** @type {import("@de100/auth/types").ValidSessionResult} */ (props.data),
+		// 	data: /** @type {import("@acme/auth/types").ValidSessionResult} */ (props.data),
 		// 	update: updateUserSession,
 		// },
 	});

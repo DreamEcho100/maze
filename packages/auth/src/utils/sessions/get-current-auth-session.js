@@ -44,7 +44,7 @@ function validateJWTAccessToken(token, ctx) {
 
 /**
  * Strategy-aware current session/auth retrieval (replaces getCurrentSession)
- * @param {Omit<AuthProvidersWithGetSessionUtils, 'ipAddress' | 'userAgent'> & {
+ * @param {Omit<AuthProvidersWithGetSessionUtils, 'ipAddress' | 'userAgent' | 'session' | 'user' | 'sessionMetadata' | 'tx'> & {
  * 	authProviders: AuthProvidersWithGetSessionProviders
  * 	ipAddress: string|null|undefined;
  * 	userAgent: UserAgent|null|undefined;
@@ -108,11 +108,12 @@ export async function getCurrentAuthSession(props) {
 	const result = await resolveAuthSession({
 		authStrategy: props.authStrategy,
 		refreshToken,
+		cookiesOptions: props.cookiesOptions,
 		shouldExtendRefreshAuthTokensOnNeed: !isDeviceMobileOrTablet,
 		canMutateCookies: props.canMutateCookies,
 		ipAddress,
 		userAgent,
-		tx: props.tx,
+		// tx: props.tx,
 		authProviders: {
 			sessions: {
 				findOneWithUser: props.authProviders.sessions.findOneWithUser,

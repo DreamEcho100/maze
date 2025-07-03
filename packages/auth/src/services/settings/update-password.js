@@ -4,9 +4,8 @@ import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
-import { createAuthSession, getCurrentAuthSession } from "#utils/sessions/index.js";
+import { createAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
 /**
@@ -14,6 +13,8 @@ import { updateUserPassword } from "#utils/users.js";
  * Handles updating a user's password, including validation and session management.
  *
  * @param {AuthProvidersWithGetSessionUtils & {
+ * 	ipAddress?: Exclude<AuthProvidersWithGetSessionUtils['ipAddress'], ((...props: any[]) => any)>;
+ *  userAgent?: Exclude<AuthProvidersWithGetSessionUtils['userAgent'], ((...props: any[]) => any)>;
  * 	authProviders: AuthProvidersWithGetSessionProviders<{
  * 		sessions: {
  * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
@@ -34,8 +35,7 @@ import { updateUserPassword } from "#utils/users.js";
  * >}
  */
 export async function updatePasswordService(props) {
-	const getCurrentAuthSessionInput = await generateGetCurrentAuthSessionProps(props);
-	const { session, user } = await getCurrentAuthSession(getCurrentAuthSessionInput);
+	const { session, user } = props;
 
 	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
@@ -79,8 +79,8 @@ export async function updatePasswordService(props) {
 
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: getCurrentAuthSessionInput.ipAddress ?? null,
-		userAgent: getCurrentAuthSessionInput.userAgent ?? null,
+		ipAddress: props.ipAddress ?? null,
+		userAgent: props.userAgent ?? null,
 		twoFactorVerifiedAt: session.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: session.metadata,
@@ -92,7 +92,7 @@ export async function updatePasswordService(props) {
 		metadata: sessionInputBasicInfo,
 		cookies: props.cookies,
 		cookiesOptions: props.cookiesOptions,
-		userAgent: getCurrentAuthSessionInput.userAgent,
+		userAgent: props.userAgent,
 		authStrategy: props.authStrategy,
 		authProviders: {
 			sessions: { createOne: props.authProviders.sessions.createOne },

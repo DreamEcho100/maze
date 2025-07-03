@@ -1,14 +1,18 @@
-/** @import { MultiErrorSingleSuccessResponse, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, AuthStrategy, CookiesProvider, DynamicCookiesOptions, ValidSessionResult } from "#types.ts" */
 
 import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/sessions/index.js";
+import { invalidateOneAuthSessionToken } from "#utils/sessions/index.js";
 
 /**
  * Handles logout by deleting the user session and clearing session cookies.
  *
- * @param {AuthProvidersWithGetSessionUtils & {
- * 	authProviders: AuthProvidersWithGetSessionProviders
+ * @param {{
+ * 	authProviders: { sessions: { revokeOneById: SessionsProvider['revokeOneById'] }; }
+ * 	shouldDeleteCookie?: boolean;
+ *  authStrategy: AuthStrategy;
+ * 	cookies: CookiesProvider;
+ * 	cookiesOptions?: DynamicCookiesOptions;
+ * 	session: ValidSessionResult["session"];
  * }} props
  * @returns {Promise<
  *  MultiErrorSingleSuccessResponse<
@@ -18,14 +22,18 @@ import { getCurrentAuthSession, invalidateOneAuthSessionToken } from "#utils/ses
  * >}
  */
 export async function logoutService(props) {
-	const getSessionInput = await generateGetCurrentAuthSessionProps(props);
-	const { session } = await getCurrentAuthSession(getSessionInput);
-	// TODO: Just delete the session cookie instead of invalidating the session
-	if (!session) {
-		return LOGOUT_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
-	}
-
-	await invalidateOneAuthSessionToken(getSessionInput);
+	await invalidateOneAuthSessionToken({
+		authProviders: {
+			sessions: {
+				revokeOneById: props.authProviders.sessions.revokeOneById,
+			},
+		},
+		authStrategy: props.authStrategy,
+		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
+		session: props.session,
+		shouldDeleteCookie: props.shouldDeleteCookie,
+	});
 
 	return LOGOUT_MESSAGES_SUCCESS.LOGOUT_SUCCESS;
 }

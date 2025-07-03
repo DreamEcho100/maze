@@ -1,54 +1,58 @@
 "use client";
-
-/** @import { ActionResult } from "./actions"; */
-import { useActionState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import {
 	verifyPasswordReset2FAWithRecoveryCodeAction,
 	verifyPasswordReset2FAWithTOTPAction,
 } from "./actions";
 
-/** @type {ActionResult} */
-const initialPasswordResetTOTPState = {
-	type: "idle",
-};
-
 export function PasswordResetTOTPForm() {
-	const [state, action] = useActionState(
-		verifyPasswordReset2FAWithTOTPAction,
-		initialPasswordResetTOTPState,
-	);
+	const mutation = useMutation({
+		mutationFn: verifyPasswordReset2FAWithTOTPAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ code: formData.get("code") });
+			}}
+		>
 			<label htmlFor="form-totp.code">Code</label>
 			<input id="form-totp.code" name="code" required />
 			<br />
-			<button type="submit">Verify</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Verify
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }
 
-/** @type {ActionResult} */
-const initialPasswordResetRecoveryCodeState = {
-	type: "idle",
-};
-
 export function PasswordResetRecoveryCodeForm() {
-	const [state, action] = useActionState(
-		verifyPasswordReset2FAWithRecoveryCodeAction,
-		initialPasswordResetRecoveryCodeState,
-	);
+	const mutation = useMutation({
+		mutationFn: verifyPasswordReset2FAWithRecoveryCodeAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ code: formData.get("code") });
+			}}
+		>
 			<label htmlFor="form-recovery-code.code">Recovery code</label>
 			<input id="form-recovery-code.code" name="code" required />
 			<br />
 			<br />
-			<button type="submit">Verify</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Verify
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }

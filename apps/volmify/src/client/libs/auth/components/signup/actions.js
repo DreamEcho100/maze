@@ -14,21 +14,17 @@ import {
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
- *
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{
+ * 	email: unknown,
+ * 	name: unknown,
+ *  password: unknown,
+ *  enable2FA: unknown,
+ * }} input
  */
-export async function signupAction(_prev, formData) {
+export async function signupAction(input) {
 	const result = await registerService({
 		...(await getSessionOptionsBasics()),
-		input: {
-			email: formData.get("email"),
-			name: formData.get("name"),
-			password: formData.get("password"),
-			enable2FA: formData.get("enable_2fa") === "on",
-		},
+		input,
 		authStrategy,
 		authProviders: {
 			userEmailVerificationRequests: {

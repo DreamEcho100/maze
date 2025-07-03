@@ -6,8 +6,6 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateEmailServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -39,10 +37,7 @@ export async function updateEmailService(props) {
 
 	const validatedEmail = input.data.email;
 
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
-	if (!session) return UPDATE_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	const { session, user } = props;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return UPDATE_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;

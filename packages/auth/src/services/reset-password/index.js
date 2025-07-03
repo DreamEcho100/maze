@@ -4,13 +4,12 @@ import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import {
 	deletePasswordResetSessionTokenCookie,
 	validatePasswordResetSessionRequest,
 } from "#utils/password-reset.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
-import { createAuthSession, getCurrentAuthSession } from "#utils/sessions/index.js";
+import { createAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
 import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 
@@ -18,6 +17,8 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * Handles the reset password process, including validation and session management.
  *
  * @param {AuthProvidersWithGetSessionUtils & {
+ * 	ipAddress?: Exclude<AuthProvidersWithGetSessionUtils['ipAddress'], ((...props: any[]) => any)>;
+ *  userAgent?: Exclude<AuthProvidersWithGetSessionUtils['userAgent'], ((...props: any[]) => any)>;
  * 	authProviders: AuthProvidersWithGetSessionProviders<{
  * 		sessions: {
  * 			deleteAllByUserId: SessionsProvider['deleteAllByUserId'];
@@ -42,10 +43,7 @@ import { resetPasswordServiceInputSchema } from "#utils/validations.js";
  * >}
  */
 export async function resetPasswordService(props) {
-	const getCurrentAuthSessionInput = await generateGetCurrentAuthSessionProps(props);
-	const { session, user } = await getCurrentAuthSession(getCurrentAuthSessionInput);
-
-	if (!session) return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	const { user } = props;
 
 	const input = resetPasswordServiceInputSchema.safeParse(props.input);
 	if (!input.success) {
@@ -86,8 +84,8 @@ export async function resetPasswordService(props) {
 	}
 	/** @type {SessionMetadata} */
 	const sessionInputBasicInfo = {
-		ipAddress: getCurrentAuthSessionInput.ipAddress ?? null,
-		userAgent: getCurrentAuthSessionInput.userAgent ?? null,
+		ipAddress: props.ipAddress ?? null,
+		userAgent: props.userAgent ?? null,
 		twoFactorVerifiedAt: passwordResetSession.twoFactorVerifiedAt,
 		userId: user.id,
 		metadata: null,
@@ -119,8 +117,8 @@ export async function resetPasswordService(props) {
 	const newSession = await createAuthSession({
 		cookies: props.cookies,
 		cookiesOptions: props.cookiesOptions,
-		userAgent: getCurrentAuthSessionInput.userAgent,
-		generateRandomId: getCurrentAuthSessionInput.generateRandomId,
+		userAgent: props.userAgent,
+		generateRandomId: props.generateRandomId,
 		metadata: sessionInputBasicInfo,
 		user,
 		tx: props.tx,

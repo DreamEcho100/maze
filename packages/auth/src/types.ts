@@ -177,21 +177,21 @@ type PasswordResetSessionValidationResult =
 	| PasswordResetSessionValidationFailureResult;
 
 export type {
-	DateLike,
 	AsyncGetCookie,
-	Organization,
-	User,
+	ClientSession,
+	DateLike,
 	DBSession,
 	DBSessionOutput,
-	ClientSession,
-	SessionWithUser,
-	ValidSessionResult,
 	InvalidSessionResult,
-	SessionValidationResult,
+	Organization,
 	PasswordResetSession,
-	PasswordResetSessionValidationSuccessResult,
 	PasswordResetSessionValidationFailureResult,
 	PasswordResetSessionValidationResult,
+	PasswordResetSessionValidationSuccessResult,
+	SessionValidationResult,
+	SessionWithUser,
+	User,
+	ValidSessionResult,
 };
 
 type TransactionClient = any;
@@ -528,10 +528,9 @@ export interface SessionsProvider {
 	 * @param [options] - Additional options (e.g. transaction)
 	 * @returns {Promise<DBSessionOutput | null>} The created session
 	 */
-	createOne: (
-		props: { data: DBSession },
-		options?: { tx?: TransactionClient },
-	) => Promise<{ session: DBSessionOutput; user: User } | null>;
+	createOne: (props: {
+		data: DBSession;
+	}) => Promise<{ session: DBSessionOutput; user: User } | null>;
 	/**
 	 * Find a session by ID with associated user data
 	 * @param sessionId - The session ID to find
@@ -831,4 +830,7 @@ export interface AuthProvidersWithGetSessionUtils {
 	ipAddress?: string | (() => string | Promise<string>) | undefined | null;
 	userAgent?: UserAgent | (() => UserAgent | Promise<UserAgent>) | undefined | null;
 	tx: any;
+	user: ValidSessionResult["user"];
+	session: ValidSessionResult["session"];
+	sessionMetadata: ValidSessionResult["metadata"] | null;
 }

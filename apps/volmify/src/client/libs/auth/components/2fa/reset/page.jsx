@@ -5,7 +5,7 @@ import { TwoFactorResetForm } from "./components";
 export default async function AuthTwoFactorResetPage() {
 	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 

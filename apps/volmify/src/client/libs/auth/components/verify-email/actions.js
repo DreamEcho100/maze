@@ -9,7 +9,7 @@ import {
 } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
+import { generateAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	createOneEmailVerificationRequests,
 	deleteAllPasswordResetSessionsByUserId,
@@ -20,37 +20,29 @@ import {
 import { db } from "#server/libs/db";
 
 /**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
+ * @param {{ code: unknown }} input
  */
+export async function verifyEmailAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			passwordResetSessions: {
+				deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
+			},
+			users: { updateOneEmailAndVerify: updateOneUserEmailAndVerify },
+			userEmailVerificationRequests: {
+				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+				createOne: createOneEmailVerificationRequests,
+				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+			},
+		},
+	});
 
-/**
- *
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
- */
-export async function verifyEmailAction(_prev, formData) {
-	const result = await db.transaction(async (tx) =>
-		verifyEmailUserService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				input: { code: formData.get("code") },
-				authProviders: {
-					passwordResetSessions: {
-						deleteAllByUserId: deleteAllPasswordResetSessionsByUserId,
-					},
-					users: { updateOneEmailAndVerify: updateOneUserEmailAndVerify },
-					userEmailVerificationRequests: {
-						findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-						createOne: createOneEmailVerificationRequests,
-						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
-					},
-				},
-			}),
-		),
-	);
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
 
-	console.log("___ verifyEmailAction result", result);
+	const result = await db.transaction(async (tx) => verifyEmailUserService({ ...authProps, tx }));
 
 	if (result.type === "success") {
 		return redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);
@@ -80,24 +72,26 @@ export async function verifyEmailAction(_prev, formData) {
 	}
 }
 
-/**
- * @param {ActionResult} _prev
- * @returns {Promise<ActionResult>}
- */
-export async function resendEmailVerificationCodeAction(_prev) {
+export async function resendEmailVerificationCodeAction() {
+	const authProps = await generateAuthSessionProps({
+		authProviders: {
+			userEmailVerificationRequests: {
+				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
+				createOne: createOneEmailVerificationRequests,
+				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+			},
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
 	const result = await db.transaction(async (tx) =>
-		resendEmailVerificationCodeService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				authProviders: {
-					userEmailVerificationRequests: {
-						findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-						createOne: createOneEmailVerificationRequests,
-						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
-					},
-				},
-			}),
-		),
+		resendEmailVerificationCodeService({
+			...authProps,
+			tx,
+		}),
 	);
 
 	if (result.type === "success") {

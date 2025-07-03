@@ -1,4 +1,4 @@
-/** @import { CookiesProvider, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
+/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
 
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
@@ -21,6 +21,7 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
  * @param {unknown} props.input
  * @param {any} props.tx - Transaction object for database operations.
  * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - Options for the cookies.
  * @param {{
  * 	passwordResetSession: {
  * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
@@ -47,6 +48,7 @@ export async function verifyPasswordResetEmailVerificationService(props) {
 
 	const { session, user } = await validatePasswordResetSessionRequest({
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,

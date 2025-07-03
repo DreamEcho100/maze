@@ -2,8 +2,6 @@
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { reset2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -32,9 +30,7 @@ export async function reset2FAService(props) {
 		return RESET_2FA_MESSAGES_ERRORS.RECOVERY_CODE_REQUIRED;
 	}
 
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
+	const { session, user } = props;
 	if (!session) {
 		return RESET_2FA_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

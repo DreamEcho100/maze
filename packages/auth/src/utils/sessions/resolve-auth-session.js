@@ -90,6 +90,10 @@ async function validateJWTRefreshToken(token, ctx) {
 
 		const sessionId = validation.data.payload.sessionId;
 
+		if (!sessionId) {
+			return null;
+		}
+
 		const result = await ctx.authProviders.sessions.findOneWithUser(sessionId);
 
 		if (
@@ -144,7 +148,6 @@ function getShouldExtendRefreshAuthTokens(ctx) {
  * @param {NonNullable<Awaited<ReturnType<typeof validateJWTRefreshToken>>>} ctx.validatedJWTRefreshTokenResult
  * @param {string|null|undefined} ctx.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} ctx.userAgent - Optional user agent for the session.
- * @param {any} ctx.tx
  * @param {AuthStrategy} ctx.authStrategy
  * @param {() => string} [ctx.generateRandomId] - Function to create a unique ID synchronously, if available.
  * @param {{
@@ -180,7 +183,6 @@ async function regenerateRefreshAuthTokens(ctx) {
 	return generateRefreshToken({
 		user,
 		metadata,
-		tx: ctx.tx,
 		authProviders: {
 			sessions: {
 				createOne: ctx.authProviders.sessions.createOne,
@@ -223,7 +225,7 @@ async function regenerateRefreshAuthTokens(ctx) {
  * @param {boolean} [props.canMutateCookies=true] - Whether to set authentication cookies. Set to false for mobile/API-only usage.
  * @param {any} [props.tx] - Optional database transaction for atomic operations
  * @param {CookiesProvider} props.cookies - Cookie management interface for setting authentication cookies
- * @param {DynamicCookiesOptions} props.cookiesConfig
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - Options for cookie management, such as `sameSite`, `secure`, etc.
  * @param {{
  * 	sessions: {
  * 		findOneWithUser: SessionsProvider['findOneWithUser'];
@@ -303,7 +305,6 @@ export async function resolveAuthSession(props) {
 			validatedJWTRefreshTokenResult: validatedRefreshToken,
 			ipAddress: props.ipAddress ?? null,
 			userAgent: props.userAgent ?? null,
-			tx: props.tx,
 			authProviders: {
 				sessions: {
 					revokeOneById: props.authProviders.sessions.revokeOneById,

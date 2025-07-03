@@ -13,28 +13,25 @@ import {
 import { getSessionOptionsBasics } from "#server/libs/get-session-options-basics";
 
 /**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
- *
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ email: unknown, password: unknown }} input
  */
-export async function loginAction(_prev, formData) {
+export async function loginAction(input) {
 	const result = await loginUserService({
 		...(await getSessionOptionsBasics()),
-		input: {
-			email: formData.get("email"),
-			password: formData.get("password"),
-		},
+		input,
 		authStrategy,
 		authProviders: {
 			sessions: { createOne: createOneSession },
-			users: { findOneByEmail: findOneUserByEmail, getOnePasswordHash: getOneUserPasswordHash },
+			users: {
+				findOneByEmail: findOneUserByEmail,
+				getOnePasswordHash: getOneUserPasswordHash,
+			},
 		},
 	});
 
 	if (result.type === "success") {
-		return redirect(AUTH_URLS.SUCCESS_LOGIN);
+		// return redirect(AUTH_URLS.SUCCESS_LOGIN);
+		return result;
 	}
 
 	switch (result.messageCode) {
@@ -49,6 +46,6 @@ export async function loginAction(_prev, formData) {
 		case LOGIN_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED.messageCode:
 			return redirect(AUTH_URLS.TWO_FA);
 		default:
-			return { type: "error", statusCode: 500, message: "Unexpected error" };
+			return { type: /** @type {const} */ ("error"), statusCode: 500, message: "Unexpected error" };
 	}
 }

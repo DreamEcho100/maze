@@ -12,7 +12,7 @@ import {
 export default async function AuthSettingsPage() {
 	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {

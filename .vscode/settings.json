@@ -3,14 +3,14 @@
 		// "playground/nextjs-ai-note-app/src/styles/tailwind.config.js": "playground/nextjs-ai-note-app/src/**",
 		"playground/nextjs-deep-research-ai-agent/src/styles/globals.css": "playground/nextjs-deep-research-ai-agent/src/**"
 	},
-	"javascript.validate.enable": false,
+	"typescript.validate.enable": true,
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"editor.codeActionsOnSave": {
 		"source.organizeImports.biome": "explicit",
+		"source.organizeImports": "never",
+		"quickfix.biome": "explicit",
 		"source.fixAll.biome": "explicit",
-		"source.biome": "explicit",
-		"source.organizeImports": "explicit",
-		"quickfix.biome": "explicit"
+		"source.biome": "explicit"
 	},
 	"[css]": {
 		"editor.defaultFormatter": "biomejs.biome"

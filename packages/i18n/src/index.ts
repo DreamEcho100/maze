@@ -50,7 +50,7 @@ export interface LanguageMessages {
  * Users can extend this to get type safety for their specific translations
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Register {}
+export type Register = {};
 
 /**
  * Extract registered translations from the Register interface
@@ -336,7 +336,7 @@ function getPluralRules(locale: string, type?: Intl.PluralRuleType): Intl.Plural
  * Pre-compiled regex patterns for better performance
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PARAM_REGEX = /\{([^:}]+)(?::([^}]*))?\}/g;
+const _PARAM_REGEX = /\{([^:}]+)(?::([^}]*))?\}/g;
 
 /**
  * Initialize the i18n system with locale configuration and translations
@@ -529,7 +529,7 @@ function performSubstitution(
 					const numberFormatter = getNumberFormatter(locale, pluralMap.formatter);
 					return result.replace(
 						replaceKey,
-						replacement.replace(`{?}`, numberFormatter.format(argValue)),
+						replacement.replace("{?}", numberFormatter.format(argValue)),
 					);
 				}
 

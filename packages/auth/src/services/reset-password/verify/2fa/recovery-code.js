@@ -1,4 +1,4 @@
-/** @import { CookiesProvider, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, SessionsProvider, UsersProvider } from "#types.ts" */
+/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, SessionsProvider, UsersProvider } from "#types.ts" */
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
 import {
@@ -15,6 +15,7 @@ import { verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema } from "#utils/
  * @param {unknown} props.input
  * @param {any} props.tx - Transaction object for database operations.
  * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - Options for the cookies.
  * @param {{
  * 	passwordResetSession: {
  * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
@@ -46,6 +47,7 @@ export async function verifyPasswordReset2FAViaRecoveryCodeService(props) {
 
 	const { session, user } = await validatePasswordResetSessionRequest({
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,

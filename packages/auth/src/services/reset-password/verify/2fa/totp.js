@@ -1,4 +1,4 @@
-/** @import { CookiesProvider, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
+/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
 
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
@@ -14,6 +14,7 @@ import { verifyPasswordReset2FAViaTOTPServiceInputSchema } from "#utils/validati
  * @param {object} props - Options for the service.
  * @param {unknown} props.input
  * @param {CookiesProvider} props.cookies - Cookies provider for session management.
+ * @param {DynamicCookiesOptions} [props.cookiesOptions] - Options for the cookies.
  * @param {{
  * 	passwordResetSession: {
  * 	  findOneWithUser: PasswordResetSessionsProvider["findOneWithUser"];
@@ -41,6 +42,7 @@ export async function verifyPasswordReset2FAViaTOTPService(props) {
 
 	const { session, user } = await validatePasswordResetSessionRequest({
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions,
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,

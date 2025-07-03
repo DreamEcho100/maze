@@ -50,7 +50,6 @@ export async function createOneAuthSession(props) {
 	const result = await generateRefreshToken({
 		user: props.user,
 		metadata: props.metadata,
-		tx: props.tx,
 		authProviders: {
 			sessions: {
 				createOne: props.authProviders.sessions.createOne,

@@ -5,14 +5,12 @@ import {
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
 import { dateLikeToISOString } from "#utils/dates.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { generateRandomToken } from "#utils/generate-random-token.js";
 import {
 	createPasswordResetSession,
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -40,9 +38,6 @@ import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
  */
 export async function forgotPasswordService(props) {
 	const input = forgotPasswordServiceInputSchema.safeParse(props.input);
-	const { session } = await getCurrentAuthSession(await generateGetCurrentAuthSessionProps(props));
-
-	if (!session) return FORGET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (!input.success) {
 		return FORGET_PASSWORD_MESSAGES_ERRORS.EMAIL_REQUIRED;

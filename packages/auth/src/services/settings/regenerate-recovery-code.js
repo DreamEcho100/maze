@@ -4,8 +4,6 @@ import {
 	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
 	REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
 /**
@@ -27,9 +25,7 @@ import { resetUserRecoveryCode } from "#utils/users.js";
  * >}
  */
 export async function regenerateRecoveryCodeService(props) {
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
+	const { session, user } = props;
 	if (!session) {
 		return REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}

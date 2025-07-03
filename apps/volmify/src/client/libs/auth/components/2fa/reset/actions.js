@@ -1,10 +1,11 @@
+// @ts-check
 "use server";
 
 import { reset2FAService } from "@de100/auth/services/2fa/reset";
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
+import { generateAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	getOneUserRecoveryCodeRaw,
 	unMarkOneSession2FAForUser,
@@ -13,29 +14,31 @@ import {
 import { db } from "#server/libs/db";
 
 /**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
- *
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ code: unknown }} input
  */
-export async function reset2FAAction(_prev, formData) {
+export async function reset2FAAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			sessions: {
+				unMarkOne2FAForUser: unMarkOneSession2FAForUser,
+			},
+			users: {
+				getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
+				updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
+			},
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
 	const result = await db.transaction(async (tx) =>
-		reset2FAService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				input: { code: formData.get("code") },
-				authProviders: {
-					sessions: {
-						unMarkOne2FAForUser: unMarkOneSession2FAForUser,
-					},
-					users: {
-						getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
-						updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
-					},
-				},
-			}),
-		),
+		reset2FAService({
+			tx,
+			...authProps,
+		}),
 	);
 
 	if (result.type === "success") {

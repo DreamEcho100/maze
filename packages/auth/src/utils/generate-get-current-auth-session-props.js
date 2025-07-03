@@ -53,11 +53,15 @@ export async function generateGetCurrentAuthSessionProps(props) {
 		ipAddress: ipAddress,
 		userAgent: userAgent,
 		cookies: props.cookies,
+		cookiesOptions: props.cookiesOptions ?? {},
 		headers: props.headers,
 		tx: props.tx,
 		authStrategy: props.authStrategy,
 		canMutateCookies: props.canMutateCookies,
 		generateRandomId: props.generateRandomId,
 		authProviders: getDefaultSessionAndJWTFromAuthProviders(props.authProviders),
+		user: props.user,
+		session: props.session,
+		sessionMetadata: props.sessionMetadata,
 	};
 }

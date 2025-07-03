@@ -19,7 +19,7 @@ export default async function AuthPasswordResetPage() {
 		},
 	});
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/forgot-password");
 	}
 	if (!session.emailVerifiedAt) {

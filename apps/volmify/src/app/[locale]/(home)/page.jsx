@@ -79,7 +79,7 @@ import { getCurrentSession } from "#server/libs/auth/get-current-session";
 export default async function Page() {
 	const { session, user } = await getCurrentSession();
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 	if (!user.emailVerifiedAt) {

@@ -1,28 +1,23 @@
 "use server";
 
+import { getCurrentAuthSession } from "@de100/auth/utils/sessions";
 import { cache } from "react";
 
-import { getCurrentAuthSession } from "@de100/auth/utils/sessions";
-
-import { db } from "../db";
 import { generateGetCurrentAuthSessionProps } from "./generate-get-current-auth-session-props";
 
 export const getUncachedCurrentSession =
 	/**
 	 * @param {object} [props]
 	 * @param {Headers} [props.reqHeaders] - Optional headers from the request, typically used to access cookies.
-	 *  @param {boolean} [props.canMutateCookies] - Indicates whether the function can modify cookies.
+	 * @param {boolean} [props.canMutateCookies] - Indicates whether the function can modify cookies.
 	 */
 	async (props) => {
 		"use server";
-		return db.transaction(async (tx) =>
-			getCurrentAuthSession(
-				await generateGetCurrentAuthSessionProps({
-					tx,
-					reqHeaders: props?.reqHeaders,
-					canMutateCookies: props?.canMutateCookies,
-				}),
-			),
+		return getCurrentAuthSession(
+			await generateGetCurrentAuthSessionProps({
+				reqHeaders: props?.reqHeaders,
+				canMutateCookies: props?.canMutateCookies,
+			}),
 		);
 	};
 

@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider } from "#types.ts" */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider, DynamicCookiesOptions } from "#types.ts" */
 
 import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
@@ -11,6 +11,7 @@ import { loginServiceInputSchema } from "#utils/validations.js";
  * @param {object} props
  * @param {unknown} props.input
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
+ * @param {DynamicCookiesOptions} props.cookiesOptions - Options for the cookies, such as `sameSite`, `secure`, etc.
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session.
  * @param {UserAgent|null|undefined} props.userAgent - Optional user agent for the session.
  * @param {AuthStrategy} props.authStrategy

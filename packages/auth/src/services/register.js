@@ -1,4 +1,4 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy, DynamicCookiesOptions } from "#types.ts"; */
 
 import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
 import {
@@ -83,7 +83,6 @@ export async function registerService(props) {
 	});
 
 	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
-	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 
 	return REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL;
 

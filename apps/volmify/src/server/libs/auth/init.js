@@ -3,11 +3,10 @@
  * @import { UsersProvider, SessionsProvider, PasswordResetSessionsProvider, UserEmailVerificationRequestsProvider, AuthStrategy } from "@de100/auth/types";
  */
 
-import { and, eq, isNull, lt } from "drizzle-orm";
-import { ulid } from "ulid";
-
 import { dateLikeToDate } from "@de100/auth/utils/dates";
 import { decrypt, decryptToString } from "@de100/auth/utils/encryption";
+import { and, eq, isNull, lt } from "drizzle-orm";
+import { ulid } from "ulid";
 
 import { db, dbSchema } from "../db/index.js";
 
@@ -74,7 +73,7 @@ const emailVerificationRequestReturnTemplate = {
 	email: dbSchema.userEmailVerificationRequests.email,
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const emailVerificationRequestReturnSchema = /** @type {const} */ ({
+const _emailVerificationRequestReturnSchema = /** @type {const} */ ({
 	id: true,
 	code: true,
 	userId: true,
@@ -312,13 +311,10 @@ export const getOneUserTOTPKey = async (userId) => {
 /*************** ***************/
 
 /** @type {SessionsProvider['createOne']} */
-export const createOneSession = async (props, options) => {
-	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+export const createOneSession = async (props) => {
 	const createdAt = new Date();
 	const [session, user] = await Promise.all([
-		_db
+		db
 			.insert(dbSchema.session)
 			.values({
 				...props.data,
@@ -335,7 +331,7 @@ export const createOneSession = async (props, options) => {
 			})
 			.returning(sessionReturnTemplate)
 			.then((result) => result[0] ?? null),
-		_db
+		db
 			.select(userReturnTemplate)
 			.from(dbSchema.user)
 			.where(eq(dbSchema.user.id, props.data.userId))
@@ -424,7 +420,7 @@ export const revokeAllSessionsByUserId = async (props, options) => {
 };
 /** @type {SessionsProvider['isOneRevokedById']} */
 // eslint-disable-next-line @typescript-eslint/require-await, @typescript-eslint/no-unused-vars
-export const isOneSessionRevokedById = async (props) => {
+export const isOneSessionRevokedById = async (_props) => {
 	// return RedisTokenBlacklist.isOneRevokedById(props.where.id);
 	// For now, we don't use Redis for token revocation
 	// return db

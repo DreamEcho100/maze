@@ -8,7 +8,7 @@ import { TwoFactorSetUpForm } from "./components";
 export default async function AuthTwoFactorSetUpPage() {
 	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 

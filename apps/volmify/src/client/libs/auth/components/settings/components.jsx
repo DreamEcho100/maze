@@ -1,8 +1,7 @@
 "use client";
 
-/** @import { ActionResult } from "./actions"; */
-import { useActionState, useState } from "react";
-
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import {
 	regenerateRecoveryCodeAction,
 	updateEmailAction,
@@ -10,16 +9,23 @@ import {
 	updatePasswordAction,
 } from "./actions";
 
-/** @type {ActionResult} */
-const initialUpdatePasswordState = {
-	type: "idle",
-};
-
 export function UpdatePasswordForm() {
-	const [state, action] = useActionState(updatePasswordAction, initialUpdatePasswordState);
+	const mutation = useMutation({
+		mutationFn: updatePasswordAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({
+					currentPassword: formData.get("password"),
+					newPassword: formData.get("new_password"),
+				});
+			}}
+		>
 			<label htmlFor="form-password.password">Current password</label>
 			<input
 				type="password"
@@ -38,45 +44,56 @@ export function UpdatePasswordForm() {
 				required
 			/>
 			<br />
-			<button type="submit">Update</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Update
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }
 
-/** @type {ActionResult} */
-const initialUpdateFormState = {
-	type: "idle",
-};
-
 export function UpdateEmailForm() {
-	const [state, action] = useActionState(updateEmailAction, initialUpdateFormState);
+	const mutation = useMutation({
+		mutationFn: updateEmailAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({
+					email: formData.get("email"),
+				});
+			}}
+		>
 			<label htmlFor="form-email.email">New email</label>
 			<input type="email" id="form-email.email" name="email" required />
 			<br />
-			<button type="submit">Update</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Update
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }
 
-/** @type {ActionResult} */
-const initialUpdateToggleIsTwoFactorEnabledState = {
-	type: "idle",
-};
-
 /** @param {{ twoFactorEnabledAt: boolean }} props */
 export function UpdateToggleIsTwoFactorEnabledForm(props) {
-	const [state, action] = useActionState(
-		updateIsTwoFactorEnabledAction,
-		initialUpdateToggleIsTwoFactorEnabledState,
-	);
+	const mutation = useMutation({
+		mutationFn: updateIsTwoFactorEnabledAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ isTwoFactorEnabled: formData.get("is_two_factor_enabled") });
+			}}
+		>
 			<button
 				type="button"
 				name="is_two_factor_enabled"
@@ -85,7 +102,7 @@ export function UpdateToggleIsTwoFactorEnabledForm(props) {
 				Toggle two-factor authentication (currently{" "}
 				{props.twoFactorEnabledAt ? "enabled" : "disabled"})
 			</button>
-			<p>{state.message}</p>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }

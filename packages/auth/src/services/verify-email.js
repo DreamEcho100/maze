@@ -10,8 +10,6 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { verifyEmailServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -45,18 +43,12 @@ export async function verifyEmailUserService(props) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
-
-	console.log("___ verifyEmailUserService session, user", session, user);
-	if (!session) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	const { session, user } = props;
 
 	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
-	console.log("___ getUserEmailVerificationRequestFromRequest id", id);
 
 	const verificationRequest = await getUserEmailVerificationRequestFromRequest({
 		userId: user.id,
@@ -70,7 +62,6 @@ export async function verifyEmailUserService(props) {
 		},
 	});
 
-	console.log("___ verifyEmailUserService verificationRequest", verificationRequest);
 	if (!verificationRequest) return VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
 	if (Date.now() >= dateLikeToNumber(verificationRequest.expiresAt)) {

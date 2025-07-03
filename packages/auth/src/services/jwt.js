@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 	createAccessToken: (props, options = {}) => {
@@ -15,7 +15,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		return jwt.sign({ payload }, secret, {
 			expiresIn: options.expiresIn ?? "15m",
 			// audience: options.audience,
-			// issuer: options.issuer ?? "volmify.com",
+			issuer: options.issuer ?? "volmify.com",
 			algorithm: "HS256",
 		});
 	},
@@ -31,7 +31,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		return jwt.sign({ payload }, secret, {
 			expiresIn: options.expiresIn ?? "30d",
 			// audience: options.audience,
-			issuer: options.issuer ?? "volmify.com",
+			// issuer: options.issuer ?? "volmify.com",
 			algorithm: "HS256",
 		});
 	},
@@ -44,7 +44,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		try {
 			return jwt.verify(token, secret, {
 				// audience: options.audience,
-				issuer: options.issuer ?? "volmify.com",
+				// issuer: options.issuer ?? "volmify.com",
 				ignoreExpiration: options.ignoreExpiration ?? false,
 				algorithms: ["HS256"],
 			});
@@ -65,7 +65,7 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		try {
 			return jwt.verify(token, secret, {
 				// audience: options.audience,
-				issuer: options.issuer ?? "volmify.com",
+				// issuer: options.issuer ?? "volmify.com",
 				ignoreExpiration: options.ignoreExpiration ?? false,
 				algorithms: ["HS256"],
 			});

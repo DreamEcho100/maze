@@ -28,13 +28,13 @@
 			"recommended": true,
 			"complexity": {
 				"noForEach": "off",
-				"noUselessFragments": "off"
+				"noUselessFragments": "warn"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "info"
 			},
 			"suspicious": {
-				"noExplicitAny": "off",
+				"noExplicitAny": "warn",
 				"noAssignInExpressions": "warn"
 			},
 			"nursery": {

@@ -93,6 +93,7 @@ export async function validatePasswordResetSessionToken(token, ctx) {
 /**
  * @param {object} ctx
  * @param {CookiesProvider} ctx.cookies - The cookies provider to access the session token cookie.
+ * @param {DynamicCookiesOptions} [ctx.cookiesOptions] - The options for the cookies.
  * @param {{
  * 	passwordResetSession: {
  * 		findOneWithUser: PasswordResetSessionsProvider['findOneWithUser'];
@@ -105,16 +106,20 @@ export async function validatePasswordResetSessionRequest(ctx) {
 	const token = ctx.cookies.get(COOKIE_TOKEN_PASSWORD_RESET_KEY) ?? null;
 	if (!token) return { session: null, user: null };
 	const result = await validatePasswordResetSessionToken(token, ctx);
-	if (!result.session) deletePasswordResetSessionTokenCookie(ctx.cookies);
+	if (!result.session)
+		deletePasswordResetSessionTokenCookie({
+			cookies: ctx.cookies,
+			cookiesOptions: ctx.cookiesOptions,
+		});
 	return result;
 }
 
-const defaultPasswordResetSessionOptions = {
+const defaultPasswordResetSessionOptions = /** @type {const} */ ({
 	sameSite: "lax",
 	httpOnly: true,
 	path: "/",
 	secure: process.env.NODE_ENV === "production",
-};
+});
 
 /**
  * @param {object} props
@@ -130,7 +135,7 @@ export function setPasswordResetSessionTokenCookie(props) {
 		expires: expiresAt,
 		...(typeof props.cookiesOptions?.PASSWORD_RESET_SESSION === "function"
 			? props.cookiesOptions.PASSWORD_RESET_SESSION({ expiresAt })
-			: props.cookiesOptions.PASSWORD_RESET_SESSION),
+			: props.cookiesOptions?.PASSWORD_RESET_SESSION),
 	};
 	props.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, props.token, cookiesOptions);
 }
@@ -147,7 +152,7 @@ export function deletePasswordResetSessionTokenCookie(props) {
 		maxAge: 0,
 		...(typeof props.cookiesOptions?.PASSWORD_RESET_SESSION === "function"
 			? props.cookiesOptions.PASSWORD_RESET_SESSION()
-			: props.cookiesOptions.PASSWORD_RESET_SESSION),
+			: props.cookiesOptions?.PASSWORD_RESET_SESSION),
 	};
 	props.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, "", cookiesOptions);
 }

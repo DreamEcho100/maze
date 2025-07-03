@@ -1,4 +1,3 @@
-// import { prisma as db } from "@de100/db/db";
 /** @import { UsersProvider, SessionsProvider } from "#types.ts"; */
 
 import { decryptToString, encryptString } from "./encryption.js";

@@ -1,7 +1,6 @@
 /** @import { AuthProvidersShape, AuthProvidersWithGetSessionUtils } from "@de100/auth/types"; */
-import { cookies as _cookies, headers as _headers } from "next/headers";
-
 import { getSessionOptionsBasics } from "../get-session-options-basics";
+import { getCurrentSession } from "./get-current-session";
 import {
 	authStrategy,
 	createOneIdSync,
@@ -19,8 +18,31 @@ import {
  * }} TProps
  * @param {TProps} props
  */
-export async function generateGetCurrentAuthSessionProps(props) {
+export async function generateAuthSessionProps(props) {
+	const input = await generateGetCurrentAuthSessionProps(props);
+	const result = await getCurrentSession(input);
+
+	if (!result.session) {
+		return null;
+	}
+
 	return {
+		...input,
+		user: result.user,
+		session: result.session,
+		sessionMetadata: result.metadata,
+	};
+}
+
+/**
+ * @template {Partial<AuthProvidersWithGetSessionUtils> & {
+ * 	authProviders?: AuthProvidersShape
+ * 	reqHeaders?: Headers;
+ * }} TProps
+ * @param {TProps} props
+ */
+export async function generateGetCurrentAuthSessionProps(props) {
+	const input = {
 		...(await getSessionOptionsBasics(props.reqHeaders)),
 		cookiesOptions: props.cookiesOptions ?? {},
 		canMutateCookies: true,
@@ -46,4 +68,6 @@ export async function generateGetCurrentAuthSessionProps(props) {
 			},
 		},
 	};
+
+	return input;
 }

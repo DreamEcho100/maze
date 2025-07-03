@@ -2,9 +2,9 @@
 
 import { verifyPasswordReset2FAViaRecoveryCodeService } from "@de100/auth/services/reset-password/verify/2fa/recovery-code";
 import { verifyPasswordReset2FAViaTOTPService } from "@de100/auth/services/reset-password/verify/2fa/totp";
-
+import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "#i18n/server";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
+import { generateAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,
@@ -16,33 +16,31 @@ import {
 } from "#server/libs/auth/init";
 import { db } from "#server/libs/db";
 
-/**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
- */
-
 // TODO: Make sure every service needs the auth verification to have it
 
 /**
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ code: unknown }} input
  */
-export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
-	const result = await verifyPasswordReset2FAViaTOTPService(
-		await generateGetCurrentAuthSessionProps({
-			input: { code: formData.get("code") },
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: deleteOnePasswordResetSession,
-					findOneWithUser: findOnePasswordResetSessionWithUser,
-					markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
-				},
-				users: {
-					getOneTOTPKey: getOneUserTOTPKey,
-				},
+export async function verifyPasswordReset2FAWithTOTPAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: deleteOnePasswordResetSession,
+				findOneWithUser: findOnePasswordResetSessionWithUser,
+				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
 			},
-		}),
-	);
+			users: {
+				getOneTOTPKey: getOneUserTOTPKey,
+			},
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
+	const result = await verifyPasswordReset2FAViaTOTPService(authProps);
 
 	if (result.type === "success") {
 		return redirect("/auth/reset-password");
@@ -52,33 +50,36 @@ export async function verifyPasswordReset2FAWithTOTPAction(_prev, formData) {
 }
 
 /**
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ code: unknown }} input
  */
-export async function verifyPasswordReset2FAWithRecoveryCodeAction(_prev, formData) {
-	const code = formData.get("code");
+export async function verifyPasswordReset2FAWithRecoveryCodeAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: deleteOnePasswordResetSession,
+				findOneWithUser: findOnePasswordResetSessionWithUser,
+				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+			},
+			sessions: {
+				unMarkOne2FAForUser: unMarkOneSession2FAForUser,
+			},
+			users: {
+				getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
+				updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
+			},
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordReset2FAViaRecoveryCodeService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				input: { code },
-				authProviders: {
-					passwordResetSession: {
-						deleteOne: deleteOnePasswordResetSession,
-						findOneWithUser: findOnePasswordResetSessionWithUser,
-						markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
-					},
-					sessions: {
-						unMarkOne2FAForUser: unMarkOneSession2FAForUser,
-					},
-					users: {
-						getOneRecoveryCodeRaw: getOneUserRecoveryCodeRaw,
-						updateOneRecoveryCodeById: updateOneUserRecoveryCodeById,
-					},
-				},
-			}),
-		),
+		verifyPasswordReset2FAViaRecoveryCodeService({
+			...authProps,
+			tx,
+		}),
 	);
 
 	if (result.type === "success") {

@@ -1,20 +1,22 @@
 "use client";
 
-/** @import { ActionResult } from "./actions"; */
-import { useActionState } from "react";
-
+import { useMutation } from "@tanstack/react-query";
 import { resetPasswordAction } from "./actions";
 
-/** @type {ActionResult} */
-const initialState = {
-	type: "idle",
-};
-
 export function PasswordResetForm() {
-	const [state, action] = useActionState(resetPasswordAction, initialState);
+	const mutation = useMutation({
+		mutationFn: resetPasswordAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ password: formData.get("password") });
+			}}
+		>
 			<label htmlFor="form-reset.password">Password</label>
 			<input
 				type="password"
@@ -24,8 +26,10 @@ export function PasswordResetForm() {
 				required
 			/>
 			<br />
-			<button type="submit">Reset password</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Reset password
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }

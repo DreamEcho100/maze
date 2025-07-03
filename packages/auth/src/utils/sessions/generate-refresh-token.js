@@ -13,7 +13,6 @@ import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants";
  * @param {object} props
  * @param {User} props.user
  * @param {SessionMetadata} props.metadata - Optional IP address for the session
- * @param {any} [props.tx]
  * @param {() => string} [props.generateRandomId] - Function to create a unique ID synchronously, if available.
  * @param {AuthStrategy} props.authStrategy
  * @param {{
@@ -68,7 +67,7 @@ export async function generateRefreshToken(props) {
 		revokedAt: null, // Not revoked initially
 		metadata: props.metadata,
 	};
-	const result = await props.authProviders.sessions.createOne({ data: sessionData }, props);
+	const result = await props.authProviders.sessions.createOne({ data: sessionData });
 	if (!result) {
 		throw new Error("Failed to create JWT refresh token session");
 	}

@@ -1,24 +1,28 @@
 "use client";
-
-/** @import { ActionResult } from "./actions"; */
-import { useActionState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 import { verifyPasswordResetEmailVerificationAction } from "./actions";
 
-/** @type {ActionResult} */
-const initialState = {
-	type: "idle",
-};
-
 export function PasswordResetEmailVerificationForm() {
-	const [state, action] = useActionState(verifyPasswordResetEmailVerificationAction, initialState);
+	const mutation = useMutation({
+		mutationFn: verifyPasswordResetEmailVerificationAction,
+	});
 
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ code: formData.get("code") });
+			}}
+		>
 			<label htmlFor="form-verify.code">Code</label>
 			<input id="form-verify.code" name="code" required />
-			<button type="submit">verify</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				verify
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }

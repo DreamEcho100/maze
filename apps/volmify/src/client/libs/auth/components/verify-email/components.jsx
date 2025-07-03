@@ -1,41 +1,48 @@
 "use client";
 
-/** @import { ActionResult } from "./actions"; */
-import { useActionState } from "react";
-
+import { useMutation } from "@tanstack/react-query";
 import { resendEmailVerificationCodeAction, verifyEmailAction } from "./actions";
 
-/** @type {ActionResult} */
-const emailVerificationInitialState = {
-	type: "idle",
-};
-
 export function EmailVerificationForm() {
-	const [state, action] = useActionState(verifyEmailAction, emailVerificationInitialState);
+	const mutation = useMutation({
+		mutationFn: verifyEmailAction,
+	});
+
 	return (
-		<form action={action}>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				const formData = new FormData(e.currentTarget);
+				mutation.mutate({ code: formData.get("code") });
+			}}
+		>
 			<label htmlFor="form-verify.code">Code</label>
 			<input id="form-verify.code" name="code" required />
-			<button type="submit">Verify</button>
-			<p>{state.message}</p>
+			<button type="submit" disabled={mutation.isPending}>
+				Verify
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }
 
-/** @type {ActionResult} */
-const resendEmailInitialState = {
-	type: "idle",
-};
-
 export function ResendEmailVerificationCodeForm() {
-	const [state, action] = useActionState(
-		resendEmailVerificationCodeAction,
-		resendEmailInitialState,
-	);
+	const mutation = useMutation({
+		mutationFn: resendEmailVerificationCodeAction,
+	});
 	return (
-		<form action={action}>
-			<button type="submit">Resend code</button>
-			<p>{state.message}</p>
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				if (mutation.isPending) return;
+				mutation.mutate();
+			}}
+		>
+			<button type="submit" disabled={mutation.isPending}>
+				Resend code
+			</button>
+			<p>{mutation.data?.message}</p>
 		</form>
 	);
 }

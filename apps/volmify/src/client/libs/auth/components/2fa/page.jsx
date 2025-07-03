@@ -1,13 +1,12 @@
 import { Link } from "#client/components/link";
 import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
-// import CustomLink from "~/components/common/CustomLink";
 import { TwoFactorVerificationForm } from "./components";
 
 export default async function AuthTwoFactorVerificationPage() {
 	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 

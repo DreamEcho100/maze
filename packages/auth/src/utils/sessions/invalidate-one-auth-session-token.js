@@ -1,24 +1,22 @@
-/** @import { AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, AuthStrategy, CookiesProvider, HeadersProvider, SessionsProvider, UserAgent } from "#types.ts" */
+/** @import { AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, AuthStrategy, CookiesProvider, DynamicCookiesOptions, HeadersProvider, SessionsProvider, UserAgent, ValidSessionResult } from "#types.ts" */
 
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
 import { deleteAuthTokenCookies } from "./cookies";
-import { getCurrentAuthSession } from "./get-current-auth-session";
 
 /**
  * Strategy-aware token clearing (replaces deleteSessionTokenCookie)
  *
- * @param {AuthProvidersWithGetSessionUtils & {
- * 	authProviders: AuthProvidersWithGetSessionProviders;
+ * @param {{
+ * 	authProviders: {
+ * 		sessions: { revokeOneById: SessionsProvider['revokeOneById'] };
+ * 	};
  * 	shouldDeleteCookie?: boolean;
+ *  authStrategy: AuthStrategy;
+ * 	cookies: CookiesProvider;
+ * 	cookiesOptions?: DynamicCookiesOptions;
+ * 	session: ValidSessionResult["session"];
  * }} props
  */
 export async function invalidateOneAuthSessionToken(props) {
-	const { session } = await getCurrentAuthSession(await generateGetCurrentAuthSessionProps(props));
-
-	if (!session) {
-		return false;
-	}
-
 	const { shouldDeleteCookie = true } = props;
 	if (shouldDeleteCookie) {
 		deleteAuthTokenCookies({
@@ -28,5 +26,5 @@ export async function invalidateOneAuthSessionToken(props) {
 		});
 	}
 
-	return await props.authProviders.sessions.revokeOneById(session.id);
+	return await props.authProviders.sessions.revokeOneById(props.session.id);
 }

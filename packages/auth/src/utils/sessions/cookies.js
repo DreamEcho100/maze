@@ -5,18 +5,18 @@ import { dateLikeToDate } from "#utils/dates.js";
 const accessTokenCookieName = "access_token";
 const refreshTokenCookieName = "refresh_token";
 
-const defaultRefreshTokenOptions = {
+const defaultRefreshTokenOptions = /** @type {const} */ ({
 	httpOnly: true,
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
 	path: "/",
-};
-export const defaultAccessTokenOptions = {
+});
+export const defaultAccessTokenOptions = /** @type {const} */ ({
 	httpOnly: true,
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
 	path: "/",
-};
+});
 
 /**
  * Delete JWT token cookies
@@ -31,7 +31,7 @@ export function deleteAuthTokenCookies(props) {
 		maxAge: 0,
 		...(typeof props.cookiesOptions?.REFRESH_TOKEN === "function"
 			? props.cookiesOptions.REFRESH_TOKEN()
-			: props.cookiesOptions.REFRESH_TOKEN),
+			: props.cookiesOptions?.REFRESH_TOKEN),
 	};
 
 	props.cookies.set(refreshTokenCookieName, "", refreshTokenCookieOptions);
@@ -42,7 +42,7 @@ export function deleteAuthTokenCookies(props) {
 			maxAge: 0,
 			...(typeof props.cookiesOptions?.ACCESS_TOKEN === "function"
 				? props.cookiesOptions.ACCESS_TOKEN()
-				: props.cookiesOptions.ACCESS_TOKEN),
+				: props.cookiesOptions?.ACCESS_TOKEN),
 		};
 		props.cookies.set(accessTokenCookieName, "", accessTokenCookieOptions);
 	}
@@ -71,7 +71,7 @@ export function setAuthTokenCookies(props) {
 		expires: refreshTokenCookieExpiresAt,
 		...(typeof props.cookiesOptions?.REFRESH_TOKEN === "function"
 			? props.cookiesOptions.REFRESH_TOKEN({ expiresAt: refreshTokenCookieExpiresAt })
-			: props.cookiesOptions.REFRESH_TOKEN),
+			: props.cookiesOptions?.REFRESH_TOKEN),
 	};
 	// Set refresh token cookie (long-lived, httpOnly)
 	props.cookies.set(refreshTokenCookieName, props.refreshToken, refreshTokenCookieOptions);
@@ -83,7 +83,7 @@ export function setAuthTokenCookies(props) {
 			expires: accessTokenCookieExpiresAt,
 			...(typeof props.cookiesOptions?.ACCESS_TOKEN === "function"
 				? props.cookiesOptions.ACCESS_TOKEN({ expiresAt: accessTokenCookieExpiresAt })
-				: props.cookiesOptions.ACCESS_TOKEN),
+				: props.cookiesOptions?.ACCESS_TOKEN),
 		};
 		// Set access token cookie (short-lived)
 		props.cookies.set(accessTokenCookieName, props.accessToken, accessTokenCookieOptions);

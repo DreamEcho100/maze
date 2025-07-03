@@ -6,6 +6,7 @@ import {
 	COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
 } from "./constants.js";
+import { dateLikeToDate } from "./dates.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
 
 /**
@@ -71,11 +72,12 @@ export async function sendVerificationEmail(email, code) {
  * @param {DynamicCookiesOptions} [props.cookiesOptions] - The options for the cookies.
  */
 export function setEmailVerificationRequestCookie(props) {
+	const expiresAt = dateLikeToDate(props.request.expiresAt);
 	const cookiesOptions = {
 		...defaultEmailVerificationRequestCookieOptions,
-		expires: props.request.expiresAt,
+		expires: expiresAt,
 		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST === "function"
-			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST({ expiresAt: props.request.expiresAt })
+			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST({ expiresAt })
 			: props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST),
 	};
 	props.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, props.request.id, cookiesOptions);
@@ -89,12 +91,12 @@ export function getEmailVerificationRequestCookie(cookies) {
 	return cookies.get(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY);
 }
 
-const defaultEmailVerificationRequestCookieOptions = {
+const defaultEmailVerificationRequestCookieOptions = /** @type {const} */ ({
 	httpOnly: true,
 	path: "/",
 	secure: process.env.NODE_ENV === "production",
 	sameSite: "lax",
-};
+});
 
 /**
  * Delete the email verification request cookie.

@@ -1,9 +1,9 @@
 "use server";
 
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth/services/reset-password/verify/email";
-
+import { AUTH_URLS } from "@de100/auth/utils/constants";
 import { redirect } from "#i18n/server";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
+import { generateAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,
@@ -13,30 +13,32 @@ import {
 import { db } from "#server/libs/db";
 
 /**
- * @typedef {{ type: 'idle'; statusCode?: number; message?: string; } | { type: 'error' | 'success'; statusCode: number; message: string; }} ActionResult
- *
- * @param {ActionResult} _prev - The previous result from the action.
- * @param {FormData} formData - The form data containing user input.
- * @returns {Promise<ActionResult>}
+ * @param {{ code: unknown }} input
  */
-export async function verifyPasswordResetEmailVerificationAction(_prev, formData) {
+export async function verifyPasswordResetEmailVerificationAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: deleteOnePasswordResetSession,
+				findOneWithUser: findOnePasswordResetSessionWithUser,
+				markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
+			},
+			users: {
+				verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
+			},
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
 	const result = await db.transaction(async (tx) =>
-		verifyPasswordResetEmailVerificationService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				input: { code: formData.get("code") },
-				authProviders: {
-					passwordResetSession: {
-						deleteOne: deleteOnePasswordResetSession,
-						findOneWithUser: findOnePasswordResetSessionWithUser,
-						markOneEmailAsVerified: markOnePasswordResetSessionEmailAsVerified,
-					},
-					users: {
-						verifyOneEmailIfMatches: verifyOneUserEmailIfMatches,
-					},
-				},
-			}),
-		),
+		verifyPasswordResetEmailVerificationService({
+			...authProps,
+			tx,
+		}),
 	);
 	if (result.type === "success") {
 		switch (result.data.nextStep) {

@@ -10,7 +10,7 @@ import { getOneUserRecoveryCode } from "#server/libs/auth/init";
 export default async function AuthRecoveryCodePage() {
 	const { session, user } = await getCurrentSession({ canMutateCookies: false });
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/login");
 	}
 

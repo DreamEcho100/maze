@@ -14,7 +14,7 @@ import { updatePasswordService } from "@de100/auth/services/settings/update-pass
 import { AUTH_URLS } from "@de100/auth/utils/constants";
 
 import { redirect } from "#i18n/server";
-import { generateGetCurrentAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
+import { generateAuthSessionProps } from "#server/libs/auth/generate-get-current-auth-session-props";
 import {
 	createOneEmailVerificationRequests,
 	createOneSession,
@@ -32,15 +32,28 @@ import { db } from "#server/libs/db";
  *
  * Processes the update password form action, validating inputs and handling session updates.
  *
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ currentPassword: unknown, newPassword: unknown }} input - The input containing the current and new passwords.
  */
-export async function updatePasswordAction(_prev, formData) {
-	const currentPassword = formData.get("password");
-	const newPassword = formData.get("new_password");
+export async function updatePasswordAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			sessions: {
+				createOne: createOneSession,
+				deleteAllByUserId: deleteAllSessionsByUserId,
+			},
+			users: {
+				updateOnePassword: updateOneUserPassword,
+				getOnePasswordHash: getOneUserPasswordHash,
+			},
+		},
+	});
 
-	if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
+	if (typeof input.currentPassword !== "string" || typeof input.newPassword !== "string") {
 		return {
 			message: "Invalid or missing fields",
 			type: "error",
@@ -49,35 +62,35 @@ export async function updatePasswordAction(_prev, formData) {
 	}
 
 	const result = await db.transaction(async (tx) =>
-		updatePasswordService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				input: { currentPassword, newPassword },
-				authProviders: {
-					sessions: {
-						createOne: createOneSession,
-						deleteAllByUserId: deleteAllSessionsByUserId,
-					},
-					users: {
-						updateOnePassword: updateOneUserPassword,
-						getOnePasswordHash: getOneUserPasswordHash,
-					},
-				},
-			}),
-		),
+		updatePasswordService({
+			...authProps,
+			tx,
+		}),
 	);
 
 	return result;
 }
 
 /**
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ email: unknown }} input
  */
-export async function updateEmailAction(_prev, formData) {
-	const email = formData.get("email");
-	if (typeof email !== "string") {
+export async function updateEmailAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			userEmailVerificationRequests: {
+				createOne: createOneEmailVerificationRequests,
+				deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
+			},
+			users: { findOneByEmail: findOneUserByEmail },
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
+	if (typeof input.email !== "string") {
 		return {
 			message: "Invalid or missing fields",
 			type: "error",
@@ -86,19 +99,10 @@ export async function updateEmailAction(_prev, formData) {
 	}
 
 	const result = await db.transaction(async (tx) =>
-		updateEmailService(
-			await generateGetCurrentAuthSessionProps({
-				input: { email },
-				tx,
-				authProviders: {
-					userEmailVerificationRequests: {
-						createOne: createOneEmailVerificationRequests,
-						deleteOneByUserId: deleteOneEmailVerificationRequestsByUserId,
-					},
-					users: { findOneByEmail: findOneUserByEmail },
-				},
-			}),
-		),
+		updateEmailService({
+			...authProps,
+			tx,
+		}),
 	);
 
 	if (result.type === "success") {
@@ -112,34 +116,43 @@ export async function updateEmailAction(_prev, formData) {
  * @returns {Promise<ActionIdleResult | ActionErrorResult | (ActionSuccessResult & { data: { recoveryCode: string; } })>}
  */
 export async function regenerateRecoveryCodeAction() {
+	const authProps = await generateAuthSessionProps({
+		authProviders: {
+			users: { updateOneRecoveryCode: updateOneUserRecoveryCode },
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
+
 	return db.transaction(async (tx) =>
-		regenerateRecoveryCodeService(
-			await generateGetCurrentAuthSessionProps({
-				tx,
-				authProviders: {
-					users: { updateOneRecoveryCode: updateOneUserRecoveryCode },
-				},
-			}),
-		),
+		regenerateRecoveryCodeService({
+			...authProps,
+			tx,
+		}),
 	);
 }
 
 /**
- * @param {ActionResult} _prev
- * @param {FormData} formData
- * @returns {Promise<ActionResult>}
+ * @param {{ isTwoFactorEnabled: unknown }} input
  */
-export async function updateIsTwoFactorEnabledAction(_prev, formData) {
+export async function updateIsTwoFactorEnabledAction(input) {
+	const authProps = await generateAuthSessionProps({
+		input,
+		authProviders: {
+			users: { updateOne2FAEnabled: updateOneUser2FAEnabled },
+		},
+	});
+
+	if (!authProps?.session) {
+		return redirect(AUTH_URLS.LOGIN);
+	}
 	const result = await db.transaction(async (tx) =>
-		updateIsTwoFactorService(
-			await generateGetCurrentAuthSessionProps({
-				input: { isTwoFactorEnabled: formData.get("is_two_factor_enabled") },
-				tx,
-				authProviders: {
-					users: { updateOne2FAEnabled: updateOneUser2FAEnabled },
-				},
-			}),
-		),
+		updateIsTwoFactorService({
+			...authProps,
+			tx,
+		}),
 	);
 
 	if (result.type === "success") {

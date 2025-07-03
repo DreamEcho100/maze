@@ -7,8 +7,6 @@ import {
 	sendVerificationEmail,
 	setEmailVerificationRequestCookie,
 } from "#utils/email-verification.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 
 /**
  *
@@ -29,10 +27,7 @@ import { getCurrentAuthSession } from "#utils/sessions/index.js";
  * >}
  */
 export async function resendEmailVerificationCodeService(props) {
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
-	if (!session) return RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	const { session, user } = props;
 
 	if (user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED;

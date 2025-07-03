@@ -19,7 +19,7 @@ export default async function AuthPasswordReset2FAVerificationPage() {
 		},
 	});
 
-	if (session === null) {
+	if (!session) {
 		return redirect("/auth/forgot-password");
 	}
 

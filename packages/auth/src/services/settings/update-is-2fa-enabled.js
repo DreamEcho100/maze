@@ -4,8 +4,6 @@ import {
 	UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS,
 	UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
-import { generateGetCurrentAuthSessionProps } from "#utils/generate-get-current-auth-session-props.js";
-import { getCurrentAuthSession } from "#utils/sessions/index.js";
 import { updateUserTwoFactorEnabledService } from "#utils/users.js";
 import { updateIsTwoFactorServiceInputSchema } from "#utils/validations.js";
 
@@ -41,10 +39,7 @@ export async function updateIsTwoFactorService(props) {
 
 	const isTwoFactorEnabled = input.data.isTwoFactorEnabled;
 
-	const { session, user } = await getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps(props),
-	);
-	if (!session) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	const { user } = props;
 
 	await updateUserTwoFactorEnabledService(user.id, isTwoFactorEnabled ? new Date() : null, {
 		authProviders: {
