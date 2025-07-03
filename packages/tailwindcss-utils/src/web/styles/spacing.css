@@ -59,7 +59,7 @@
 }
 
 @theme {
-	--spacing-*: initial;
+	--spacing-\*: initial;
 	--spacing-0: var(--de100-spacing-0);
 	--spacing-0-25: var(--de100-spacing-0-25);
 	--spacing-0-50: var(--de100-spacing-0-50);

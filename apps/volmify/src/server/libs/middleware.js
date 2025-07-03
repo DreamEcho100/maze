@@ -4,12 +4,12 @@
  * @import { AllowedLocale } from "#i18n/constants"
  */
 
-// import type { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
 // import { NextResponse } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
+// import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 // import {
 // 	I18N_HEADER_LOCALE_NAME,
@@ -17,7 +17,7 @@ import Negotiator from "negotiator";
 // } from "node_modules/@de100/i18n-nextjs/src/server";
 
 // import { csrfProtection } from "@de100/auth/utils/csrf";
-import { I18N_HEADER_LOCALE_NAME, updateLocaleConfigCache } from "@de100/i18n-nextjs/server/init";
+import { updateLocaleConfigCache } from "@de100/i18n-nextjs/server/init";
 
 import { allowedLocales, defaultLocale } from "#i18n/constants";
 import { getRequestLocale, setRequestLocale } from "#i18n/server";

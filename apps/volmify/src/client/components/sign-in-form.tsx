@@ -58,7 +58,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 					e.stopPropagation();
 					void form.handleSubmit();
 				}}
-				className="space-y-4">
+				className="space-y-4"
+			>
 				<div>
 					<form.Field name="email">
 						{(field) => (
@@ -110,7 +111,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}>
+							disabled={!state.canSubmit || state.isSubmitting}
+						>
 							{state.isSubmitting ? "Submitting..." : "Sign In"}
 						</Button>
 					)}
@@ -121,7 +123,8 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
 				<Button
 					variant="link"
 					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800">
+					className="text-indigo-600 hover:text-indigo-800"
+				>
 					Need an account? Sign Up
 				</Button>
 			</div>

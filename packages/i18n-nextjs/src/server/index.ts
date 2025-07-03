@@ -1,18 +1,17 @@
 // import type { IntlConfig, Locale } from "use-intl/core";
-import { cache } from "react";
+
+import type { LanguageMessages } from "@de100/i18n";
+import { match } from "@formatjs/intl-localematcher";
+import Negotiator from "negotiator";
 import { cookies, headers } from "next/headers.js";
 import {
 	permanentRedirect as nextPermanentRedirect,
 	redirect as nextRedirect,
 	RedirectType,
 } from "next/navigation";
-import { match } from "@formatjs/intl-localematcher";
-import Negotiator from "negotiator";
-
-import type { LanguageMessages } from "@de100/i18n";
-
-import type { Locale } from "./config";
+import { cache } from "react";
 import { parsePathname } from "#utils";
+import type { Locale } from "./config";
 import { initializeLocaleConfigCache, updateLocaleConfigCache } from "./config";
 
 export function isPromise<Value>(value: Value | Promise<Value>): value is Promise<Value> {
@@ -35,7 +34,7 @@ async function getHeadersImpl(): Promise<Headers> {
 const getHeaders = cache(getHeadersImpl);
 
 async function getLocaleFromHeaderImpl(): Promise<Locale | undefined> {
-	let locale;
+	let locale: string | undefined;
 
 	try {
 		locale =
@@ -53,9 +52,8 @@ async function getLocaleFromHeaderImpl(): Promise<Locale | undefined> {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			(wrappedError as any).digest = (error as any).digest;
 			throw wrappedError;
-		} else {
-			throw error;
 		}
+		throw error;
 	}
 
 	return locale;
@@ -115,7 +113,7 @@ export function redirect(
 	} = parsePathname(path, initializeLocaleConfigCache());
 
 	if (!currentLocale) {
-		throw new Error(`!currentLocale`);
+		throw new Error("!currentLocale");
 	}
 
 	const targetLocale = props?.locale ?? currentLocale; // ?? defaultLocale;
@@ -145,7 +143,7 @@ export function permanentRedirect(
 	} = parsePathname(path, initializeLocaleConfigCache());
 
 	if (!currentLocale) {
-		throw new Error(`!currentLocale`);
+		throw new Error("!currentLocale");
 	}
 
 	const targetLocale = props?.locale ?? currentLocale; // ?? defaultLocale;

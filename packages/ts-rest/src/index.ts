@@ -206,16 +206,15 @@ export interface ExtractRouteMetadata<
     | NonNullable<RouteDefinition[InternalInferredKey]>["baseResponses"];
 }
 */
-type SchemaIO<TSchema> =
-	TSchema extends SchemaShape<infer TInput, infer TOutput>
-		? {
-				input: TInput;
-				output: TOutput;
-			}
-		: {
-				input: undefined;
-				output: undefined;
-			};
+type SchemaIO<TSchema> = TSchema extends SchemaShape<infer TInput, infer TOutput>
+	? {
+			input: TInput;
+			output: TOutput;
+		}
+	: {
+			input: undefined;
+			output: undefined;
+		};
 
 type MereSchemaIO<
 	RouteDefinition extends ContractDefinition,
@@ -260,17 +259,17 @@ type ExtractRouteMetadata<RouteDefinition> = RouteDefinition extends ContractDef
 // Route Traversal by Key Path
 // -----------------------------
 
-type TraverseRouteTree<Tree extends Record<string, any>, Prefix extends string> =
-	// If the path chain extends further, continue traversing
-	Prefix extends `${infer Key}.${infer Rest}`
-		? // If the current key is a record, continue traversing
-			Key extends keyof Tree
-			? TraverseRouteTree<Tree[Key], Rest>
-			: never
-		: // If the path chain is at the end, extract the metadata
-			Prefix extends keyof Tree
-			? Tree[Prefix]
-			: never;
+type TraverseRouteTree<Tree extends Record<string, any>, Prefix extends string> = Prefix extends `${
+	infer Key // If the path chain extends further, continue traversing
+}.${infer Rest}`
+	? // If the current key is a record, continue traversing
+		Key extends keyof Tree
+		? TraverseRouteTree<Tree[Key], Rest>
+		: never
+	: // If the path chain is at the end, extract the metadata
+		Prefix extends keyof Tree
+		? Tree[Prefix]
+		: never;
 
 /**
  * Given a dot-separated route key path, returns enriched route info.

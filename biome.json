@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.0.2/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -17,7 +17,8 @@
 			"!**/.vscode",
 			"!**/routeTree.gen.ts",
 			"!**/src-tauri",
-			"!**/.nuxt"
+			"!**/.nuxt",
+			"!**/_ignore"
 		]
 	},
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
@@ -33,7 +34,8 @@
 				"useExhaustiveDependencies": "info"
 			},
 			"suspicious": {
-				"noExplicitAny": "off"
+				"noExplicitAny": "off",
+				"noAssignInExpressions": "warn"
 			},
 			"nursery": {
 				"useSortedClasses": {

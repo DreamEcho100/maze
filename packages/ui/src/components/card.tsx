@@ -5,7 +5,7 @@ import { cn } from "#libs/utils";
 function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
-			className={cn("bg-card text-card-foreground rounded-xl border shadow", className)}
+			className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
 			{...props}
 		/>
 	);
@@ -17,7 +17,7 @@ const CardHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => 
 );
 
 function CardTitle({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn("leading-none font-semibold tracking-tight", className)} {...props} />;
+	return <div className={cn("font-semibold leading-none tracking-tight", className)} {...props} />;
 }
 
 function CardDescription({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
@@ -32,4 +32,4 @@ function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 	return <div className={cn("flex items-center p-6 pt-0", className)} {...props} />;
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

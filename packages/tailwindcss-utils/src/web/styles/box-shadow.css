@@ -1,5 +1,5 @@
 @theme {
-	--shadow-*: initial;
+	--shadow-\*: initial;
 }
 
 @utility shadow-type-inset {
@@ -369,11 +369,11 @@
 @utility double-shadow {
 	box-shadow:
 		var(--de100-box-shadow-type, var(--de100-shadow-type-outset)) var(--de100-box-shadow-x)
-			var(--de100-box-shadow-y) var(--de100-box-shadow-blur) var(--de100-box-shadow-spread)
-			var(--de100-box-shadow-background, var(--de100-box-shadow-bg-2)),
+		var(--de100-box-shadow-y) var(--de100-box-shadow-blur) var(--de100-box-shadow-spread)
+		var(--de100-box-shadow-background, var(--de100-box-shadow-bg-2)),
 		var(--second-box-shadow-type, var(--de100-shadow-type-outset)) var(--second-box-shadow-x)
-			var(--second-box-shadow-y) var(--second-box-shadow-blur) var(--second-box-shadow-spread)
-			var(--second-box-shadow-background, var(--de100-box-shadow-bg-2));
+		var(--second-box-shadow-y) var(--second-box-shadow-blur) var(--second-box-shadow-spread)
+		var(--second-box-shadow-background, var(--de100-box-shadow-bg-2));
 }
 
 /* --shadow-2xs: 0 1px rgb(0 0 0 / 0.05); */

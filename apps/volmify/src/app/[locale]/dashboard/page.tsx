@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { useGetCurrentSession } from "#client/libs/auth/hooks/get-current-session";
 import { orpc } from "#client/libs/orpc";
@@ -19,7 +19,7 @@ export default function Dashboard() {
 		if (status !== "PENDING") {
 			router.push("/login");
 		}
-	}, [router, session, status]);
+	}, [router, status]);
 
 	if (status === "PENDING") {
 		return <div>Loading...</div>;

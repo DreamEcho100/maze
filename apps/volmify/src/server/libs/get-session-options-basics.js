@@ -1,7 +1,6 @@
 "use server";
 
 /** @import { CookiesProvider, DynamicCookiesOptions, HeadersProvider } from "@de100/auth/types"; */
-import { cookies as _cookies, headers as _headers } from "next/headers";
 import { userAgent as getUserAgent } from "next/server";
 
 import { getCookiesAndHeaders } from "./get-cookies-and-headers";

@@ -80,7 +80,8 @@ export function UpdateToggleIsTwoFactorEnabledForm(props) {
 			<button
 				type="button"
 				name="is_two_factor_enabled"
-				value={props.twoFactorEnabledAt ? "off" : "on"}>
+				value={props.twoFactorEnabledAt ? "off" : "on"}
+			>
 				Toggle two-factor authentication (currently{" "}
 				{props.twoFactorEnabledAt ? "enabled" : "disabled"})
 			</button>
@@ -103,7 +104,8 @@ export function RecoveryCodeSection(props) {
 					if (result.type === "success") {
 						setRecoveryCode(result.data.recoveryCode);
 					}
-				}}>
+				}}
+			>
 				Generate new code
 			</button>
 		</section>

@@ -16,9 +16,9 @@ import React, { Component } from "react";
  * }} ErrorBoundaryState
  */
 
-export class GracefullyDegradingErrorBoundary
-	extends /** @type {typeof Component<ErrorBoundaryProps,ErrorBoundaryState>} */ (Component)
-{
+export class GracefullyDegradingErrorBoundary extends /** @type {typeof Component<ErrorBoundaryProps,ErrorBoundaryState>} */ (
+	Component
+) {
 	/** @type {React.RefObject<HTMLDivElement|null>} */
 	#contentRef;
 

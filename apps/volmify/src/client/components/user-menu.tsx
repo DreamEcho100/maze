@@ -52,7 +52,8 @@ export default function UserMenu() {
 							// 		},
 							// 	},
 							// });
-						}}>
+						}}
+					>
 						Sign Out
 					</Button>
 				</DropdownMenuItem>

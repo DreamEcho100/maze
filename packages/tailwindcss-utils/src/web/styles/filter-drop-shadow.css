@@ -1,5 +1,5 @@
 @theme {
-	--shadow-*: initial;
+	--shadow-\*: initial;
 }
 
 @utility drop-shadow-x-0 {

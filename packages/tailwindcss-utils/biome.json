@@ -1,8 +1,6 @@
 {
-	"extends": [
-		"../../biome.json"
-	],
+	"extends": ["../../biome.json"],
 	"files": {
-		"includes": ["!dist/**"]
+		"includes": ["!dist/**", "!./src/web/styles/.css"]
 	}
 }

@@ -183,10 +183,9 @@ type TranslationAtKeyWithParams<
  * Normalize translation values to a consistent tuple format
  * Converts simple strings to [string, {}] format for uniform processing
  */
-type NormalizedTranslationAtKey<T> =
-	T extends ReturnType<typeof defineTranslation>
-		? T
-		: [T extends string ? T : never, ReturnType<typeof defineTranslation>[1]];
+type NormalizedTranslationAtKey<T> = T extends ReturnType<typeof defineTranslation>
+	? T
+	: [T extends string ? T : never, ReturnType<typeof defineTranslation>[1]];
 
 /**
  * Get normalized translation at a specific key path

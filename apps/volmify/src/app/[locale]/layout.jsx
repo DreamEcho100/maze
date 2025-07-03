@@ -62,7 +62,8 @@ export default async function RootLayout(props) {
 					defaultLocale={defaultLocale}
 					fallbackLocale={fallbackLocale}
 					translations={{ [locale]: localeTranslations }}
-					locale={locale}>
+					locale={locale}
+				>
 					<div className="grid h-svh grid-rows-[auto_1fr]">
 						<Header />
 						{props.children}

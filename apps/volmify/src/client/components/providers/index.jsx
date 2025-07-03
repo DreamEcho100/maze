@@ -18,7 +18,8 @@ export default function Providers(props) {
 			defaultLocale={props.defaultLocale}
 			fallbackLocale={props.fallbackLocale}
 			translations={props.translations}
-			locale={props.locale}>
+			locale={props.locale}
+		>
 			<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 				<QueryClientProvider client={queryClient}>
 					<SessionProvider>
