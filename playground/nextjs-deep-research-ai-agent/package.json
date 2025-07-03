@@ -8,8 +8,8 @@
 		"build": "next build",
 		"start": "next start",
 		"clean": "git clean -xdf .cache .next .turbo node_modules",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint"
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src"
 	},
 	"dependencies": {
 		"@ai-sdk/react": "^1.2.5",
@@ -38,23 +38,17 @@
 		"zustand": "^5.0.3"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tailwind-config": "workspace:*",
-		"@de100/tsconfig": "workspace:*",
-		"@eslint/eslintrc": "^3",
+		"@de100/tsconfig": "workspace:*", 
 		"@standard-schema/spec": "catalog:",
 		"@tailwindcss/postcss": "catalog:",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
-		"@types/react-syntax-highlighter": "^15.5.13",
-		"eslint": "catalog:",
-		"eslint-config-next": "catalog:",
-		"prettier": "catalog:",
+		"@types/react-syntax-highlighter": "^15.5.13", 
 		"tailwindcss": "catalog:",
 		"typescript": "catalog:"
-	},
-	"prettier": "./prettier.config.mjs"
+	}
 }

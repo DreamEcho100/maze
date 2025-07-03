@@ -15,8 +15,10 @@ export default async function AuthVerifyEmailPage() {
 
 	// TODO: Ideally we'd sent a new verification email automatically if the previous one is expired,
 	// but we can't set cookies inside server components.
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest(user.id, {
+	const verificationRequest = await getUserEmailVerificationRequestFromRequest({
+		userId: user.id,
 		cookies: await getCookies(),
+		cookiesOptions: {},
 		authProviders: {
 			userEmailVerificationRequests: {
 				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,

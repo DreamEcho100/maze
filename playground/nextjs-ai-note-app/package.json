@@ -8,8 +8,8 @@
 		"build": "next build",
 		"start": "next start",
 		"clean": "git clean -xdf .cache .next .turbo node_modules",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint"
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src"
 	},
 	"dependencies": {
 		"@clerk/nextjs": "^6.12.12",
@@ -32,22 +32,16 @@
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tailwind-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
-		"@eslint/eslintrc": "^3",
 		"@standard-schema/spec": "catalog:",
 		"@tailwindcss/postcss": "catalog:",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
-		"eslint": "catalog:",
-		"eslint-config-next": "catalog:",
-		"prettier": "catalog:",
 		"prisma": "^6.5.0",
 		"tailwindcss": "catalog:",
 		"typescript": "catalog:"
-	},
-	"prettier": "@de100/prettier-config"
+	}
 }

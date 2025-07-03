@@ -6,8 +6,8 @@
 		"dev": "pnpm with-env next dev --turbopack --port=3000",
 		"build": "pnpm with-env next build",
 		"start": "pnpm with-env next start",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint",
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"clean": "git clean -xdf .cache .next .turbo node_modules",
 		"typecheck": "tsc --noEmit",
 		"with-env": "dotenv -e ../../.env --",
@@ -41,8 +41,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tailwind-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"@tailwindcss/postcss": "catalog:",
@@ -54,9 +53,7 @@
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
 		"drizzle-kit": "^0.30.5",
-		"prettier": "catalog:",
 		"tailwindcss": "catalog:",
 		"typescript": "catalog:"
-	},
-	"prettier": "@de100/prettier-config"
+	}
 }

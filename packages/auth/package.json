@@ -161,8 +161,8 @@
 		"build": "tsc",
 		"dev": "tsc",
 		"clean": "rm -rf .turbo .cache .turbo dist node_modules",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint",
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
@@ -176,14 +176,10 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
 		"@types/jsonwebtoken": "^9.0.9",
 		"@types/node": "catalog:",
-		"eslint": "catalog:",
-		"prettier": "catalog:",
 		"typescript": "catalog:"
-	},
-	"prettier": "@de100/prettier-config"
+	}
 }

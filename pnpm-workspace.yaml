@@ -2,7 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tooling/*
-  - playground/*
+  # - playground/*
   - packages/ts-rest/src/schemas/adapters/zod
 catalog:
   react: ^19.1.0
@@ -25,6 +25,7 @@ catalog:
   # https://github.com/vercel/next.js/discussions/71727
   next: ^15.4.0-canary.85
   eslint-config-next: ^15.4.0-canary.85
+  "@biomejs/biome": "^2.0.2"
   "@standard-schema/spec": ^1.0.0
   "@tanstack/react-query": ^5.67.1
   "@trpc/client": ^11.0.0-rc.824

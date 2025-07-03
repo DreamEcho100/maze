@@ -1,0 +1,14 @@
+{
+	"extends": [
+		"../../biome.json"
+	],
+	"files": {
+		"includes": ["!dist/**"]
+	},
+	"linter": {
+		"domains": {
+			"react": "recommended",
+			"next": "recommended"
+		}
+	}
+}

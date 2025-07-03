@@ -68,12 +68,12 @@
 
 import Link from "next/link";
 
-import { LogoutButton } from "#client/libs/auth/components/logout/components";
+import { LogoutButton } from "#client/libs/auth/components/logout";
 import { redirect } from "#i18n/server";
 import { getCurrentSession } from "#server/libs/auth/get-current-session";
 
 // import { redirect } from "next/navigation";
-// import { LogoutButton } from "#client/libs/auth/components/logout/components";
+// import { LogoutButton } from "#client/libs/auth/components/logout";
 // import { getCurrentSession } from "~/libs/auth/next-js/utils/get-current-session";
 
 export default async function Page() {

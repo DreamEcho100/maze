@@ -15,12 +15,12 @@
 			"persistent": false
 		},
 		"format": {
-			"outputs": [".cache/.prettiercache"],
+			"outputs": [".cache/.biomeformatcache"],
 			"outputLogs": "new-only"
 		},
 		"lint": {
 			"dependsOn": ["^topo", "^build"],
-			"outputs": [".cache/.eslintcache"]
+			"outputs": [".cache/.biomelintcache"]
 		},
 		"typecheck": {
 			"dependsOn": ["^topo", "^build"],

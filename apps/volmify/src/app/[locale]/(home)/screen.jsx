@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { Link } from "#client/components/link";
-import { LogoutButton } from "#client/libs/auth/components/logout/components";
+import { LogoutButton } from "#client/libs/auth/components/logout";
 import { useGetCurrentSession } from "#client/libs/auth/hooks/get-current-session";
 import { orpc } from "#client/libs/orpc";
 

@@ -14,17 +14,13 @@
 		"build": "tsc",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "tsc",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint",
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
-		"eslint": "catalog:",
-		"prettier": "catalog:",
 		"typescript": "catalog:"
-	},
-	"prettier": "@de100/prettier-config"
+	}
 }

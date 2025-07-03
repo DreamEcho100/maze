@@ -61,10 +61,10 @@
 	"license": "MIT",
 	"scripts": {
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint",
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
-		"ui-add": "pnpm dlx shadcn@latest add && prettier src --write --list-different"
+		"ui-add": "pnpm dlx shadcn@latest add && format"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "catalog:",
@@ -111,13 +111,10 @@
 		"vaul": "^1.1.2"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tailwind-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"@types/react": "catalog:react19",
-		"eslint": "catalog:",
-		"prettier": "catalog:",
 		"react": "catalog:react19",
 		"typescript": "catalog:",
 		"zod": "catalog:"
@@ -125,6 +122,5 @@
 	"peerDependencies": {
 		"react": "catalog:react19",
 		"zod": "catalog:"
-	},
-	"prettier": "@de100/prettier-config"
+	}
 }

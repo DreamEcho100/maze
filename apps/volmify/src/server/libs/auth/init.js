@@ -473,8 +473,8 @@ export const unMarkOneSession2FAForUser = async (userId, tx) => {
 			updatedAt: new Date(),
 		})
 		.where(and(eq(dbSchema.session.userId, userId), isNull(dbSchema.session.revokedAt)))
-		.returning(sessionReturnTemplate)
-		.then((result) => result.length ?? 0);
+		// .returning(sessionReturnTemplate)
+		.then((result) => result.rowCount ?? 0);
 };
 // The following methods are commented out as they are not currently used.
 // They could be useful for session management in the future, so they are kept here for reference.

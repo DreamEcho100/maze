@@ -25,22 +25,18 @@
 		"build": "tsc",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "tsc",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"lint": "eslint",
+    "format": "biome format ./src ",
+    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"devDependencies": {
-		"@de100/eslint-config": "workspace:*",
-		"@de100/prettier-config": "workspace:*",
+    "@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
 		"@types/negotiator": "^0.6.4",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19",
-		"eslint": "catalog:",
-		"prettier": "catalog:",
 		"typescript": "catalog:"
 	},
-	"prettier": "@de100/prettier-config",
 	"dependencies": {
 		"@de100/i18n": "workspace:*",
 		"@de100/i18n-reactjs": "workspace:*",
