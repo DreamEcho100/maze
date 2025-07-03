@@ -7,7 +7,7 @@ type TObj = Record<string, any>;
  * Configuration options for different parameter types in translations
  * Each parameter type (date, number, plural, etc.) can have specific formatting options
  */
-interface ParamOptions {
+export interface ParamOptions {
 	date?: Record<string, Intl.DateTimeFormatOptions>;
 	number?: Record<string, Intl.NumberFormatOptions>;
 	plural?: Record<
@@ -49,8 +49,9 @@ export interface LanguageMessages {
  * Module augmentation interface for registering translation types
  * Users can extend this to get type safety for their specific translations
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type Register = {};
+
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
+export interface Register {}
 
 /**
  * Extract registered translations from the Register interface
@@ -116,7 +117,7 @@ type ExtractParamOptions<S extends string> = S extends `${string}{${infer Param}
  * Generate all possible dot-notation paths for accessing nested translation objects
  * Recursively traverses the translation structure to create paths like "user.profile.name"
  */
-type DotPathsFor<TranslationRegistry extends TObj = RegisteredTranslations> = {
+export type DotPathsFor<TranslationRegistry extends TObj = RegisteredTranslations> = {
 	[Key in keyof TranslationRegistry]: TranslationRegistry[Key] extends I18nMessage
 		? Key // If it's a translation message, use the key as-is
 		: TranslationRegistry[Key] extends TObj
@@ -198,7 +199,7 @@ type NormalizedTranslationAtKeyWithParams<Key extends string> = NormalizedTransl
  * Extract parameter types for a specific translation path
  * Used to enforce type safety when calling translation functions
  */
-type Params<S extends DotPathsFor> = ExtractParamArgs<
+export type Params<S extends DotPathsFor> = ExtractParamArgs<
 	NormalizedTranslationAtKeyWithParams<S>[0],
 	NormalizedTranslationAtKeyWithParams<S>[1] extends {
 		enum: infer E;
@@ -212,14 +213,14 @@ type Params<S extends DotPathsFor> = ExtractParamArgs<
 /**
  * Translation paths that don't require any parameters
  */
-type PathsWithNoParams = {
+export type PathsWithNoParams = {
 	[K in DotPathsFor]: keyof Params<K> extends never ? K : never;
 }[DotPathsFor];
 
 /**
  * Translation paths that require parameters
  */
-type PathsWithParams = {
+export type PathsWithParams = {
 	[K in DotPathsFor]: keyof Params<K> extends never ? never : K;
 }[DotPathsFor];
 

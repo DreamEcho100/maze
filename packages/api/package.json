@@ -14,20 +14,20 @@
 		"build": "tsc",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "tsc",
-    "format": "biome format ./src ",
-    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"format": "biome format ./src",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
-		"@de100/db": "workspace:*",
 		"@de100/auth": "workspace:*",
+		"@de100/db": "workspace:*",
 		"@de100/validators": "workspace:*",
 		"@trpc/server": "catalog:",
 		"superjson": "2.2.2",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-    "@biomejs/biome": "catalog:",
+		"@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	}

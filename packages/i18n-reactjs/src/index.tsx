@@ -1,24 +1,14 @@
 "use client";
 
+import type { LanguageMessages } from "@de100/i18n";
+import { initI18n } from "@de100/i18n";
 import type { ReactNode } from "react";
-import type { StoreApi } from "zustand";
 import { createContext, useContext } from "react";
+import type { StoreApi } from "zustand";
 import { createStore, useStore } from "zustand";
 import { mutative } from "zustand-mutative";
 
-import type { LanguageMessages } from "@de100/i18n";
-import { initI18n } from "@de100/i18n";
-
 export const name = "@de100/i18n-reactjs";
-
-// const unusedProxyThrow = new Proxy(
-// 	{},
-// 	{
-// 		get: () => {
-// 			throw new Error("Translations not initialized yet");
-// 		},
-// 	},
-// );
 
 type BaseTranslationState = ReturnType<typeof initI18n>;
 interface State extends BaseTranslationState {
@@ -115,10 +105,6 @@ export function I18nProvider({
 		translations,
 	});
 
-	// return store;
-	// const store = useMemo(() => {
-	// }, [locale, fallbackLocale, translations, isNew]);
-
 	return <I18nContext value={{ store }}>{children}</I18nContext>;
 }
 
@@ -137,10 +123,8 @@ export function useGetLocale() {
 	const i18nStore = useI18nStore();
 	return useStore(i18nStore, (state) => state.locale);
 }
-export function useTranslations(): State["t"] {
+export function useTranslations() {
 	const i18nStore = useI18nStore();
-	// const t = useStore(i18nStore, (state) => state.t);
-	// return useCallback((key, args) => t(key, args), [t]) as State["t"];
 	return useStore(i18nStore, (state) => state.t);
 }
 

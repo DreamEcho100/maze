@@ -9,6 +9,12 @@
 		"module": "esnext",
 		"allowImportingTsExtensions": true
 	},
-	"include": ["./.next/types/**/*.ts", "./next-env.d.ts", "./src/**/*", ".next/types/**/*.ts"],
+	"include": [
+		"./.next/types/**/*.ts",
+		"./next-env.d.ts",
+		"./src/**/*",
+		".next/types/**/*.ts",
+		"./src/i18n/def.d.ts"
+	],
 	"exclude": ["node_modules"]
 }
