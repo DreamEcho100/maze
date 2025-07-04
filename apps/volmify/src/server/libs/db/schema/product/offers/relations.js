@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { user } from "../../auth/schema.js";
 import { currency } from "../../currency-and-market/schema.js";
 import { organization } from "../../organization/schema.js";
+import { seoMetadata } from "../../seo/schema.js";
 import { discountCollection } from "../collection/schema.js";
 import { discountProduct, discountVariant } from "../schema.js";
 import {
@@ -42,6 +43,10 @@ export const discountTranslationRelations = relations(discountTranslation, ({ on
 		fields: [discountTranslation.discountId],
 		references: [discount.id],
 	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [discountTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
 }));
 
 export const couponRelations = relations(coupon, ({ one, many }) => ({
@@ -60,6 +65,10 @@ export const couponTranslationRelations = relations(couponTranslation, ({ one })
 	coupon: one(coupon, {
 		fields: [couponTranslation.couponId],
 		references: [coupon.id],
+	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [couponTranslation.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
 }));
 
@@ -96,6 +105,10 @@ export const giftCardTranslationRelations = relations(giftCardTranslation, ({ on
 		fields: [giftCardTranslation.giftCardId],
 		references: [giftCard.id],
 	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [giftCardTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
 }));
 
 export const giftCardUsageRelations = relations(giftCardUsage, ({ one }) => ({
@@ -122,6 +135,10 @@ export const promotionTranslationRelations = relations(promotionTranslation, ({ 
 	promotion: one(promotion, {
 		fields: [promotionTranslation.promotionId],
 		references: [promotion.id],
+	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [promotionTranslation.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
 }));
 

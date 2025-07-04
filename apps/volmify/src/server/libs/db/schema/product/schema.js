@@ -15,6 +15,7 @@ import {
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
 import { currency } from "../currency-and-market/schema.js";
 import { organization, organizationMarket, pricingZone } from "../organization/schema.js";
+import { seoMetadata } from "../seo/schema.js";
 import { discount } from "./offers/schema.js";
 
 // -------------------------------------
@@ -73,8 +74,11 @@ export const productTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-		seoTitle: text("seo_title"),
-		seoDescription: text("seo_description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_product_translation_product_locale").on(t.productId, t.locale),

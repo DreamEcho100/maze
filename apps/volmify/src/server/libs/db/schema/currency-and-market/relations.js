@@ -9,6 +9,7 @@ import {
 } from "../organization/schema.js";
 import { discount, giftCard } from "../product/offers/schema.js";
 import { productPrice, productZonePrice } from "../product/schema.js";
+import { seoMetadata } from "../seo/schema.js";
 import {
 	country,
 	currency,
@@ -87,6 +88,10 @@ export const marketTemplateTranslationRelations = relations(
 		marketTemplate: one(marketTemplate, {
 			fields: [marketTemplateTranslation.marketTemplateId],
 			references: [marketTemplate.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [marketTemplateTranslation.seoMetadataId],
+			references: [seoMetadata.id],
 		}),
 	}),
 );

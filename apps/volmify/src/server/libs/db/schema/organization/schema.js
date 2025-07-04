@@ -16,6 +16,7 @@ import {
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { user } from "../auth/schema.js";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
+import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 
 export const memberBaseRoleEnum = pgEnum("member_base_role", [
@@ -355,8 +356,11 @@ export const organizationMarketTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
-		seoTitle: text("seo_title"),
-		seoDescription: text("seo_description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_organization_market_translation_unique").on(t.organizationMarketId, t.locale),

@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
+import { seoMetadata } from "../seo/schema.js";
 
 export const currency = table(
 	"currency",
@@ -164,8 +165,11 @@ export const marketTemplateTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
-		seoTitle: text("seo_title"),
-		seoDescription: text("seo_description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_market_template_translation_unique").on(t.marketTemplateId, t.locale),

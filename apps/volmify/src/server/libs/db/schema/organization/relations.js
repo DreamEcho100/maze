@@ -2,7 +2,8 @@ import { relations } from "drizzle-orm";
 
 import { user } from "../auth/schema.js";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
-import { productZonePrice } from "../product/schema.js";
+import { productPrice, productZonePrice } from "../product/schema.js";
+import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 import {
 	organization,
@@ -185,6 +186,10 @@ export const organizationMarketTranslationRelations = relations(
 		organization: one(organization, {
 			fields: [organizationMarketTranslation.organizationId],
 			references: [organization.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [organizationMarketTranslation.seoMetadataId],
+			references: [seoMetadata.id],
 		}),
 	}),
 );

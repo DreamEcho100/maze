@@ -15,6 +15,7 @@ import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
 import { user } from "../../auth/schema.js";
 import { currency } from "../../currency-and-market/schema.js";
 import { organization } from "../../organization/schema.js";
+import { seoMetadata } from "../../seo/schema.js";
 
 export const discountTypeEnum = pgEnum("discount_type", [
 	"percentage", // e.g. 10% off
@@ -79,6 +80,11 @@ export const discountTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_discount_translation").on(t.discountId, t.locale),
@@ -156,6 +162,11 @@ export const couponTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_coupon_translation").on(t.couponId, t.locale),
@@ -218,6 +229,11 @@ export const giftCardTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.locale),
@@ -293,6 +309,11 @@ export const promotionTranslation = table(
 		description: text("description"),
 		seoTitle: text("seo_title"),
 		seoDescription: text("seo_description"),
+
+		// SEO reference (optional - not all translations need SEO)
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 	},
 	(t) => [
 		uniqueIndex("uq_promotion_translation").on(t.promotionId, t.locale),
