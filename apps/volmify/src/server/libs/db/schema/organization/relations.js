@@ -5,20 +5,24 @@ import { country, currency, marketTemplate } from "../currency-and-market/schema
 import { productPrice, productZonePrice } from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
+import { instructorOrganizationAffiliation, vendor } from "../vendor/schema.js";
 import {
 	organization,
 	organizationCurrencySettings,
+	organizationDepartment,
 	organizationLocale,
 	organizationMarket,
 	organizationMarketCountry,
 	organizationMarketTranslation,
 	organizationMember,
+	organizationMemberDepartment,
 	organizationMemberInvitation,
 	organizationMemberPermissionsGroup,
 	organizationMemberTeam,
 	organizationPermissionsGroup,
 	organizationPermissionsGroupPermission,
 	organizationTeam,
+	organizationTeamDepartment,
 	pricingZone,
 	pricingZoneCountry,
 } from "./schema.js";
@@ -26,11 +30,14 @@ import {
 export const organizationRelations = relations(organization, ({ many }) => ({
 	members: many(organizationMember),
 	teams: many(organizationTeam),
+	departments: many(organizationDepartment),
 	permissionGroups: many(organizationPermissionsGroup),
 	locales: many(organizationLocale),
 	currencySettings: many(organizationCurrencySettings),
 	markets: many(organizationMarket),
 	pricingZones: many(pricingZone),
+	vendors: many(vendor),
+	instructorAffiliations: many(instructorOrganizationAffiliation),
 }));
 export const organizationMemberRelations = relations(organizationMember, ({ one, many }) => ({
 	organization: one(organization, {
@@ -44,15 +51,55 @@ export const organizationMemberRelations = relations(organizationMember, ({ one,
 	// ✅ New: Multiple teams via junction table
 	memberTeams: many(organizationMemberTeam),
 	memberGroups: many(organizationMemberPermissionsGroup),
-	memberInvitations: many(organizationMemberInvitation, {
-		relationName: "member_invitation",
-	}),
+	memberInvitations: many(organizationMemberInvitation),
+	memberDepartments: many(organizationMemberDepartment),
 }));
+// ✅ ADD: Department relations
+export const organizationDepartmentRelations = relations(
+	organizationDepartment,
+	({ one, many }) => ({
+		organization: one(organization, {
+			fields: [organizationDepartment.organizationId],
+			references: [organization.id],
+		}),
+		memberDepartments: many(organizationMemberDepartment),
+		teamDepartments: many(organizationTeamDepartment),
+		instructorAffiliations: many(instructorOrganizationAffiliation),
+	}),
+);
+export const organizationTeamDepartmentRelations = relations(
+	organizationTeamDepartment,
+	({ one }) => ({
+		team: one(organizationTeam, {
+			fields: [organizationTeamDepartment.teamId],
+			references: [organizationTeam.id],
+		}),
+		department: one(organizationDepartment, {
+			fields: [organizationTeamDepartment.departmentId],
+			references: [organizationDepartment.id],
+		}),
+	}),
+);
+
+export const organizationMemberDepartmentRelations = relations(
+	organizationMemberDepartment,
+	({ one }) => ({
+		member: one(organizationMember, {
+			fields: [organizationMemberDepartment.memberId],
+			references: [organizationMember.id],
+		}),
+		department: one(organizationDepartment, {
+			fields: [organizationMemberDepartment.departmentId],
+			references: [organizationDepartment.id],
+		}),
+	}),
+);
 export const organizationTeamRelations = relations(organizationTeam, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [organizationTeam.organizationId],
 		references: [organization.id],
 	}),
+	teamDepartments: many(organizationTeamDepartment),
 	memberTeams: many(organizationMemberTeam), // Via junction table
 }));
 export const organizationMemberTeamRelations = relations(organizationMemberTeam, ({ one }) => ({

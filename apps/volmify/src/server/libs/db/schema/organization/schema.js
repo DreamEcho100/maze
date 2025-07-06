@@ -13,7 +13,7 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, fk, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { user } from "../auth/schema.js";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import { seoMetadata } from "../seo/schema.js";
@@ -69,6 +69,10 @@ export const organizationTeam = table(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
+
+		teamType: text("team_type").default("cross_functional"), // "departmental", "cross_functional", "project", "permanent"
+		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
+
 		metadata: jsonb("metadata"),
 	},
 	(table) => [
@@ -102,6 +106,55 @@ export const organizationMember = table(
 		uniqueIndex("uq_organization_member_user_org").on(table.userId, table.organizationId),
 	],
 );
+export const organizationDepartment = table(
+	"organization_department",
+	{
+		id,
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		name: name.notNull(),
+		description: text("description"),
+		color: text("color"), // For UI categorization (#FF5733)
+		isDefault: boolean("is_default").default(false),
+		isActive: boolean("is_active").default(true),
+		createdAt,
+		updatedAt,
+		deletedAt,
+	},
+	(t) => [
+		uniqueIndex("uq_organization_department_name").on(t.organizationId, t.name),
+		uniqueIndex("uq_organization_department_default")
+			.on(t.organizationId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_organization_department_organization").on(t.organizationId),
+		index("idx_organization_department_active").on(t.isActive),
+	],
+);
+// Many-to-many: Members can be in multiple departments
+export const organizationMemberDepartment = table(
+	"organization_member_department",
+	{
+		id,
+		memberId: text("member_id")
+			.notNull()
+			.references(() => organizationMember.id, { onDelete: "cascade" }),
+		departmentId: text("department_id")
+			.notNull()
+			.references(() => organizationDepartment.id, { onDelete: "cascade" }),
+		isDefault: boolean("is_default").default(false), // Primary department for the member
+		joinedAt: timestamp("joined_at").defaultNow(),
+		createdAt,
+	},
+	(t) => [
+		uniqueIndex("uq_member_department").on(t.memberId, t.departmentId),
+		uniqueIndex("uq_member_default_department")
+			.on(t.memberId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index("idx_member_department_member").on(t.memberId),
+		index("idx_member_department_department").on(t.departmentId),
+	],
+);
 export const organizationMemberTeamRoleEnum = pgEnum("organization_member_team_role", [
 	"admin", // Admins have full access to the team, can manage members and settings
 	"member", // Members have access to the team's resources, and it will be based on the permissions group they belong to
@@ -127,6 +180,32 @@ export const organizationMemberTeam = table(
 		index("idx_organization_member_team_role").on(table.role),
 		index("idx_organization_member_team_joined_at").on(table.joinedAt),
 		uniqueIndex("uq_member_team").on(table.memberId, table.teamId),
+	],
+);
+export const organizationTeamDepartment = table(
+	"organization_team_department",
+	{
+		id,
+		teamId: fk("team_id")
+			.references(() => organizationTeam.id, { onDelete: "cascade" })
+			.notNull(),
+		departmentId: fk("department_id")
+			.references(() => organizationDepartment.id, { onDelete: "cascade" })
+			.notNull(),
+
+		// Team-department relationship metadata
+		isPrimary: boolean("is_primary").default(false), // Which department leads this team
+		relationshipType: text("relationship_type").default("collaboration"), // "lead", "collaboration", "support"
+
+		createdAt,
+	},
+	(t) => [
+		uniqueIndex("uq_team_department").on(t.teamId, t.departmentId),
+		uniqueIndex("uq_team_primary_department")
+			.on(t.teamId, t.isPrimary)
+			.where(eq(t.isPrimary, true)),
+		index("idx_team_department_team").on(t.teamId),
+		index("idx_team_department_department").on(t.departmentId),
 	],
 );
 export const organizationMemberPermissionsGroup = table(
@@ -288,6 +367,7 @@ export const organizationCurrencySettings = table(
 	],
 );
 
+// TODO: How to ease the flow when the users (can?) switch between markets dynamically?
 export const organizationMarket = table(
 	"organization_market",
 	{

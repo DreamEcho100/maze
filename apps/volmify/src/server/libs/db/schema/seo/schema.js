@@ -70,6 +70,7 @@ export const seoMetadata = table(
 		// Language targeting
 		hreflang: text("hreflang"),
 
+		// TODO: Make the following fields into a separate table
 		// Performance metrics
 		lastIndexed: timestamp("last_indexed"),
 		clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 2 }),
@@ -78,6 +79,7 @@ export const seoMetadata = table(
 		clicks: integer("clicks").default(0),
 		seoScore: integer("seo_score"),
 
+		// TODO: Make the following fields into a separate table
 		// Workflow
 		notes: text("notes"),
 		lastReviewedAt: timestamp("last_reviewed_at"),

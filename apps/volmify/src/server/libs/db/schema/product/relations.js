@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import { currency } from "../currency-and-market/schema.js";
 import { organization, organizationMarket, pricingZone } from "../organization/schema.js";
 import { seoMetadata } from "../seo/schema.js";
+import { productVendor } from "../vendor/schema.js";
 import { productCollection } from "./collection/schema.js";
 import { discount } from "./offers/schema.js";
 import {
@@ -26,6 +27,7 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	zonePrices: many(productZonePrice),
 	collections: many(productCollection),
 	discountProducts: many(discountProduct),
+	vendors: many(productVendor),
 }));
 
 export const productTranslationRelations = relations(productTranslation, ({ one }) => ({
