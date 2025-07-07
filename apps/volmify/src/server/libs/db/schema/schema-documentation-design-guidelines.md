@@ -87,6 +87,143 @@ Given our Attribute-Based Access Control implementation, documentation should em
  */
 ```
 
+## **🔄 Schema File Update Instructions**
+
+### **⚠️ Critical Requirements**
+
+- **NEVER CREATE NEW FILES** - Always update existing schema and relations files in-place
+- **PRESERVE EXISTING COMMENTS** - Keep all existing inline comments and code structure
+- **JSDoc ENHANCEMENT ONLY** - Add JSDoc documentation without modifying existing code logic
+- **MAINTAIN IMPORTS/EXPORTS** - Preserve all existing import statements and export declarations
+
+### **📝 Update Process for Schema Files**
+
+#### **1. Schema File Updates (`schema.js`)**
+
+```javascript
+// filepath: [keep exact original path]
+
+// ...existing imports... (PRESERVE ALL)
+
+/**
+ * @fileoverview [Schema Name] - [Primary Purpose]
+ * 
+ * @architecture [Architectural Pattern]
+ * [Architecture explanation]
+ * 
+ * @designPattern [Design Pattern Details]
+ * [Pattern implementation details]
+ * 
+ * @integrationPoints
+ * - [Integration point 1]
+ * - [Integration point 2]
+ * 
+ * @businessValue
+ * [Business value explanation]
+ * 
+ * @scalingDesign
+ * [Scaling considerations]
+ */
+
+// ...existing enums and constants... (PRESERVE ALL)
+
+/**
+ * [Table Business Purpose]
+ * 
+ * @businessLogic
+ * [Key business rules and design drivers]
+ * 
+ * @architecturalDecision
+ * [Why this design was chosen]
+ * 
+ * @integrationContext
+ * [How this connects to broader system]
+ */
+export const tableName = table(
+    "table_name",
+    {
+        // ...existing fields... (PRESERVE ALL)
+        /**
+         * @businessRule [Only when field has special business significance]
+         * @abacContext [Only for permission-related fields]
+         * @performanceCritical [Only for high-frequency access fields]
+         */
+        specialField: fieldDefinition,
+        
+        // ...rest of existing fields... (PRESERVE ALL)
+    },
+    (table) => [
+        // ...existing indexes and constraints... (PRESERVE ALL)
+        /**
+         * @businessConstraint [Only for complex business rule constraints]
+         * @performanceCritical [Only for critical performance indexes]
+         */
+        uniqueIndex("constraint_name").on(table.field1, table.field2),
+    ],
+);
+
+// ...all other existing tables and exports... (PRESERVE ALL)
+```
+
+#### **2. Relations File Updates (`relations.js`)**
+
+```javascript
+// filepath: [keep exact original path]
+
+// ...existing imports... (PRESERVE ALL)
+
+/**
+ * @fileoverview [Schema] Relations - [Integration Purpose]
+ * 
+ * @integrationPattern [Pattern Description]
+ * [How relations enable cross-schema integration]
+ * 
+ * @businessContext
+ * [Business workflows enabled by these relations]
+ */
+
+/**
+ * [Entity] Relations ([Role in System])
+ * 
+ * @integrationRole [How this entity integrates with broader system]
+ * [Description of entity's role in system architecture]
+ * 
+ * @businessRelationships
+ * [Key business relationships and their purposes]
+ */
+export const entityNameRelations = relations(entityName, ({ one, many }) => ({
+    /**
+     * @businessContext [Only for complex/important relationships]
+     * @abacRole [Only for permission-related relationships]
+     * @performanceCritical [Only for high-frequency relationships]
+     */
+    relationshipName: one/many(relatedEntity, {
+        // ...existing relationship definition... (PRESERVE ALL)
+    }),
+    
+    // ...all existing relationships... (PRESERVE ALL)
+}));
+
+// ...all other existing relations... (PRESERVE ALL)
+```
+
+### **🚫 What NOT to Change**
+
+- **Import/Export Statements**: Keep all existing imports and exports
+- **Table Definitions**: Don't modify field definitions, types, or constraints
+- **Relationship Definitions**: Don't change existing relation configurations
+- **Index Definitions**: Don't modify existing indexes or constraints
+- **Existing Comments**: Preserve all existing inline comments
+- **Code Structure**: Maintain existing code organization and spacing
+
+### **✅ What TO Add**
+
+- **File-level JSDoc**: Add comprehensive @fileoverview with architecture context
+- **Table-level JSDoc**: Add business purpose and integration context
+- **Field-level JSDoc**: Only for fields with special business rules or performance implications
+- **Relationship JSDoc**: Only for complex relationships with business significance
+- **Constraint JSDoc**: Only for constraints that implement complex business rules
+
 ## **📋 README.md Template**
 
 ```markdown
@@ -259,5 +396,11 @@ graph LR
 - **Self-service capability**: Developers find answers without asking teammates
 - **Consistency**: Similar patterns documented similarly across schemas
 - **Maintenance burden**: Documentation updates are part of normal development flow
+
+## **🎯 Key Reminder**
+
+**JSDoc comments are meant to enhance the onboarding experience by helping developers understand the overall system architecture and its connection to the business logic—not to overwhelm them with unnecessary details.**
+
+**Always update existing files in-place, never create new files. Preserve all existing code structure, comments, and logic while adding JSDoc documentation to enhance architectural understanding.**
 
 **Focus on accelerating developer understanding of system design and business logic, not restating what the code already expresses clearly.** 🎯

@@ -22,6 +22,45 @@ import { product } from "../product/schema";
 import { seoMetadata } from "../seo/schema";
 // organization, user, organizationMember, organizationDepartment, product
 
+/**
+ * @fileoverview Vendor Schema - Content Creator & Brand Partnership System
+ *
+ * @architecture Class Table Inheritance + Multi-Entity Pattern
+ * Implements a flexible vendor system that supports both individual instructors and brand
+ * partnerships within organizational contexts. Uses class table inheritance where the base
+ * vendor table contains common attributes, and specialized tables (vendorInstructor, vendorBrand)
+ * contain type-specific data. This enables consistent vendor management while supporting
+ * diverse content creator and partnership models.
+ *
+ * @designPattern Inheritance + Metrics Segregation + Revenue Sharing
+ * - Class Table Inheritance: Base vendor + specialized instructor/brand tables
+ * - Metrics Segregation: Separate metrics tables for performance isolation
+ * - Revenue Sharing: Flexible compensation models (revenue share, flat fee, per-course)
+ * - Translation Support: Multi-language vendor profiles for global organizations
+ * - Verification System: Trust and credential verification workflows
+ *
+ * @integrationPoints
+ * - Product System: Vendor-product relationships with role-based collaboration
+ * - Organization System: Vendor affiliations and organizational context
+ * - Financial System: Revenue sharing, payouts, and compensation management
+ * - Content Management: Course creation and content ownership tracking
+ * - Trust & Safety: Verification workflows and trust scoring
+ * - Marketing: Brand partnerships and co-marketing relationships
+ * - Localization: Multi-language vendor profiles and SEO optimization
+ *
+ * @businessValue
+ * Enables platform to support diverse content creation models from individual instructors
+ * to enterprise brand partnerships. Provides flexible revenue sharing, comprehensive
+ * metrics tracking, and scalable verification systems. Supports both B2C (instructor-led)
+ * and B2B (brand partnership) business models within unified vendor management framework.
+ *
+ * @scalingDesign
+ * - Type-specific tables scale independently based on vendor type distribution
+ * - Metrics segregation prevents performance impact from analytics queries
+ * - Translation tables support global vendor expansion
+ * - Revenue rules enable complex partnership compensation models
+ */
+
 // Enums
 export const vendorTypeEnum = pgEnum("vendor_type", ["instructor", "brand"]);
 export const vendorStatusEnum = pgEnum("vendor_status", [
@@ -103,16 +142,53 @@ const timestamps = {
 // CORE VENDOR TABLES
 // ================================
 
+/**
+ * Base Vendor Registry (Class Table Inheritance Root)
+ *
+ * @businessLogic Central registry for all content creators and brand partners
+ * Serves as the foundation for both individual instructors and corporate brands
+ * that create or sponsor content on the platform. Provides unified vendor
+ * management while enabling type-specific specializations.
+ *
+ * @inheritancePattern
+ * Base table containing common vendor attributes with specialized child tables
+ * (vendorInstructor, vendorBrand) for type-specific data. This enables consistent
+ * vendor operations while supporting diverse business models and requirements.
+ *
+ * @organizationalContext
+ * Vendors can be organization-scoped (employee instructors, brand partners) or
+ * platform-wide (independent instructors, system-defined brands). Organization
+ * context influences permission scope, revenue sharing, and content visibility.
+ *
+ * @businessModel
+ * Supports multiple content creation models:
+ * - Independent instructors (organizationId: null)
+ * - Employee instructors (organizationId: set)
+ * - Brand partnerships (type: brand, organizationId: required)
+ * - System brands (isSystemDefined: true)
+ */
 export const vendor = table(
 	"vendor",
 	{
 		id,
+		/**
+		 * @businessRule Brand vendors must belong to an organization
+		 * @organizationalContext Null for independent instructors, required for brands
+		 */
 		organizationId: fk("organization_id").references(() => organization.id, {
 			onDelete: "cascade",
 		}),
+		/**
+		 * @inheritanceKey Determines specialized table and business logic
+		 * @businessModel Instructor vs brand partnership content creation models
+		 */
 		type: vendorTypeEnum("type").notNull(),
 
 		// Core vendor identity
+		/**
+		 * @businessRule URL-safe identifier, unique within organization scope
+		 * @routingContext Used in vendor profile URLs and API endpoints
+		 */
 		slug: text("slug").notNull(),
 		status: vendorStatusEnum("status").default("pending"),
 
@@ -137,19 +213,46 @@ export const vendor = table(
 	},
 	(t) => [
 		// Unique slug per organization (or globally if organizationId is null)
+		/**
+		 * @businessConstraint Organization-scoped slug uniqueness for multi-tenant vendors
+		 */
 		uniqueIndex("uq_vendor_slug_org").on(t.organizationId, t.slug),
-		uniqueIndex("uq_vendor_slug_global").on(t.slug).where(sql`${t.organizationId} IS NULL`),
+		/**
+		 * @businessConstraint Global slug uniqueness for independent vendors
+		 */
+		uniqueIndex("uq_vendor_slug_global")
+			.on(t.slug)
+			.where(sql`${t.organizationId} IS NULL`),
 
 		index("idx_vendor_type").on(t.type),
 		index("idx_vendor_organization").on(t.organizationId),
 		index("idx_vendor_status").on(t.status),
 		// index("idx_vendor_rating").on(t.avgRating),
 
-		// Check constraints
+		/**
+		 * @businessRule Brand vendors must have organizational context
+		 * @complianceCheck Prevents orphaned brand vendors
+		 */
 		check("vendor_brand_has_org", sql`NOT (${t.type} = 'brand' AND ${t.organizationId} IS NULL)`),
 	],
 );
 
+/**
+ * Vendor Localization and Translation
+ *
+ * @businessLogic Multi-language vendor profiles for global market reach
+ * Enables vendors to maintain localized profiles with market-specific names,
+ * descriptions, and SEO optimization for international audience engagement.
+ *
+ * @localizationStrategy
+ * Supports vendor profile translation across different markets while maintaining
+ * consistent vendor identity. Essential for organizations operating globally
+ * with localized content delivery and marketing requirements.
+ *
+ * @seoIntegration
+ * Links to SEO metadata for vendor profile optimization in different languages
+ * and markets, supporting discovery and brand building across regions.
+ */
 export const vendorTranslation = table(
 	"vendor_translation",
 	{
@@ -158,13 +261,20 @@ export const vendorTranslation = table(
 			.references(() => vendor.id, { onDelete: "cascade" })
 			.notNull(),
 		locale: text("locale").notNull(), // "en-US", "es-ES", "fr-FR"
+		/**
+		 * @businessRule One default translation per vendor for fallback
+		 * @localizationDefault Used when requested locale is unavailable
+		 */
 		isDefault: boolean("is_default").default(false),
 
 		// Translatable fields
 		displayName: text("display_name"),
 		description: text("description"),
 
-		// SEO metadata reference
+		/**
+		 * @seoIntegration Vendor profile optimization for search discovery
+		 * @marketingContext Supports vendor branding and discoverability
+		 */
 		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
@@ -180,6 +290,17 @@ export const vendorTranslation = table(
 	],
 );
 
+/**
+ * Vendor Contact Information Bridge
+ *
+ * @businessLogic Links vendors to contact information for communication workflows
+ * Enables vendors to have multiple contact points for different purposes
+ * (business, technical, marketing) while leveraging the centralized contact system.
+ *
+ * @communicationIntegration
+ * Integrates with platform communication systems for vendor onboarding,
+ * support, partnership management, and payment processing workflows.
+ */
 export const vendorContactInfo = table(
 	"vendor_contact_info",
 	{
@@ -202,6 +323,21 @@ export const vendorContactInfo = table(
 	],
 );
 
+/**
+ * Vendor Financial Metrics (Performance Segregation)
+ *
+ * @businessLogic Isolated financial tracking for vendor performance analysis
+ * Separates financial metrics from operational data to enable independent
+ * scaling and specialized financial reporting without impacting core vendor operations.
+ *
+ * @revenueSharing
+ * Tracks revenue generation and payout calculations for vendor compensation
+ * models including revenue sharing, flat fees, and performance bonuses.
+ *
+ * @performanceIsolation
+ * Dedicated table prevents financial analytics queries from impacting
+ * core vendor operations and enables specialized financial data access patterns.
+ */
 export const vendorMetrics = table(
 	"vendor_metrics",
 	{
@@ -217,12 +353,19 @@ export const vendorMetrics = table(
 		// totalActiveUsers: integer("total_active_users").default(0),
 		// totalCoursesCompleted: integer("total_courses_completed").default(0),
 
-		// Financial metrics
+		/**
+		 * @revenueTracking Total revenue generated by vendor across all products
+		 * @performanceMetric Key metric for vendor success and compensation calculations
+		 */
 		totalRevenueGenerated: decimal("total_revenue_generated", {
 			precision: 12,
 			scale: 2,
 		}).default("0"),
 		totalPayouts: decimal("total_payouts", { precision: 12, scale: 2 }).default("0"),
+		/**
+		 * @compensationModel Default revenue share percentage for vendor
+		 * @businessRule Can be overridden at product or contract level
+		 */
 		revenueSharePercentage: decimal("revenue_share_percentage", {
 			precision: 5,
 			scale: 2,
@@ -243,13 +386,40 @@ export const vendorMetrics = table(
 	],
 );
 
+/**
+ * Brand Vendor Specialization (Class Table Inheritance)
+ *
+ * @businessLogic Corporate brand profiles and partnership management
+ * Specialized table for brand vendors that represent companies, institutions,
+ * or organizations creating branded content and educational partnerships.
+ *
+ * @brandPartnership
+ * Enables enterprise partnerships with features like white-labeling,
+ * certification authority, and co-marketing capabilities. Supports both
+ * content creation and content sponsorship business models.
+ *
+ * @enterpriseFeatures
+ * Brand-specific capabilities including certification provision, third-party
+ * content acceptance, and white-labeling for enterprise customer requirements.
+ *
+ * @verificationSystem
+ * Multi-level brand verification (unverified, basic, premium, enterprise)
+ * enables trust-based features and partnership tier management.
+ */
 export const vendorBrand = table("vendor_brand", {
+	/**
+	 * @inheritanceKey Links to base vendor table in class table inheritance
+	 */
 	vendorId: text("vendor_id")
 		.primaryKey()
 		.references(() => vendor.id, { onDelete: "cascade" }),
 
 	// Brand identity
 	logoUrl: text("logo_url"),
+	/**
+	 * @brandingContext Brand color palette for UI customization
+	 * @partnershipFeature Enables brand consistency in co-branded content
+	 */
 	colors: jsonb("colors"), // {"primary": "#1a1a1a", "secondary": "#ff6b35"}
 	website: text("website"),
 	socialMedia: jsonb("social_media"), // {"linkedin": "...", "twitter": "..."}
@@ -261,10 +431,17 @@ export const vendorBrand = table("vendor_brand", {
 	employeeCount: integer("employee_count"),
 
 	// Platform presence
+	/**
+	 * @systemBrand Indicates platform-defined brand vs user-created brand
+	 * @contentCuration System brands may have special content privileges
+	 */
 	isSystemDefined: boolean("is_system_defined").default(false),
 	verificationLevel: text("verification_level").default("unverified"), // "unverified", "basic", "premium", "enterprise"
 
-	// Brand capabilities
+	/**
+	 * @partnershipCapabilities Features available for brand partnerships
+	 * @businessModel Defines what partnership types the brand supports
+	 */
 	acceptsThirdPartyContent: boolean("accepts_third_party_content").default(false),
 	whiteLabelingAvailable: boolean("white_labeling_available").default(false),
 	canProvideCertification: boolean("can_provide_certification").default(false),
@@ -279,6 +456,13 @@ export const vendorBrand = table("vendor_brand", {
 	...timestamps,
 });
 
+/**
+ * Brand Localization Support
+ *
+ * @businessLogic Multi-language brand profiles for global partnerships
+ * Enables brands to maintain localized presence across different markets
+ * with region-specific messaging, positioning, and SEO optimization.
+ */
 export const vendorBrandTranslation = table(
 	"vendor_brand_translation",
 	{
@@ -309,6 +493,13 @@ export const vendorBrandTranslation = table(
 	],
 );
 
+/**
+ * Brand Performance Metrics (Segregated Analytics)
+ *
+ * @businessLogic Brand-specific performance tracking isolated from operational data
+ * Enables brand partnership performance analysis without impacting core platform
+ * operations or vendor management workflows.
+ */
 export const vendorBrandMetrics = table("vendor_brand_metrics", {
 	id,
 	vendorBrandId: fk("vendor_brand_id")
@@ -325,12 +516,34 @@ export const vendorBrandMetrics = table("vendor_brand_metrics", {
 	...timestamps,
 });
 
+/**
+ * Instructor Vendor Specialization (Class Table Inheritance)
+ *
+ * @businessLogic Individual instructor profiles and teaching capabilities
+ * Specialized table for instructor vendors that represent individual content
+ * creators, subject matter experts, and teaching professionals.
+ *
+ * @teachingContext
+ * Links instructors to platform users while maintaining vendor identity
+ * separation. Supports both independent and organization-affiliated instructors.
+ *
+ * @scalabilityDesign
+ * Minimal initial structure with commented fields for future expansion
+ * based on teaching features and instructor management requirements.
+ */
 export const vendorInstructor = table(
 	"vendor_instructor",
 	{
+		/**
+		 * @inheritanceKey Links to base vendor table in class table inheritance
+		 */
 		vendorId: text("vendor_id")
 			.primaryKey()
 			.references(() => vendor.id, { onDelete: "cascade" }),
+		/**
+		 * @userConnection Links instructor vendor to platform user account
+		 * @authenticationIntegration Enables instructor authentication and profile management
+		 */
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }), // The following is commented out because it should be handled in it's own related tables, maybe in the same way as LinkedIn Learning or Udemy, with as many tables as needed
@@ -384,6 +597,9 @@ export const vendorInstructor = table(
 		...timestamps,
 	},
 	(t) => [
+		/**
+		 * @businessConstraint One instructor vendor per user account
+		 */
 		uniqueIndex("uq_instructor_user").on(t.userId),
 		// index("idx_instructor_expertise").on(t.expertise),
 		// index("idx_instructor_verification").on(
@@ -395,6 +611,13 @@ export const vendorInstructor = table(
 	],
 );
 
+/**
+ * Instructor Localization Support
+ *
+ * @businessLogic Multi-language instructor profiles for global teaching reach
+ * Enables instructors to maintain localized profiles with region-specific
+ * professional titles, bios, and teaching philosophies for international markets.
+ */
 export const vendorInstructorTranslation = table(
 	"vendor_instructor_translation",
 	{
@@ -430,6 +653,17 @@ export const vendorInstructorTranslation = table(
 	],
 );
 
+/**
+ * Instructor Performance Metrics (Teaching Analytics)
+ *
+ * @businessLogic Instructor-specific performance tracking for teaching effectiveness
+ * Segregated metrics enable instructor performance analysis without impacting
+ * core platform operations or other vendor management workflows.
+ *
+ * @teachingMetrics
+ * Focuses on teaching-specific metrics like student count, ratings, and reviews
+ * while leaving course-specific metrics to dedicated course analytics tables.
+ */
 export const vendorInstructorMetrics = table(
 	"vendor_instructor_metrics",
 	{
@@ -518,6 +752,17 @@ export const vendorInstructorMetrics = table(
 	],
 );
 
+/**
+ * Instructor Course Performance Analytics
+ *
+ * @businessLogic Course-specific metrics for instructor teaching effectiveness
+ * Segregated course analytics enable detailed instructor performance tracking
+ * without impacting core instructor profile or platform vendor operations.
+ *
+ * @courseMetrics
+ * Tracks course creation, completion, and performance metrics specific to
+ * instructor teaching activities for performance evaluation and improvement.
+ */
 export const vendorInstructorCoursesMetrics = table(
 	"vendor_instructor_courses_metrics",
 	{
@@ -563,6 +808,32 @@ export const vendorInstructorCoursesMetrics = table(
 // INSTRUCTOR-ORGANIZATION RELATIONSHIPS
 // ================================
 
+/**
+ * Instructor-Organization Affiliation Management
+ *
+ * @businessLogic Flexible instructor-organization relationship management
+ * Supports various instructor employment and partnership models including
+ * employees, contractors, guests, and partners with configurable compensation
+ * and permission structures within organizational contexts.
+ *
+ * @affiliationTypes
+ * Supports diverse instructor-organization relationships:
+ * - Owner: Organization founders who are also instructors
+ * - Employee: Full-time instructional staff
+ * - Contractor: Project-based or part-time instructors
+ * - Guest: External experts for specific content
+ * - Partner: Strategic partnership instructors
+ * - Volunteer: Community or non-profit instructors
+ *
+ * @compensationModels
+ * Flexible compensation structures including revenue sharing, flat fees,
+ * hourly rates, salaries, and per-course payments to support various
+ * business models and instructor preferences.
+ *
+ * @workflowIntegration
+ * Includes invitation, approval, and lifecycle management workflows
+ * with audit trails for instructor affiliation governance and compliance.
+ */
 export const instructorOrganizationAffiliation = table(
 	"instructor_organization_affiliation",
 	{
@@ -574,11 +845,18 @@ export const instructorOrganizationAffiliation = table(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
-		// User connection (flexible for employees vs collaborators)
+		/**
+		 * @identityConnection Flexible user connection for different affiliation types
+		 * @businessRule Either userId (external) OR orgMemberId (internal) must be set
+		 */
 		userId: fk("user_id").references(() => user.id),
 		orgMemberId: fk("org_member_id").references(() => organizationMember.id),
 
 		// Relationship context
+		/**
+		 * @affiliationModel Defines instructor-organization relationship type
+		 * @compensationContext Influences compensation structure and permissions
+		 */
 		affiliationType: affiliationTypeEnum("affiliation_type").notNull(),
 		role: text("role"), // "lead_instructor", "subject_expert", "guest_lecturer", "content_reviewer"
 		title: text("title"), // "Senior Training Manager", "Principal Instructor"
@@ -593,7 +871,10 @@ export const instructorOrganizationAffiliation = table(
 		// ),
 		// authorizationLevel: text("authorization_level").default("standard"), // "restricted", "standard", "elevated", "admin"
 
-		// Compensation for this relationship
+		/**
+		 * @compensationStructure Flexible payment models for instructor relationships
+		 * @businessModel Supports various instructor compensation strategies
+		 */
 		compensationType: compensationTypeEnum("compensation_type").default("revenue_share"),
 		compensationAmount: decimal("compensation_amount", {
 			precision: 10,
@@ -609,7 +890,10 @@ export const instructorOrganizationAffiliation = table(
 		startedAt: timestamp("started_at").defaultNow(),
 		endedAt: timestamp("ended_at"),
 
-		// Connection tracking
+		/**
+		 * @workflowTracking Affiliation creation and approval workflow management
+		 * @auditTrail Complete lifecycle tracking for governance and compliance
+		 */
 		connectionMethod: text("connection_method"), // "self_created_org", "invited", "applied", "imported", "transferred"
 		invitedBy: fk("invited_by").references(() => user.id),
 		applicationNotes: text("application_notes"),
@@ -625,7 +909,9 @@ export const instructorOrganizationAffiliation = table(
 		...timestamps,
 	},
 	(t) => [
-		// One active relationship per instructor per organization
+		/**
+		 * @businessConstraint One active affiliation per instructor per organization
+		 */
 		uniqueIndex("uq_instructor_org_active")
 			.on(t.instructorVendorId, t.organizationId)
 			.where(eq(t.status, "active")),
@@ -637,7 +923,9 @@ export const instructorOrganizationAffiliation = table(
 		index("idx_affiliation_user").on(t.userId),
 		index("idx_affiliation_member").on(t.orgMemberId),
 
-		// Either userId OR orgMemberId must be set
+		/**
+		 * @businessRule Either userId OR orgMemberId must be set for connection
+		 */
 		check(
 			"affiliation_user_connection",
 			sql`(${t.userId} IS NOT NULL) OR (${t.orgMemberId} IS NOT NULL)`,
@@ -649,6 +937,34 @@ export const instructorOrganizationAffiliation = table(
 // PRODUCT-VENDOR RELATIONSHIPS
 // ================================
 
+/**
+ * Product-Vendor Collaboration Management
+ *
+ * @businessLogic Multi-vendor product collaboration with role-based contribution
+ * Enables complex product creation scenarios where multiple vendors contribute
+ * with different roles, compensation models, and contribution weights for
+ * comprehensive content creation and partnership management.
+ *
+ * @collaborationModel
+ * Supports various vendor roles in product creation:
+ * - Primary: Main content creator/owner
+ * - Collaborator: Contributing partner
+ * - Co-instructor: Joint teaching responsibility
+ * - Content creator: Specific content contribution
+ * - Technical reviewer: Quality assurance role
+ * - Certifying body: Certification authority
+ * - Guest expert: Specialized knowledge contribution
+ *
+ * @revenueSharing
+ * Product-specific revenue sharing with contribution weights enables
+ * fair compensation distribution among multiple contributing vendors
+ * based on their actual contribution and agreed terms.
+ *
+ * @performanceTracking
+ * JSONB performance metrics enable flexible tracking of vendor contributions
+ * including content completion, quality scores, deadline adherence, and
+ * student feedback for continuous improvement and partnership evaluation.
+ */
 export const productVendor = table(
 	"product_vendor",
 	{
@@ -660,10 +976,16 @@ export const productVendor = table(
 			.notNull()
 			.references(() => vendor.id, { onDelete: "cascade" }),
 
-		// Vendor role in this product
+		/**
+		 * @collaborationRole Vendor's role in product creation and delivery
+		 * @businessModel Determines permissions, responsibilities, and compensation
+		 */
 		role: vendorRoleEnum("role").notNull(),
 
-		// Revenue sharing for this specific product
+		/**
+		 * @compensationModel Product-specific revenue sharing and payment terms
+		 * @revenueDistribution Enables complex multi-vendor compensation structures
+		 */
 		revenueSharePercentage: decimal("revenue_share_percentage", {
 			precision: 5,
 			scale: 2,
@@ -673,7 +995,10 @@ export const productVendor = table(
 			scale: 2,
 		}),
 
-		// Contribution details
+		/**
+		 * @contributionTracking Vendor contribution measurement and attribution
+		 * @performanceManagement Enables fair compensation and recognition
+		 */
 		contributionType: text("contribution_type").array(), // ["content", "marketing", "support", "certification", "review"]
 		contributionWeight: decimal("contribution_weight", {
 			precision: 3,
@@ -686,7 +1011,10 @@ export const productVendor = table(
 		displayOrder: integer("display_order").default(1),
 		displayName: text("display_name"), // Override vendor display name for this product
 
-		// Collaboration terms
+		/**
+		 * @partnershipTerms Collaboration agreement and exclusivity management
+		 * @businessModel Defines partnership exclusivity and competitive constraints
+		 */
 		exclusivityLevel: text("exclusivity_level"), // "exclusive", "non_exclusive", "preferred"
 		collaborationAgreement: text("collaboration_agreement"), // Reference to agreement document
 
@@ -695,7 +1023,10 @@ export const productVendor = table(
 		startDate: timestamp("start_date").defaultNow(),
 		endDate: timestamp("end_date"),
 
-		// Performance tracking
+		/**
+		 * @performanceAnalytics Flexible vendor performance tracking
+		 * @qualityManagement Multi-dimensional performance evaluation system
+		 */
 		performanceMetrics: jsonb("performance_metrics"),
 		/*
   {
@@ -709,7 +1040,9 @@ export const productVendor = table(
 		...timestamps,
 	},
 	(t) => [
-		// Only one primary vendor per product
+		/**
+		 * @businessConstraint One primary vendor per product for clear ownership
+		 */
 		uniqueIndex("uq_product_vendor_primary")
 			.on(t.productId, t.role)
 			.where(eq(t.role, "primary")),
