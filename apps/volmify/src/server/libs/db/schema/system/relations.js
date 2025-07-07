@@ -1,18 +1,60 @@
 import { relations } from "drizzle-orm";
-
 import { organizationPermissionsGroupPermission } from "../organization/schema.js";
 import { systemPermission, systemPermissionCategory } from "./schema.js";
 
+/**
+ * @fileoverview ABAC System Permission Relations
+ *
+ * @abacRelationships
+ * Defines the foundational relationships for attribute-based access control:
+ * - Hierarchical permission organization (categories)
+ * - Cross-context attribute assignment (organization integration)
+ */
+
+/**
+ * Category → Permissions (ABAC Namespace Relationship)
+ *
+ * @abacRole Attribute namespace container
+ * Enables logical grouping of permission attributes for policy management
+ * and simplified role template creation during organization onboarding.
+ *
+ * @cascadeBehavior Maintains ABAC integrity by preventing orphaned attributes
+ */
 export const systemPermissionCategoryRelations = relations(
 	systemPermissionCategory,
 	({ many }) => ({
 		permissions: many(systemPermission),
 	}),
 );
+
+/**
+ * Permission Relations (ABAC Attribute Assignments)
+ *
+ * @abacRole Core permission attribute with context assignments
+ *
+ * @crossContextIntegration
+ * The `groupPermissions` relationship enables the same permission attribute
+ * to be assigned across multiple organizational contexts, supporting the
+ * multi-tenant ABAC model where permissions are contextual to organizations.
+ *
+ * @authorizationPath
+ * ```
+ * User → Organization Context → Permission Group → System Permission
+ * ```
+ * This path enables runtime authorization decisions based on user context.
+ */
 export const systemPermissionRelations = relations(systemPermission, ({ one, many }) => ({
+	/**
+	 * @abacContext Namespace assignment for attribute organization
+	 */
 	category: one(systemPermissionCategory, {
 		fields: [systemPermission.categoryId],
 		references: [systemPermissionCategory.id],
 	}),
+	/**
+	 * @abacCrossContext Multi-tenant permission assignments
+	 * Enables same permission to be granted across different organizational contexts
+	 * @performanceCritical High-frequency relationship during authorization checks
+	 */
 	groupPermissions: many(organizationPermissionsGroupPermission),
 }));

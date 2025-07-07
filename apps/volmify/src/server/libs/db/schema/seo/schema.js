@@ -6,7 +6,6 @@ import {
 	jsonb,
 	pgEnum,
 	text,
-	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createdAt, id, table, updatedAt } from "../_utils/helpers.js";
@@ -43,24 +42,21 @@ export const seoMetadata = table(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
-		locale: text("locale").notNull(),
+		// locale: text("locale").notNull(),
 		isDefault: boolean("is_default").default(false),
 
 		// SEO workflow status
 		status: seoStatusEnum("status").default("draft"),
 
+		// Basic meta tags
 		// Core SEO fields (most commonly used)
 		title: text("title"),
 		description: text("description"),
 		keywords: text("keywords").array(),
+		image: text("image"),
+		imageAlt: text("image_alt"),
 		canonicalUrl: text("canonical_url"),
 		focusKeyword: text("focus_keyword"),
-
-		// Basic meta tags
-		metaTitle: text("meta_title"),
-		metaDescription: text("meta_description"),
-		metaImage: text("meta_image"),
-		metaImageAlt: text("meta_image_alt"),
 
 		// Advanced SEO
 		robots: text("robots").default("index,follow"),
@@ -70,32 +66,34 @@ export const seoMetadata = table(
 		// Language targeting
 		hreflang: text("hreflang"),
 
-		// TODO: Make the following fields into a separate table
-		// Performance metrics
-		lastIndexed: timestamp("last_indexed"),
-		clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 2 }),
-		averagePosition: decimal("average_position", { precision: 5, scale: 2 }),
-		impressions: integer("impressions").default(0),
-		clicks: integer("clicks").default(0),
-		seoScore: integer("seo_score"),
+		// The following is commented out as it is not needed for now.
+		// // TODO: Make the following fields into a separate table
+		// // Performance metrics
+		// lastIndexed: timestamp("last_indexed"),
+		// clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 2 }),
+		// averagePosition: decimal("average_position", { precision: 5, scale: 2 }),
+		// impressions: integer("impressions").default(0),
+		// clicks: integer("clicks").default(0),
+		// seoScore: integer("seo_score"),
 
-		// TODO: Make the following fields into a separate table
-		// Workflow
-		notes: text("notes"),
-		lastReviewedAt: timestamp("last_reviewed_at"),
-		reviewedBy: text("reviewed_by"),
+		// The following is commented out as it is not needed for now.
+		// // TODO: Make the following fields into a separate table
+		// // Workflow
+		// notes: text("notes"),
+		// lastReviewedAt: timestamp("last_reviewed_at"),
+		// reviewedBy: text("reviewed_by"),
 
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
 		index("idx_seo_organization").on(t.organizationId),
-		index("idx_seo_locale").on(t.locale),
 		index("idx_seo_canonical").on(t.canonicalUrl),
 		index("idx_seo_status").on(t.status),
 		index("idx_seo_focus_keyword").on(t.focusKeyword),
-		index("idx_seo_performance").on(t.clickThroughRate, t.averagePosition),
-		index("idx_seo_score").on(t.seoScore),
+		// index("idx_seo_locale").on(t.locale),
+		// index("idx_seo_performance").on(t.clickThroughRate, t.averagePosition),
+		// index("idx_seo_score").on(t.seoScore),
 	],
 );
 

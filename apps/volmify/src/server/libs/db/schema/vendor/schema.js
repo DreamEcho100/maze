@@ -1,296 +1,3 @@
-/*
-# **Vendor System Architecture - Developer Onboarding Guide**
-
-## **🎯 Core Concept**
-
-Our vendor system uses **Class Table Inheritance (CTI)** to handle different types of content creators and partners. Think of it as a flexible way to represent anyone who can create, collaborate on, or certify educational content on our platform.
-
-## **📊 Base Architecture**
-
-The foundation is the `vendor` table which contains common fields like `id`, `displayName`, `slug`, `type`, and `status`. The `organizationId` is **nullable** because some vendors (like system-defined brands) operate independently of specific organizations. The `userId` is **not** in the base vendor table since different vendor types have different user relationships.
-
-The `type` field determines which specialized table contains the vendor's specific data. This CTI pattern gives us type safety while maintaining flexibility.
-
-## **🎭 Two Primary Vendor Types**
-
-### **1. Brand Vendors (`type: "brand"`)**
-
-**Purpose:** Represents companies, institutions, or certification bodies that belong to specific organizations and provide branded content or certification.
-
-**Key Characteristics:**
-
-- **Organization-owned** - belongs to a specific organization via `organizationId`
-- **Brand identity** - represents the organization's training/content brand
-- **Certification capability** - can provide official certifications for courses
-- **System-defined option** - some brands can be created by the platform (future feature)
-
-**Example:** "TechCorp Training Division", "MIT Computer Science Department", "Adobe Creative Suite Training"
-
-**Data Storage:** `vendor_brand` table contains brand identity like `brandName`, `brandDescription`, `logoUrl`, `brandColors`, industry information, and verification details.
-
-**Organization Relationship:** Brands belong TO organizations. Each organization can create multiple brands for different purposes (e.g., "TechCorp Technical Training" and "TechCorp Leadership Development").
-
-**Revenue Model:** Revenue flows directly to the owning organization, which handles internal distribution.
-
-### **2. Instructor Vendors (`type: "instructor")`**
-
-**Purpose:** Individual users who create and deliver educational content across multiple organizational contexts.
-
-**Key Characteristics:**
-
-- **User-owned** - directly connected to a user account via `userId` in `vendor_instructor`
-- **Portable identity** - single instructor profile that works across all organizations
-- **Multi-organizational** - can affiliate with multiple organizations simultaneously
-- **Unified analytics** - all performance data tied to single instructor identity
-
-**Example:** A React developer who teaches independently, works for TechCorp, and consults for StartupXYZ - same instructor profile, different organizational contexts.
-
-**Data Storage:** `vendor_instructor` table contains the instructor's core professional profile: `bio`, `expertise`, `certifications`, `yearsExperience`, teaching preferences, and verification status.
-
-## **🔄 Revolutionary Many-to-Many Organization Model**
-
-Instead of artificial "independent" vs "organization" instructor types, we use a **single instructor identity with multiple organizational affiliations**:
-
-### **Instructor-Organization Affiliations:**
-
-The `instructor_organization_affiliation` table creates flexible relationships between instructors and organizations:
-
-- **Affiliation Types:** "owner" (created own org), "employee", "contractor", "guest", "partner"
-- **Role Context:** "lead_instructor", "subject_expert", "content_reviewer" within specific organization
-- **Permissions:** Different capabilities per organization (`canCreateCourses`, `canManageStudents`)
-- **Compensation:** Flexible models per relationship (`revenue_share`, `flat_fee`, `hourly`, `salary`)
-- **Lifecycle:** Track relationship status, start/end dates, and connection method
-
-### **Real-World User Journey:**
-
-1. **Profile Creation:** Sarah creates single instructor vendor profile with her credentials
-2. **Own Organization:** Sarah creates "Sarah's Academy" → becomes owner affiliation
-3. **Employment:** TechCorp hires Sarah → employee affiliation with different compensation
-4. **Consulting:** StartupXYZ engages Sarah → contractor affiliation with project-specific terms
-5. **Analytics:** Sarah sees consolidated performance across all contexts
-
-**Same instructor, multiple organizational contexts, unified identity!**
-
-## **🏅 Comprehensive Credential Management System**
-
-### **Global Credential Portfolio:**
-
-The `instructor_credential` table stores the instructor's complete professional portfolio:
-
-**Credential Types:**
-
-- **Education:** Degrees, diplomas, academic achievements
-- **Certifications:** Professional certifications, skill assessments
-- **Work Experience:** Employment history, project roles
-- **Projects:** Portfolio work, open source contributions
-- **Awards:** Industry recognition, achievements
-- **Publications:** Articles, research papers, books
-
-**Rich Credential Data:**
-
-- Core information (`title`, `institution`, `description`)
-- Verification details (`credentialId`, `credentialUrl`, `issueDate`, `expirationDate`)
-- Supporting evidence (documents, certificates, portfolio links)
-- Skills and subjects covered
-- Display preferences and highlighting
-
-### **Multi-Level Verification System:**
-
-**1. System-Level Verification (Automatic):**
-
-- API integrations with LinkedIn, Credly, university systems
-- Document analysis and pattern matching
-- Third-party verification services
-- Public records checking
-
-**2. Organization-Level Verification (Manual/Hybrid):**
-
-- Organization's HR/academic team reviews
-- Interview processes and practical assessments
-- Reference checks and background verification
-- Custom verification workflows per organization
-
-**3. Trust Score Calculation:**
-
-- Weighted scoring based on credential type and verification status
-- Institution reputation factors
-- Peer validation and community verification
-- Real-time credibility assessment
-
-### **Organization Requirements Matching:**
-
-The `organization_credential_requirement` table allows organizations to:
-
-- Define mandatory vs. preferred credentials
-- Set minimum experience levels
-- Specify required certifications or education
-- Configure automatic vs. manual verification preferences
-- Apply requirements to specific roles or subject areas
-
-## **🛠 Advanced Product Collaboration**
-
-### **Multi-Vendor Products:**
-
-The `product_vendor` table enables sophisticated collaboration:
-
-**Vendor Roles:**
-
-- **Primary:** Main content creator and course owner
-- **Collaborator:** Co-instructor or content contributor  
-- **Reviewer:** Technical or subject matter expert
-- **Certifier:** Brand providing official certification
-
-**Revenue Distribution:**
-
-- Flexible revenue sharing per vendor per product
-- Different compensation models based on contribution type
-- Organization-context-aware revenue calculations
-- Performance-based bonus structures
-
-**Example Course Structure:**
-
-- Primary Instructor: Sarah (50% revenue) - main content creation
-- Co-Instructor: TechCorp employee (30% revenue) - specialized modules
-- Certifying Brand: Microsoft (20% revenue) - official certification
-
-## **💰 Sophisticated Revenue Architecture**
-
-### **Context-Aware Revenue Rules:**
-
-The `vendor_revenue_rule` table provides dynamic commission structures:
-
-**Rule Types:**
-
-- **Base Share:** Default revenue percentage for vendor type/context
-- **Performance Bonus:** Rewards for high ratings, completion rates, student volumes
-- **Volume Tiers:** Graduated rates based on total revenue or student count
-- **Traffic Source:** Different rates for organic vs. paid customer acquisition
-
-**Organizational Context:**
-
-- Same instructor can have different revenue arrangements with different organizations
-- Organization-specific bonus structures and performance incentives
-- Compliance with local employment laws and contractor agreements
-
-## **✅ Advanced Verification Workflows**
-
-### **Type-Specific Verification Processes:**
-
-The `vendor_verification` table handles tailored verification workflows:
-
-**Instructor Verification:**
-
-- Identity verification (government ID, address confirmation)
-- Educational credentials (degree verification, transcript review)
-- Professional experience (employment verification, reference checks)
-- Teaching demonstration (sample lesson, peer review)
-- Background checks (criminal history, professional misconduct)
-
-**Brand Verification:**
-
-- Business registration and legal standing
-- Trademark and intellectual property verification
-- Financial stability and insurance coverage
-- Content licensing and compliance review
-
-### **Verification Request Management:**
-
-The `credential_verification_request` table tracks:
-
-- Verification requests in different organizational contexts
-- Assigned reviewers and workflow status
-- Additional documentation requirements
-- Interview scheduling and assessment results
-- Decision tracking and audit trails
-
-## **🔍 Powerful Query Patterns**
-
-### **Instructor-Centric Queries:**
-
-- Get instructor with all organizational affiliations and credentials
-- Calculate instructor performance across all contexts
-- Find instructors matching specific credential requirements
-- Track instructor verification status across organizations
-
-### **Organization-Centric Queries:**
-
-- Get all affiliated instructors with their roles and permissions
-- Find instructors meeting specific credential requirements
-- Calculate organization revenue attribution across instructors
-- Monitor instructor verification compliance
-
-### **Cross-Context Analytics:**
-
-- Instructor performance comparison across organizations
-- Revenue attribution and settlement calculations
-- Credential gap analysis and recommendation engines
-- Trust score trends and verification success rates
-
-## **🚀 Scalability & Future Extensions**
-
-### **Architectural Benefits:**
-
-- **Single instructor identity** - eliminates data duplication and inconsistency
-- **Flexible relationships** - supports complex real-world collaboration patterns
-- **Extensible credential system** - ready for new verification methods and credential types
-- **Performance optimized** - efficient queries with clear relationship boundaries
-
-### **Future Platform Evolution:**
-
-The vendor architecture supports expansion into:
-
-- **Freelance marketplace** - project-based work and gig economy features
-- **Talent agency model** - managed talent pools and representation
-- **Job placement services** - career advancement and hiring facilitation
-- **Professional networking** - LinkedIn-like features for education industry
-- **Certification marketplace** - third-party certification provider ecosystem
-
-## **🔧 Developer Guidelines**
-
-### **Working with Vendors:**
-
-- Always query instructor affiliations to understand organizational context
-- Use the credential system for trust and safety features
-- Leverage verification workflows for quality assurance
-- Consider revenue context when calculating payouts
-- Use transactions when creating vendor relationships
-
-### **Best Practices:**
-
-- Check affiliation status and permissions before allowing instructor actions
-- Cache trust scores and verification status for performance
-- Use the credential matching system for intelligent instructor recommendations
-- Implement proper audit trails for verification decisions
-- Design UI to clearly show organizational context and instructor identity
-
-### **Performance Considerations:**
-
-- Index on frequently queried fields (affiliation status, verification status, credential types)
-- Use materialized views for complex analytics calculations
-- Cache instructor profiles and credential summaries
-- Optimize joins between vendor tables and affiliation relationships
-
-## **🎯 Platform Differentiation**
-
-This vendor architecture creates a **unified professional identity system** that surpasses traditional LMS platforms:
-
-**vs. Traditional Platforms:**
-
-- **Udemy:** Instructors locked to platform, no organizational flexibility
-- **Coursera:** University partnerships but limited instructor mobility
-- **LinkedIn Learning:** Single employer model, no multi-organizational capability
-
-**Our Advantages:**
-
-- **Portable professional identity** across organizational boundaries
-- **Comprehensive credential verification** with multiple validation levels
-- **Flexible collaboration models** supporting real-world work patterns
-- **Advanced revenue sharing** with context-aware compensation
-- **Scalable architecture** ready for marketplace and networking features
-
-The vendor system is the foundation for a **professional education ecosystem** that recognizes how people actually work - with multiple affiliations, portable reputations, and complex collaboration patterns. It transforms our platform from a simple LMS into a comprehensive professional development and networking platform.
-*/
-
 import { eq, sql } from "drizzle-orm";
 import {
 	boolean,
@@ -368,10 +75,13 @@ export const verificationStatusEnum = pgEnum("verification_status", [
 	"needs_review",
 ]);
 
-export const verificationRequestStatusEnum = pgEnum(
-	"verification_request_status",
-	["pending", "in_review", "approved", "rejected", "needs_more_info"],
-);
+export const verificationRequestStatusEnum = pgEnum("verification_request_status", [
+	"pending",
+	"in_review",
+	"approved",
+	"rejected",
+	"needs_more_info",
+]);
 
 export const vendorRoleEnum = pgEnum("vendor_role", [
 	"primary",
@@ -428,9 +138,7 @@ export const vendor = table(
 	(t) => [
 		// Unique slug per organization (or globally if organizationId is null)
 		uniqueIndex("uq_vendor_slug_org").on(t.organizationId, t.slug),
-		uniqueIndex("uq_vendor_slug_global")
-			.on(t.slug)
-			.where(sql`${t.organizationId} IS NULL`),
+		uniqueIndex("uq_vendor_slug_global").on(t.slug).where(sql`${t.organizationId} IS NULL`),
 
 		index("idx_vendor_type").on(t.type),
 		index("idx_vendor_organization").on(t.organizationId),
@@ -438,10 +146,7 @@ export const vendor = table(
 		// index("idx_vendor_rating").on(t.avgRating),
 
 		// Check constraints
-		check(
-			"vendor_brand_has_org",
-			sql`NOT (${t.type} = 'brand' AND ${t.organizationId} IS NULL)`,
-		),
+		check("vendor_brand_has_org", sql`NOT (${t.type} = 'brand' AND ${t.organizationId} IS NULL)`),
 	],
 );
 
@@ -517,9 +222,7 @@ export const vendorMetrics = table(
 			precision: 12,
 			scale: 2,
 		}).default("0"),
-		totalPayouts: decimal("total_payouts", { precision: 12, scale: 2 }).default(
-			"0",
-		),
+		totalPayouts: decimal("total_payouts", { precision: 12, scale: 2 }).default("0"),
 		revenueSharePercentage: decimal("revenue_share_percentage", {
 			precision: 5,
 			scale: 2,
@@ -562,9 +265,7 @@ export const vendorBrand = table("vendor_brand", {
 	verificationLevel: text("verification_level").default("unverified"), // "unverified", "basic", "premium", "enterprise"
 
 	// Brand capabilities
-	acceptsThirdPartyContent: boolean("accepts_third_party_content").default(
-		false,
-	),
+	acceptsThirdPartyContent: boolean("accepts_third_party_content").default(false),
 	whiteLabelingAvailable: boolean("white_labeling_available").default(false),
 	canProvideCertification: boolean("can_provide_certification").default(false),
 
@@ -601,10 +302,7 @@ export const vendorBrandTranslation = table(
 		...timestamps,
 	},
 	(t) => [
-		uniqueIndex("uq_vendor_brand_translation_locale").on(
-			t.vendorBrandId,
-			t.locale,
-		),
+		uniqueIndex("uq_vendor_brand_translation_locale").on(t.vendorBrandId, t.locale),
 		uniqueIndex("uq_vendor_brand_translation_default")
 			.on(t.vendorBrandId, t.isDefault)
 			.where(eq(t.isDefault, true)),
@@ -725,10 +423,7 @@ export const vendorInstructorTranslation = table(
 		...timestamps,
 	},
 	(t) => [
-		uniqueIndex("uq_vendor_instructor_translation_locale").on(
-			t.vendorInstructorId,
-			t.locale,
-		),
+		uniqueIndex("uq_vendor_instructor_translation_locale").on(t.vendorInstructorId, t.locale),
 		uniqueIndex("uq_vendor_instructor_translation_default")
 			.on(t.vendorInstructorId, t.isDefault)
 			.where(eq(t.isDefault, true)),
@@ -745,9 +440,7 @@ export const vendorInstructorMetrics = table(
 		// Engagement metrics
 		totalStudents: integer("total_students").default(0),
 
-		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default(
-			"0.00",
-		),
+		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
 		totalReviews: integer("total_reviews").default(0),
 
 		// totalCourses: integer("total_courses").default(0),
@@ -835,16 +528,10 @@ export const vendorInstructorCoursesMetrics = table(
 		total: integer("total_courses").default(0),
 		// totalCompleted: integer("total_courses_completed").default(0),
 		// totalInProgress: integer("total_courses_in_progress").default(0),
-		totalCompletedByStudents: integer(
-			"total_courses_completed_by_students",
-		).default(0),
-		totalInProgressByStudents: integer(
-			"total_courses_in_progress_by_students",
-		).default(0),
+		totalCompletedByStudents: integer("total_courses_completed_by_students").default(0),
+		totalInProgressByStudents: integer("total_courses_in_progress_by_students").default(0),
 
-		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default(
-			"0.00",
-		),
+		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
 		totalReviews: integer("total_reviews").default(0),
 		// totalActive: integer("total_courses_active").default(0),
 		// totalArchived: integer("total_courses_archived").default(0),
@@ -907,8 +594,7 @@ export const instructorOrganizationAffiliation = table(
 		// authorizationLevel: text("authorization_level").default("standard"), // "restricted", "standard", "elevated", "admin"
 
 		// Compensation for this relationship
-		compensationType:
-			compensationTypeEnum("compensation_type").default("revenue_share"),
+		compensationType: compensationTypeEnum("compensation_type").default("revenue_share"),
 		compensationAmount: decimal("compensation_amount", {
 			precision: 10,
 			scale: 2,

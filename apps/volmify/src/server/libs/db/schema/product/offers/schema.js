@@ -307,8 +307,6 @@ export const promotionTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-		seoTitle: text("seo_title"),
-		seoDescription: text("seo_description"),
 
 		// SEO reference (optional - not all translations need SEO)
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
