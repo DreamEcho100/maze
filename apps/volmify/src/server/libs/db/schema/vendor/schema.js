@@ -976,6 +976,9 @@ export const productVendor = table(
 			.notNull()
 			.references(() => vendor.id, { onDelete: "cascade" }),
 
+		// TODO
+		// If vendors are tenant-scoped: They share the same tenant_id, and permissions are managed through userRoles.
+		// If vendors are global (multi-tenant reach): You’ll need to decouple vendors from tenants and have a many-to-many table like vendorTenants.
 		/**
 		 * @collaborationRole Vendor's role in product creation and delivery
 		 * @businessModel Determines permissions, responsibilities, and compensation
