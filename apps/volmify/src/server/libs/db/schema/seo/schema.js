@@ -37,7 +37,7 @@ export const changeFreqEnum = pgEnum("change_freq", [
 export const seoMetadata = table(
 	"seo_metadata",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -103,7 +103,7 @@ export const seoMetadata = table(
 export const seoOpenGraph = table(
 	"seo_open_graph",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -180,7 +180,7 @@ export const seoOpenGraph = table(
 export const seoTwitterCard = table(
 	"seo_twitter_card",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -241,7 +241,7 @@ export const seoTwitterCard = table(
 export const seoStructuredData = table(
 	"seo_structured_data",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -276,7 +276,7 @@ export const seoStructuredData = table(
 export const seoAlternateUrl = table(
 	"seo_alternate_url",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -306,7 +306,7 @@ export const seoAlternateUrl = table(
 export const seoCustomMeta = table(
 	"seo_custom_meta",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -344,7 +344,7 @@ export const seoCustomMeta = table(
 export const seoIssue = table(
 	"seo_issue",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -389,7 +389,7 @@ export const seoIssue = table(
 export const seoAuditLog = table(
 	"seo_audit_log",
 	{
-		id,
+		id: id.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),

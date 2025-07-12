@@ -35,7 +35,7 @@ export const discountAppliesToEnum = pgEnum("discount_applies_to", [
 export const discount = table(
 	"discount",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -72,7 +72,7 @@ export const discount = table(
 export const discountTranslation = table(
 	"discount_translation",
 	{
-		id,
+		id: id.notNull(),
 		discountId: text("discount_id")
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
@@ -100,7 +100,7 @@ export const discountTranslation = table(
 export const discountUsage = table(
 	"discount_usage",
 	{
-		id,
+		id: id.notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id),
@@ -121,7 +121,7 @@ export const discountUsage = table(
 export const coupon = table(
 	"coupon",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -154,7 +154,7 @@ export const coupon = table(
 export const couponTranslation = table(
 	"coupon_translation",
 	{
-		id,
+		id: id.notNull(),
 		couponId: text("coupon_id")
 			.notNull()
 			.references(() => coupon.id, { onDelete: "cascade" }),
@@ -182,7 +182,7 @@ export const couponTranslation = table(
 export const giftCard = table(
 	"gift_card",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -221,7 +221,7 @@ export const giftCard = table(
 export const giftCardTranslation = table(
 	"gift_card_translation",
 	{
-		id,
+		id: id.notNull(),
 		giftCardId: text("gift_card_id")
 			.notNull()
 			.references(() => giftCard.id, { onDelete: "cascade" }),
@@ -249,7 +249,7 @@ export const giftCardTranslation = table(
 export const giftCardUsage = table(
 	"gift_card_usage",
 	{
-		id,
+		id: id.notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id),
@@ -271,7 +271,7 @@ export const giftCardUsage = table(
 export const promotion = table(
 	"promotion",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -299,7 +299,7 @@ export const promotion = table(
 export const promotionTranslation = table(
 	"promotion_translation",
 	{
-		id,
+		id: id.notNull(),
 		promotionId: text("promotion_id")
 			.notNull()
 			.references(() => promotion.id, { onDelete: "cascade" }),
@@ -327,7 +327,7 @@ export const promotionTranslation = table(
 export const promotionDiscount = table(
 	"promotion_discount",
 	{
-		id,
+		id: id.notNull(),
 		promotionId: text("promotion_id")
 			.notNull()
 			.references(() => promotion.id, { onDelete: "cascade" }),

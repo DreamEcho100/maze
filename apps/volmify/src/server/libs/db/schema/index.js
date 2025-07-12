@@ -18,3 +18,6 @@ export * from "./seo/schema.js";
 
 export * from "./system/relations.js";
 export * from "./system/schema.js";
+
+export * from "./user/profile/instructor/relations.js";
+export * from "./user/profile/instructor/schema.js";

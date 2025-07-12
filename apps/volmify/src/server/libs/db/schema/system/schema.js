@@ -49,7 +49,7 @@ import { createdAt, id, name, table } from "../_utils/helpers.js";
 export const systemPermissionCategory = table(
 	"system_permission_category",
 	{
-		id,
+		id: id.notNull(),
 		/**
 		 * Namespace identifier for permission grouping
 		 * @businessRule snake_case, represents functional domain
@@ -89,7 +89,7 @@ export const systemPermissionCategory = table(
 export const systemPermission = table(
 	"system_permission",
 	{
-		id,
+		id: id.notNull(),
 		/**
 		 * Unique permission attribute identifier
 		 * @abacAttribute Core attribute for access control decisions

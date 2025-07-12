@@ -1,17 +1,21 @@
 import { relations } from "drizzle-orm";
 
 import { user } from "../auth/schema.js";
+import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import {
-	country,
-	currency,
-	marketTemplate,
-} from "../currency-and-market/schema.js";
-import { productPrice, productZonePrice } from "../product/schema.js";
+	productBrandAttribution,
+	productInstructorAttribution,
+	productPrice,
+	productZonePrice,
+} from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
-import { instructorOrganizationAffiliation, vendor } from "../vendor/schema.js";
+import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import {
+	instructorOrganizationAffiliation,
 	organization,
+	organizationBrand,
+	organizationBrandTranslation,
 	organizationCurrencySettings,
 	organizationDepartment,
 	// organizationLocale,
@@ -25,10 +29,10 @@ import {
 	organizationMemberTeam,
 	organizationPermissionsGroup,
 	organizationPermissionsGroupPermission,
+	organizationPricingZone,
+	organizationPricingZoneCountry,
 	organizationTeam,
 	organizationTeamDepartment,
-	pricingZone,
-	pricingZoneCountry,
 } from "./schema.js";
 
 /**
@@ -89,8 +93,18 @@ export const organizationRelations = relations(organization, ({ many }) => ({
 	// locales: many(organizationLocale),
 	currencySettings: many(organizationCurrencySettings),
 	markets: many(organizationMarket),
-	pricingZones: many(pricingZone),
-	vendors: many(vendor),
+	pricingZones: many(organizationPricingZone),
+
+	/**
+	 * @brandIdentity Organization's brand identities for content attribution
+	 * @contentStrategy Multiple brands per organization for different market segments
+	 */
+	brands: many(organizationBrand),
+
+	/**
+	 * @instructorNetwork Instructor affiliations and affiliations within organization
+	 * @creatorEconomy Instructor relationships for content creation and collaboration
+	 */
 	instructorAffiliations: many(instructorOrganizationAffiliation),
 }));
 
@@ -107,50 +121,47 @@ export const organizationRelations = relations(organization, ({ many }) => ({
  * - Department-based: Department membership + department permissions
  * - Invitation-based: Pre-authorization through invitation system
  */
-export const organizationMemberRelations = relations(
-	organizationMember,
-	({ one, many }) => ({
-		/**
-		 * @abacContext Organization provides permission evaluation boundary
-		 */
-		organization: one(organization, {
-			fields: [organizationMember.organizationId],
-			references: [organization.id],
-		}),
-
-		/**
-		 * @abacSubject Links to platform user identity
-		 * @identityResolution Connects organization context to user identity
-		 */
-		user: one(user, {
-			fields: [organizationMember.userId],
-			references: [user.id],
-		}),
-
-		/**
-		 * @abacPermissionPath Team-based permission inheritance
-		 * @organizationalFlexibility Many-to-many team membership
-		 */
-		memberTeams: many(organizationMemberTeam),
-
-		/**
-		 * @abacCore Direct permission attribute assignments
-		 * @permissionManagement Primary mechanism for permission assignment
-		 */
-		memberGroups: many(organizationMemberPermissionsGroup),
-
-		/**
-		 * @membershipLifecycle Invitation-to-member workflow tracking
-		 */
-		memberInvitations: many(organizationMemberInvitation),
-
-		/**
-		 * @abacPermissionPath Department-based permission inheritance
-		 * @organizationalStructure Many-to-many department membership
-		 */
-		memberDepartments: many(organizationMemberDepartment),
+export const organizationMemberRelations = relations(organizationMember, ({ one, many }) => ({
+	/**
+	 * @abacContext Organization provides permission evaluation boundary
+	 */
+	organization: one(organization, {
+		fields: [organizationMember.organizationId],
+		references: [organization.id],
 	}),
-);
+
+	/**
+	 * @abacSubject Links to platform user identity
+	 * @identityResolution Connects organization context to user identity
+	 */
+	user: one(user, {
+		fields: [organizationMember.userId],
+		references: [user.id],
+	}),
+
+	/**
+	 * @abacPermissionPath Team-based permission inheritance
+	 * @organizationalFlexibility Many-to-many team membership
+	 */
+	memberTeams: many(organizationMemberTeam),
+
+	/**
+	 * @abacCore Direct permission attribute assignments
+	 * @permissionManagement Primary mechanism for permission assignment
+	 */
+	memberGroups: many(organizationMemberPermissionsGroup),
+
+	/**
+	 * @membershipLifecycle Invitation-to-member workflow tracking
+	 */
+	memberInvitations: many(organizationMemberInvitation),
+
+	/**
+	 * @abacPermissionPath Department-based permission inheritance
+	 * @organizationalStructure Many-to-many department membership
+	 */
+	memberDepartments: many(organizationMemberDepartment),
+}));
 
 /**
  * Department Relations (Structural Permission Context)
@@ -244,27 +255,24 @@ export const organizationMemberDepartmentRelations = relations(
  * Teams enable project-based, cross-functional, and temporary permission
  * assignments within the organizational ABAC context.
  */
-export const organizationTeamRelations = relations(
-	organizationTeam,
-	({ one, many }) => ({
-		organization: one(organization, {
-			fields: [organizationTeam.organizationId],
-			references: [organization.id],
-		}),
-
-		/**
-		 * @organizationalFlexibility Teams can span multiple departments
-		 * @permissionBridge Enables complex team-department permission relationships
-		 */
-		teamDepartments: many(organizationTeamDepartment),
-
-		/**
-		 * @abacSubjects Team members with role-based team permissions
-		 * @permissionContext Team membership can provide additional permission layers
-		 */
-		memberTeams: many(organizationMemberTeam),
+export const organizationTeamRelations = relations(organizationTeam, ({ one, many }) => ({
+	organization: one(organization, {
+		fields: [organizationTeam.organizationId],
+		references: [organization.id],
 	}),
-);
+
+	/**
+	 * @organizationalFlexibility Teams can span multiple departments
+	 * @permissionBridge Enables complex team-department permission relationships
+	 */
+	teamDepartments: many(organizationTeamDepartment),
+
+	/**
+	 * @abacSubjects Team members with role-based team permissions
+	 * @permissionContext Team membership can provide additional permission layers
+	 */
+	memberTeams: many(organizationMemberTeam),
+}));
 
 /**
  * Member-Team Assignment Relations
@@ -273,19 +281,16 @@ export const organizationTeamRelations = relations(
  * Enables team-based permission inheritance with role-specific
  * permissions within team contexts.
  */
-export const organizationMemberTeamRelations = relations(
-	organizationMemberTeam,
-	({ one }) => ({
-		member: one(organizationMember, {
-			fields: [organizationMemberTeam.memberId],
-			references: [organizationMember.id],
-		}),
-		team: one(organizationTeam, {
-			fields: [organizationMemberTeam.teamId],
-			references: [organizationTeam.id],
-		}),
+export const organizationMemberTeamRelations = relations(organizationMemberTeam, ({ one }) => ({
+	member: one(organizationMember, {
+		fields: [organizationMemberTeam.memberId],
+		references: [organizationMember.id],
 	}),
-);
+	team: one(organizationTeam, {
+		fields: [organizationMemberTeam.teamId],
+		references: [organizationTeam.id],
+	}),
+}));
 
 /**
  * Member-Permission Group Relations (ABAC Attribute Assignment)
@@ -430,26 +435,23 @@ export const organizationCurrencySettingsRelations = relations(
 	}),
 );
 
-export const organizationMarketRelations = relations(
-	organizationMarket,
-	({ one, many }) => ({
-		organization: one(organization, {
-			fields: [organizationMarket.organizationId],
-			references: [organization.id],
-		}),
-		template: one(marketTemplate, {
-			fields: [organizationMarket.templateId],
-			references: [marketTemplate.id],
-		}),
-		currency: one(currency, {
-			fields: [organizationMarket.currencyCode],
-			references: [currency.code],
-		}),
-		countries: many(organizationMarketCountry),
-		translations: many(organizationMarketTranslation),
-		productPrices: many(productPrice),
+export const organizationMarketRelations = relations(organizationMarket, ({ one, many }) => ({
+	organization: one(organization, {
+		fields: [organizationMarket.organizationId],
+		references: [organization.id],
 	}),
-);
+	template: one(marketTemplate, {
+		fields: [organizationMarket.templateId],
+		references: [marketTemplate.id],
+	}),
+	currency: one(currency, {
+		fields: [organizationMarket.currencyCode],
+		references: [currency.code],
+	}),
+	countries: many(organizationMarketCountry),
+	translations: many(organizationMarketTranslation),
+	productPrices: many(productPrice),
+}));
 
 export const organizationMarketCountryRelations = relations(
 	organizationMarketCountry,
@@ -483,29 +485,116 @@ export const organizationMarketTranslationRelations = relations(
 	}),
 );
 
-export const pricingZoneRelations = relations(pricingZone, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [pricingZone.organizationId],
-		references: [organization.id],
+export const organizationPricingZoneRelations = relations(
+	organizationPricingZone,
+	({ one, many }) => ({
+		organization: one(organization, {
+			fields: [organizationPricingZone.organizationId],
+			references: [organization.id],
+		}),
+		currency: one(currency, {
+			fields: [organizationPricingZone.currencyCode],
+			references: [currency.code],
+		}),
+		countries: many(organizationPricingZoneCountry),
+		productZonePrices: many(productZonePrice),
 	}),
-	currency: one(currency, {
-		fields: [pricingZone.currencyCode],
-		references: [currency.code],
-	}),
-	countries: many(pricingZoneCountry),
-	productZonePrices: many(productZonePrice),
-}));
+);
 
-export const pricingZoneCountryRelations = relations(
-	pricingZoneCountry,
+export const organizationPricingZoneCountryRelations = relations(
+	organizationPricingZoneCountry,
 	({ one }) => ({
-		zone: one(pricingZone, {
-			fields: [pricingZoneCountry.zoneId],
-			references: [pricingZone.id],
+		zone: one(organizationPricingZone, {
+			fields: [organizationPricingZoneCountry.zoneId],
+			references: [organizationPricingZone.id],
 		}),
 		country: one(country, {
-			fields: [pricingZoneCountry.countryId],
+			fields: [organizationPricingZoneCountry.countryId],
 			references: [country.id],
 		}),
+	}),
+);
+
+/**
+ * Organization Brand Relations
+ *
+ * @brandIdentity Organization-scoped brand management for content attribution
+ * Enables organizations to manage multiple brand identities for different
+ * market segments while maintaining organizational context and permissions.
+ */
+export const organizationBrandRelations = relations(organizationBrand, ({ one, many }) => ({
+	/**
+	 * @organizationContext Brand operates within organization boundary
+	 */
+	organization: one(organization, {
+		fields: [organizationBrand.organizationId],
+		references: [organization.id],
+	}),
+
+	/**
+	 * @contentAttribution Products attributed to this brand identity
+	 * @marketplaceVisibility Brand-attributed content in marketplace
+	 */
+	productAttributions: many(productBrandAttribution),
+
+	/**
+	 * @localizationSupport Multi-language brand content for global markets
+	 */
+	translations: many(organizationBrandTranslation),
+}));
+
+export const organizationBrandTranslationRelations = relations(
+	organizationBrandTranslation,
+	({ one }) => ({
+		brand: one(organizationBrand, {
+			fields: [organizationBrandTranslation.organizationBrandId],
+			references: [organizationBrand.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [organizationBrandTranslation.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+	}),
+);
+
+/**
+ * Instructor Organization Membership Relations
+ *
+ * @instructorNetwork Instructor participation within organization context
+ * Enables instructors to create content and collaborate within specific
+ * organizational boundaries while maintaining cross-organization flexibility.
+ */
+export const instructorOrganizationAffiliationRelations = relations(
+	instructorOrganizationAffiliation,
+	({ one, many }) => ({
+		/**
+		 * @instructorIdentity Links to instructor's global profile
+		 */
+		instructor: one(userInstructorProfile, {
+			fields: [instructorOrganizationAffiliation.instructorId],
+			references: [userInstructorProfile.id],
+		}),
+
+		/**
+		 * @organizationContext Organization providing membership context
+		 */
+		organization: one(organization, {
+			fields: [instructorOrganizationAffiliation.organizationId],
+			references: [organization.id],
+		}),
+
+		/**
+		 * @membershipBridge Organization member account for permissions
+		 */
+		member: one(organizationMember, {
+			fields: [instructorOrganizationAffiliation.memberId],
+			references: [organizationMember.id],
+		}),
+
+		/**
+		 * @contentAttribution Products created by instructor in this organization
+		 * @revenueTracking Revenue attribution for instructor content
+		 */
+		productAttributions: many(productInstructorAttribution),
 	}),
 );

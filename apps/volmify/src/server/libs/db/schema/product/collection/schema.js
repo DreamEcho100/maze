@@ -11,7 +11,7 @@ import { product } from "../schema.js";
 export const collection = table(
 	"collection",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),

@@ -31,6 +31,7 @@ import {
 } from "../currency-and-market/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
+import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 
 /**
  * @fileoverview Organization Schema - Multi-Tenant ABAC Context
@@ -103,7 +104,7 @@ const organizationMetadataJsonb = jsonb("metadata");
 export const organization = table(
 	"organization",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -169,7 +170,7 @@ export const organization = table(
 export const organizationTeam = table(
 	"organization_team",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -238,7 +239,7 @@ export const organizationTeam = table(
 export const organizationMember = table(
 	"organization_member",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -291,7 +292,7 @@ export const organizationMember = table(
 export const organizationDepartment = table(
 	"organization_department",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
@@ -339,7 +340,7 @@ export const organizationDepartment = table(
 export const organizationMemberDepartment = table(
 	"organization_member_department",
 	{
-		id,
+		id: id.notNull(),
 		memberId: text("member_id")
 			.notNull()
 			.references(() => organizationMember.id, { onDelete: "cascade" }),
@@ -391,7 +392,7 @@ export const organizationMemberTeamRoleEnum = pgEnum(
 export const organizationMemberTeam = table(
 	"organization_member_team",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		memberId: text("member_id")
 			.notNull()
@@ -437,7 +438,7 @@ export const organizationMemberTeam = table(
 export const organizationTeamDepartment = table(
 	"organization_team_department",
 	{
-		id,
+		id: id.notNull(),
 		teamId: fk("team_id")
 			.references(() => organizationTeam.id, { onDelete: "cascade" })
 			.notNull(),
@@ -487,7 +488,7 @@ export const organizationTeamDepartment = table(
 export const organizationMemberPermissionsGroup = table(
 	"organization_member_permissions_group",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		/**
 		 * @auditTrail Tracks who assigned permissions for compliance
@@ -539,7 +540,7 @@ export const organizationMemberPermissionsGroup = table(
 export const organizationPermissionsGroup = table(
 	"organization_permissions_group",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -590,7 +591,7 @@ export const organizationPermissionsGroup = table(
 export const organizationPermissionsGroupPermission = table(
 	"organization_permissions_group_permission",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		permissionsGroupId: text("permissions_group_id")
 			.notNull()
@@ -655,7 +656,7 @@ export const organizationMemberInvitationStatusEnum = pgEnum(
 export const organizationMemberInvitation = table(
 	"organization_member_invitation",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		organizationId: text("organization_id")
@@ -804,7 +805,7 @@ export const organizationCurrencySettings = table(
 export const organizationMarket = table(
 	"organization_market",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
@@ -881,7 +882,7 @@ export const organizationMarketCountry = table(
 export const organizationMarketTranslation = table(
 	"organization_market_translation",
 	{
-		id,
+		id: id.notNull(),
 		organizationMarketId: text("organization_market_id")
 			.notNull()
 			.references(() => organizationMarket.id, { onDelete: "cascade" }),
@@ -927,10 +928,10 @@ export const organizationMarketTranslation = table(
  * Works with product pricing system to provide location-based
  * pricing within organizational market structures.
  */
-export const pricingZone = table(
-	"pricing_zone",
+export const organizationPricingZone = table(
+	"organization_pricing_zone",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id").references(() => organization.id),
 		name: name.notNull(),
 		description: text("description"),
@@ -943,11 +944,11 @@ export const pricingZone = table(
 		createdAt,
 	},
 	(t) => [
-		index("idx_pricing_zone_organization").on(t.organizationId),
-		index("idx_pricing_zone_currency").on(t.currencyCode),
-		index("idx_pricing_zone_active").on(t.isActive),
-		index("idx_pricing_zone_priority").on(t.priority),
-		index("idx_pricing_zone_name").on(t.name),
+		index("idx_organization_pricing_zone_organization").on(t.organizationId),
+		index("idx_organization_pricing_zone_currency").on(t.currencyCode),
+		index("idx_organization_pricing_zone_active").on(t.isActive),
+		index("idx_organization_pricing_zone_priority").on(t.priority),
+		index("idx_organization_pricing_zone_name").on(t.name),
 	],
 );
 
@@ -957,15 +958,203 @@ export const pricingZone = table(
  * @businessLogic Maps countries to pricing zones for precise
  * geographic pricing strategy implementation within organizations.
  */
-export const pricingZoneCountry = table(
-	"pricing_zone_country",
+export const organizationPricingZoneCountry = table(
+	"organization_pricing_zone_country",
 	{
 		zoneId: text("zone_id")
 			.notNull()
-			.references(() => pricingZone.id, { onDelete: "cascade" }),
+			.references(() => organizationPricingZone.id, { onDelete: "cascade" }),
 		countryId: text("country_id")
 			.notNull()
 			.references(() => country.id, { onDelete: "cascade" }),
 	},
 	(t) => [primaryKey({ columns: [t.zoneId, t.countryId] })],
+);
+
+/**
+ * Organization Brand Identity
+ *
+ * @businessLogic Organization's brand representation for content attribution
+ * Used for corporate course branding and professional content creation
+ */
+export const organizationBrand = table(
+	"organization_brand",
+	{
+		id: id.notNull(),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id),
+		name: text("name").notNull(),
+		slug: text("slug").notNull(),
+		description: text("description"),
+		logo: text("logo"),
+		brandCategory: text("brand_category"),
+		metadata: jsonb("metadata"),
+		createdAt,
+		updatedAt,
+		deletedAt,
+	},
+	(t) => [
+		uniqueIndex("uq_org_brand_slug").on(t.organizationId, t.slug),
+		index("idx_org_brand_category").on(t.brandCategory),
+	],
+);
+export const organizationBrandTranslation = table(
+	"organization_brand_translation",
+	{
+		id: id.notNull(),
+		organizationBrandId: fk("organization_brand_id")
+			.references(() => organizationBrand.id, { onDelete: "cascade" })
+			.notNull(),
+		locale: text("locale").notNull(),
+		isDefault: boolean("is_default").default(false),
+
+		// Translatable brand fields
+		name: text("name"),
+		description: text("description"),
+		story: text("story"),
+
+		// SEO metadata reference
+		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
+	},
+	(t) => [
+		uniqueIndex("uq_organization_brand_translation_locale").on(
+			t.organizationBrandId,
+			t.locale,
+		),
+		uniqueIndex("uq_organization_brand_translation_default")
+			.on(t.organizationBrandId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+	],
+);
+
+export const organizationBrandMetrics = table("organization_brand_metrics", {
+	id: id.notNull(),
+	organizationBrandId: fk("vendor_brand_id")
+		.references(() => organizationBrand.id, { onDelete: "cascade" })
+		.notNull(),
+
+	// // Brand-specific metrics
+	// brandRecognition: decimal("brand_recognition", { precision: 5, scale: 2 }),
+	// contentCertifications: integer("content_certifications").default(0),
+	// partnerOrganizations: integer("partner_organizations").default(0),
+	// brandedCourses: integer("branded_courses").default(0),
+
+	lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
+	createdAt,
+	updatedAt,
+});
+
+export const affiliationTypeEnum = pgEnum("affiliation_type", [
+	"owner",
+	"employee",
+	"contractor",
+	"guest",
+	"partner",
+	"volunteer",
+]);
+
+export const affiliationStatusEnum = pgEnum("affiliation_status", [
+	"pending",
+	"active",
+	"suspended",
+	"terminated",
+]);
+
+export const compensationTypeEnum = pgEnum("compensation_type", [
+	"revenue_share",
+	"flat_fee",
+	"hourly",
+	"salary",
+	"per_course",
+	"none",
+]);
+
+/**
+ * Instructor-Organization Affiliations
+ *
+ * @businessLogic Instructor's relationship with specific organization
+ * Enables cross-organizational course creation and collaboration
+ */
+export const instructorOrganizationAffiliation = table(
+	"instructor_organization_affiliation",
+	{
+		id,
+		instructorId: text("instructor_id")
+			.notNull()
+			.references(() => userInstructorProfile.id),
+		memberId: fk("member_id").references(() => organizationMember.id, {
+			onDelete: "set null",
+		}),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id),
+		joinedAt: timestamp("joined_at").defaultNow(),
+		createdAt,
+
+		// Relationship context
+		/**
+		 * @affiliationModel Defines instructor-organization relationship type
+		 * @compensationContext Influences compensation structure and permissions
+		 */
+		affiliationType: affiliationTypeEnum("affiliation_type").notNull(),
+		role: text("role"), // "lead_instructor", "subject_expert", "guest_lecturer", "content_reviewer"
+		title: text("title"), // "Senior Training Manager", "Principal Instructor"
+
+		// The following is commented out because it should be handled in another way, not like this, needs to be well thought out
+		// // Permissions within this organization
+		// canCreateCourses: boolean("can_create_courses").default(true),
+		// canManageStudents: boolean("can_manage_students").default(false),
+		// canAccessAnalytics: boolean("can_access_analytics").default(true),
+		// canManageOtherInstructors: boolean("can_manage_other_instructors").default(
+		// 	false,
+		// ),
+		// authorizationLevel: text("authorization_level").default("standard"), // "restricted", "standard", "elevated", "admin"
+
+		/**
+		 * @compensationStructure Flexible payment models for instructor relationships
+		 * @businessModel Supports various instructor compensation strategies
+		 */
+		compensationType:
+			compensationTypeEnum("compensation_type").default("revenue_share"),
+		compensationAmount: decimal("compensation_amount", {
+			precision: 10,
+			scale: 2,
+		}),
+		revenueSharePercentage: decimal("revenue_share_percentage", {
+			precision: 5,
+			scale: 2,
+		}),
+
+		// Relationship lifecycle
+		status: affiliationStatusEnum("status").default("pending"),
+		startedAt: timestamp("started_at").defaultNow(),
+		endedAt: timestamp("ended_at"),
+
+		/**
+		 * @workflowTracking Affiliation creation and approval workflow management
+		 * @auditTrail Complete lifecycle tracking for governance and compliance
+		 */
+		connectionMethod: text("connection_method"), // "self_created_org", "invited", "applied", "imported", "transferred"
+		invitedBy: fk("invited_by").references(() => user.id),
+		applicationNotes: text("application_notes"),
+		// The approval process is optional, but if used:
+		// - If the organization requires approval, the affiliation is pending until approved
+		// - If the organization does not require approval, the affiliation is active immediately
+		// - If the affiliation is approved, the status changes to active
+		// - If the affiliation is rejected, the status changes to rejected
+		// The approval is done by an organization member with the appropriate permissions
+		approvedBy: fk("approved_by").references(() => organizationMember.id),
+		approvedAt: timestamp("approved_at"),
+	},
+	(t) => [
+		uniqueIndex("uq_instructor_org_affiliation").on(
+			t.instructorId,
+			t.organizationId,
+		),
+		index("idx_instructor_affiliation_org").on(t.organizationId),
+		index("idx_instructor_affiliation_member").on(t.memberId),
+	],
 );

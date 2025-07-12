@@ -27,7 +27,7 @@ export const productCourseLevelEnum = pgEnum("product_course_level", [
 export const productCourse = table(
 	"course",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: fk("organization_id")
 			.references(() => organization.id)
 			.notNull(),
@@ -37,9 +37,7 @@ export const productCourse = table(
 		productId: fk("product_id")
 			.references(() => product.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
-			.default(0)
-			.notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -69,7 +67,7 @@ export const productCourse = table(
 
 // Naming problem: should it be `module` or `section`?
 export const productCourseModule = table("product_course_module", {
-	id,
+	id: id.notNull(),
 	courseId: fk("product_course_id")
 		.references(() => productCourse.id)
 		.notNull(),
@@ -82,24 +80,21 @@ export const productCourseModule = table("product_course_module", {
 	//  settings: jsonb("settings"),
 });
 
-export const productCourseModuleTranslation = table(
-	"product_course_module_translation",
-	{
-		id,
-		productCourseModuleId: fk("product_course_module_id")
-			.references(() => productCourseModule.id)
-			.notNull(),
-		title: integer("title").notNull(),
-		description: integer("description"),
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-		locale: text("locale").notNull(),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
-		updatedAt,
-	},
-);
+export const productCourseModuleTranslation = table("product_course_module_translation", {
+	id: id.notNull(),
+	productCourseModuleId: fk("product_course_module_id")
+		.references(() => productCourseModule.id)
+		.notNull(),
+	title: integer("title").notNull(),
+	description: integer("description"),
+	seoMetadataId: fk("seo_metadata_id")
+		.references(() => seoMetadata.id)
+		.notNull(),
+	locale: text("locale").notNull(),
+	isDefault: boolean("is_default").default(false),
+	createdAt,
+	updatedAt,
+});
 
 // The following will be for the lessons within the modules
 // Things to consider for Lessons:
@@ -109,7 +104,7 @@ export const productCourseModuleTranslation = table(
 // - Different types of prerequisites per modules are related to the product payment model
 // - Lessons can have different metadata (e.g., tags, categories, etc.)
 export const productCourseModuleLesson = table("product_course_module_lesson", {
-	id,
+	id: id.notNull(),
 	productCourseModuleId: fk("product_course_module_id")
 		.references(() => productCourseModule.id)
 		.notNull(),
@@ -135,7 +130,7 @@ export const productCourseModuleLesson = table("product_course_module_lesson", {
 export const productCourseModuleLessonTranslation = table(
 	"product_course_module_lesson_translation",
 	{
-		id,
+		id: id.notNull(),
 		productCourseModuleLessonId: fk("product_course_module_lesson_id")
 			.references(() => productCourseModuleLesson.id)
 			.notNull(),
@@ -160,7 +155,7 @@ export const lessonTypeEnum = pgEnum("lesson_type", [
 	// What're other valid types that will help in this project and used on other LMS systems?
 ]);
 export const lesson = table("lesson", {
-	id,
+	id: id.notNull(),
 	organizationId: fk("organization_id")
 		.references(() => organization.id)
 		.notNull(),
@@ -168,7 +163,7 @@ export const lesson = table("lesson", {
 });
 
 export const lessonTranslation = table("lesson_translation", {
-	id,
+	id: id.notNull(),
 	lessonId: fk("lesson_id")
 		.references(() => lesson.id)
 		.notNull(),
@@ -187,21 +182,20 @@ export const lessonTranslation = table("lesson_translation", {
 // IMP: The lesson type related table are halted for now
 
 // User productCourseEnrollment & progress
-export const productCourseEnrollmentStatusEnum = pgEnum(
-	"product_course_enrollment_status",
-	["active", "completed", "cancelled"],
-);
+export const productCourseEnrollmentStatusEnum = pgEnum("product_course_enrollment_status", [
+	"active",
+	"completed",
+	"cancelled",
+]);
 export const productCourseEnrollment = table("product_course_enrollment", {
-	id,
+	id: id.notNull(),
 	userId: fk("user_id")
 		.references(() => user.id)
 		.notNull(),
 	courseId: fk("product_course_id")
 		.references(() => productCourse.id)
 		.notNull(),
-	status: productCourseEnrollmentStatusEnum("status")
-		.default("active")
-		.notNull(),
+	status: productCourseEnrollmentStatusEnum("status").default("active").notNull(),
 	progressPercentage: decimal("progress_percentage", {
 		precision: 5,
 		scale: 2,
@@ -233,37 +227,34 @@ export const productCourseModuleLessonProgressStatusEnum = pgEnum(
 		// What're other valid types that will help in this project and used on other LMS systems?
 	],
 );
-export const productCourseModuleLessonProgress = table(
-	"product_course_module_lesson_progress",
-	{
-		id,
-		productCourseModuleLessonId: fk("product_course_module_lesson_id")
-			.references(() => productCourseModuleLesson.id)
-			.notNull(),
-		// IMP: Should this be a user ID or the organization member ID (organization member is a user that is part of an organization)?
-		// Things to consider:
-		// - The organization can have the product only available to its markets or the global web app market _(not implemented yet)_.
-		// - If the user is part of an organization, should the progress be tracked per user or per organization member?
-		userId: fk("user_id")
-			.references(() => user.id)
-			.notNull(),
-		progressPercentage: decimal("progress_percentage", {
-			precision: 5,
-			scale: 2,
-		}).default("0.00"),
-		// Or a status enum to indicate progress
-		// progressStatus: pgEnum("progress_status", ["not_started", "in_progress", "completed"])
-		// 	.default("not_started")
+export const productCourseModuleLessonProgress = table("product_course_module_lesson_progress", {
+	id: id.notNull(),
+	productCourseModuleLessonId: fk("product_course_module_lesson_id")
+		.references(() => productCourseModuleLesson.id)
+		.notNull(),
+	// IMP: Should this be a user ID or the organization member ID (organization member is a user that is part of an organization)?
+	// Things to consider:
+	// - The organization can have the product only available to its markets or the global web app market _(not implemented yet)_.
+	// - If the user is part of an organization, should the progress be tracked per user or per organization member?
+	userId: fk("user_id")
+		.references(() => user.id)
+		.notNull(),
+	progressPercentage: decimal("progress_percentage", {
+		precision: 5,
+		scale: 2,
+	}).default("0.00"),
+	// Or a status enum to indicate progress
+	// progressStatus: pgEnum("progress_status", ["not_started", "in_progress", "completed"])
+	// 	.default("not_started")
 
-		// Type-specific progress data (JSONB for flexibility)
-		progressData: jsonb("progress_data"),
+	// Type-specific progress data (JSONB for flexibility)
+	progressData: jsonb("progress_data"),
 
-		// Timestamps
-		startedAt: timestamp("started_at"),
-		completedAt: timestamp("completed_at"),
-		lastAccessedAt: timestamp("last_accessed_at"),
-	},
-);
+	// Timestamps
+	startedAt: timestamp("started_at"),
+	completedAt: timestamp("completed_at"),
+	lastAccessedAt: timestamp("last_accessed_at"),
+});
 
 // IMP: `quiz` and `assignment` results tables will be handled later after the lesson types are finalized
 // IMP: The `quiz` and `assignment` will be connected to an `assessment` table that will handle the different types of assessments in A CTI way

@@ -67,14 +67,14 @@ import { createdAt, deletedAt, id, table, updatedAt } from "../_utils/helpers";
 export const contactInfo = table(
 	"contact_info",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @polymorphicKey Entity type identifier for polymorphic associations
 		 * @businessRule Must match existing entity types in the system
 		 * @integrationContext Used by application layer to route contact operations
 		 */
-		entityType: text("entity_type").notNull(), // "vendor", "organization", "user", "brand"
+		entityType: text("entity_type").notNull(), // "organization_brand", "user_instructor_profile", "organization", "user"
 
 		/**
 		 * @polymorphicKey Entity instance identifier for contact association

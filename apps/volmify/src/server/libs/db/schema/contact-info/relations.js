@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { vendorContactInfo } from "../vendor/schema";
+import { userInstructorProfileContactInfo } from "../user/profile/instructor/schema";
 import { contactInfo } from "./schema";
 
 /**
@@ -8,7 +8,7 @@ import { contactInfo } from "./schema";
  * @polymorphicPattern
  * Contact info uses polymorphic associations to connect with multiple entity types
  * without creating dedicated foreign key constraints. This enables flexible contact
- * management across vendors, organizations, users, and brands.
+ * management across users-instructor-profiles, organizations, users, and brands.
  *
  * @integrationStrategy
  * Relations are defined through junction tables and application-level associations
@@ -20,7 +20,7 @@ import { contactInfo } from "./schema";
  * Contact Info Relations (Polymorphic Communication Hub)
  *
  * @polymorphicRole Central contact repository for all platform entities
- * Serves as the communication foundation for vendors, organizations, users,
+ * Serves as the communication foundation for users-instructor-profiles, organizations, users,
  * and brands through polymorphic associations and junction table patterns.
  *
  * @communicationIntegration
@@ -37,5 +37,5 @@ export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	 * @businessContext Vendor relationships often require specialized contact handling
 	 * @workflowIntegration Supports vendor onboarding, payment, and partnership workflows
 	 */
-	vendorsContactInfo: many(vendorContactInfo),
+	usersInstructorProfilesContactInfo: many(userInstructorProfileContactInfo),
 }));

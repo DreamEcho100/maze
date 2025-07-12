@@ -8,7 +8,7 @@ import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/help
 export const user = table(
 	"user",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -38,7 +38,7 @@ const userAgentJsonb = jsonb("user_agent_metadata");
 export const session = table(
 	"session",
 	{
-		id,
+		id: id.notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
 		createdAt,
 		updatedAt,
@@ -76,7 +76,7 @@ export const session = table(
 export const userEmailVerificationRequests = table(
 	"email_verification_request",
 	{
-		id,
+		id: id.notNull(),
 		createdAt,
 		code: varchar("code", { length: 256 }).notNull().unique("uq_email_verification_request_code"),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),

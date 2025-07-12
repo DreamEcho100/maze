@@ -14,8 +14,14 @@ import {
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
 import { currency } from "../currency-and-market/schema.js";
-import { organization, organizationMarket, pricingZone } from "../organization/schema.js";
+import {
+	organization,
+	organizationBrand,
+	organizationMarket,
+	organizationPricingZone,
+} from "../organization/schema.js";
 import { seoMetadata } from "../seo/schema.js";
+import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
 
 // -------------------------------------
@@ -33,7 +39,7 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "active", "a
 export const product = table(
 	"product",
 	{
-		id,
+		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id),
@@ -66,7 +72,7 @@ export const product = table(
 export const productTranslation = table(
 	"product_translation",
 	{
-		id,
+		id: id.notNull(),
 		productId: text("product_id")
 			.notNull()
 			.references(() => product.id, { onDelete: "cascade" }),
@@ -97,7 +103,7 @@ export const productTranslation = table(
 export const productVariant = table(
 	"product_variant",
 	{
-		id,
+		id: id.notNull(),
 		productId: text("product_id")
 			.notNull()
 			.references(() => product.id, { onDelete: "cascade" }),
@@ -122,7 +128,7 @@ export const productVariant = table(
 export const productPrice = table(
 	"product_price",
 	{
-		id,
+		id: id.notNull(),
 		productId: text("product_id")
 			.references(() => product.id, { onDelete: "cascade" })
 			.notNull(),
@@ -166,7 +172,7 @@ export const productZonePrice = table(
 	{
 		productId: text("product_id").references(() => product.id),
 		variantId: text("variant_id").references(() => productVariant.id),
-		zoneId: text("zone_id").references(() => pricingZone.id),
+		zoneId: text("zone_id").references(() => organizationPricingZone.id),
 		currencyCode: text("currency_code").references(() => currency.code),
 		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
 		compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
@@ -207,39 +213,62 @@ export const discountVariant = table(
 	(t) => [primaryKey({ columns: [t.discountId, t.variantId] })],
 );
 
-// // -------------------------------------
-// // COURSE-SPECIFIC STRUCTURE
-// // -------------------------------------
+/**
+ * Product-Brand Attribution
+ *
+ * @businessLogic Links products to organization brand identity
+ * Used for corporate course branding and content attribution
+ */
+export const productBrandAttribution = table(
+	"product_brand_attribution",
+	{
+		id,
+		productId: text("product_id")
+			.notNull()
+			.references(() => product.id),
+		brandId: text("brand_id")
+			.notNull()
+			.references(() => organizationBrand.id),
+		isPrimary: boolean("is_primary").default(true),
+		createdAt,
+	},
+	(t) => [
+		uniqueIndex("uq_product_brand").on(t.productId, t.brandId),
+		index("idx_product_brand_primary").on(t.isPrimary),
+	],
+);
 
-// export const courseSection = table(
-// 	"course_section",
-// 	{
-// 		id,
-// 		productId: text("product_id")
-// 			.references(() => product.id, { onDelete: "cascade" })
-// 			.notNull(),
-// 		title: varchar("title", { length: 256 }).notNull(),
-// 		order: integer("order").notNull(),
-// 		metadata: jsonb("metadata"),
-// 		createdAt,
-// 	},
-// 	(t) => [index("idx_course_section_product").on(t.productId)],
-// );
-
-// export const courseLesson = table(
-// 	"course_lesson",
-// 	{
-// 		id,
-// 		sectionId: text("section_id")
-// 			.references(() => courseSection.id, { onDelete: "cascade" })
-// 			.notNull(),
-// 		title: varchar("title", { length: 256 }).notNull(),
-// 		content: text("content"),
-// 		videoUrl: text("video_url"),
-// 		order: integer("order").notNull(),
-// 		isPreview: boolean("is_preview").default(false),
-// 		metadata: jsonb("metadata"),
-// 		createdAt,
-// 	},
-// 	(t) => [index("idx_course_lesson_section").on(t.sectionId)],
-// );
+/**
+ * Product-Instructor Attribution
+ *
+ * @businessLogic Links products to instructor creators for course attribution
+ * Supports revenue sharing and multi-instructor collaborations
+ */
+export const productInstructorAttribution = table(
+	"product_instructor_attribution",
+	{
+		id,
+		productId: text("product_id")
+			.notNull()
+			.references(() => product.id),
+		instructorProfileId: text("instructor_profile_id")
+			.notNull()
+			.references(() => userInstructorProfile.id),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id), // Organization context for the attribution
+		role: text("role").default("creator"), // creator, collaborator, reviewer
+		revenueSharePercentage: decimal("revenue_share_percentage", { precision: 5, scale: 2 }),
+		isPrimary: boolean("is_primary").default(false),
+		createdAt,
+	},
+	(t) => [
+		uniqueIndex("uq_product_instructor_org").on(
+			t.productId,
+			t.instructorProfileId,
+			t.organizationId,
+		),
+		index("idx_product_instructor_profile").on(t.instructorProfileId),
+		index("idx_product_instructor_org").on(t.organizationId),
+	],
+);

@@ -4,8 +4,8 @@ import {
 	organizationCurrencySettings,
 	organizationMarket,
 	organizationMarketCountry,
-	pricingZone,
-	pricingZoneCountry,
+	organizationPricingZone,
+	organizationPricingZoneCountry,
 } from "../organization/schema.js";
 import { discount, giftCard } from "../product/offers/schema.js";
 import { productPrice, productZonePrice } from "../product/schema.js";
@@ -84,7 +84,7 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	discounts: many(discount),
 	giftCards: many(giftCard),
 
-	pricingZones: many(pricingZone),
+	pricingZones: many(organizationPricingZone),
 }));
 
 /**
@@ -121,7 +121,7 @@ export const countryRelations = relations(country, ({ one, many }) => ({
 	/**
 	 * @pricingStrategy Geographic pricing zone assignments
 	 */
-	pricingZoneCountries: many(pricingZoneCountry),
+	pricingZoneCountries: many(organizationPricingZoneCountry),
 }));
 
 /**

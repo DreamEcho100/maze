@@ -1,7 +1,11 @@
 import { relations } from "drizzle-orm";
 
-import { organizationMember, organizationMemberInvitation } from "../organization/schema.js";
-import { instructorOrganizationAffiliation, vendorInstructor } from "../vendor/schema.js";
+import {
+	instructorOrganizationAffiliation,
+	organizationMember,
+	organizationMemberInvitation,
+} from "../organization/schema.js";
+import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { passwordResetSession, session, user, userEmailVerificationRequests } from "./schema.js";
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -10,8 +14,8 @@ export const userRelations = relations(user, ({ many }) => ({
 	passwordResetSessions: many(passwordResetSession),
 	organizationMemberships: many(organizationMember),
 	invitationsSent: many(organizationMemberInvitation),
-	instructorVendors: many(vendorInstructor),
 	affiliations: many(instructorOrganizationAffiliation),
+	instructorProfiles: many(userInstructorProfile),
 }));
 export const sessionRelations = relations(session, ({ one }) => ({
 	user: one(user, {

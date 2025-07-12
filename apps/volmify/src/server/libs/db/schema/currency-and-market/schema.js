@@ -119,7 +119,7 @@ export const currency = table(
 export const country = table(
 	"country",
 	{
-		id,
+		id: id.notNull(),
 		/**
 		 * @complianceStandard ISO 3166-1 alpha-2 for international compatibility
 		 * @integrationContext Used by payment processors, shipping APIs, tax systems
@@ -189,7 +189,7 @@ export const country = table(
 export const exchangeRate = table(
 	"exchange_rate",
 	{
-		id,
+		id: id.notNull(),
 		baseCurrency: text("base_currency")
 			.notNull()
 			.references(() => currency.code),
@@ -258,7 +258,7 @@ export const exchangeRate = table(
 export const marketTemplate = table(
 	"market_template",
 	{
-		id,
+		id: id.notNull(),
 		/**
 		 * @businessRule Template names should be clear market identifiers
 		 * @examples "North America", "European Union", "APAC", "Latin America"
@@ -349,7 +349,7 @@ export const marketTemplateCountry = table(
 export const marketTemplateTranslation = table(
 	"market_template_translation",
 	{
-		id,
+		id: id.notNull(),
 		marketTemplateId: text("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),
