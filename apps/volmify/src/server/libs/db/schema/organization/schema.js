@@ -13,21 +13,8 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	id,
-	name,
-	slug,
-	table,
-	updatedAt,
-} from "../_utils/helpers.js";
-import {
-	country,
-	currency,
-	marketTemplate,
-} from "../currency-and-market/schema.js";
+import { createdAt, deletedAt, fk, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
+import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -196,9 +183,7 @@ export const organizationTeam = table(
 		 * @abacPolicy Controls whether team can have members from multiple departments
 		 * @permissionBoundary Affects how permissions are inherited and evaluated
 		 */
-		allowsCrossDepartmentMembers: boolean(
-			"allows_cross_department_members",
-		).default(true),
+		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
 
 		metadata: jsonb("metadata"),
 	},
@@ -206,10 +191,7 @@ export const organizationTeam = table(
 		index("idx_organization_team_created_at").on(table.createdAt),
 		index("idx_organization_team_updated_at").on(table.updatedAt),
 		index("idx_organization_team_name").on(table.name),
-		uniqueIndex("uq_organization_team_name_org").on(
-			table.name,
-			table.organizationId,
-		),
+		uniqueIndex("uq_organization_team_name_org").on(table.name, table.organizationId),
 	],
 );
 
@@ -261,10 +243,7 @@ export const organizationMember = table(
 	},
 	(table) => [
 		index("idx_organization_member_created_at").on(table.createdAt),
-		uniqueIndex("uq_organization_member_user_org").on(
-			table.userId,
-			table.organizationId,
-		),
+		uniqueIndex("uq_organization_member_user_org").on(table.userId, table.organizationId),
 	],
 );
 
@@ -365,13 +344,10 @@ export const organizationMemberDepartment = table(
 	],
 );
 
-export const organizationMemberTeamRoleEnum = pgEnum(
-	"organization_member_team_role",
-	[
-		"admin", // Admins have full access to the team, can manage members and settings
-		"member", // Members have access to the team's resources, and it will be based on the permissions group they belong to
-	],
-);
+export const organizationMemberTeamRoleEnum = pgEnum("organization_member_team_role", [
+	"admin", // Admins have full access to the team, can manage members and settings
+	"member", // Members have access to the team's resources, and it will be based on the permissions group they belong to
+]);
 
 /**
  * Member-Team Many-to-Many Assignment
@@ -505,10 +481,7 @@ export const organizationMemberPermissionsGroup = table(
 			}),
 	},
 	(table) => [
-		uniqueIndex("uq_member_permission_group").on(
-			table.memberId,
-			table.permissionsGroupId,
-		),
+		uniqueIndex("uq_member_permission_group").on(table.memberId, table.permissionsGroupId),
 		index("idx_member_permission_group_member_id").on(table.memberId),
 		index("idx_member_permission_group_group_id").on(table.permissionsGroupId),
 	],
@@ -561,10 +534,7 @@ export const organizationPermissionsGroup = table(
 		index("idx_organization_permissions_group_created_at").on(table.createdAt),
 		index("idx_organization_permissions_group_updated_at").on(table.updatedAt),
 		index("idx_organization_permissions_group_is_system").on(table.isSystem),
-		uniqueIndex("uq_organization_permissions_group_name").on(
-			table.name,
-			table.organizationId,
-		),
+		uniqueIndex("uq_organization_permissions_group_name").on(table.name, table.organizationId),
 	],
 );
 
@@ -612,10 +582,7 @@ export const organizationPermissionsGroupPermission = table(
 		assignedBy: text("assigned_by").references(() => user.id),
 	},
 	(table) => [
-		uniqueIndex("uq_group_permission").on(
-			table.permissionsGroupId,
-			table.systemPermissionId,
-		),
+		uniqueIndex("uq_group_permission").on(table.permissionsGroupId, table.systemPermissionId),
 		index("idx_group_permission_group_id").on(table.permissionsGroupId),
 		index("idx_group_permission_permission_id").on(table.systemPermissionId),
 	],
@@ -675,9 +642,7 @@ export const organizationMemberInvitation = table(
 		 * @businessRule Expired invitations cannot be accepted
 		 */
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
-		status: organizationMemberInvitationStatusEnum("status")
-			.notNull()
-			.default("pending"),
+		status: organizationMemberInvitationStatusEnum("status").notNull().default("pending"),
 
 		/**
 		 * @abacPreset Base role assigned upon invitation acceptance
@@ -699,12 +664,8 @@ export const organizationMemberInvitation = table(
 		index("idx_organization_member_invitation_status").on(table.status),
 		index("idx_organization_member_invitation_expires_at").on(table.expiresAt),
 		index("idx_organization_member_invitation_email").on(table.email),
-		index("idx_organization_member_invitation_invited_by_user_id").on(
-			table.invitedByUserId,
-		),
-		index("idx_organization_member_invitation_organization_id").on(
-			table.organizationId,
-		),
+		index("idx_organization_member_invitation_invited_by_user_id").on(table.invitedByUserId),
+		index("idx_organization_member_invitation_organization_id").on(table.organizationId),
 		uniqueIndex("uq_organization_member_invitation_email_org").on(
 			table.email,
 			table.organizationId,
@@ -834,10 +795,7 @@ export const organizationMarket = table(
 		uniqueIndex("uq_organization_market_org_slug")
 			.on(t.organizationId, t.slug)
 			.where(isNotNull(t.slug)),
-		index("idx_organization_market_template_custom").on(
-			t.templateId,
-			t.isCustom,
-		),
+		index("idx_organization_market_template_custom").on(t.templateId, t.isCustom),
 	],
 );
 
@@ -903,16 +861,11 @@ export const organizationMarketTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_organization_market_translation_unique").on(
-			t.organizationMarketId,
-			t.locale,
-		),
+		uniqueIndex("uq_organization_market_translation_unique").on(t.organizationMarketId, t.locale),
 		uniqueIndex("uq_organization_market_translation_default")
 			.on(t.organizationMarketId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_organization_market_translation_organization").on(
-			t.organizationId,
-		),
+		index("idx_organization_market_translation_organization").on(t.organizationId),
 		index("idx_organization_market_translation_locale").on(t.locale),
 	],
 );
@@ -1020,10 +973,7 @@ export const organizationBrandTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_organization_brand_translation_locale").on(
-			t.organizationBrandId,
-			t.locale,
-		),
+		uniqueIndex("uq_organization_brand_translation_locale").on(t.organizationBrandId, t.locale),
 		uniqueIndex("uq_organization_brand_translation_default")
 			.on(t.organizationBrandId, t.isDefault)
 			.where(eq(t.isDefault, true)),
@@ -1117,8 +1067,7 @@ export const instructorOrganizationAffiliation = table(
 		 * @compensationStructure Flexible payment models for instructor relationships
 		 * @businessModel Supports various instructor compensation strategies
 		 */
-		compensationType:
-			compensationTypeEnum("compensation_type").default("revenue_share"),
+		compensationType: compensationTypeEnum("compensation_type").default("revenue_share"),
 		compensationAmount: decimal("compensation_amount", {
 			precision: 10,
 			scale: 2,
@@ -1150,10 +1099,7 @@ export const instructorOrganizationAffiliation = table(
 		approvedAt: timestamp("approved_at"),
 	},
 	(t) => [
-		uniqueIndex("uq_instructor_org_affiliation").on(
-			t.instructorId,
-			t.organizationId,
-		),
+		uniqueIndex("uq_instructor_org_affiliation").on(t.instructorId, t.organizationId),
 		index("idx_instructor_affiliation_org").on(t.organizationId),
 		index("idx_instructor_affiliation_member").on(t.memberId),
 	],

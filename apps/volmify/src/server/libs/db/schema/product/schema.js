@@ -34,7 +34,7 @@
  * pricing strategies and promotional campaign compatibility.
  */
 
-import { eq, isNotNull, isNull } from "drizzle-orm";
+import { eq, } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -44,20 +44,16 @@ import {
 	pgEnum,
 	primaryKey,
 	text,
-	timestamp,
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
 import { currency } from "../currency-and-market/schema.js";
-import {
 	organization,
 	organizationBrand,
 	organizationMarket,
-	organizationPricingZone,
-} from "../organization/schema.js";
-import { seoMetadata } from "../seo/schema.js";
+	organizationPricinom "../seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
 
@@ -358,86 +354,7 @@ export const productVariant = table(
 	],
 );
 
-// -------------------------------------
-// DEPRECATED PRICING TABLES (MIGRATION TO PAYMENT PLANS)
-// -------------------------------------
 
-/**
- * Product Price - Market-Specific Pricing (DEPRECATED - Use Payment Plans)
- *
- * @deprecated This table is being phased out in favor of payment plan integrated pricing
- * @migrationNote Pricing functionality should be handled by payment plan pricing integration
- * @businessRule Existing data should be migrated to payment plan pricing before removal
- */
-export const productPrice = table(
-	"product_price",
-	{
-		productId: text("product_id")
-			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
-		variantId: text("variant_id")
-			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
-		marketId: text("market_id").references(() => organizationMarket.id),
-		currencyCode: text("currency_code").references(() => currency.code),
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-		compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
-		taxRate: decimal("tax_rate", { precision: 5, scale: 4 }),
-		startsAt: timestamp("starts_at"),
-		endsAt: timestamp("ends_at"),
-		createdAt,
-	},
-	(t) => [
-		// Market/Currency Pricing Constraints
-		uniqueIndex("uq_product_price_variant_market_currency")
-			.on(t.variantId, t.marketId, t.currencyCode)
-			.where(isNotNull(t.marketId)),
-		uniqueIndex("uq_product_price_variant_global_currency")
-			.on(t.variantId, t.currencyCode)
-			.where(isNull(t.marketId)),
-
-		// Performance Indexes
-		index("idx_product_price_product").on(t.productId),
-		index("idx_product_price_variant").on(t.variantId),
-		index("idx_product_price_market").on(t.marketId),
-		index("idx_product_price_currency").on(t.currencyCode),
-		index("idx_product_price_dates").on(t.startsAt, t.endsAt),
-	],
-);
-
-/**
- * Product Zone Price - Pricing Zone Overrides (DEPRECATED - Use Payment Plans)
- *
- * @deprecated This table will be removed in favor of payment plan integrated pricing
- * @migrationNote Zone pricing functionality should be integrated into payment plans
- * @businessRule Existing zone pricing should be migrated to payment plan pricing zones
- */
-export const productZonePrice = table(
-	"product_zone_price",
-	{
-		productId: text("product_id")
-			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
-		variantId: text("variant_id")
-			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
-		zoneId: text("zone_id")
-			.notNull()
-			.references(() => organizationPricingZone.id, { onDelete: "cascade" }),
-		currencyCode: text("currency_code").references(() => currency.code),
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-		compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
-		createdAt,
-	},
-	(t) => [
-		primaryKey({ columns: [t.variantId, t.zoneId, t.currencyCode] }),
-
-		// Performance Indexes
-		index("idx_product_zone_price_product").on(t.productId),
-		index("idx_product_zone_price_variant").on(t.variantId),
-		index("idx_product_zone_price_zone").on(t.zoneId),
-	],
-);
 
 // -------------------------------------
 // PROFESSIONAL ATTRIBUTION (CREATOR ECONOMY)

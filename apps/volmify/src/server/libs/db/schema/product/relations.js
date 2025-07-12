@@ -27,27 +27,22 @@
 
 import { relations } from "drizzle-orm";
 
-import { currency } from "../currency-and-market/schema.js";
-import {
-	organization,
-	organizationBrand,
-	organizationMarket,
-	organizationPricingZone,
-} from "../organization/schema.js";
+import { organization, organizationBrand } from "../organization/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { productCollection } from "./collection/schema.js";
 import { discount } from "./offers/schema.js";
+import { productVariantPaymentPlan } from "./payment/schema.js";
 import {
 	discountProduct,
 	discountVariant,
 	product,
 	productBrandAttribution,
 	productInstructorAttribution,
-	productPrice,
+	// productPrice,
 	productTranslation,
 	productVariant,
-	productZonePrice,
+	// productZonePrice,
 } from "./schema.js";
 
 /**
@@ -94,14 +89,6 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	 * @paymentIntegration Variants connect directly to payment plans for integrated commerce
 	 */
 	variants: many(productVariant),
-
-	/**
-	 * @pricingInfrastructure Market and currency-specific pricing (DEPRECATED)
-	 * @migrationNote Being replaced by payment plan integrated pricing
-	 * @businessRule Existing pricing data should be migrated to payment plan pricing
-	 */
-	prices: many(productPrice),
-	zonePrices: many(productZonePrice),
 
 	/**
 	 * @catalogManagement Product collection membership for organizational catalog structure
@@ -188,12 +175,13 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 	}),
 
 	/**
-	 * @pricingInfrastructure Market and currency-specific pricing (DEPRECATED)
-	 * @migrationNote Being replaced by payment plan integrated pricing
-	 * @businessRule Existing variant pricing should be migrated to payment plan pricing
+	 * @paymentPlanIntegration Payment plan pricing for this variant
+	 * @businessContext Direct integration with payment plans for variant pricing
+	 * @ecommerceStrategy Enables sophisticated pricing strategies without separate pricing tables
+	 * @revenueOptimization Supports subscription, one-time purchase, and free access models
+	 * @multiCurrencySupport Maintains multi-currency pricing for global markets
 	 */
-	prices: many(productPrice),
-	zonePrices: many(productZonePrice),
+	paymentPlans: many(productVariantPaymentPlan),
 
 	/**
 	 * @promotionalStrategy Variant-specific discount campaign integration
@@ -201,58 +189,6 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 	 * @revenueOptimization Supports targeted promotional campaigns for conversion optimization
 	 */
 	discountVariants: many(discountVariant),
-}));
-
-/**
- * Product Price Relations (DEPRECATED - Legacy Pricing)
- *
- * @integrationRole Market-specific pricing relationships (being phased out)
- * @migrationNote These relations will be replaced by payment plan pricing integration
- * @businessRule Existing pricing data should be migrated before deprecation
- */
-export const productPriceRelations = relations(productPrice, ({ one }) => ({
-	product: one(product, {
-		fields: [productPrice.productId],
-		references: [product.id],
-	}),
-	variant: one(productVariant, {
-		fields: [productPrice.variantId],
-		references: [productVariant.id],
-	}),
-	market: one(organizationMarket, {
-		fields: [productPrice.marketId],
-		references: [organizationMarket.id],
-	}),
-	currency: one(currency, {
-		fields: [productPrice.currencyCode],
-		references: [currency.code],
-	}),
-}));
-
-/**
- * Product Zone Price Relations (DEPRECATED - Legacy Zone Pricing)
- *
- * @integrationRole Pricing zone override relationships (being phased out)
- * @migrationNote Zone pricing functionality should be integrated into payment plans
- * @businessRule Existing zone pricing should be migrated to payment plan pricing zones
- */
-export const productZonePriceRelations = relations(productZonePrice, ({ one }) => ({
-	product: one(product, {
-		fields: [productZonePrice.productId],
-		references: [product.id],
-	}),
-	variant: one(productVariant, {
-		fields: [productZonePrice.variantId],
-		references: [productVariant.id],
-	}),
-	pricingZone: one(organizationPricingZone, {
-		fields: [productZonePrice.zoneId],
-		references: [organizationPricingZone.id],
-	}),
-	currency: one(currency, {
-		fields: [productZonePrice.currencyCode],
-		references: [currency.code],
-	}),
 }));
 
 /**

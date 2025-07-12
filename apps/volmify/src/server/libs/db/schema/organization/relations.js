@@ -1,10 +1,11 @@
 import { relations } from "drizzle-orm";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
+import { productVariantPaymentPlan } from "../product/payment/schema.js";
 import {
 	productBrandAttribution,
 	productInstructorAttribution,
-	productPrice,
-	productZonePrice,
+	// productPrice,
+	// productZonePrice,
 } from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
@@ -449,7 +450,7 @@ export const organizationMarketRelations = relations(organizationMarket, ({ one,
 	}),
 	countries: many(organizationMarketCountry),
 	translations: many(organizationMarketTranslation),
-	productPrices: many(productPrice),
+	productVariantsPaymentPlans: many(productVariantPaymentPlan),
 }));
 
 export const organizationMarketCountryRelations = relations(
@@ -496,7 +497,7 @@ export const organizationPricingZoneRelations = relations(
 			references: [currency.code],
 		}),
 		countries: many(organizationPricingZoneCountry),
-		productZonePrices: many(productZonePrice),
+		// productZonePrices: many(productZonePrice),
 	}),
 );
 

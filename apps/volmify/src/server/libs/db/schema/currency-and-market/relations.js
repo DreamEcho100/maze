@@ -8,7 +8,8 @@ import {
 	organizationPricingZoneCountry,
 } from "../organization/schema.js";
 import { discount, giftCard } from "../product/offers/schema.js";
-import { productPrice, productZonePrice } from "../product/schema.js";
+import { productVariantPaymentPlan } from "../product/payment/schema.js";
+// import { productPrice, productZonePrice } from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import {
 	country,
@@ -75,8 +76,8 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	 * @pricingSystem Product pricing in this currency
 	 * @businessCritical Core pricing system integration
 	 */
-	productPrices: many(productPrice),
-	productZonePrices: many(productZonePrice),
+	productVariantsPaymentPlans: many(productVariantPaymentPlan),
+	// productZonePrices: many(productZonePrice),
 
 	/**
 	 * @promotionalSystem Discounts and gift cards with currency context
