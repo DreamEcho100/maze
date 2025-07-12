@@ -11,9 +11,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, fk, id, table, updatedAt } from "../../../_utils/helpers";
-import { user } from "../../../auth/schema";
 import { organization } from "../../../organization/schema";
 import { seoMetadata } from "../../../seo/schema";
+import { user } from "../../../user/schema";
 import { product } from "../../schema";
 
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?

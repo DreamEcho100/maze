@@ -1,9 +1,8 @@
 import { relations } from "drizzle-orm";
-
-import { user } from "../../auth/schema.js";
 import { currency } from "../../currency-and-market/schema.js";
 import { organization } from "../../organization/schema.js";
 import { seoMetadata } from "../../seo/schema.js";
+import { user } from "../../user/schema.js";
 import { discountCollection } from "../collection/schema.js";
 import { discountProduct, discountVariant } from "../schema.js";
 import {

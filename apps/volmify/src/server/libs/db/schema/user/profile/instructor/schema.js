@@ -12,11 +12,11 @@ import {
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
 import { createdAt, fk, id, updatedAt } from "../../../_utils/helpers";
-import { user } from "../../../auth/schema";
 import { contactInfo } from "../../../contact-info/schema";
 import { instructorOrganizationAffiliation } from "../../../organization/schema";
 import { product } from "../../../product/schema";
 import { seoMetadata } from "../../../seo/schema";
+import { user } from "../../../user/schema";
 
 /**
  * Instructor Profile - User-based content creator identity

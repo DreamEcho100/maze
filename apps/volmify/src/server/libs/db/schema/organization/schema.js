@@ -23,7 +23,6 @@ import {
 	table,
 	updatedAt,
 } from "../_utils/helpers.js";
-import { user } from "../auth/schema.js";
 import {
 	country,
 	currency,
@@ -32,6 +31,7 @@ import {
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
+import { user } from "../user/schema.js";
 
 /**
  * @fileoverview Organization Schema - Multi-Tenant ABAC Context

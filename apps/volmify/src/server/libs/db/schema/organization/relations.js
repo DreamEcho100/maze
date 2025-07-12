@@ -1,6 +1,4 @@
 import { relations } from "drizzle-orm";
-
-import { user } from "../auth/schema.js";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import {
 	productBrandAttribution,
@@ -11,6 +9,7 @@ import {
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
+import { user } from "../user/schema.js";
 import {
 	instructorOrganizationAffiliation,
 	organization,

@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
-import { user } from "../../../auth/schema.js";
 import { instructorOrganizationAffiliation } from "../../../organization/schema.js";
+import { user } from "../../../user/schema.js";
 import { userInstructorProfile, userInstructorProfileContactInfo } from "./schema.js";
 
 /**

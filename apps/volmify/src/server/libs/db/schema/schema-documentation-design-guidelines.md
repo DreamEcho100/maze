@@ -3,24 +3,21 @@
 ## **🎯 Documentation Philosophy**
 
 ### **Core Principles**
-
 - **Architecture Over Implementation**: Focus on design decisions, not code restatement
 - **Business Context First**: Explain WHY before WHAT
 - **Developer Acceleration**: Minimize time-to-understanding for new team members
 - **Cognitive Efficiency**: Avoid redundant explanations of self-evident code
 
-### **ABAC System Focus**
-
-Given our Attribute-Based Access Control implementation, documentation should emphasize:
-
-- **Context-Aware Design**: How attributes work within organizational boundaries
-- **Cross-Schema Integration**: How permission attributes flow through the application
-- **Security Architecture**: ABAC principles and authorization paths
+### **Multi-Tenant Creator Platform Focus**
+Given our multi-tenant educational content platform with creator economy, documentation should emphasize:
+- **Organization-Centric Design**: How all features operate within organizational boundaries
+- **Creator Economy Integration**: How brand and professional attribution systems work together
+- **Professional Scalability**: How the architecture supports multiple profession types
+- **Cross-Schema Integration**: How professional profiles interact across organizational contexts
 
 ## **📁 Documentation Structure**
 
-### **Simplified Folder Pattern**
-
+### **Current Folder Pattern**
 ```
 📂 schema-folder/
 ├── README.md              # 🎯 High-level overview and quick start
@@ -32,15 +29,37 @@ Given our Attribute-Based Access Control implementation, documentation should em
     └── examples.md         # 💡 Complex usage scenarios
 ```
 
+### **Multi-Schema Organization Pattern**
+```
+📂 user/
+├── profile/
+│   └── instructor/
+│       ├── schema.js      # Professional profile tables
+│       └── relations.js   # Professional relationships
+└── auth/
+    ├── schema.js          # Authentication tables
+    └── relations.js       # Auth relationships
+
+📂 organization/
+├── schema.js              # Organization + brand + affiliations
+└── relations.js           # Cross-organizational relationships
+
+📂 product/
+├── schema.js              # Core product system
+├── relations.js           # Product relationships
+└── by-type/
+    └── course/
+        └── schema.js      # Course-specific extensions
+```
+
 ## **📝 JSDoc Standards for Schema Files**
 
 ### **File-Level Documentation**
-
 ```javascript
 /**
  * @fileoverview [Schema Name] - [Primary Purpose]
  * 
- * @architecture [Pattern Type] (e.g., ABAC, Registry, Event Sourcing)
+ * @architecture [Pattern Type] (e.g., Multi-Tenant, Professional Attribution, Cross-Organization)
  * Brief explanation of the architectural pattern and why it was chosen.
  * 
  * @designPattern [Specific Pattern]
@@ -48,22 +67,24 @@ Given our Attribute-Based Access Control implementation, documentation should em
  * 
  * @integrationPoints
  * - Key system integration points
- * - Authorization flow participation
- * - Cross-schema dependencies
+ * - Professional attribution workflows
+ * - Cross-organizational collaboration patterns
  * 
  * @businessValue
  * Why this schema exists and what business problems it solves.
+ * 
+ * @scalingDesign
+ * How this design supports multiple professions and organizational growth.
  */
 ```
 
 ### **Table-Level Documentation**
-
 ```javascript
 /**
  * [Table Purpose in Business Terms]
  * 
- * @abacRole [ABAC Context] (for permission-related tables)
- * How this table participates in attribute-based access control.
+ * @professionalContext [Professional Role] (for profession-related tables)
+ * How this table supports professional identity and cross-organization collaboration.
  * 
  * @businessLogic
  * Key business rules and constraints that drive the design.
@@ -73,24 +94,26 @@ Given our Attribute-Based Access Control implementation, documentation should em
  * 
  * @integrationContext
  * How this table connects to the broader application workflow.
+ * 
+ * @scalabilityNote
+ * How this design supports adding new professions or scaling existing ones.
  */
 ```
 
 ### **Field-Level Documentation** (Only When Not Self-Evident)
-
 ```javascript
 /**
  * @businessRule [Important constraint or naming convention]
- * @abacContext [How this field participates in access control]
- * @immutable [Why this field shouldn't change after creation]
- * @performanceCritical [High-frequency usage in authorization/queries]
+ * @professionalContext [How this field supports professional identity/workflow]
+ * @organizationScope [How this field respects organizational boundaries]
+ * @performanceCritical [High-frequency usage in queries]
+ * @scalabilityNote [How this field supports adding new professions]
  */
 ```
 
 ## **🔄 Schema File Update Instructions**
 
 ### **⚠️ Critical Requirements**
-
 - **NEVER CREATE NEW FILES** - Always update existing schema and relations files in-place
 - **PRESERVE EXISTING COMMENTS** - Keep all existing inline comments and code structure
 - **JSDoc ENHANCEMENT ONLY** - Add JSDoc documentation without modifying existing code logic
@@ -99,7 +122,6 @@ Given our Attribute-Based Access Control implementation, documentation should em
 ### **📝 Update Process for Schema Files**
 
 #### **1. Schema File Updates (`schema.js`)**
-
 ```javascript
 // filepath: [keep exact original path]
 
@@ -109,20 +131,21 @@ Given our Attribute-Based Access Control implementation, documentation should em
  * @fileoverview [Schema Name] - [Primary Purpose]
  * 
  * @architecture [Architectural Pattern]
- * [Architecture explanation]
+ * [Architecture explanation focusing on multi-tenant and professional attribution]
  * 
  * @designPattern [Design Pattern Details]
- * [Pattern implementation details]
+ * [Pattern implementation details emphasizing scalability for professions]
  * 
  * @integrationPoints
- * - [Integration point 1]
- * - [Integration point 2]
+ * - [Professional attribution workflows]
+ * - [Cross-organizational collaboration]
+ * - [Organization boundary enforcement]
  * 
  * @businessValue
- * [Business value explanation]
+ * [Business value explanation focusing on creator economy]
  * 
  * @scalingDesign
- * [Scaling considerations]
+ * [How this supports multiple professions and organizational growth]
  */
 
 // ...existing enums and constants... (PRESERVE ALL)
@@ -131,13 +154,16 @@ Given our Attribute-Based Access Control implementation, documentation should em
  * [Table Business Purpose]
  * 
  * @businessLogic
- * [Key business rules and design drivers]
+ * [Key business rules focusing on professional workflows and organizational context]
  * 
  * @architecturalDecision
- * [Why this design was chosen]
+ * [Why this design was chosen, emphasizing scalability for professions]
  * 
  * @integrationContext
- * [How this connects to broader system]
+ * [How this connects to broader creator economy and organizational workflows]
+ * 
+ * @scalabilityNote
+ * [How this design pattern can be replicated for new professions]
  */
 export const tableName = table(
     "table_name",
@@ -145,7 +171,8 @@ export const tableName = table(
         // ...existing fields... (PRESERVE ALL)
         /**
          * @businessRule [Only when field has special business significance]
-         * @abacContext [Only for permission-related fields]
+         * @professionalContext [Only for profession-specific fields]
+         * @organizationScope [Only for organization boundary fields]
          * @performanceCritical [Only for high-frequency access fields]
          */
         specialField: fieldDefinition,
@@ -157,6 +184,7 @@ export const tableName = table(
         /**
          * @businessConstraint [Only for complex business rule constraints]
          * @performanceCritical [Only for critical performance indexes]
+         * @scalabilityNote [Only for indexes that support profession scalability]
          */
         uniqueIndex("constraint_name").on(table.field1, table.field2),
     ],
@@ -166,7 +194,6 @@ export const tableName = table(
 ```
 
 #### **2. Relations File Updates (`relations.js`)**
-
 ```javascript
 // filepath: [keep exact original path]
 
@@ -176,25 +203,32 @@ export const tableName = table(
  * @fileoverview [Schema] Relations - [Integration Purpose]
  * 
  * @integrationPattern [Pattern Description]
- * [How relations enable cross-schema integration]
+ * [How relations enable cross-schema integration, focusing on professional attribution]
  * 
  * @businessContext
- * [Business workflows enabled by these relations]
+ * [Business workflows enabled by these relations in creator economy context]
+ * 
+ * @scalabilityContext
+ * [How these relation patterns support multiple professions]
  */
 
 /**
  * [Entity] Relations ([Role in System])
  * 
  * @integrationRole [How this entity integrates with broader system]
- * [Description of entity's role in system architecture]
+ * [Description of entity's role in creator economy and organizational context]
  * 
  * @businessRelationships
- * [Key business relationships and their purposes]
+ * [Key business relationships focusing on professional collaboration]
+ * 
+ * @scalabilityPattern
+ * [How this relation pattern can be replicated for new professions]
  */
 export const entityNameRelations = relations(entityName, ({ one, many }) => ({
     /**
      * @businessContext [Only for complex/important relationships]
-     * @abacRole [Only for permission-related relationships]
+     * @professionalWorkflow [Only for profession-related relationships]
+     * @organizationBoundary [Only for cross-organizational relationships]
      * @performanceCritical [Only for high-frequency relationships]
      */
     relationshipName: one/many(relatedEntity, {
@@ -208,7 +242,6 @@ export const entityNameRelations = relations(entityName, ({ one, many }) => ({
 ```
 
 ### **🚫 What NOT to Change**
-
 - **Import/Export Statements**: Keep all existing imports and exports
 - **Table Definitions**: Don't modify field definitions, types, or constraints
 - **Relationship Definitions**: Don't change existing relation configurations
@@ -217,12 +250,12 @@ export const entityNameRelations = relations(entityName, ({ one, many }) => ({
 - **Code Structure**: Maintain existing code organization and spacing
 
 ### **✅ What TO Add**
-
 - **File-level JSDoc**: Add comprehensive @fileoverview with architecture context
 - **Table-level JSDoc**: Add business purpose and integration context
 - **Field-level JSDoc**: Only for fields with special business rules or performance implications
 - **Relationship JSDoc**: Only for complex relationships with business significance
 - **Constraint JSDoc**: Only for constraints that implement complex business rules
+- **Scalability JSDoc**: How patterns support adding new professions
 
 ## **📋 README.md Template**
 
@@ -230,38 +263,45 @@ export const entityNameRelations = relations(entityName, ({ one, many }) => ({
 # **📂 [Schema Name] Schema**
 
 ## **🎯 Architecture**
-**Pattern**: [ABAC/Registry/Event Sourcing/etc.]
-**Purpose**: [1-2 sentence business purpose]
+**Pattern**: [Multi-Tenant/Professional Attribution/Cross-Organization/etc.]
+**Purpose**: [1-2 sentence business purpose in creator economy context]
 
 ## **🏗 Core Design**
-- **[Key Design Decision 1]**: Brief explanation of why
-- **[Key Design Decision 2]**: Brief explanation of why
+- **[Key Design Decision 1]**: Brief explanation focusing on professional scalability
+- **[Key Design Decision 2]**: Brief explanation focusing on organizational boundaries
 
 ## **🔗 System Integration**
-- **Authorization Flow**: How this participates in ABAC decisions
-- **Cross-Schema**: Key relationships with other schema domains
+- **Professional Attribution**: How this participates in creator economy workflows
+- **Cross-Schema**: Key relationships with other professional/organizational domains
 - **API Layer**: Primary integration points with application logic
 
 ## **📊 Schema Overview**
-- **Tables**: X core tables
-- **Key Relationships**: Most important relationships
-- **Performance Considerations**: Critical indexes or caching needs
+- **Tables**: X core tables (organization-scoped/profession-agnostic)
+- **Key Relationships**: Most important relationships for professional workflows
+- **Performance Considerations**: Critical indexes for professional queries
 
 ## **🚀 Quick Start**
 ```javascript
-// Most common/important usage pattern
+// Most common professional workflow pattern
 const example = await db.query.mainTable.findFirst({
-  // Show typical relationship loading
-  with: { relatedTable: true }
+  where: eq(mainTable.organizationId, orgId), // Organization boundary
+  with: { 
+    professionalProfile: true,
+    organizationContext: true
+  }
 });
 ```
 
+## **🎯 Professional Scalability**
+This schema supports:
+- **Multiple Professions**: [List current and planned professions]
+- **Cross-Organization**: Professional collaboration across organizational boundaries
+- **Attribution Models**: Clear content creation and revenue attribution
+
 ## **📖 Deep Dive**
-
-- [🏗 Architecture](./docs/architecture.md) - Design patterns and decisions
-- [🔗 Integration](./docs/integration.md) - Cross-system workflows  
-- [💡 Examples](./docs/examples.md) - Complex implementation scenarios
-
+- [🏗 Architecture](./docs/architecture.md) - Design patterns and professional scalability
+- [🔗 Integration](./docs/integration.md) - Cross-organizational workflows  
+- [💡 Examples](./docs/examples.md) - Multi-professional collaboration scenarios
 ```
 
 ## **📖 Deep Documentation (docs/ folder)**
@@ -272,27 +312,30 @@ const example = await db.query.mainTable.findFirst({
 
 ## **🎯 Design Pattern**
 ### [Pattern Name] Implementation
-- **Why chosen**: Business/technical reasoning
-- **Trade-offs**: What we gained/sacrificed
+- **Why chosen**: Business/technical reasoning for creator economy
+- **Trade-offs**: What we gained/sacrificed for professional scalability
 - **Alternatives considered**: What we didn't do and why
 
-## **🔄 Data Flow**
+## **🔄 Professional Workflow**
 ```mermaid
 graph LR
-    A[Input Source] --> B[Processing] --> C[Decision Point] --> D[Output]
+    A[User] --> B[Professional Profile] --> C[Organization Affiliation] --> D[Content Creation]
 ```
 
 ## **🚨 Critical Constraints**
-
-- **[Constraint 1]**: Business rule it enforces
-- **[Constraint 2]**: Technical limitation it addresses
+- **[Constraint 1]**: Business rule for professional attribution
+- **[Constraint 2]**: Organizational boundary enforcement
 
 ## **⚡ Performance Architecture**
+- **Hot Path**: Critical queries for professional workflows
+- **Caching Strategy**: What should be cached for professional data
+- **Scaling Considerations**: How this handles multiple professions
 
-- **Hot Path**: Critical queries and their optimization
-- **Caching Strategy**: What should be cached and why
-- **Scaling Considerations**: Future growth implications
-
+## **🎯 Profession Scalability**
+### Adding New Professions
+- **Pattern Replication**: How to add new profession types
+- **Integration Points**: What needs to be connected
+- **Performance Considerations**: Index and query implications
 ```
 
 ### **docs/integration.md**
@@ -300,61 +343,64 @@ graph LR
 # **🔗 [Schema] Integration Points**
 
 ## **🌐 Cross-Schema Workflows**
-### [Workflow Name]
+### Professional Attribution Workflow
 ```javascript
-// Show how this schema participates in broader workflows
-// Focus on the integration logic, not basic CRUD
+// Show how professional attribution flows through the system
+// Focus on organization boundaries and professional identity
 ```
 
-## **🔐 Authorization Integration** (for ABAC-related schemas)
-
-### Permission Evaluation Flow
-
+## **🏢 Multi-Tenant Integration**
+### Organization Boundary Enforcement
 ```javascript
-// How permissions flow through the system
-// Subject + Context + Action + Resource → Decision
+// How organizational context is maintained across professional workflows
+// Subject + Organization + Professional Role + Resource → Decision
 ```
 
 ## **📡 API Integration**
-
 ### Critical Endpoints
-
-- **[Endpoint]**: How schema data is exposed
-- **[Another Endpoint]**: Integration with frontend/services
-
+- **[Professional Endpoint]**: How professional data is exposed
+- **[Attribution Endpoint]**: How content attribution is managed
 ```
 
 ### **docs/examples.md**
 ```markdown
 # **💡 [Schema] Implementation Examples**
 
-## **🎯 Complex Scenarios**
-### [Scenario Name]
-**Business Context**: Why this scenario is important
+## **🎯 Complex Professional Scenarios**
+### Cross-Organizational Instructor Collaboration
+**Business Context**: Instructor working across multiple organizations
 
 ```javascript
-// Complete, working implementation
-// Focus on the business logic and integration points
+// Complete, working implementation showing:
+// - Professional identity maintenance
+// - Organization boundary respect
+// - Revenue attribution across organizations
 // Include error handling for critical paths
 ```
 
 **Key Design Points**:
+- How professional identity is preserved across organizations
+- How revenue attribution works in multi-organizational context
+- What edge cases are handled for professional workflows
 
-- Why this approach was chosen
-- What edge cases are handled
-- Performance considerations
+### Multi-Professional Content Creation
+**Business Context**: Team of different professionals creating content
 
+```javascript
+// Show how multiple professions collaborate on single product
+// Focus on attribution, revenue sharing, and organizational context
+```
 ```
 
 ## **✅ Documentation Quality Standards**
 
 ### **What TO Include**
-- **Architectural reasoning**: Why we chose this design
-- **Business context**: What problem this solves
-- **Integration points**: How it connects to the broader system
-- **Performance implications**: Critical path optimizations
-- **ABAC context**: How permissions/attributes flow through the system
-- **Complex scenarios**: Multi-step workflows and edge cases
+- **Professional workflow reasoning**: Why we chose this professional attribution design
+- **Creator economy context**: What business problems this solves for professionals
+- **Cross-organizational integration**: How professionals work across organizational boundaries
+- **Scalability implications**: How this supports multiple profession types
+- **Performance considerations**: Critical path optimizations for professional queries
+- **Attribution workflows**: How content creation and revenue attribution works
 
 ### **What NOT to Include**
 - **Self-evident code**: Field types, basic constraints, obvious relationships
@@ -363,44 +409,68 @@ graph LR
 - **Low-level implementation**: Details that belong in code comments
 
 ### **JSDoc Focus Areas**
-- **File level**: Architecture pattern and system integration
-- **Table level**: Business purpose and design decisions
-- **Field level**: Only when business rules or performance implications exist
-- **Relationship level**: Cross-schema integration and ABAC flows
+- **File level**: Architecture pattern and professional scalability
+- **Table level**: Business purpose and professional workflow integration
+- **Field level**: Only when business rules or professional attribution exists
+- **Relationship level**: Cross-organizational collaboration and professional identity
 
 ## **🚀 Implementation Priority**
 
-### **Phase 1: Core Architecture Documentation**
-1. **System schema**: ABAC foundation and permission flows
-2. **Organization schema**: Multi-tenant architecture and context boundaries
-3. **User schema**: Subject definition and authentication integration
+### **Phase 1: Core Professional Architecture Documentation**
+1. **User instructor profile schema**: Professional identity and multi-profile system
+2. **Organization schema**: Multi-tenant boundaries and brand attribution
+3. **Product attribution schemas**: Professional content creation workflows
 
-### **Phase 2: Domain Documentation**
-1. **Product/Course schemas**: Content management architecture
-2. **Currency/Market schemas**: Internationalization design
-3. **SEO schema**: Translation and optimization patterns
+### **Phase 2: Creator Economy Documentation**
+1. **Revenue attribution**: How professionals earn from content
+2. **Cross-organizational collaboration**: Instructor affiliation networks
+3. **Brand attribution**: Organization brand identity and content attribution
 
-### **Phase 3: Supporting Documentation**
-1. **Integration workflows**: Cross-schema business processes
-2. **Performance guidelines**: Query optimization and caching
-3. **Migration strategies**: Schema evolution patterns
+### **Phase 3: Scalability Documentation**
+1. **New profession patterns**: How to add consultants, designers, lawyers, etc.
+2. **Performance optimization**: Query patterns for professional workflows
+3. **Integration workflows**: API patterns for professional data
 
 ## **📏 Success Metrics**
 
 ### **Developer Onboarding**
 - **Time to first meaningful contribution**: < 2 days
-- **Architecture comprehension**: Understanding ABAC flow within 1 day
-- **Integration confidence**: Ability to modify cross-schema workflows
+- **Professional workflow comprehension**: Understanding attribution flows within 1 day
+- **Integration confidence**: Ability to add new profession types
 
 ### **Documentation Effectiveness**
 - **Self-service capability**: Developers find answers without asking teammates
-- **Consistency**: Similar patterns documented similarly across schemas
+- **Consistency**: Similar professional patterns documented similarly
 - **Maintenance burden**: Documentation updates are part of normal development flow
 
 ## **🎯 Key Reminder**
 
-**JSDoc comments are meant to enhance the onboarding experience by helping developers understand the overall system architecture and its connection to the business logic—not to overwhelm them with unnecessary details.**
+**JSDoc comments are meant to enhance the onboarding experience by helping developers understand the creator economy architecture, professional attribution systems, and multi-tenant organizational boundaries—not to overwhelm them with unnecessary details.**
 
 **Always update existing files in-place, never create new files. Preserve all existing code structure, comments, and logic while adding JSDoc documentation to enhance architectural understanding.**
 
-**Focus on accelerating developer understanding of system design and business logic, not restating what the code already expresses clearly.** 🎯
+**Focus on accelerating developer understanding of professional workflows, creator economy systems, and multi-tenant organizational design, not restating what the code already expresses clearly.** 🎯
+
+## **🌟 Creator Economy Focus Areas**
+
+### **Professional Identity Management**
+- How users maintain multiple professional profiles
+- Cross-organizational professional identity preservation
+- Professional verification and credentialing workflows
+
+### **Content Attribution Systems**
+- Brand attribution for organizational content
+- Professional attribution for individual creators
+- Multi-professional collaboration on content projects
+
+### **Revenue and Recognition Models**
+- Professional revenue sharing and attribution
+- Cross-organizational revenue tracking
+- Professional performance and reputation systems
+
+### **Organizational Boundary Management**
+- How professionals operate within organizational contexts
+- Cross-organizational collaboration workflows
+- Professional affiliation and membership systems
+
+This documentation approach ensures developers understand both the technical architecture and the business context of your sophisticated creator economy platform! 🚀

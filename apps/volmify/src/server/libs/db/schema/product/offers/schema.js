@@ -12,10 +12,10 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
-import { user } from "../../auth/schema.js";
 import { currency } from "../../currency-and-market/schema.js";
 import { organization } from "../../organization/schema.js";
 import { seoMetadata } from "../../seo/schema.js";
+import { user } from "../../user/schema.js";
 
 export const discountTypeEnum = pgEnum("discount_type", [
 	"percentage", // e.g. 10% off
