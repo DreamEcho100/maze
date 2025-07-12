@@ -34,7 +34,7 @@
  * pricing strategies and promotional campaign compatibility.
  */
 
-import { eq, } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -49,11 +49,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
-import { currency } from "../currency-and-market/schema.js";
-	organization,
-	organizationBrand,
-	organizationMarket,
-	organizationPricinom "../seo/schema.js";
+import { organization, organizationBrand } from "../organization/schema.js";
+import { seoMetadata } from "../seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
 
@@ -353,8 +350,6 @@ export const productVariant = table(
 		index("idx_product_variant_default").on(t.isDefault),
 	],
 );
-
-
 
 // -------------------------------------
 // PROFESSIONAL ATTRIBUTION (CREATOR ECONOMY)
