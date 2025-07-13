@@ -5,6 +5,10 @@ import {
 	organizationMember,
 	organizationMemberInvitation,
 } from "../organization/schema.js";
+import {
+	productCourseChallengeRating,
+	userLearningProfile,
+} from "../product/by-type/course/schema.js";
 import { userInstructorProfile } from "./profile/instructor/schema.js";
 import { passwordResetSession, session, user, userEmailVerificationRequests } from "./schema.js";
 
@@ -16,6 +20,8 @@ export const userRelations = relations(user, ({ many }) => ({
 	invitationsSent: many(organizationMemberInvitation),
 	affiliations: many(instructorOrganizationAffiliation),
 	instructorProfiles: many(userInstructorProfile),
+	courseProductsChallengeRatings: many(productCourseChallengeRating),
+	learningProfile: many(userLearningProfile),
 }));
 export const sessionRelations = relations(session, ({ one }) => ({
 	user: one(user, {

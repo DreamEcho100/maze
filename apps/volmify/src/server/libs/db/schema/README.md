@@ -1,4 +1,4 @@
-# **📚 Volmify Database Schema Overview**
+# **📚 Volmify Database Schema Overview - Updated**
 
 ## **🎓 What Volmify Is**
 
@@ -10,7 +10,7 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 - **Professional Creator System**: Instructors and content creators with specialized expertise across multiple domains
 - **Cross-Organizational Networks**: Professionals can collaborate across organizational boundaries while maintaining identity
 - **Organization-Scoped Branding**: Each organization manages its own brand identities for comprehensive product marketing
-- **Integrated Payment Strategy**: Sophisticated monetization through variant-level payment plans eliminating pricing redundancy
+- **Variant-Level Payment Strategy**: Sophisticated monetization through payment plans attached to product variants with access tier control
 
 ## **📚 Creator Economy with Professional Attribution**
 
@@ -34,17 +34,26 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 - **Multi-Creator Collaboration**: Teams of professionals creating products together across organizations
 - **Revenue Sharing Models**: Flexible attribution-based revenue distribution for product sales and subscriptions
 
-### **💰 Creator Economy Monetization with Integrated Payment Plans**
-- **Variant-Level Payment Strategies**: Product variants connect directly to sophisticated payment plans (one-time, subscription, usage-based)
+### **💰 Creator Economy Monetization with Access Tier Control**
+- **Payment Plan Access Tiers**: Payment plans define both billing strategy AND content access level (1=basic, 2=premium, 3=VIP)
+- **Granular Content Gating**: Course modules, sections, and lessons can require specific access tiers for monetization
+- **Flexible Payment Strategies**: Multiple payment options (one-time, subscription, usage-based) for same product variant with different access levels
 - **Integrated Market Pricing**: Multi-currency regional pricing built into payment plans eliminating separate pricing tables
 - **Professional Revenue Tracking**: Individual creator earnings across organizations with accurate attribution
 - **Cross-Organizational Revenue**: Professionals earning from multiple organizational contexts with clear compensation
 - **Attribution-Based Sharing**: Revenue distribution based on professional contribution and content attribution
-- **Product-Specific Business Models**: Flexible monetization strategies per product type with promotional campaign integration
+
+### **🎓 Advanced Learning Management Architecture**
+- **Three-Tier Content Structure**: Course → Module → Section → Lesson hierarchy for maximum instructional flexibility
+- **Dual Complexity Measurement**: Level (qualitative prerequisite knowledge) + Difficulty (quantitative 1-10 complexity rating)
+- **Community Quality Validation**: User rating system for course level and difficulty accuracy with instructor feedback
+- **Organization Member Progress Tracking**: Progress tied to organizational membership enabling role-based learning and company analytics
+- **Skill Taxonomy Integration**: Platform-wide skill management with course attribution for marketplace intelligence and learning pathways
+- **Reusable Lesson Content**: Lessons can be shared across courses and organizations while maintaining creator attribution
 
 ### **🛍️ Comprehensive E-commerce Foundation**
 - **Multi-Product Support**: Physical products, digital downloads, educational courses, and professional services
-- **Variant-Based Commerce**: Product variations with independent payment strategies and feature differentiation
+- **Variant-Based Commerce**: Product variations with independent payment strategies and access tier differentiation
 - **Promotional Campaign Integration**: Sophisticated discount and promotional strategies compatible with payment plans
 - **International Commerce**: Multi-currency support with regional market optimization and purchasing power parity
 - **Subscription Management**: Complete subscription lifecycle with trial periods, access control, and revenue tracking
@@ -53,7 +62,7 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 - **Organization Boundaries**: Strict data isolation between organizational tenants with independent business operations
 - **Professional Context**: Permissions based on creator roles, affiliations, and cross-organizational collaboration
 - **Cross-Organizational Access**: Controlled professional collaboration across organizational boundaries
-- **Granular Product Control**: Fine-grained product creation, editing, and monetization permissions
+- **Granular Content Control**: Access tier-based content gating with payment plan integration
 
 ### **🌍 Global Commerce Infrastructure**
 - **Multi-Currency Payment Plans**: Global product pricing with integrated regional market configurations
@@ -63,12 +72,12 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 
 ## **🏗 Database Architecture Patterns**
 
-### **Product-Centric Design with Payment Integration**
+### **Product-Centric Design with Access Tier Integration**
 - **Multi-Product Foundation**: Base product system supporting physical, digital, course, and service products
 - **CTI Product Extensions**: Type-specific product features through specialization tables
 - **Organization-Agnostic Professionals**: Creator identity preserved across organizational contexts
 - **Professional Attribution Flexibility**: Multiple attribution models for content ownership and revenue sharing
-- **Integrated Payment Architecture**: Payment plans attached to product variants eliminating pricing table redundancy
+- **Access Tier Payment Architecture**: Payment plans define content access levels enabling sophisticated content monetization
 - **Performance Isolation**: Product and payment data optimized for e-commerce and creator economy workflows
 
 ### **Key Architectural Decisions**
@@ -76,9 +85,10 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 2. **Direct Professional Attribution**: Clear content ownership without generic abstraction
 3. **Cross-Organizational Networks**: Professional collaboration beyond organizational boundaries
 4. **Organization-Scoped Brands**: Brand identities managed within organizational context for product marketing
-5. **Variant-Level Payment Plans**: Sophisticated pricing strategies attached to product variants
-6. **Integrated Pricing**: Market/currency pricing built into payment plans eliminating separate pricing tables
-7. **CTI Payment Specialization**: One-time, subscription, and usage-based payment models with type-specific features
+5. **Payment Plan Access Tiers**: Access levels attached to payment plans (not variants) for flexible monetization
+6. **Organization Member Progress**: Learning progress tracked per organizational membership for role-based analytics
+7. **Three-Tier Content Structure**: Course → Module → Section → Lesson for maximum instructional design flexibility
+8. **Skill Relationship Management**: Structured skill taxonomy with course attribution for marketplace intelligence
 
 ## **📊 Schema Organization**
 
@@ -101,8 +111,12 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 📂 product/
 ├── schema.js                   # Multi-product foundation + variants + professional attribution
 ├── relations.js                # Professional and brand attribution relationships
+├── by-type/
+│   └── course/                 # Educational content specialization
+│       ├── schema.js          # Course structure + modules + sections + lessons + progress
+│       └── relations.js       # Course content relationships and learning management
 ├── payment/
-│   ├── schema.js              # Integrated payment plans (CTI: one-time, subscription, usage-based)
+│   ├── schema.js              # Payment plans with access tiers (CTI: one-time, subscription, usage-based)
 │   └── relations.js           # Payment plan relationships and subscription management
 ├── offers/
 │   ├── schema.js              # Discount campaigns and promotional strategies
@@ -128,48 +142,70 @@ A **multi-tenant B2B SaaS educational content platform** that enables organizati
 └── relations.js               # System relationship management
 ```
 
+### **Course Content Architecture**
+```mermaid
+graph TD
+    A[Course] --> B[Module 1]
+    A --> C[Module 2]
+    A --> D[Module N]
+    
+    B --> E[Section 1.1]
+    B --> F[Section 1.2]
+    
+    E --> G[Lesson 1.1.1]
+    E --> H[Lesson 1.1.2]
+    
+    G --> I[Video Content]
+    G --> J[Quiz Assessment]
+    G --> K[Assignment]
+    
+    L[Access Tier 1] --> M[Basic Modules]
+    N[Access Tier 2] --> O[Premium Modules]
+    P[Access Tier 3] --> Q[VIP Content + Features]
+```
+
 ### **Creator Economy Workflow Architecture**
 ```mermaid
 graph TD
     A[User] --> B[Professional Instructor Profiles]
     B --> C[Organization Affiliations]
-    C --> D[Product Creation]
-    D --> E[Product Variants]
-    E --> F[Payment Plans]
-    F --> G[Professional Attribution & Revenue]
+    C --> D[Course Creation]
+    D --> E[Module/Section/Lesson Structure]
+    E --> F[Product Variants]
+    F --> G[Payment Plans with Access Tiers]
+    G --> H[Professional Attribution & Revenue]
     
-    H[Organization] --> I[Brand Identities]
-    I --> J[Brand-Attributed Products]
+    I[Organization] --> J[Brand Identities]
+    J --> K[Brand-Attributed Products]
     
-    C --> K[Cross-Org Professional Collaboration]
-    K --> L[Multi-Org Revenue Attribution]
+    C --> L[Cross-Org Professional Collaboration]
+    L --> M[Multi-Org Revenue Attribution]
     
-    M[Customers] --> N[Subscriptions]
-    N --> O[Access Control]
-    O --> P[Revenue Distribution]
+    N[Students] --> O[Organization Member Enrollment]
+    O --> P[Access Tier-Based Content]
+    P --> Q[Progress Tracking]
+    Q --> R[Revenue Distribution]
 ```
 
-### **Integrated Payment Architecture**
+### **Access Tier Payment Architecture**
 ```mermaid
 graph TD
-    A[Product] --> B[Product Variants]
-    B --> C[Payment Plans]
-    C --> D{Payment Type}
+    A[Product Variant] --> B[Payment Plan 1: Basic]
+    A --> C[Payment Plan 2: Premium] 
+    A --> D[Payment Plan 3: VIP]
     
-    D --> E[One-Time Purchase]
-    D --> F[Subscription Billing]
-    D --> G[Usage-Based Billing]
+    B --> E[Access Tier 1]
+    C --> F[Access Tier 2]
+    D --> G[Access Tier 3]
     
-    E --> H[Lifetime/Time-Limited Access]
-    F --> I[Recurring Revenue]
-    G --> J[Consumption-Based Revenue]
+    E --> H[Basic Course Modules]
+    F --> I[Basic + Premium Modules]
+    G --> J[All Content + VIP Features]
     
-    H --> K[Professional Revenue Attribution]
-    I --> K
-    J --> K
-    
-    L[Market/Currency Pricing] --> C
-    M[Promotional Campaigns] --> C
+    K[Course Module] --> L{Required Access Tier}
+    L -->|Tier 1| M[All Students Can Access]
+    L -->|Tier 2| N[Premium+ Students Only]
+    L -->|Tier 3| O[VIP Students Only]
 ```
 
 ## **🎯 Target Market & Use Cases**
@@ -182,94 +218,95 @@ graph TD
 - **Content Creator Networks**: Platforms supporting diverse creator economies across multiple product types
 - **E-commerce Organizations**: Companies requiring sophisticated pricing strategies and creator attribution
 
-### **Product Creation Scenarios**
+### **Course Creation Scenarios**
 - **Corporate Universities**: Organizations hiring external instructor experts for specialized content creation
+- **Tiered Learning Programs**: Companies offering basic, premium, and VIP training experiences
 - **Cross-Industry Collaboration**: Professionals collaborating across different organizational contexts
 - **Professional Development Networks**: Expert creator referral and collaboration systems
-- **Global Product Delivery**: International product sales with localized creator content and regional pricing
-- **Multi-Product Creator Economy**: Creators monetizing diverse content types across organizational boundaries
-- **Subscription-Based Learning**: Organizations offering subscription access to creator-developed content
+- **Global Course Delivery**: International course sales with localized creator content and regional pricing
+- **Multi-Access Learning**: Organizations offering different access levels based on payment commitment
+- **Subscription-Based Learning**: Organizations offering subscription access to creator-developed content with tier-based features
 
 ## **🚀 Competitive Positioning**
 
-### **Enterprise Creator Economy Platform**
-**Volmify** is positioned as an **enterprise-grade creator economy platform** with integrated e-commerce and sophisticated monetization:
+### **Enterprise Creator Economy Platform with Advanced Learning Management**
+**Volmify** is positioned as an **enterprise-grade creator economy platform** with sophisticated learning management and access tier monetization:
 
-- **vs. Teachable/Thinkific**: Enterprise multi-tenancy with professional attribution across organizations and integrated payment strategies
-- **vs. LinkedIn Learning**: Organization-controlled with creator economy features and cross-organizational professional collaboration
-- **vs. Coursera for Business**: Multi-organizational creator collaboration with integrated payment plans and revenue sharing
-- **vs. Corporate LMS**: Creator economy monetization with professional identity and sophisticated e-commerce capabilities
-- **vs. Shopify**: Professional attribution system with creator economy revenue sharing and cross-organizational collaboration
-- **vs. Gumroad**: Enterprise multi-tenancy with organizational boundaries and integrated payment plan sophistication
+- **vs. Teachable/Thinkific**: Enterprise multi-tenancy with three-tier content structure and organization member progress tracking
+- **vs. LinkedIn Learning**: Organization-controlled with creator economy features and access tier-based content monetization
+- **vs. Coursera for Business**: Multi-organizational creator collaboration with granular content gating and skill taxonomy integration
+- **vs. Corporate LMS**: Creator economy monetization with professional identity and sophisticated access tier control
+- **vs. Udemy Business**: Advanced learning analytics with organization member progress and skill-based learning pathways
+- **vs. MasterClass**: Professional attribution system with access tier monetization and cross-organizational collaboration
 
 ### **Unique Value Propositions**
-1. **Multi-Organizational Professional Network**: Creators can develop products across multiple organizations while maintaining identity
-2. **Cross-Organizational Collaboration**: Professional partnerships beyond organizational boundaries with clear attribution
-3. **Attribution-Based Product Economics**: Clear content ownership and revenue attribution for professional creators
-4. **Professional Identity Preservation**: Global creator professional identity across organizational contexts
-5. **Enterprise-Grade Multi-Tenancy**: True organizational isolation with creator economy features and sophisticated monetization
-6. **Integrated Payment Architecture**: Variant-level payment plans eliminating pricing table redundancy with sophisticated monetization
-7. **Multi-Product Creator Support**: Professional creators can monetize diverse content types with consistent attribution
+1. **Access Tier Monetization**: Payment plans define content access levels enabling sophisticated course monetization strategies
+2. **Three-Tier Content Architecture**: Module → Section → Lesson structure for maximum instructional design flexibility
+3. **Organization Member Learning**: Progress tracking tied to organizational membership for role-based analytics and training
+4. **Skill Taxonomy Integration**: Platform-wide skill management with course attribution for marketplace intelligence
+5. **Dual Complexity Measurement**: Level + difficulty rating system with community validation for precise course positioning
+6. **Multi-Organizational Professional Network**: Creators can develop courses across multiple organizations while maintaining identity
+7. **Community Quality Assurance**: User rating system for course accuracy with instructor feedback loops
 
 ## **📈 Future Scalability (Creator Economy Foundation)**
 
-### **Extensible Product Architecture**
-The architecture supports current and future product types through CTI pattern and professional attribution:
+### **Extensible Course Architecture**
+The course architecture supports current and future educational content types:
 
 ```javascript
-// Current: Multi-product implementation
-product → courseProduct (educational content)
-product → digitalProduct (downloadable content)
-product → physicalProduct (shipped goods)
-product → serviceProduct (professional services)
+// Current: Course content implementation
+course → modules → sections → lessons (video, text, quiz, assignment, interactive)
 
-// Future: Extensible to specialized product types
-product → eventProduct (scheduled sessions)
-product → bundleProduct (product collections)
-product → mediaProduct (streaming content)
-product → consultationProduct (1-on-1 services)
-product → certificationProduct (credential programs)
+// Future: Extensible content types
+lesson → liveSessionLesson (scheduled instruction)
+lesson → projectLesson (multi-step practical work)
+lesson → discussionLesson (community engagement)
+lesson → assessmentLesson (certification testing)
+lesson → workshopLesson (hands-on practice)
 ```
 
-### **Payment Plan Scalability**
+### **Access Tier Scalability**
 ```javascript
-// Current: CTI payment plan implementation
-paymentPlan → oneTimePaymentPlan (traditional purchase)
-paymentPlan → subscriptionPaymentPlan (recurring billing)
-paymentPlan → usageBasedPaymentPlan (consumption billing)
+// Current: Tiered access implementation
+accessTier: 1 → Basic content access
+accessTier: 2 → Premium content + features
+accessTier: 3 → VIP content + exclusive features
 
-// Future: Extensible payment strategies
-paymentPlan → freemiumPaymentPlan (free tier with upgrades)
-paymentPlan → corporatePaymentPlan (enterprise licensing)
-paymentPlan → partnershipPaymentPlan (revenue sharing models)
+// Future: Extensible access models
+accessTier: 4 → Enterprise features (team management)
+accessTier: 5 → Partner access (content collaboration)
+accessTier: 6 → Instructor access (content creation)
 ```
 
-### **Creator Economy Benefits**
-- **Pattern Consistency**: Professional attribution architecture replicates across all product types
-- **Performance Isolation**: Creator and payment data scales independently
-- **Business Model Flexibility**: Different monetization strategies for diverse content types
-- **Professional Scalability**: Creator system ready for monetizing different product and service types
-- **Cross-Organizational Growth**: Professional collaboration patterns scale with platform expansion
+### **Learning Management Benefits**
+- **Progress Tracking Scalability**: Organization member progress supports complex organizational learning analytics
+- **Skill Attribution Growth**: Skill taxonomy enables sophisticated learning pathway recommendations
+- **Content Reusability**: Lesson sharing across courses and organizations with maintained attribution
+- **Quality Assurance Evolution**: Community rating system provides data for AI-driven course improvement
+- **Access Control Sophistication**: Tier-based gating supports complex monetization and feature strategies
 
 ## **🎯 Developer Quick Start**
 
-### **Understanding the Creator Economy Architecture**
-1. **Start with Organization Schema**: Understand multi-tenant boundaries and brand management
-2. **Review Professional Profiles**: See how creator identity works across organizational contexts
-3. **Examine Product Attribution**: Understand content ownership and revenue attribution for creators
-4. **Study Payment Plan Integration**: See variant-level payment strategies and pricing architecture
-5. **Explore Cross-Organizational Features**: Understand professional collaboration patterns
+### **Understanding the Learning Management Architecture**
+1. **Start with Course Schema**: Understand three-tier content structure (Course → Module → Section → Lesson)
+2. **Review Access Tier System**: See how payment plans control content access and feature availability
+3. **Examine Progress Tracking**: Understand organization member-based learning analytics
+4. **Study Skill Integration**: See how course-skill attribution enables marketplace intelligence
+5. **Explore Quality System**: Understand community-driven course validation and improvement
 
 ### **Key Development Patterns**
 ```javascript
-// Professional Attribution Pattern
-Organization → Brand → Product → Professional Attribution → Revenue Sharing
+// Course Content Organization Pattern
+Course → Module → Section → Lesson → Progress Tracking
 
-// Payment Plan Integration Pattern
-Product → Variant → Payment Plan → Subscription → Revenue Attribution
+// Access Tier Control Pattern
+Payment Plan → Access Tier → Content Gating → Feature Access
 
-// Cross-Organizational Collaboration Pattern
-Professional Profile → Multiple Organizations → Attributed Products → Revenue Tracking
+// Skill Attribution Pattern
+Course → Skill Mapping → Learning Pathways → Marketplace Intelligence
+
+// Organization Member Learning Pattern
+User → Organization Member → Course Enrollment → Role-Based Progress
 ```
 
 ## **📖 Detailed Documentation**
@@ -278,7 +315,8 @@ Professional Profile → Multiple Organizations → Attributed Products → Reve
 - 🏢 Organization Schema - Multi-tenant and brand management
 - 👤 User Instructor Profile - Professional creator identity system
 - 📚 Product Schema - Multi-product catalog and professional attribution
-- 💳 Payment Schema - Integrated payment plans and subscription management
+- 🎓 Course Schema - Three-tier learning management with access control
+- 💳 Payment Schema - Access tier payment plans and subscription management
 - 🎁 Offers Schema - Promotional campaigns and discount strategies
 - 💰 Currency & Market - International commerce and regional pricing
 - 🔍 SEO Schema - Content discovery and search optimization
@@ -286,38 +324,41 @@ Professional Profile → Multiple Organizations → Attributed Products → Reve
 ### **Architecture Deep Dives**
 - 🏗 Multi-Tenant Creator Economy Architecture
 - 👥 Professional Attribution System
-- 💳 Integrated Payment Plan Architecture
+- 🎓 Three-Tier Learning Management Architecture
+- 💳 Access Tier Payment Plan Integration
+- 🧠 Skill Taxonomy and Learning Pathway System
 - 🔗 Cross-Organizational Professional Collaboration
 - 🌍 International Commerce Architecture
-- 🎯 Creator Economy Revenue Models
+- 📊 Organization Member Learning Analytics
 
 ## **🔧 Development Guidelines**
 
-### **Creator Economy Feature Development**
-1. **Follow the Professional Attribution Pattern**: Use instructor schema and content attribution models
-2. **Maintain Organization Context**: All products operate within organizational boundaries
-3. **Support Cross-Organizational**: Enable professional collaboration across organizations
-4. **Professional Attribution Integration**: Connect to creator and brand attribution system
-5. **Payment Plan Integration**: Utilize variant-level payment strategies for monetization
-6. **Revenue Attribution Accuracy**: Ensure clear professional compensation tracking
+### **Learning Management Feature Development**
+1. **Follow Three-Tier Content Pattern**: Use Course → Module → Section → Lesson hierarchy
+2. **Implement Access Tier Control**: Respect payment plan access levels for content gating
+3. **Support Organization Member Progress**: Track learning within organizational context
+4. **Integrate Skill Attribution**: Connect course content to platform skill taxonomy
+5. **Enable Community Quality**: Support user rating and feedback systems
+6. **Maintain Professional Attribution**: Ensure creator revenue and recognition tracking
 
 ### **Schema Evolution Principles**
 - **Organization-First**: Every feature respects organizational boundaries and business independence
 - **Professional Identity**: Maintain global creator identity across organizational contexts
-- **Content Attribution Clarity**: Clear product ownership and revenue tracking for professionals
-- **Performance Isolation**: Product and payment data optimized for creator economy workflows
-- **Payment Plan Integration**: Utilize integrated pricing to eliminate table redundancy
-- **Cross-Organizational Support**: Enable professional collaboration while maintaining boundaries
+- **Content Access Control**: Implement sophisticated access tier-based monetization strategies
+- **Learning Analytics**: Support organization member-based progress tracking and reporting
+- **Skill Intelligence**: Enable platform-wide skill tracking and learning pathway construction
+- **Quality Assurance**: Build community-driven validation and improvement systems
 
-### **Payment Architecture Guidelines**
-1. **Variant-Level Attachment**: Payment plans attach to product variants, not products directly
-2. **CTI Pattern Usage**: Extend base payment plans with type-specific specialization tables
-3. **Integrated Pricing**: Include market/currency pricing directly in payment plans
-4. **Professional Attribution**: Ensure payment revenue integrates with creator attribution
-5. **Translation Support**: Provide multi-language support for international markets
+### **Course Architecture Guidelines**
+1. **Three-Tier Structure**: Always implement Course → Module → Section → Lesson hierarchy
+2. **Access Tier Integration**: Respect payment plan access levels for content and feature access
+3. **Organization Member Tracking**: Progress tied to organizational membership for role-based analytics
+4. **Skill Attribution**: Connect course content to structured skill taxonomy for marketplace intelligence
+5. **Quality Validation**: Support community rating system for course accuracy and improvement
+6. **Professional Recognition**: Ensure instructor attribution and revenue tracking across all course content
 
 ---
 
-**Volmify enables organizations to build sophisticated creator economies with multi-organizational professional collaboration, integrated payment plan strategies, clear content attribution models, and enterprise-grade multi-tenant architecture supporting diverse product types and monetization strategies.** 🎓💰✨
+**Volmify enables organizations to build sophisticated creator economies with advanced learning management, access tier-based monetization, organization member analytics, skill-based learning pathways, and enterprise-grade multi-tenant architecture supporting comprehensive educational content delivery and professional development tracking.** 🎓💰✨
 
-The database architecture focuses on creator economy scalability while maintaining organizational boundaries, professional identity preservation, integrated payment sophistication, and clear content attribution for sustainable professional creator growth across diverse product catalogs and international markets.
+The database architecture focuses on learning management scalability while maintaining organizational boundaries, professional identity preservation, access tier sophistication, and community-driven quality assurance for sustainable educational creator growth across diverse course catalogs and international markets.

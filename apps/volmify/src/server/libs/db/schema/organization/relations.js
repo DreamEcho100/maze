@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
+import { lesson, productCourseEnrollment, skill } from "../product/by-type/course/schema.js";
 import { productVariantPaymentPlan } from "../product/payment/schema.js";
 import { productBrandAttribution, productInstructorAttribution } from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
@@ -53,6 +54,8 @@ export const organizationRelations = relations(organization, ({ many }) => ({
 	pricingZones: many(organizationPricingZone),
 	brands: many(organizationBrand),
 	instructorAffiliations: many(instructorOrganizationAffiliation),
+	skillsCreated: many(skill),
+	lessons: many(lesson),
 }));
 
 /**
@@ -74,6 +77,8 @@ export const organizationMemberRelations = relations(organizationMember, ({ one,
 	memberGroups: many(organizationMemberPermissionsGroup),
 	memberInvitations: many(organizationMemberInvitation),
 	memberDepartments: many(organizationMemberDepartment),
+	productsCoursesEnrollments: many(productCourseEnrollment),
+	lessons: many(lesson),
 }));
 
 /**

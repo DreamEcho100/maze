@@ -1,6 +1,12 @@
 import { relations } from "drizzle-orm";
 import { organization } from "../organization/schema.js";
 import {
+	lessonTranslation,
+	productCourseModuleSectionLessonTranslation,
+	productCourseModuleSectionTranslation,
+	productCourseModuleTranslation,
+} from "../product/by-type/course/schema.js";
+import {
 	seoAlternateUrl,
 	seoCustomMeta,
 	seoMetadata,
@@ -14,10 +20,17 @@ import {
 // -------------------------------------
 export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	// Many-to-one: SEO belongs to an organization
-	organization: one(organization, {
+	createdByOrganization: one(organization, {
 		fields: [seoMetadata.organizationId],
 		references: [organization.id],
+		relationName: "seo_metadata_created_by_org",
 	}),
+
+	// organization: one(organization, {
+	// 	fields: [seoMetadata.organizationId],
+	// 	references: [organization.id],
+	// 	relationName: "seo_metadata_organization",
+	// }),
 
 	// One-to-one: SEO can have one Open Graph configuration
 	openGraph: one(seoOpenGraph, {
@@ -29,6 +42,34 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	twitterCard: one(seoTwitterCard, {
 		fields: [seoMetadata.id],
 		references: [seoTwitterCard.seoMetadataId],
+	}),
+
+	productsCoursesModules: one(productCourseModuleTranslation, {
+		fields: [seoMetadata.id],
+		references: [productCourseModuleTranslation.seoMetadataId],
+	}),
+	productsCoursesModulesSections: one(productCourseModuleSectionTranslation, {
+		fields: [seoMetadata.id],
+		references: [productCourseModuleSectionTranslation.seoMetadataId],
+	}),
+	productsCoursesModulesSectionsLessons: one(
+		productCourseModuleSectionLessonTranslation,
+		{
+			fields: [seoMetadata.id],
+			references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
+		},
+	),
+	productsCoursesModulesLessonsTranslations: one(
+		productCourseModuleTranslation,
+		{
+			fields: [seoMetadata.id],
+			references: [productCourseModuleTranslation.seoMetadataId],
+		},
+	),
+
+	lessons: one(lessonTranslation, {
+		fields: [seoMetadata.id],
+		references: [lessonTranslation.seoMetadataId],
 	}),
 
 	// One-to-many: SEO can have multiple structured data entries
@@ -74,24 +115,30 @@ export const seoTwitterCardRelations = relations(seoTwitterCard, ({ one }) => ({
 // -------------------------------------
 // STRUCTURED DATA RELATIONS
 // -------------------------------------
-export const seoStructuredDataRelations = relations(seoStructuredData, ({ one }) => ({
-	// Many-to-one: Structured data belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoStructuredData.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoStructuredDataRelations = relations(
+	seoStructuredData,
+	({ one }) => ({
+		// Many-to-one: Structured data belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoStructuredData.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // ALTERNATE URL RELATIONS
 // -------------------------------------
-export const seoAlternateUrlRelations = relations(seoAlternateUrl, ({ one }) => ({
-	// Many-to-one: Alternate URL belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoAlternateUrl.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoAlternateUrlRelations = relations(
+	seoAlternateUrl,
+	({ one }) => ({
+		// Many-to-one: Alternate URL belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoAlternateUrl.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // CUSTOM META RELATIONS

@@ -267,7 +267,9 @@ export const productVariantPaymentPlan = table(
 		 * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		 * @businessFlexibility Enables complex regional pricing strategies
 		 */
-		pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
+		pricingZoneId: text("pricing_zone_id").references(
+			() => organizationPricingZone.id,
+		),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -300,6 +302,14 @@ export const productVariantPaymentPlan = table(
 		 * @integrationContext Third-party platform support
 		 */
 		metadata: jsonb("metadata"),
+
+		/**
+		 * @accessControl Access tier granted by this payment plan
+		 * @businessRule Higher payment commitment = higher access tier
+		 * @contentGating Determines which course modules/sections/lessons user can access
+		 * @monetizationStrategy Enables content-based pricing differentiation
+		 */
+		accessTier: integer("access_tier").default(1).notNull(),
 
 		createdAt,
 		updatedAt,
@@ -648,7 +658,9 @@ export const subscriptionPaymentPlanTranslation = table(
 		 */
 		planId: text("plan_id")
 			.notNull()
-			.references(() => subscriptionPaymentPlan.planId, { onDelete: "cascade" }),
+			.references(() => subscriptionPaymentPlan.planId, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @localizationContext Region/market locale of the content
@@ -755,7 +767,10 @@ export const usageBasedPaymentPlan = table(
 		 * @revenueProtection Minimum charge per billing period regardless of usage
 		 * @businessModel Ensures baseline revenue even during low consumption periods
 		 */
-		minimumCharge: decimal("minimum_charge", { precision: 12, scale: 2 }).default("0"),
+		minimumCharge: decimal("minimum_charge", {
+			precision: 12,
+			scale: 2,
+		}).default("0"),
 
 		/**
 		 * @freemiumModel Free usage allowance before billing charges begin
@@ -918,7 +933,9 @@ export const userSubscription = table(
 		 * @memberContext Optional organization member context for internal subscriptions
 		 * @businessRule When present, indicates internal organizational member subscription
 		 */
-		organizationMemberId: text("organization_member_id").references(() => organizationMember.id),
+		organizationMemberId: text("organization_member_id").references(
+			() => organizationMember.id,
+		),
 
 		/**
 		 * @subscriptionLifecycle Current subscription state for access control
@@ -986,6 +1003,9 @@ export const userSubscription = table(
 
 		// Revenue Analytics Indexes
 		index("idx_user_subscription_revenue").on(t.totalPaid, t.currencyCode),
-		index("idx_user_subscription_org_revenue").on(t.organizationId, t.totalPaid),
+		index("idx_user_subscription_org_revenue").on(
+			t.organizationId,
+			t.totalPaid,
+		),
 	],
 );
