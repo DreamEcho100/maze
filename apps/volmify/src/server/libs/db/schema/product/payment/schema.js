@@ -183,7 +183,7 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
 export const productVariantPaymentPlan = table(
 	"product_variant_payment_plan",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @integrationContext Binds plan to specific purchasable entity
@@ -267,9 +267,7 @@ export const productVariantPaymentPlan = table(
 		 * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		 * @businessFlexibility Enables complex regional pricing strategies
 		 */
-		pricingZoneId: text("pricing_zone_id").references(
-			() => organizationPricingZone.id,
-		),
+		pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -366,7 +364,7 @@ export const productVariantPaymentPlan = table(
 export const productVariantPaymentPlanTranslation = table(
 	"product_variant_payment_plan_translation",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @translationTarget Parent payment plan receiving this translation
@@ -517,7 +515,7 @@ export const oneTimePaymentPlan = table(
 export const oneTimePaymentPlanTranslation = table(
 	"one_time_payment_plan_translation",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @translationTarget Parent one-time plan for this localized version
@@ -651,7 +649,7 @@ export const subscriptionPaymentPlan = table(
 export const subscriptionPaymentPlanTranslation = table(
 	"subscription_payment_plan_translation",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @translationTarget Target subscription plan
@@ -809,7 +807,7 @@ export const usageBasedPaymentPlan = table(
 export const usageBasedPaymentPlanTranslation = table(
 	"usage_based_payment_plan_translation",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @translationTarget Parent usage-based plan
@@ -903,7 +901,7 @@ export const usageBasedPaymentPlanTranslation = table(
 export const userSubscription = table(
 	"user_subscription",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @customerReference Customer who owns this subscription instance
@@ -933,9 +931,7 @@ export const userSubscription = table(
 		 * @memberContext Optional organization member context for internal subscriptions
 		 * @businessRule When present, indicates internal organizational member subscription
 		 */
-		organizationMemberId: text("organization_member_id").references(
-			() => organizationMember.id,
-		),
+		organizationMemberId: text("organization_member_id").references(() => organizationMember.id),
 
 		/**
 		 * @subscriptionLifecycle Current subscription state for access control
@@ -1003,9 +999,6 @@ export const userSubscription = table(
 
 		// Revenue Analytics Indexes
 		index("idx_user_subscription_revenue").on(t.totalPaid, t.currencyCode),
-		index("idx_user_subscription_org_revenue").on(
-			t.organizationId,
-			t.totalPaid,
-		),
+		index("idx_user_subscription_org_revenue").on(t.organizationId, t.totalPaid),
 	],
 );

@@ -13,7 +13,17 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, fk, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	fk,
+	id,
+	name,
+	orgTableName,
+	slug,
+	table,
+	updatedAt,
+} from "../_utils/helpers.js";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
@@ -66,7 +76,7 @@ const organizationMetadataJsonb = jsonb("metadata");
  * Each organization has isolated content, users, permission groups, and market settings.
  */
 export const organization = table(
-	"organization",
+	orgTableName,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -84,13 +94,13 @@ export const organization = table(
 		 * Unique human-readable identifier (e.g., "Acme Inc.")
 		 * Used in dashboards, invitations, and billing.
 		 */
-		name: name.notNull().unique("uq_organization_name"),
+		name: name.notNull(),
 
 		/**
 		 * Unique slug used in URLs and subdomain routing.
 		 * E.g., `acme` → acme.yourdomain.com or /org/acme
 		 */
-		slug: slug.notNull().unique("uq_organization_slug"),
+		slug: slug.notNull(),
 
 		logo: varchar("logo", { length: 2096 }),
 
@@ -100,12 +110,17 @@ export const organization = table(
 				organizationMetadataJsonb
 			),
 	},
-	(table) => [
-		index("idx_organization_created_at").on(table.createdAt),
-		index("idx_organization_updated_at").on(table.updatedAt),
-		index("idx_organization_name").on(table.name),
-		index("idx_organization_slug").on(table.slug),
-	],
+	(table) => {
+		const base = orgTableName;
+		return [
+			uniqueIndex(`uq_${base}_slug`).on(table.slug),
+			uniqueIndex(`uq_${base}_name`).on(table.name),
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_name`).on(table.name),
+			index(`idx_${base}_slug`).on(table.slug),
+		];
+	},
 );
 
 /**
@@ -120,7 +135,7 @@ export const organization = table(
  * They may be short-lived (project-based) or permanent (functional).
  */
 export const organizationTeam = table(
-	"organization_team",
+	`${orgTableName}_team`,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -131,7 +146,7 @@ export const organizationTeam = table(
 			.notNull(),
 		name: name.notNull(),
 
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
@@ -147,12 +162,15 @@ export const organizationTeam = table(
 
 		metadata: jsonb("metadata"),
 	},
-	(table) => [
-		index("idx_organization_team_created_at").on(table.createdAt),
-		index("idx_organization_team_updated_at").on(table.updatedAt),
-		index("idx_organization_team_name").on(table.name),
-		uniqueIndex("uq_organization_team_name_org").on(table.name, table.organizationId),
-	],
+	(table) => {
+		const base = `${orgTableName}_team`;
+		return [
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_name`).on(table.name),
+			uniqueIndex(`uq_${base}_name_org`).on(table.name, table.organizationId),
+		];
+	},
 );
 
 /**
@@ -163,14 +181,14 @@ export const organizationTeam = table(
  * in ABAC evaluations. Connects the global user identity to tenant-specific roles.
  */
 export const organizationMember = table(
-	"organization_member",
+	`${orgTableName}_member`,
 	{
 		id: id.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
 
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
@@ -206,11 +224,11 @@ export const organizationMember = table(
  * structure and influences default permissions for members and teams.
  */
 export const organizationDepartment = table(
-	"organization_department",
+	`${orgTableName}_department`,
 	{
 		id: id.notNull(),
 
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
@@ -244,7 +262,7 @@ export const organizationDepartment = table(
  * inheritance and UI logic (like filtering or default views).
  */
 export const organizationMemberDepartment = table(
-	"organization_member_department",
+	`${orgTableName}_member_department`,
 	{
 		id: id.notNull(),
 
@@ -272,7 +290,7 @@ export const organizationMemberDepartment = table(
 	],
 );
 
-export const organizationMemberTeamRoleEnum = pgEnum("organization_member_team_role", [
+export const organizationMemberTeamRoleEnum = pgEnum(`${orgTableName}_member_team_role`, [
 	"admin", // Full access to manage team members, settings, and permissions
 	"member", // Scoped access based on permission groups assigned within the team
 ]);
@@ -290,7 +308,7 @@ export const organizationMemberTeamRoleEnum = pgEnum("organization_member_team_r
  * - Supports transient or permanent collaboration units
  */
 export const organizationMemberTeam = table(
-	"organization_member_team",
+	`${orgTableName}_member_team`,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -321,7 +339,7 @@ export const organizationMemberTeam = table(
  * permission inheritance across domains.
  */
 export const organizationTeamDepartment = table(
-	"organization_team_department",
+	`${orgTableName}_team_department`,
 	{
 		id: id.notNull(),
 		teamId: fk("team_id")
@@ -353,7 +371,7 @@ export const organizationTeamDepartment = table(
  * Links members to organizational permission groups for ABAC resolution.
  */
 export const organizationMemberPermissionsGroup = table(
-	"organization_member_permissions_group",
+	`${orgTableName}_member_permissions_group`,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -380,7 +398,7 @@ export const organizationMemberPermissionsGroup = table(
  * an organization's scope to simplify permission management and reuse.
  */
 export const organizationPermissionsGroup = table(
-	"organization_permissions_group",
+	`${orgTableName}_permissions_group`,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -389,7 +407,7 @@ export const organizationPermissionsGroup = table(
 		createdBy: text("created_by").references(() => user.id), // Nullable for seeded/system roles
 		name: name.notNull(),
 		description: varchar("description", { length: 256 }),
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		isSystem: boolean("is_system").default(false), // Flag for system-defined groups
@@ -411,7 +429,7 @@ export const organizationPermissionsGroup = table(
  * enabling context-specific role composition.
  */
 export const organizationPermissionsGroupPermission = table(
-	"organization_permissions_group_permission",
+	`${orgTableName}_permissions_group_permission`,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -431,7 +449,7 @@ export const organizationPermissionsGroupPermission = table(
 );
 
 export const organizationMemberInvitationStatusEnum = pgEnum(
-	"organization_member_invitation_status",
+	`${orgTableName}_member_invitation_status`,
 	[
 		"pending", // Awaiting response
 		"accepted", // Member joined organization
@@ -448,12 +466,12 @@ export const organizationMemberInvitationStatusEnum = pgEnum(
  * Handles invitation issuance and acceptance into the ABAC org model.
  */
 export const organizationMemberInvitation = table(
-	"organization_member_invitation",
+	`${orgTableName}_member_invitation`,
 	{
 		id: id.notNull(),
 		createdAt,
 		updatedAt,
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		email: varchar("email", { length: 256 }).notNull(),
@@ -487,9 +505,9 @@ export const organizationMemberInvitation = table(
  * Allows org-level currency preferences and rounding strategies.
  */
 export const organizationCurrencySettings = table(
-	"organization_currency_settings",
+	`${orgTableName}_currency_settings`,
 	{
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		currencyCode: text("currency_code")
@@ -529,10 +547,10 @@ export const organizationCurrencySettings = table(
  * systems for contextual delivery based on the active market.
  */
 export const organizationMarket = table(
-	"organization_market",
+	`${orgTableName}_market`,
 	{
 		id: id.notNull(),
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id),
 
@@ -576,9 +594,9 @@ export const organizationMarket = table(
  * targeting, pricing logic, and compliance.
  */
 export const organizationMarketCountry = table(
-	"organization_market_country",
+	`${orgTableName}_market_country`,
 	{
-		organizationMarketId: text("organization_market_id")
+		organizationMarketId: text(`${orgTableName}_market_id`)
 			.notNull()
 			.references(() => organizationMarket.id, { onDelete: "cascade" }),
 		countryId: text("country_id")
@@ -604,13 +622,13 @@ export const organizationMarketCountry = table(
  * @integrationContext Connects to SEO for localized optimization.
  */
 export const organizationMarketTranslation = table(
-	"organization_market_translation",
+	`${orgTableName}_market_translation`,
 	{
 		id: id.notNull(),
-		organizationMarketId: text("organization_market_id")
+		organizationMarketId: text(`${orgTableName}_market_id`)
 			.notNull()
 			.references(() => organizationMarket.id, { onDelete: "cascade" }),
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id),
 		locale: text("locale").notNull(),
@@ -640,10 +658,10 @@ export const organizationMarketTranslation = table(
  * configuration systems.
  */
 export const organizationPricingZone = table(
-	"organization_pricing_zone",
+	`${orgTableName}_pricing_zone`,
 	{
 		id: id.notNull(),
-		organizationId: text("organization_id").references(() => organization.id),
+		organizationId: text(`${orgTableName}_id`).references(() => organization.id),
 		name: name.notNull(),
 		description: text("description"),
 		currencyCode: text("currency_code")
@@ -669,7 +687,7 @@ export const organizationPricingZone = table(
  * @businessLogic Maps countries to pricing zones for regional pricing strategies.
  */
 export const organizationPricingZoneCountry = table(
-	"organization_pricing_zone_country",
+	`${orgTableName}_pricing_zone_country`,
 	{
 		zoneId: text("zone_id")
 			.notNull()
@@ -688,10 +706,10 @@ export const organizationPricingZoneCountry = table(
  * content, marketing, and course attribution.
  */
 export const organizationBrand = table(
-	"organization_brand",
+	`${orgTableName}_brand`,
 	{
 		id: id.notNull(),
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id),
 		name: text("name").notNull(),
@@ -716,10 +734,10 @@ export const organizationBrand = table(
  * @businessLogic Localized branding content for internationalization.
  */
 export const organizationBrandTranslation = table(
-	"organization_brand_translation",
+	`${orgTableName}_brand_translation`,
 	{
 		id: id.notNull(),
-		organizationBrandId: fk("organization_brand_id")
+		organizationBrandId: fk(`${orgTableName}_brand_id`)
 			.references(() => organizationBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		locale: text("locale").notNull(),
@@ -742,7 +760,7 @@ export const organizationBrandTranslation = table(
  *
  * @businessLogic Tracks metrics and usage data for brand content.
  */
-export const organizationBrandMetrics = table("organization_brand_metrics", {
+export const organizationBrandMetrics = table(`${orgTableName}_brand_metrics`, {
 	id: id.notNull(),
 	organizationBrandId: fk("vendor_brand_id")
 		.references(() => organizationBrand.id, { onDelete: "cascade" })
@@ -791,12 +809,12 @@ export const compensationTypeEnum = pgEnum("compensation_type", [
 export const instructorOrganizationAffiliation = table(
 	"instructor_organization_affiliation",
 	{
-		id,
+		id: id.notNull(),
 		instructorId: text("instructor_id")
 			.notNull()
 			.references(() => userInstructorProfile.id),
 		memberId: fk("member_id").references(() => organizationMember.id, { onDelete: "set null" }),
-		organizationId: text("organization_id")
+		organizationId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => organization.id),
 		joinedAt: timestamp("joined_at").defaultNow(),
@@ -832,9 +850,9 @@ export const instructorOrganizationAffiliation = table(
 // The following is commented out as it is not needed for now.
 // Organization-specific locale settings
 // export const organizationLocale = table(
-// 	"organization_locale",
+// 	`${orgTableName}_locale`,
 // 	{
-// 		organizationId: text("organization_id")
+// 		organizationId: text(`${orgTableName}_id`)
 // 			.notNull()
 // 			.references(() => organization.id, { onDelete: "cascade" }),
 // 		locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"

@@ -427,7 +427,7 @@ export const productVariant = table(
 export const productVariantTranslation = table(
 	"product_variant_translation",
 	{
-		id,
+		id: id.notNull(),
 
 		/**
 		 * @translationTarget Product variant this localized content applies to

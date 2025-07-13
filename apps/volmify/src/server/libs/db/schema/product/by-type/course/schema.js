@@ -112,7 +112,7 @@ export const productCourse = table(
 export const productCourseTranslation = table(
 	"product_course_translation",
 	{
-		id,
+		id: id.notNull(),
 		courseId: fk("course_id")
 			.references(() => productCourse.id)
 			.notNull(),
@@ -154,7 +154,7 @@ export const productCourseTranslation = table(
 export const skill = table(
 	"skill",
 	{
-		id,
+		id: id.notNull(),
 		/**
 		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
 		 * @analyticsFoundation Enables cross-organization skill tracking and recommendations
@@ -205,7 +205,7 @@ export const skill = table(
 export const skillTranslation = table(
 	"skill_translation",
 	{
-		id,
+		id: id.notNull(),
 		skillId: fk("skill_id")
 			.references(() => skill.id)
 			.notNull(),
@@ -290,7 +290,7 @@ export const productCourseSkill = table(
 export const productCourseChallengeRating = table(
 	"product_course_challenge_rating",
 	{
-		id,
+		id: id.notNull(),
 		courseId: fk("course_id")
 			.references(() => productCourse.id)
 			.notNull(),
@@ -420,7 +420,7 @@ export const productCourseModuleTranslation = table(
 export const productCourseModuleSection = table(
 	"product_course_module_section",
 	{
-		id,
+		id: id.notNull(),
 		moduleId: fk("module_id")
 			.references(() => productCourseModule.id)
 			.notNull(),
@@ -750,7 +750,7 @@ export const productCourseEnrollment = table(
  * for comprehensive professional development and career progression analytics.
  */
 export const userLearningProfile = table("user_learning_profile", {
-	id,
+	id: id.notNull(),
 	userId: fk("user_id")
 		.references(() => user.id)
 		.notNull()

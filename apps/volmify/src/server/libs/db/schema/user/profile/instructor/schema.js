@@ -27,7 +27,7 @@ import { user } from "../../../user/schema";
 export const userInstructorProfile = table(
 	"user_instructor_profile",
 	{
-		id,
+		id: id.notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id),
@@ -135,7 +135,7 @@ export const userInstructorProfileTranslation = table(
 export const userInstructorProfileContactInfo = table(
 	"user_instructor_profile_contact_info",
 	{
-		id,
+		id: id.notNull(),
 		instructorProfileId: text("instructor_profile_id")
 			.notNull()
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" }),

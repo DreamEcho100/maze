@@ -3,6 +3,7 @@ import { ulid } from "ulid";
 
 const createId = ulid;
 
+export const orgTableName = "org";
 export const id = text("id").primaryKey().notNull().$default(createId);
 export const fk = text;
 export const name = varchar("name", { length: 100 }).notNull();
