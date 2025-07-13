@@ -1,11 +1,11 @@
 /**
- * @fileoverview Product Payment Plans - Variant-Level Payment Strategies with Integrated Pricing
+ * @fileoverview Product Variant Payment Plans - CTI-Based Monetization with Multi-Tenant Pricing
  *
- * @architecture Variant-Based Payment Plans with CTI + Integrated Market/Currency Pricing
- * Payment plan system attached to productVariant (e-commerce atomic unit) with integrated
- * market/currency pricing eliminating productPrice redundancy. Supports sophisticated payment
- * strategies including one-time purchases, subscriptions, and usage-based billing within
- * organizational boundaries while maintaining creator economy revenue attribution workflows.
+ * @architecture Variant-Level Payment Strategies with Integrated Market/Currency Pricing
+ * Payment plan system attached to productVariant with integrated pricing eliminating productPrice
+ * redundancy. Supports sophisticated payment strategies including one-time purchases, subscriptions,
+ * and usage-based billing within organizational boundaries while maintaining creator economy
+ * revenue attribution workflows.
  *
  * @designPattern CTI + Integrated Pricing + Translation + Multi-Tenant + Creator Attribution
  * - Variant-Level Attachment: Payment plans define HOW customers pay for specific product variants
@@ -165,6 +165,9 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
  * tables. Combines payment strategy (one-time, subscription, usage) with regional pricing
  * in a single coherent system for simplified e-commerce management.
  *
+ * @abacRole Plan creation/update restricted to organization owners/managers
+ * @permissionContext Variant scope for plan visibility and organizational boundaries
+ *
  * @variantLevelAttachment Payment plans are variant-specific because variants define WHAT
  * customers purchase (features, access levels) while payment plans define HOW they pay for it.
  * This separation enables sophisticated pricing strategies with multiple payment options per variant.
@@ -183,7 +186,7 @@ export const productVariantPaymentPlan = table(
 		id,
 
 		/**
-		 * @variantIntegration Product variant this payment plan applies to
+		 * @integrationContext Binds plan to specific purchasable entity
 		 * @businessRule Multiple payment strategies per variant enable pricing tier flexibility
 		 */
 		variantId: text("variant_id")
@@ -191,8 +194,8 @@ export const productVariantPaymentPlan = table(
 			.references(() => productVariant.id),
 
 		/**
-		 * @organizationScope Organization managing this payment strategy
-		 * @multiTenant Enables independent organizational payment plan management
+		 * @abacRole Plan creation/update restricted to org owners/managers
+		 * @multiTenant Separates plan configuration per organizational boundary
 		 */
 		organizationId: text("organization_id")
 			.notNull()
@@ -200,18 +203,16 @@ export const productVariantPaymentPlan = table(
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
-		 * @performanceCritical Indexed for fast type-specific query routing
+		 * @templatePattern Determines downstream plan table extensions
 		 */
 		type: paymentPlanTypeEnum("type").notNull(),
 
-		// Plan Identity and Marketing
-		name: text("name").notNull(), // "Monthly Premium", "One-Time Basic", "Pro Annual"
-		slug: text("slug").notNull(), // "monthly-premium", "one-time-basic", "pro-annual"
+		name: text("name").notNull(),
+		slug: text("slug").notNull(),
 
-		// Tier Management (E-commerce Best Practices)
 		/**
 		 * @businessRule Default plan shown first in pricing displays and checkout flows
-		 * @constraint Exactly one default plan per variant enforced by unique index
+		 * @onboardingPattern Ensures a single visible option per variant
 		 */
 		isDefault: boolean("is_default").default(false),
 
@@ -222,14 +223,14 @@ export const productVariantPaymentPlan = table(
 		isFeatured: boolean("is_featured").default(false),
 
 		/**
-		 * @displayOrder Controls pricing table sequence for optimal conversion flow
+		 * @uiControl Controls pricing table sequence for optimal conversion flow
 		 */
 		sortOrder: integer("sort_order").default(0),
 
-		// Integrated Market/Currency Pricing (Replaces ProductPrice)
 		/**
 		 * @regionalPricing Optional market for regional pricing strategies
 		 * @businessRule null = global pricing, marketId = region-specific pricing
+		 * @multiRegionSupport Enables localized pricing overrides
 		 */
 		marketId: text("market_id").references(() => organizationMarket.id),
 
@@ -251,7 +252,10 @@ export const productVariantPaymentPlan = table(
 		 * @promotionalPricing Original price for "save X%" marketing displays
 		 * @marketingStrategy Shows discount value to increase conversion rates
 		 */
-		compareAtPrice: decimal("compare_at_price", { precision: 10, scale: 2 }),
+		compareAtPrice: decimal("compare_at_price", {
+			precision: 10,
+			scale: 2,
+		}),
 
 		/**
 		 * @taxation Tax rate for this payment plan region/market
@@ -265,24 +269,17 @@ export const productVariantPaymentPlan = table(
 		 */
 		pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
 
-		// Payment Plan Features
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
 		 * @businessFlexibility Enables sophisticated feature differentiation between payment tiers
-		 * @courseExample {
-		 *   "support_level": "priority",
-		 *   "max_concurrent_access": 3,
-		 *   "download_resources": true,
-		 *   "certificate_eligible": true,
-		 *   "instructor_interaction": "1on1"
-		 * }
+		 * @templatePattern Extensible per-plan entitlements
+		 * @permissionResolution Drives runtime access decisions
 		 */
 		features: jsonb("features"),
 
-		// Plan Validity and Management
 		/**
 		 * @businessRule Controls plan availability for new purchases
-		 * @operationalControl Allows disabling plans without deletion for lifecycle management
+		 * @workflowControl Allows plan disabling without deletion for lifecycle management
 		 */
 		isActive: boolean("is_active").default(true),
 
@@ -300,6 +297,7 @@ export const productVariantPaymentPlan = table(
 
 		/**
 		 * @extensibility Additional payment plan metadata for integrations and analytics
+		 * @integrationContext Third-party platform support
 		 */
 		metadata: jsonb("metadata"),
 
@@ -336,7 +334,7 @@ export const productVariantPaymentPlan = table(
 );
 
 /**
- * Product Variant Payment Plan Translation - Internationalization Support
+ * Product Variant Payment Plan Translation - Multi-language Payment Marketing
  *
  * @businessLogic Multi-language support for payment plan marketing content enabling
  * organizations to localize pricing strategies for different markets and regions.
@@ -351,6 +349,9 @@ export const productVariantPaymentPlan = table(
  *
  * @seoIntegration Optional SEO metadata enables payment plan landing pages and search
  * optimization for region-specific pricing campaigns and promotional content.
+ *
+ * @abacRole Readable globally; write-scoped to org admins with pricing access
+ * @permissionContext Translations scoped to organization and tenant
  */
 export const productVariantPaymentPlanTranslation = table(
 	"product_variant_payment_plan_translation",
@@ -358,8 +359,7 @@ export const productVariantPaymentPlanTranslation = table(
 		id,
 
 		/**
-		 * @translationTarget Payment plan this localized content applies to
-		 * @cascadeDelete Translation content removed when payment plan is deleted
+		 * @translationTarget Parent payment plan receiving this translation
 		 */
 		planId: text("plan_id")
 			.notNull()
@@ -373,13 +373,21 @@ export const productVariantPaymentPlanTranslation = table(
 
 		/**
 		 * @translationDefault Primary translation used when locale-specific content unavailable
-		 * @constraint Exactly one default translation per payment plan enforced by unique index
+		 * @businessRule Exactly one default translation per payment plan
 		 */
 		isDefault: boolean("is_default").default(false),
 
-		// Localized Marketing Content
-		name: text("name"), // Localized plan name for regional marketing effectiveness
-		description: text("description"), // Localized plan description and value proposition
+		/**
+		 * @localizedContent Region-specific name of plan
+		 * @conversionStrategy Enables contextual pricing and positioning across locales
+		 */
+		name: text("name"),
+
+		/**
+		 * @localizedContent Region-specific plan details
+		 * @conversionStrategy Boosts international trust and clarity
+		 */
+		description: text("description"),
 
 		/**
 		 * @seoOptimization Optional SEO metadata for payment plan landing pages
@@ -426,13 +434,15 @@ export const productVariantPaymentPlanTranslation = table(
  *
  * @accessManagement Configurable access duration supports both permanent ownership
  * models and rental-style time-limited access patterns for different monetization strategies.
+ *
+ * @abacRole Scoped to vendor/organization with payment plan write access
+ * @entitlementScope Access duration drives unlock window logic
  */
 export const oneTimePaymentPlan = table(
 	"one_time_payment_plan",
 	{
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
-		 * @foreignKey Primary key serves as foreign key to parent CTI table
 		 */
 		planId: text("plan_id")
 			.primaryKey()
@@ -441,6 +451,7 @@ export const oneTimePaymentPlan = table(
 		/**
 		 * @accessControl Days of access after purchase (null = lifetime access)
 		 * @businessFlexibility Enables time-limited access models for rental or subscription-like experiences
+		 * @entitlementScope Number of days user may access after purchase
 		 */
 		accessDurationDays: integer("access_duration_days"),
 
@@ -453,6 +464,7 @@ export const oneTimePaymentPlan = table(
 		/**
 		 * @ecommerceFeature Allows customers to purchase products for other recipients
 		 * @marketExpansion Enables gift economy and viral growth through gift purchases
+		 * @giftingEnabled Determines whether users can purchase for others
 		 */
 		allowGifting: boolean("allow_gifting").default(false),
 
@@ -481,7 +493,7 @@ export const oneTimePaymentPlan = table(
 );
 
 /**
- * One-Time Payment Plan Translation - Internationalization Support
+ * One-Time Payment Plan Translation - Localized Purchase Content
  *
  * @businessLogic Multi-language support for one-time payment plan specific content
  * including gift messaging, access policies, and transfer terms for different markets
@@ -489,32 +501,60 @@ export const oneTimePaymentPlan = table(
  *
  * @translationPattern Consistent with established schema translation architecture
  * for predictable internationalization workflows.
+ *
+ * @abacRole Write access limited to org admins and pricing managers
  */
 export const oneTimePaymentPlanTranslation = table(
 	"one_time_payment_plan_translation",
 	{
 		id,
 
+		/**
+		 * @translationTarget Parent one-time plan for this localized version
+		 */
 		planId: text("plan_id")
 			.notNull()
 			.references(() => oneTimePaymentPlan.planId, { onDelete: "cascade" }),
+
+		/**
+		 * @localizationContext Target region-language identifier
+		 */
 		locale: text("locale").notNull(),
+
+		/**
+		 * @translationDefault Fallback translation when no exact match
+		 */
 		isDefault: boolean("is_default").default(false),
 
-		// Localized One-Time Specific Content
-		giftMessage: text("gift_message"), // Localized gift purchase messaging and instructions
-		accessDescription: text("access_description"), // Localized access duration explanation
-		transferPolicy: text("transfer_policy"), // Localized transfer policy and procedures
+		/**
+		 * @localizedContent Text shown to gift recipients
+		 * @conversionStrategy Personalizes gifting experience
+		 */
+		giftMessage: text("gift_message"),
+
+		/**
+		 * @localizedContent Description of access duration
+		 * @onboardingClarity Helps buyers understand ownership terms
+		 */
+		accessDescription: text("access_description"),
+
+		/**
+		 * @localizedContent Description of transfer eligibility
+		 * @complianceContext Helps avoid support misunderstandings
+		 */
+		transferPolicy: text("transfer_policy"),
 
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
+		// Translation Constraints
 		uniqueIndex("uq_one_time_plan_translation").on(t.planId, t.locale),
 		uniqueIndex("uq_one_time_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
+		// Performance Indexes
 		index("idx_one_time_plan_translation_locale").on(t.locale),
 	],
 );
@@ -535,13 +575,16 @@ export const oneTimePaymentPlanTranslation = table(
  *
  * @customerAcquisition Trial period capabilities reduce purchase friction and enable
  * customers to experience product value before payment commitment.
+ *
+ * @compensationModel Recurring revenue engine for instructors and organizations
+ * @permissionContext Managed by organization admins with variant access
+ * @auditTrail Includes timestamps for usage analytics and plan lifecycle
  */
 export const subscriptionPaymentPlan = table(
 	"subscription_payment_plan",
 	{
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
-		 * @foreignKey Primary key serves as foreign key to parent CTI table
 		 */
 		planId: text("plan_id")
 			.primaryKey()
@@ -549,7 +592,7 @@ export const subscriptionPaymentPlan = table(
 
 		/**
 		 * @billingCycle How frequently organization charges subscribers
-		 * @cashFlowImpact Determines revenue timing and customer payment preferences
+		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
 		billingInterval: billingIntervalEnum("billing_interval").notNull(),
 
@@ -584,7 +627,7 @@ export const subscriptionPaymentPlan = table(
 );
 
 /**
- * Subscription Payment Plan Translation - Internationalization Support
+ * Subscription Payment Plan Translation - Localized Subscription Content
  *
  * @businessLogic Multi-language support for subscription payment plan specific content
  * including billing descriptions, trial messaging, and cancellation policies for different
@@ -592,32 +635,61 @@ export const subscriptionPaymentPlan = table(
  *
  * @translationPattern Consistent with established schema translation architecture
  * for predictable internationalization workflows.
+ *
+ * @abacRole Translations readable globally; write-scoped to organization owners
  */
 export const subscriptionPaymentPlanTranslation = table(
 	"subscription_payment_plan_translation",
 	{
 		id,
 
+		/**
+		 * @translationTarget Target subscription plan
+		 */
 		planId: text("plan_id")
 			.notNull()
 			.references(() => subscriptionPaymentPlan.planId, { onDelete: "cascade" }),
+
+		/**
+		 * @localizationContext Region/market locale of the content
+		 * @permissionContext Used for regional display on public storefront
+		 */
 		locale: text("locale").notNull(),
+
+		/**
+		 * @translationDefault Ensures fallback locale when no exact match
+		 */
 		isDefault: boolean("is_default").default(false),
 
-		// Localized Subscription Specific Content
-		billingDescription: text("billing_description"), // Localized billing cycle explanation
-		trialMessage: text("trial_message"), // Localized trial period messaging and terms
-		cancellationPolicy: text("cancellation_policy"), // Localized cancellation policy and procedures
+		/**
+		 * @localizedContent Localized recurring cycle description
+		 * @onboardingContent Improves understanding for end customers
+		 */
+		billingDescription: text("billing_description"),
+
+		/**
+		 * @localizedContent Localized message for free trial info
+		 * @conversionCopy Increases conversion during signup
+		 */
+		trialMessage: text("trial_message"),
+
+		/**
+		 * @localizedContent Cancellation rules and expectations
+		 * @complianceContext Required in regulated markets (e.g., EU, CA)
+		 */
+		cancellationPolicy: text("cancellation_policy"),
 
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
+		// Translation Constraints
 		uniqueIndex("uq_subscription_plan_translation").on(t.planId, t.locale),
 		uniqueIndex("uq_subscription_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
+		// Performance Indexes
 		index("idx_subscription_plan_translation_locale").on(t.locale),
 	],
 );
@@ -640,13 +712,15 @@ export const subscriptionPaymentPlanTranslation = table(
  *
  * @revenueOptimization Usage-based billing enables revenue scaling with customer success
  * while providing predictable minimum revenue through freemium models and base charges.
+ *
+ * @abacRole Entitlements enforced via usage limits
+ * @integrationContext Tied to counters (views, storage, API hits, etc.)
  */
 export const usageBasedPaymentPlan = table(
 	"usage_based_payment_plan",
 	{
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
-		 * @foreignKey Primary key serves as foreign key to parent CTI table
 		 */
 		planId: text("plan_id")
 			.primaryKey()
@@ -667,11 +741,7 @@ export const usageBasedPaymentPlan = table(
 		/**
 		 * @tieredPricing Complex pricing structure for volume discounts and usage incentives
 		 * @businessStrategy Encourages higher usage through bulk pricing benefits
-		 * @example [
-		 *   {"from": 0, "to": 100, "price": 1.00, "name": "Starter Tier"},
-		 *   {"from": 101, "to": 1000, "price": 0.75, "name": "Growth Tier"},
-		 *   {"from": 1001, "to": null, "price": 0.50, "name": "Enterprise Tier"}
-		 * ]
+		 * @entitlementScope Used for feature metering
 		 */
 		pricingTiers: jsonb("pricing_tiers"),
 
@@ -706,7 +776,7 @@ export const usageBasedPaymentPlan = table(
 );
 
 /**
- * Usage-Based Payment Plan Translation - Internationalization Support
+ * Usage-Based Payment Plan Translation - Localized Usage Content
  *
  * @businessLogic Multi-language support for usage-based payment plan specific content
  * including usage descriptions, pricing explanations, and billing policies for different
@@ -714,32 +784,61 @@ export const usageBasedPaymentPlan = table(
  *
  * @translationPattern Consistent with established schema translation architecture
  * for predictable internationalization workflows.
+ *
+ * @marketAdaptation Localizes metric explanations and billing semantics for global
+ * engagement and comprehension.
+ *
+ * @billingEducation Helps demystify complex pricing mechanics (e.g., tiers, included usage)
+ * for non-native audiences.
  */
 export const usageBasedPaymentPlanTranslation = table(
 	"usage_based_payment_plan_translation",
 	{
 		id,
 
+		/**
+		 * @translationTarget Parent usage-based plan
+		 */
 		planId: text("plan_id")
 			.notNull()
 			.references(() => usageBasedPaymentPlan.planId, { onDelete: "cascade" }),
+
+		/**
+		 * @localizationContext Target locale for this translation content
+		 */
 		locale: text("locale").notNull(),
+
+		/**
+		 * @translationDefault Primary translation used when locale-specific content unavailable
+		 */
 		isDefault: boolean("is_default").default(false),
 
-		// Localized Usage-Based Specific Content
-		usageDescription: text("usage_description"), // Localized usage metric explanation
-		pricingExplanation: text("pricing_explanation"), // Localized pricing model description
-		billingPolicy: text("billing_policy"), // Localized billing policy and calculation methods
+		/**
+		 * @localizedContent Localized usage metric explanation
+		 */
+		usageDescription: text("usage_description"),
+
+		/**
+		 * @localizedContent Localized pricing model description
+		 */
+		pricingExplanation: text("pricing_explanation"),
+
+		/**
+		 * @localizedContent Localized billing policy and calculation methods
+		 */
+		billingPolicy: text("billing_policy"),
 
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
+		// Translation Constraints
 		uniqueIndex("uq_usage_plan_translation").on(t.planId, t.locale),
 		uniqueIndex("uq_usage_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
+		// Performance Indexes
 		index("idx_usage_plan_translation_locale").on(t.locale),
 	],
 );
@@ -774,6 +873,17 @@ export const usageBasedPaymentPlanTranslation = table(
  * @memberContextSupport Supports both organization members and external customers
  * enabling internal team subscriptions alongside external customer sales workflows
  * for comprehensive organizational subscription management.
+ *
+ * @abacScope tenant: organizationId, subject: userId || organizationMemberId
+ * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
+ * @ctiBinding Concrete customer-side realization of a payment plan, enabling separation
+ * of billing strategy from usage enforcement
+ * @billingLinkage Integrates with external providers via IDs for lifecycle automation
+ * and revenue capture
+ * @revenueLineItem Canonical source for calculating actualized revenue, linked to
+ * accounting and analytics domains
+ * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
+ * via organizationMemberId
  */
 export const userSubscription = table(
 	"user_subscription",
@@ -816,7 +926,6 @@ export const userSubscription = table(
 		 */
 		status: subscriptionStatusEnum("status").default("active"),
 
-		// Access Control and Timing
 		/**
 		 * @accessControl When customer first gained access to subscribed content
 		 * @customerService Essential for support queries about access history
@@ -829,7 +938,6 @@ export const userSubscription = table(
 		 */
 		accessExpiresAt: timestamp("access_expires_at"),
 
-		// Financial Tracking and Creator Attribution
 		/**
 		 * @revenueTracking Total amount customer has paid for this subscription
 		 * @creatorEconomy Basis for instructor revenue sharing and organizational analytics
@@ -844,7 +952,6 @@ export const userSubscription = table(
 			.notNull()
 			.references(() => currency.code),
 
-		// Payment Gateway Integration
 		/**
 		 * @paymentGateway External subscription ID from payment processor
 		 * @webhookIntegration Links internal subscription management to payment processor

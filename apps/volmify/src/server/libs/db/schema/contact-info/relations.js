@@ -3,39 +3,55 @@ import { userInstructorProfileContactInfo } from "../user/profile/instructor/sch
 import { contactInfo } from "./schema";
 
 /**
- * @fileoverview Contact Info Relations - Polymorphic Communication Integration
+ * @file Contact Info Relations – Polymorphic Integration Layer
  *
- * @polymorphicPattern
- * Contact info uses polymorphic associations to connect with multiple entity types
- * without creating dedicated foreign key constraints. This enables flexible contact
- * management across users-instructor-profiles, organizations, users, and brands.
+ * @context
+ * This file defines how the universal `contactInfo` table connects to various platform entities
+ * using polymorphic and junction-table-based relationships — enabling flexible, multi-entity
+ * communication flows without tight foreign key coupling.
  *
- * @integrationStrategy
- * Relations are defined through junction tables and application-level associations
- * rather than strict foreign key constraints, providing flexibility for cross-entity
- * contact management while maintaining data integrity through business logic.
+ * @architecture
+ * - 🔄 Polymorphic Pattern: One contact table, many associated entities
+ * - 🧩 Soft Relations: Avoids hard FKs in favor of decoupled, scalable linking
+ * - 🔌 Integration-Ready: Allows new entity types to connect to contact info with minimal friction
+ *
+ * @useCases
+ * - Instructor profile contact management
+ * - Future support for organization, user, and brand-level contacts
+ * - Dynamic communication routing, support escalation, and partner outreach
+ *
+ * @why
+ * Traditional one-to-one contact models break down in multi-tenant, multi-role platforms like Volmify.
+ * This polymorphic structure enables flexible contact ownership, communication orchestration, and
+ * tailored contact strategies across all professional and organizational layers.
  */
 
 /**
- * Contact Info Relations (Polymorphic Communication Hub)
+ * Defines polymorphic contact associations for platform entities.
  *
- * @polymorphicRole Central contact repository for all platform entities
- * Serves as the communication foundation for users-instructor-profiles, organizations, users,
- * and brands through polymorphic associations and junction table patterns.
+ * @relation contactInfoRelations
+ * Allows user-instructor profiles (and in future, other entity types) to associate
+ * with centralized contact records for use in communication, billing, and support.
  *
- * @communicationIntegration
- * Contact records are referenced by communication systems, billing processes,
- * support workflows, and marketing campaigns across different entity types.
- *
- * @vendorIntegration
- * Specific vendor contact management through junction table for enhanced
- * vendor-specific contact workflows and business relationship management.
+ * @scalability
+ * New entity types can be added via dedicated junction tables without touching the base schema.
  */
 export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	/**
-	 * @vendorSpecificContacts Enhanced vendor contact management
-	 * @businessContext Vendor relationships often require specialized contact handling
-	 * @workflowIntegration Supports vendor onboarding, payment, and partnership workflows
+	 * Instructor Profile → Contact Info (many-to-many via junction)
+	 *
+	 * @purpose
+	 * Enables instructor profiles to associate with one or more contact records
+	 * (e.g., primary, billing, support) for communication workflows.
+	 *
+	 * @businessContext
+	 * Instructor relationships often span multiple organizations, roles, and
+	 * responsibilities — this allows differentiated contacts per scenario.
+	 *
+	 * @usedIn
+	 * - Instructor onboarding and CRM
+	 * - Payment and revenue sharing communication
+	 * - Professional collaboration setup
 	 */
 	usersInstructorProfilesContactInfo: many(userInstructorProfileContactInfo),
 }));

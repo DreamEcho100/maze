@@ -1,12 +1,7 @@
 import { relations } from "drizzle-orm";
 import { country, currency, marketTemplate } from "../currency-and-market/schema.js";
 import { productVariantPaymentPlan } from "../product/payment/schema.js";
-import {
-	productBrandAttribution,
-	productInstructorAttribution,
-	// productPrice,
-	// productZonePrice,
-} from "../product/schema.js";
+import { productBrandAttribution, productInstructorAttribution } from "../product/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -18,7 +13,6 @@ import {
 	organizationBrandTranslation,
 	organizationCurrencySettings,
 	organizationDepartment,
-	// organizationLocale,
 	organizationMarket,
 	organizationMarketCountry,
 	organizationMarketTranslation,
@@ -36,143 +30,56 @@ import {
 } from "./schema.js";
 
 /**
- * @fileoverview Organization Schema Relations - Multi-Tenant ABAC Context
+ * @fileoverview Multi-Tenant ABAC-Scoped Organization Relationship Map
  *
- * @abacRelationships
- * Defines the relational structure for multi-tenant attribute-based access control
- * within organizational contexts. Relations enable permission inheritance, context
- * boundaries, and cross-organizational resource access patterns.
- *
- * @designPattern Hub-and-Spoke with Many-to-Many Overlays
- * - Hub: Organization as central context boundary
- * - Spokes: All organization-scoped entities
- * - Overlays: Many-to-many relationships for flexible organizational structures
- *
- * @permissionFlow
- * User → Organization Member → Permission Groups → System Permissions
- * User → Organization Member → Teams/Departments → Context-specific Access
+ * @abacScope Centralized Organization Context
+ * @architecturePattern Hub-and-Spoke with Federated Attributes
+ * @integrationContext Role propagation via departments, teams, and permission groups
+ * @businessLogic Drives contextual access resolution and organizational scoping
+ * @auditTrail Relationships enable fine-grained authorization visibility
  */
 
 /**
- * Organization Relations (ABAC Context Hub)
- *
- * @abacRole Central Context Boundary
- * Organization serves as the primary context for all ABAC decisions,
- * providing tenant isolation and permission scope boundaries.
- *
- * @multiTenantPattern
- * All organization-scoped entities relate back to organization for
- * data isolation and context-aware permission evaluation.
+ * @abacRoleContext Organization
+ * @permissionContext Entity Hub — all ABAC-scoped entities originate from here
  */
 export const organizationRelations = relations(organization, ({ many }) => ({
-	/**
-	 * @abacSubjects Organization members are subjects in ABAC system
-	 * @permissionContext All permission evaluations center on organization members
-	 */
 	members: many(organizationMember),
-
-	/**
-	 * @organizationalStructure Flexible team structures within organization
-	 * @permissionContext Teams can have specific permission contexts
-	 */
 	teams: many(organizationTeam),
-
-	/**
-	 * @organizationalStructure Traditional department hierarchies
-	 * @permissionInheritance Departments can influence permission inheritance
-	 */
 	departments: many(organizationDepartment),
-
-	/**
-	 * @abacCore Permission attribute containers for organization
-	 * @permissionManagement Core ABAC attribute assignment mechanism
-	 */
 	permissionGroups: many(organizationPermissionsGroup),
-
-	// The following is commented out as it is not needed for now.
-	// locales: many(organizationLocale),
 	currencySettings: many(organizationCurrencySettings),
 	markets: many(organizationMarket),
 	pricingZones: many(organizationPricingZone),
-
-	/**
-	 * @brandIdentity Organization's brand identities for content attribution
-	 * @contentStrategy Multiple brands per organization for different market segments
-	 */
 	brands: many(organizationBrand),
-
-	/**
-	 * @instructorNetwork Instructor affiliations and affiliations within organization
-	 * @creatorEconomy Instructor relationships for content creation and collaboration
-	 */
 	instructorAffiliations: many(instructorOrganizationAffiliation),
 }));
 
 /**
- * Organization Member Relations (ABAC Subject)
- *
- * @abacRole Primary Subject in Authorization System
- * Organization members are the central subjects in all ABAC permission
- * evaluations, with relationships defining permission inheritance paths.
- *
- * @permissionInheritancePaths
- * - Direct: Base role + explicit permission group assignments
- * - Team-based: Team membership + team-specific permissions
- * - Department-based: Department membership + department permissions
- * - Invitation-based: Pre-authorization through invitation system
+ * @abacSubjectContext Organization Member
+ * @permissionResolution Anchor subject for organizational ABAC resolution
+ * @identityLink Bridges platform identity to organizational context
+ * @onboardingPattern Supports team/departmental affiliation, invites, and groups
  */
 export const organizationMemberRelations = relations(organizationMember, ({ one, many }) => ({
-	/**
-	 * @abacContext Organization provides permission evaluation boundary
-	 */
 	organization: one(organization, {
 		fields: [organizationMember.organizationId],
 		references: [organization.id],
 	}),
-
-	/**
-	 * @abacSubject Links to platform user identity
-	 * @identityResolution Connects organization context to user identity
-	 */
 	user: one(user, {
 		fields: [organizationMember.userId],
 		references: [user.id],
 	}),
-
-	/**
-	 * @abacPermissionPath Team-based permission inheritance
-	 * @organizationalFlexibility Many-to-many team membership
-	 */
 	memberTeams: many(organizationMemberTeam),
-
-	/**
-	 * @abacCore Direct permission attribute assignments
-	 * @permissionManagement Primary mechanism for permission assignment
-	 */
 	memberGroups: many(organizationMemberPermissionsGroup),
-
-	/**
-	 * @membershipLifecycle Invitation-to-member workflow tracking
-	 */
 	memberInvitations: many(organizationMemberInvitation),
-
-	/**
-	 * @abacPermissionPath Department-based permission inheritance
-	 * @organizationalStructure Many-to-many department membership
-	 */
 	memberDepartments: many(organizationMemberDepartment),
 }));
 
 /**
- * Department Relations (Structural Permission Context)
- *
- * @abacRole Structural Permission Inheritance Context
- * Departments provide traditional organizational structure and can serve
- * as permission inheritance contexts within the ABAC system.
- *
- * @organizationalPattern
- * Supports both flat and hierarchical department structures through
- * many-to-many member relationships and team associations.
+ * @abacInheritance Department Context
+ * @permissionBridge Enables department-based inheritance for members and teams
+ * @businessLogic Models traditional hierarchy within ABAC modeling
  */
 export const organizationDepartmentRelations = relations(
 	organizationDepartment,
@@ -181,33 +88,15 @@ export const organizationDepartmentRelations = relations(
 			fields: [organizationDepartment.organizationId],
 			references: [organization.id],
 		}),
-
-		/**
-		 * @abacSubjects Members can belong to multiple departments
-		 * @permissionInheritance Department membership affects permission evaluation
-		 */
 		memberDepartments: many(organizationMemberDepartment),
-
-		/**
-		 * @organizationalFlexibility Teams can span multiple departments
-		 * @permissionBridge Links team and department permission contexts
-		 */
 		teamDepartments: many(organizationTeamDepartment),
-
 		instructorAffiliations: many(instructorOrganizationAffiliation),
 	}),
 );
 
 /**
- * Team-Department Bridge Relations
- *
- * @abacRole Cross-Context Permission Bridge
- * Enables complex organizational structures where teams span departments
- * and departments support multiple teams, affecting permission inheritance.
- *
- * @permissionImplication
- * Relationship metadata (isPrimary, relationshipType) can influence
- * how permissions are inherited across team-department boundaries.
+ * @permissionBridgeContext Team-Department Bridge
+ * @abacImplication Enables contextual inheritance from structural mapping
  */
 export const organizationTeamDepartmentRelations = relations(
 	organizationTeamDepartment,
@@ -224,11 +113,8 @@ export const organizationTeamDepartmentRelations = relations(
 );
 
 /**
- * Member-Department Assignment Relations
- *
- * @abacRole Permission Context Assignment
- * Many-to-many relationship enabling flexible organizational structures
- * and department-based permission inheritance patterns.
+ * @abacAssignment Member–Department Contextual Assignment
+ * @permissionScope Enables scoped permissions based on departmental affiliation
  */
 export const organizationMemberDepartmentRelations = relations(
 	organizationMemberDepartment,
@@ -245,41 +131,22 @@ export const organizationMemberDepartmentRelations = relations(
 );
 
 /**
- * Team Relations (Dynamic Permission Context)
- *
- * @abacRole Dynamic Permission Context Container
- * Teams provide flexible organizational units that can have specific
- * permission contexts and span traditional departmental boundaries.
- *
- * @permissionFlexibility
- * Teams enable project-based, cross-functional, and temporary permission
- * assignments within the organizational ABAC context.
+ * @abacRoleScope Team
+ * @permissionContext Enables cross-functional and project-based roles
+ * @businessLogic Team-level access scoping for dynamic role assignment
  */
 export const organizationTeamRelations = relations(organizationTeam, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [organizationTeam.organizationId],
 		references: [organization.id],
 	}),
-
-	/**
-	 * @organizationalFlexibility Teams can span multiple departments
-	 * @permissionBridge Enables complex team-department permission relationships
-	 */
 	teamDepartments: many(organizationTeamDepartment),
-
-	/**
-	 * @abacSubjects Team members with role-based team permissions
-	 * @permissionContext Team membership can provide additional permission layers
-	 */
 	memberTeams: many(organizationMemberTeam),
 }));
 
 /**
- * Member-Team Assignment Relations
- *
- * @abacRole Dynamic Permission Assignment
- * Enables team-based permission inheritance with role-specific
- * permissions within team contexts.
+ * @abacAssignment Member–Team Relationship
+ * @permissionPath Enables team-scoped permission propagation
  */
 export const organizationMemberTeamRelations = relations(organizationMemberTeam, ({ one }) => ({
 	member: one(organizationMember, {
@@ -293,30 +160,17 @@ export const organizationMemberTeamRelations = relations(organizationMemberTeam,
 }));
 
 /**
- * Member-Permission Group Relations (ABAC Attribute Assignment)
- *
- * @abacRole Core Attribute Assignment Mechanism
- * Implements the primary ABAC attribute assignment pattern where
- * subjects (members) are assigned permission attributes through groups.
- *
- * @permissionResolution
- * Member's effective permissions = Union of all assigned permission groups
- * within the organizational context.
+ * @abacAssignment Permission Group Assignment
+ * @permissionAttributes Maps members to permission attribute containers
+ * @abacPreset Enables group-based attribute presets
  */
 export const organizationMemberPermissionsGroupRelations = relations(
 	organizationMemberPermissionsGroup,
 	({ one }) => ({
-		/**
-		 * @abacSubject Target of permission assignment
-		 */
 		member: one(organizationMember, {
 			fields: [organizationMemberPermissionsGroup.memberId],
 			references: [organizationMember.id],
 		}),
-
-		/**
-		 * @abacAttributes Permission attribute collection being assigned
-		 */
 		permissionGroup: one(organizationPermissionsGroup, {
 			fields: [organizationMemberPermissionsGroup.permissionsGroupId],
 			references: [organizationPermissionsGroup.id],
@@ -325,15 +179,9 @@ export const organizationMemberPermissionsGroupRelations = relations(
 );
 
 /**
- * Permission Group Relations (ABAC Attribute Container)
- *
- * @abacRole Permission Attribute Container
- * Permission groups serve as collections of system permissions that
- * can be assigned to organization members as ABAC attributes.
- *
- * @roleBasedPattern
- * Groups enable role-based permission management within the ABAC
- * framework while maintaining attribute-based flexibility.
+ * @abacContainer Permission Group
+ * @permissionContext Groups as reusable permission attribute containers
+ * @systemBridge Links org-specific grouping to central system permissions
  */
 export const organizationPermissionsGroupRelations = relations(
 	organizationPermissionsGroup,
@@ -342,32 +190,14 @@ export const organizationPermissionsGroupRelations = relations(
 			fields: [organizationPermissionsGroup.organizationId],
 			references: [organization.id],
 		}),
-
-		/**
-		 * @abacAttributes System permissions contained in this group
-		 * @systemIntegration Links to centrally-defined permission attributes
-		 */
 		groupPermissions: many(organizationPermissionsGroupPermission),
-
-		/**
-		 * @abacAssignments Members who have been assigned this permission group
-		 * @permissionResolution Used in permission evaluation queries
-		 */
 		memberGroups: many(organizationMemberPermissionsGroup),
 	}),
 );
 
 /**
- * Permission Group-System Permission Relations (ABAC Attribute Bridge)
- *
- * @abacRole System-Organization Permission Bridge
- * Links organization-specific permission groups to system-defined
- * permission attributes, implementing the ABAC attribute reference pattern.
- *
- * @systemIntegration
- * Bridges system permission registry with organization-specific
- * permission management, maintaining centralized permission definitions
- * while enabling organization-specific permission combinations.
+ * @abacAttributeBridge Permission Group → System Permission
+ * @systemIntegration Maps org-defined groups to core permission registry
  */
 export const organizationPermissionsGroupPermissionRelations = relations(
 	organizationPermissionsGroupPermission,
@@ -376,11 +206,6 @@ export const organizationPermissionsGroupPermissionRelations = relations(
 			fields: [organizationPermissionsGroupPermission.permissionsGroupId],
 			references: [organizationPermissionsGroup.id],
 		}),
-
-		/**
-		 * @abacCore References centrally-defined permission attributes
-		 * @systemIntegration Links to system permission registry
-		 */
 		systemPermission: one(systemPermission, {
 			fields: [organizationPermissionsGroupPermission.systemPermissionId],
 			references: [systemPermission.id],
@@ -389,11 +214,9 @@ export const organizationPermissionsGroupPermissionRelations = relations(
 );
 
 /**
- * Member Invitation Relations
- *
- * @abacRole Pre-Authorization Subject Registration
- * Manages invitation workflow for bringing new subjects into the
- * organizational ABAC context with pre-defined permission assignments.
+ * @invitationFlow Member Invitation
+ * @abacOnboarding Pre-authorization mechanism prior to subject activation
+ * @lifecycleBridge Connects invite to eventual member record
  */
 export const organizationMemberInvitationRelations = relations(
 	organizationMemberInvitation,
@@ -406,10 +229,6 @@ export const organizationMemberInvitationRelations = relations(
 			fields: [organizationMemberInvitation.invitedByUserId],
 			references: [user.id],
 		}),
-		/**
-		 * @lifecycleLink Links invitation to created member upon acceptance
-		 * @abacTransition Invitation acceptance triggers ABAC subject creation
-		 */
 		member: one(organizationMember, {
 			fields: [organizationMemberInvitation.memberId],
 			references: [organizationMember.id],
@@ -418,9 +237,10 @@ export const organizationMemberInvitationRelations = relations(
 	}),
 );
 
-// Currency, Market, and Pricing Relations (supporting organization context)
-// [Rest of the existing relations with minimal JSDoc additions for business context]
-
+/**
+ * @currencyContext Organization–Currency Association
+ * @financialGovernance Tracks preferred billing and payout currencies
+ */
 export const organizationCurrencySettingsRelations = relations(
 	organizationCurrencySettings,
 	({ one }) => ({
@@ -435,6 +255,11 @@ export const organizationCurrencySettingsRelations = relations(
 	}),
 );
 
+/**
+ * @marketContext Organization Market Structure
+ * @i18nPattern Supports localized market experience with pricing templates
+ * @complianceScope Currency-specific regional configurations
+ */
 export const organizationMarketRelations = relations(organizationMarket, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [organizationMarket.organizationId],
@@ -453,6 +278,10 @@ export const organizationMarketRelations = relations(organizationMarket, ({ one,
 	productVariantsPaymentPlans: many(productVariantPaymentPlan),
 }));
 
+/**
+ * @regionalMapping Market–Country Bridge
+ * @i18nScope Enables country-scoped market operations
+ */
 export const organizationMarketCountryRelations = relations(
 	organizationMarketCountry,
 	({ one }) => ({
@@ -467,6 +296,10 @@ export const organizationMarketCountryRelations = relations(
 	}),
 );
 
+/**
+ * @localizationBridge Market Translation
+ * @seoIntegration Includes SEO metadata per locale
+ */
 export const organizationMarketTranslationRelations = relations(
 	organizationMarketTranslation,
 	({ one }) => ({
@@ -485,6 +318,10 @@ export const organizationMarketTranslationRelations = relations(
 	}),
 );
 
+/**
+ * @pricingZone Pricing Zone Configuration
+ * @multiRegionSupport Enables regionally-scoped pricing per currency
+ */
 export const organizationPricingZoneRelations = relations(
 	organizationPricingZone,
 	({ one, many }) => ({
@@ -497,7 +334,6 @@ export const organizationPricingZoneRelations = relations(
 			references: [currency.code],
 		}),
 		countries: many(organizationPricingZoneCountry),
-		// productZonePrices: many(productZonePrice),
 	}),
 );
 
@@ -516,33 +352,22 @@ export const organizationPricingZoneCountryRelations = relations(
 );
 
 /**
- * Organization Brand Relations
- *
- * @brandIdentity Organization-scoped brand management for content attribution
- * Enables organizations to manage multiple brand identities for different
- * market segments while maintaining organizational context and permissions.
+ * @brandContext Organization Brand
+ * @contentAttribution Enables multiple brands per org for product identity
  */
 export const organizationBrandRelations = relations(organizationBrand, ({ one, many }) => ({
-	/**
-	 * @organizationContext Brand operates within organization boundary
-	 */
 	organization: one(organization, {
 		fields: [organizationBrand.organizationId],
 		references: [organization.id],
 	}),
-
-	/**
-	 * @contentAttribution Products attributed to this brand identity
-	 * @marketplaceVisibility Brand-attributed content in marketplace
-	 */
 	productAttributions: many(productBrandAttribution),
-
-	/**
-	 * @localizationSupport Multi-language brand content for global markets
-	 */
 	translations: many(organizationBrandTranslation),
 }));
 
+/**
+ * @localizationBridge Brand Translation
+ * @seoIntegration SEO metadata per brand locale
+ */
 export const organizationBrandTranslationRelations = relations(
 	organizationBrandTranslation,
 	({ one }) => ({
@@ -558,43 +383,25 @@ export const organizationBrandTranslationRelations = relations(
 );
 
 /**
- * Instructor Organization Membership Relations
- *
- * @instructorNetwork Instructor participation within organization context
- * Enables instructors to create content and collaborate within specific
- * organizational boundaries while maintaining cross-organization flexibility.
+ * @instructorNetwork Instructor Affiliation
+ * @revenueAttribution Connects instructor to org-scoped content ownership
+ * @abacScope Instructor–Org–Member bridge for scoped authorization
  */
 export const instructorOrganizationAffiliationRelations = relations(
 	instructorOrganizationAffiliation,
 	({ one, many }) => ({
-		/**
-		 * @instructorIdentity Links to instructor's global profile
-		 */
 		instructor: one(userInstructorProfile, {
 			fields: [instructorOrganizationAffiliation.instructorId],
 			references: [userInstructorProfile.id],
 		}),
-
-		/**
-		 * @organizationContext Organization providing membership context
-		 */
 		organization: one(organization, {
 			fields: [instructorOrganizationAffiliation.organizationId],
 			references: [organization.id],
 		}),
-
-		/**
-		 * @membershipBridge Organization member account for permissions
-		 */
 		member: one(organizationMember, {
 			fields: [instructorOrganizationAffiliation.memberId],
 			references: [organizationMember.id],
 		}),
-
-		/**
-		 * @contentAttribution Products created by instructor in this organization
-		 * @revenueTracking Revenue attribution for instructor content
-		 */
 		productAttributions: many(productInstructorAttribution),
 	}),
 );

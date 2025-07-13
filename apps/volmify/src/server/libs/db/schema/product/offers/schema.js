@@ -17,21 +17,36 @@ import { organization } from "../../organization/schema.js";
 import { seoMetadata } from "../../seo/schema.js";
 import { user } from "../../user/schema.js";
 
+/**
+ * @enumModel DiscountType
+ * @businessLogic Distinguishes discount computation logic
+ * @auditTrail Determines financial impact calculation method
+ */
 export const discountTypeEnum = pgEnum("discount_type", [
-	"percentage", // e.g. 10% off
-	"fixed", // e.g. $20 off
-	"free_shipping", // only removes shipping cost
-	"buy_x_get_y", // future-proof
+	"percentage", // percentage-based reduction
+	"fixed", // fixed currency amount
+	"free_shipping", // removes shipping cost
+	"buy_x_get_y", // future expansion for quantity logic
 ]);
 
+/**
+ * @enumModel DiscountAppliesTo
+ * @permissionContext Defines scoping logic for discount applicability
+ * @abacRole Affects who can redeem based on resource association
+ */
 export const discountAppliesToEnum = pgEnum("discount_applies_to", [
-	"product", // applies to specific products
-	"variant", // applies to specific product variants
-	"collection", // applies to specific collections
-	"all", // applies to all products/variants in the organization
+	"product",
+	"variant",
+	"collection",
+	"all",
 ]);
 
-// 🏷️ discount (core discount entity)  (base rule — percentage, fixed, free shipping)
+/**
+ * @table discount
+ * @businessLogic Core discount rule applicable to products or orders
+ * @auditTrail Traceable financial benefit allocation
+ * @multiTenantPattern Scoped to organization
+ */
 export const discount = table(
 	"discount",
 	{
@@ -41,10 +56,9 @@ export const discount = table(
 			.references(() => organization.id, { onDelete: "cascade" }),
 
 		type: discountTypeEnum("type").notNull(),
-		value: decimal("value", { precision: 10, scale: 2 }).notNull(), // meaning depends on type
+		value: decimal("value", { precision: 10, scale: 2 }).notNull(),
 
-		currencyCode: text("currency_code") // only for fixed
-			.references(() => currency.code),
+		currencyCode: text("currency_code").references(() => currency.code),
 
 		appliesTo: discountAppliesToEnum("applies_to").notNull().default("all"),
 		isActive: boolean("is_active").default(true),
@@ -54,6 +68,7 @@ export const discount = table(
 		startsAt: timestamp("starts_at"),
 		endsAt: timestamp("ends_at"),
 		metadata: jsonb("metadata"),
+
 		createdAt,
 		updatedAt,
 	},
@@ -68,7 +83,11 @@ export const discount = table(
 	],
 );
 
-// 🧾 discount_translation
+/**
+ * @table discount_translation
+ * @i18nSupport Provides localized display for discounts
+ * @seoSupport Optional SEO metadata integration
+ */
 export const discountTranslation = table(
 	"discount_translation",
 	{
@@ -80,8 +99,6 @@ export const discountTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-
-		// SEO reference (optional - not all translations need SEO)
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
@@ -96,7 +113,11 @@ export const discountTranslation = table(
 	],
 );
 
-// 👥 discount_usage (track who used wha
+/**
+ * @table discount_usage
+ * @auditTrail Tracks who used a discount and when
+ * @businessLogic Enables enforcing usage limits and personalization
+ */
 export const discountUsage = table(
 	"discount_usage",
 	{
@@ -108,8 +129,8 @@ export const discountUsage = table(
 			.notNull()
 			.references(() => discount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: text("order_id"), // optional, if linked to an order
-		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }), // amount discounted by this usage
+		orderId: text("order_id"),
+		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
 	},
 	(t) => [
 		index("idx_discount_usage_user_discount").on(t.userId, t.discountId),
@@ -117,7 +138,11 @@ export const discountUsage = table(
 	],
 );
 
-// 🧷 coupon (code-based discount wrapper)
+/**
+ * @table coupon
+ * @compensationModel Code-based wrapper for discount logic
+ * @permissionContext Can be scoped and assigned per user or campaign
+ */
 export const coupon = table(
 	"coupon",
 	{
@@ -141,7 +166,6 @@ export const coupon = table(
 	},
 	(t) => [
 		uniqueIndex("uq_coupon_code_org").on(t.organizationId, t.code),
-		// Add these missing indexes
 		index("idx_coupon_organization").on(t.organizationId),
 		index("idx_coupon_discount").on(t.discountId),
 		index("idx_coupon_active").on(t.isActive),
@@ -150,7 +174,10 @@ export const coupon = table(
 	],
 );
 
-// 🧾 coupon_translation (localization for coupon codes)
+/**
+ * @table coupon_translation
+ * @i18nSupport Localized titles and descriptions for coupons
+ */
 export const couponTranslation = table(
 	"coupon_translation",
 	{
@@ -162,8 +189,6 @@ export const couponTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-
-		// SEO reference (optional - not all translations need SEO)
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
@@ -178,7 +203,11 @@ export const couponTranslation = table(
 	],
 );
 
-// 🎁 gift_card
+/**
+ * @table gift_card
+ * @compensationModel Prepaid value cards used as alternative payment method
+ * @auditTrail Tracks balance and issuance info for reconciliation
+ */
 export const giftCard = table(
 	"gift_card",
 	{
@@ -186,22 +215,18 @@ export const giftCard = table(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
-
 		code: text("code").notNull(),
 		initialBalance: decimal("initial_balance", { precision: 10, scale: 2 }).notNull(),
 		remainingBalance: decimal("remaining_balance", { precision: 10, scale: 2 }).notNull(),
-
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
 		issuedToUserId: text("issued_to_user_id").references(() => user.id),
 		issuedToEmail: text("issued_to_email"),
-
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
 		expiresAt: timestamp("expires_at"),
 		isActive: boolean("is_active").default(true),
 		metadata: jsonb("metadata"),
-
 		createdAt,
 		updatedAt,
 	},
@@ -213,11 +238,15 @@ export const giftCard = table(
 		index("idx_gift_card_email").on(t.issuedToEmail),
 		index("idx_gift_card_active").on(t.isActive),
 		index("idx_gift_card_expires").on(t.expiresAt),
-		index("idx_gift_card_balance").on(t.remainingBalance), // For balance queries
+		index("idx_gift_card_balance").on(t.remainingBalance),
 	],
 );
 
-// 🎁 gift_card_translatio
+/**
+ * @table gift_card_translation
+ * @i18nSupport Localization support for gift cards
+ * @seoSupport Enables optional SEO visibility for promotional cards
+ */
 export const giftCardTranslation = table(
 	"gift_card_translation",
 	{
@@ -229,8 +258,6 @@ export const giftCardTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-
-		// SEO reference (optional - not all translations need SEO)
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
@@ -245,7 +272,10 @@ export const giftCardTranslation = table(
 	],
 );
 
-// 🏷️ gift_card_usage (track who used what)
+/**
+ * @table gift_card_usage
+ * @auditTrail Tracks user redemptions and value depletion
+ */
 export const giftCardUsage = table(
 	"gift_card_usage",
 	{
@@ -258,7 +288,7 @@ export const giftCardUsage = table(
 			.references(() => giftCard.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
-		orderId: text("order_id"), // optional, if linked to an order
+		orderId: text("order_id"),
 	},
 	(t) => [
 		index("idx_gift_card_usage_user").on(t.userId),
@@ -267,7 +297,11 @@ export const giftCardUsage = table(
 	],
 );
 
-// 🏷️ promotion (optional campaign or marketing grouping)
+/**
+ * @table promotion
+ * @marketingStrategy Logical grouping for campaigns
+ * @auditTrail Tracks validity and engagement timing
+ */
 export const promotion = table(
 	"promotion",
 	{
@@ -275,19 +309,17 @@ export const promotion = table(
 		organizationId: text("organization_id")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
-
 		slug: text("slug").notNull(),
 		bannerImage: text("banner_image"),
 		startsAt: timestamp("starts_at"),
 		endsAt: timestamp("ends_at"),
 		isActive: boolean("is_active").default(true),
 		metadata: jsonb("metadata"),
-
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_promotion_slug_org").on(t.organizationId, t.slug), // Per-org unique
+		uniqueIndex("uq_promotion_slug_org").on(t.organizationId, t.slug),
 		index("idx_promotion_organization").on(t.organizationId),
 		index("idx_promotion_active").on(t.isActive),
 		index("idx_promotion_dates").on(t.startsAt, t.endsAt),
@@ -295,7 +327,10 @@ export const promotion = table(
 	],
 );
 
-// 🗣️ 7. promotion_translation
+/**
+ * @table promotion_translation
+ * @i18nSupport Localized messaging and SEO for promotions
+ */
 export const promotionTranslation = table(
 	"promotion_translation",
 	{
@@ -307,8 +342,6 @@ export const promotionTranslation = table(
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
-
-		// SEO reference (optional - not all translations need SEO)
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
@@ -323,7 +356,11 @@ export const promotionTranslation = table(
 	],
 );
 
-// 🔗 promotion_discount  (link discounts to promotions)
+/**
+ * @table promotion_discount
+ * @businessLogic Relational link between campaigns and discounts
+ * @auditTrail Ensures traceability of discount origin
+ */
 export const promotionDiscount = table(
 	"promotion_discount",
 	{

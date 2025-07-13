@@ -9,80 +9,47 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-
 import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
 import { seoMetadata } from "../seo/schema.js";
 
 /**
- * @fileoverview Currency and Market Schema - Global Commerce Foundation
+ * @fileoverview 🌍 Currency & Market Schema — Global Commerce Backbone
  *
- * @architecture Internationalization Layer + Template Pattern
- * Provides the foundational data structures for multi-currency, multi-market global commerce.
- * Implements template-based market configuration that organizations can adopt or customize,
- * enabling rapid international expansion while maintaining consistency.
+ * @context
+ * Enables multi-currency support, international market templates, regional compliance,
+ * and pricing logic across countries. This forms the foundation of our internationalization
+ * and localization strategy.
  *
- * @designPattern Template + Reference Data
- * - Reference Data: Currencies and countries as immutable system data
- * - Template Pattern: Market templates provide configuration blueprints for organizations
- * - Exchange Rate Management: Historical rate tracking with multiple sources
+ * @design
+ * - Reference data for currencies and countries (ISO 4217 & 3166)
+ * - Market templates as reusable configurations
+ * - Exchange rate history for audit-ready currency conversions
  *
- * @integrationPoints
- * - Organization Markets: Organizations adopt or customize market templates
- * - Pricing System: Currency context for product pricing and billing
- * - Localization: Geographic and linguistic context for content delivery
- * - Tax Calculation: Country-specific VAT rates and regional compliance
- * - Financial Reporting: Multi-currency accounting and exchange rate handling
- *
- * @businessValue
- * Enables platform to support global organizations with complex international requirements
- * while providing simple onboarding through market templates. Supports real-time currency
- * conversion, regional pricing strategies, and compliance with local financial regulations.
- *
- * @scalingDesign
- * - Market Templates: Pre-configured for rapid organization international expansion
- * - Exchange Rates: Historical tracking supports financial reporting and auditing
- * - Country Data: Comprehensive geographic data enables location-based features
+ * @integrations
+ * Used by pricing, billing, subscriptions, tax, localization, and storefront rendering.
+ * Core to organization onboarding, multi-region launches, and financial reporting.
  */
 
 /**
- * Currency Reference Data
+ * 💱 Currency Reference Table
  *
- * @businessLogic Core monetary system foundation following ISO 4217 standards
- * Provides standardized currency definitions that enable consistent financial
- * operations across all platform transactions and reporting.
+ * @context
+ * Defines system-supported currencies using ISO 4217 standards.
  *
- * @immutableData
- * Currency data is treated as reference data - changes are rare and require
- * careful consideration due to impact on financial calculations and reporting.
+ * @behavior
+ * Treated as immutable reference data. `minorUnit` governs decimal precision (e.g., 2 for USD).
  *
- * @integrationContext
- * Referenced by pricing, billing, accounting, and reporting systems throughout
- * the platform. Supports multi-currency organizations and international commerce.
- *
- * @complianceStandard ISO 4217 compliance ensures compatibility with banking
- * systems, payment processors, and financial reporting standards globally.
+ * @integrations
+ * Used across pricing, invoicing, exchange rates, and market templates.
  */
 export const currency = table(
 	"currency",
 	{
-		/**
-		 * @businessRule ISO 4217 alpha-3 currency code (e.g., "USD", "EUR")
-		 * @immutable Primary identifier used throughout financial systems
-		 * @complianceStandard Required for payment processor and banking integration
-		 */
-		code: text("code").primaryKey(), // ISO 4217 code
+		code: text("code").primaryKey(), // ISO 4217 code (e.g., "USD")
 		name: name.notNull(),
 		symbol: text("symbol").notNull(),
-		/**
-		 * @complianceStandard ISO 4217 numeric code for international banking
-		 * @integrationContext Used by payment processors and banking APIs
-		 */
-		numericCode: text("numeric_code"), // ISO 4217 numeric code (e.g., "840" for USD)
-		/**
-		 * @financialPrecision Decimal places for currency calculations
-		 * @businessRule Essential for accurate monetary calculations and display
-		 */
-		minorUnit: integer("minor_unit").notNull().default(2), // decimal places
+		numericCode: text("numeric_code"),
+		minorUnit: integer("minor_unit").notNull().default(2),
 		isActive: boolean("is_active").default(true),
 		deletedAt,
 		createdAt,
@@ -99,62 +66,39 @@ export const currency = table(
 );
 
 /**
- * Country Geographic and Regulatory Data
+ * 🗺️ Country Reference Table
  *
- * @businessLogic Comprehensive country data supporting localization, taxation,
- * and regulatory compliance for global organizations operating across jurisdictions.
+ * @context
+ * Contains geographic, cultural, and financial metadata per country.
+ * Based on ISO 3166 and aligned with financial & localization needs.
  *
- * @localizationFoundation
- * Provides geographic, linguistic, and cultural context for content delivery,
- * user experience customization, and regional business operations.
- *
- * @taxationContext
- * VAT rates and regulatory information enable automated tax calculation
- * and compliance reporting for international commerce operations.
- *
- * @integrationContext
- * Used by pricing systems, shipping calculations, compliance reporting,
- * content localization, and user experience personalization.
+ * @integrations
+ * Used in user profiles, tax rules, pricing localization, address forms,
+ * and shipping logic.
  */
 export const country = table(
 	"country",
 	{
 		id: id.notNull(),
-		/**
-		 * @complianceStandard ISO 3166-1 alpha-2 for international compatibility
-		 * @integrationContext Used by payment processors, shipping APIs, tax systems
-		 */
 		isoCode: text("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
-		isoCode3: text("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3 (e.g., "USA")
-		numericCode: text("numeric_code").notNull(), // ISO 3166-1 numeric
+		isoCode3: text("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3
+		numericCode: text("numeric_code").notNull(),
 		name: name.notNull(),
 		nativeName: text("native_name"),
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
-		/**
-		 * @localizationContext Default locale for country-specific content delivery
-		 * @businessRule Fallback locale when user preference is unavailable
-		 */
 		defaultLocale: text("default_locale").notNull(),
 		flagEmoji: text("flag_emoji"),
-		phoneCode: text("phone_code"), // e.g., "+1"
+		phoneCode: text("phone_code"),
 		continent: text("continent"),
 		region: text("region"),
 		subregion: text("subregion"),
 		capital: text("capital"),
-		/**
-		 * @localizationSupport Supported languages for content localization
-		 * @businessRule Influences content translation and UI language options
-		 */
-		languages: text("languages").array(), // ISO 639-1 codes
+		languages: text("languages").array(),
 		timezones: text("timezones").array(),
 		isActive: boolean("is_active").default(true),
-		/**
-		 * @taxationContext Standard VAT rate for automated tax calculations
-		 * @complianceRequirement Required for accurate pricing and tax reporting
-		 */
-		vatRate: decimal("vat_rate", { precision: 5, scale: 4 }), // for tax calculations
+		vatRate: decimal("vat_rate", { precision: 5, scale: 4 }),
 		createdAt,
 		updatedAt,
 	},
@@ -169,22 +113,18 @@ export const country = table(
 );
 
 /**
- * Exchange Rate Historical Tracking
+ * 💹 Exchange Rate Table
  *
- * @businessLogic Comprehensive exchange rate management with historical tracking
- * for accurate financial reporting, multi-currency pricing, and accounting compliance.
+ * @context
+ * Historical and real-time exchange rates for accurate multi-currency billing
+ * and reporting. Tracks source, precision, and valid periods.
  *
- * @financialAccuracy
- * Time-bounded rates with multiple sources ensure accurate currency conversion
- * for pricing, billing, and financial reporting across different time periods.
+ * @behavior
+ * Rates are time-bounded and auditable with high precision. Multiple sources allow
+ * validation and fallback logic.
  *
- * @auditCompliance
- * Historical rate tracking supports financial auditing requirements and enables
- * reconstruction of financial calculations for any point in time.
- *
- * @integrationContext
- * Used by pricing engines, billing systems, financial reporting, and accounting
- * modules for real-time and historical currency conversions.
+ * @integrations
+ * Used in product pricing, invoices, analytics, and financial reports.
  */
 export const exchangeRate = table(
 	"exchange_rate",
@@ -196,30 +136,14 @@ export const exchangeRate = table(
 		targetCurrency: text("target_currency")
 			.notNull()
 			.references(() => currency.code),
-		/**
-		 * @financialPrecision High precision for accurate financial calculations
-		 * @businessRule Precision level supports crypto and traditional currencies
-		 */
 		rate: decimal("rate", { precision: 16, scale: 8 }).notNull(),
-		/**
-		 * @auditTrail Rate source tracking for compliance and accuracy verification
-		 * @businessRule Multiple sources enable rate validation and fallback strategies
-		 */
-		source: text("source"), // e.g., "ECB", "manual", "api_provider"
-		/**
-		 * @temporalAccuracy Time-bounded rates for historical accuracy
-		 * @financialCompliance Enables point-in-time financial calculations
-		 */
+		source: text("source"), // e.g., "ECB", "manual"
 		validFrom: timestamp("valid_from").notNull(),
 		validTo: timestamp("valid_to"),
 		deletedAt,
 		createdAt,
 		precision: integer("precision").default(2),
-		/**
-		 * @businessContext Different rate types for various use cases
-		 * @pricingStrategy Enables different rates for retail vs wholesale pricing
-		 */
-		rateType: text("rate_type"), // mid-market, retail, cash, etc
+		rateType: text("rate_type"), // "mid-market", "retail", etc
 	},
 	(t) => [
 		uniqueIndex("uq_exchange_rate_period").on(
@@ -238,45 +162,28 @@ export const exchangeRate = table(
 );
 
 /**
- * Market Configuration Templates
+ * 🧩 Market Templates
  *
- * @businessLogic Pre-configured market templates that organizations can adopt
- * for rapid international expansion with consistent regional settings.
+ * @context
+ * Pre-configured market setups combining currency, locale, and tax defaults.
+ * Streamlines international org onboarding and expansion.
  *
- * @templatePattern
- * Provides standardized market configurations (currency, locale, countries)
- * that organizations can use as-is or customize for their specific needs.
+ * @behavior
+ * Acts as a base configuration. Orgs can override but inherit sensible defaults.
  *
- * @onboardingAcceleration
- * Templates reduce complexity of international setup by providing proven
- * market configurations that organizations can quickly adopt and modify.
- *
- * @integrationContext
- * Referenced by organization markets to inherit template configurations
- * while allowing organization-specific customizations and overrides.
+ * @integrations
+ * Used in org setup, regional pricing, and storefront routing.
  */
 export const marketTemplate = table(
 	"market_template",
 	{
 		id: id.notNull(),
-		/**
-		 * @businessRule Template names should be clear market identifiers
-		 * @examples "North America", "European Union", "APAC", "Latin America"
-		 */
-		name: name.notNull(), // e.g., "Global", "US Market"
+		name: name.notNull(), // e.g., "EU", "LATAM", "Global"
 		description: text("description"),
-		/**
-		 * @integrationContext URL-friendly identifier for market-specific routing
-		 * @businessRule Used in API endpoints and marketing campaign URLs
-		 */
-		slug, // for URLs
+		slug,
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
-		/**
-		 * @localizationDefault Primary locale for template-based markets
-		 * @businessRule Fallback locale when organization doesn't specify custom locale
-		 */
 		defaultLocale: text("default_locale").notNull(),
 		deletedAt,
 		createdAt,
@@ -291,18 +198,17 @@ export const marketTemplate = table(
 );
 
 /**
- * Market Template Geographic Coverage
+ * 🌍 Market Template Countries
  *
- * @businessLogic Defines which countries are included in each market template
- * configuration, enabling precise geographic targeting and compliance.
+ * @context
+ * Links market templates to the countries they include.
+ * Each market can cover multiple countries and define one primary.
  *
- * @geographicStrategy
- * Many-to-many relationship allows flexible market definitions that can
- * span multiple countries or enable countries to belong to multiple markets.
+ * @behavior
+ * Enables flexible grouping (e.g., EU = DE, FR, IT...) with one default fallback.
  *
- * @defaultCountryPattern
- * Each template has one default country for primary market focus and
- * fallback behavior in pricing and localization decisions.
+ * @integrations
+ * Used in tax logic, localized pricing, and regional campaign targeting.
  */
 export const marketTemplateCountry = table(
 	"market_template_country",
@@ -313,10 +219,6 @@ export const marketTemplateCountry = table(
 		countryId: text("country_id")
 			.notNull()
 			.references(() => country.id, { onDelete: "cascade" }),
-		/**
-		 * @businessRule One primary country per market template
-		 * @localizationDefault Primary country influences template defaults
-		 */
 		isDefault: boolean("is_default").default(false),
 		createdAt,
 	},
@@ -329,22 +231,17 @@ export const marketTemplateCountry = table(
 );
 
 /**
- * Market Template Localization
+ * 🌐 Market Template Translations
  *
- * @businessLogic Multi-language support for market templates enabling
- * localized market names and descriptions for international organizations.
+ * @context
+ * Localized names and descriptions for market templates.
+ * Optional SEO metadata supports region-specific marketing pages.
  *
- * @localizationStrategy
- * Allows market templates to have different names and descriptions
- * for different locales while maintaining consistent underlying configuration.
+ * @behavior
+ * One translation per locale, with one marked as default for fallback.
  *
- * @seoIntegration
- * Optional SEO metadata enables market-specific landing pages and
- * search optimization for region-specific marketing campaigns.
- *
- * @templateInheritance
- * Organizations inheriting templates can override translations while
- * maintaining the core market configuration structure.
+ * @integrations
+ * Used in UI, localized routing, SEO, and marketing automation.
  */
 export const marketTemplateTranslation = table(
 	"market_template_translation",
@@ -353,23 +250,10 @@ export const marketTemplateTranslation = table(
 		marketTemplateId: text("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		/**
-		 * @localizationContext Locale-specific content for international markets
-		 * @businessRule Supports region-specific marketing and branding
-		 */
 		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
-		/**
-		 * @businessRule One default translation per template for fallback
-		 * @localizationDefault Used when requested locale is unavailable
-		 */
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
-
-		/**
-		 * @seoIntegration Optional SEO optimization for market landing pages
-		 * @marketingContext Enables region-specific marketing campaign optimization
-		 */
 		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),

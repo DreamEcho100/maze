@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+
 import { currency } from "../../currency-and-market/schema.js";
 import { organization } from "../../organization/schema.js";
 import { seoMetadata } from "../../seo/schema.js";
@@ -19,6 +20,14 @@ import {
 	promotionTranslation,
 } from "./schema.js";
 
+/**
+ * @relationModel discountRelations
+ * @domainModel Discount
+ * @abacRole marketing_admin
+ * @permissionContext organization_id
+ * @lifecycleWindow startsAt–endsAt, isActive
+ * @auditTrail track:coupon, promotion, usage, collection, product, variant
+ */
 export const discountRelations = relations(discount, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [discount.organizationId],
@@ -37,6 +46,12 @@ export const discountRelations = relations(discount, ({ one, many }) => ({
 	promotions: many(promotionDiscount),
 }));
 
+/**
+ * @relationModel discountTranslationRelations
+ * @i18nSupport true
+ * @seoSupport true
+ * @abacRole content_localizer
+ */
 export const discountTranslationRelations = relations(discountTranslation, ({ one }) => ({
 	discount: one(discount, {
 		fields: [discountTranslation.discountId],
@@ -48,6 +63,12 @@ export const discountTranslationRelations = relations(discountTranslation, ({ on
 	}),
 }));
 
+/**
+ * @relationModel couponRelations
+ * @domainModel Coupon
+ * @abacRole marketing_admin
+ * @permissionContext organization_id
+ */
 export const couponRelations = relations(coupon, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [coupon.organizationId],
@@ -60,6 +81,12 @@ export const couponRelations = relations(coupon, ({ one, many }) => ({
 	translations: many(couponTranslation),
 }));
 
+/**
+ * @relationModel couponTranslationRelations
+ * @i18nSupport true
+ * @seoSupport true
+ * @abacRole content_localizer
+ */
 export const couponTranslationRelations = relations(couponTranslation, ({ one }) => ({
 	coupon: one(coupon, {
 		fields: [couponTranslation.couponId],
@@ -71,6 +98,12 @@ export const couponTranslationRelations = relations(couponTranslation, ({ one })
 	}),
 }));
 
+/**
+ * @relationModel discountUsageRelations
+ * @auditTrail true
+ * @contentAttribution discount
+ * @abacRole end_user
+ */
 export const discountUsageRelations = relations(discountUsage, ({ one }) => ({
 	user: one(user, {
 		fields: [discountUsage.userId],
@@ -82,6 +115,14 @@ export const discountUsageRelations = relations(discountUsage, ({ one }) => ({
 	}),
 }));
 
+/**
+ * @relationModel giftCardRelations
+ * @domainModel GiftCard
+ * @abacRole finance_admin
+ * @permissionContext organization_id
+ * @auditTrail true
+ * @compensationModel prepaid_balance
+ */
 export const giftCardRelations = relations(giftCard, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [giftCard.organizationId],
@@ -99,6 +140,12 @@ export const giftCardRelations = relations(giftCard, ({ one, many }) => ({
 	usages: many(giftCardUsage),
 }));
 
+/**
+ * @relationModel giftCardTranslationRelations
+ * @i18nSupport true
+ * @seoSupport true
+ * @abacRole content_localizer
+ */
 export const giftCardTranslationRelations = relations(giftCardTranslation, ({ one }) => ({
 	giftCard: one(giftCard, {
 		fields: [giftCardTranslation.giftCardId],
@@ -110,6 +157,12 @@ export const giftCardTranslationRelations = relations(giftCardTranslation, ({ on
 	}),
 }));
 
+/**
+ * @relationModel giftCardUsageRelations
+ * @auditTrail true
+ * @abacRole end_user
+ * @contentAttribution gift_card
+ */
 export const giftCardUsageRelations = relations(giftCardUsage, ({ one }) => ({
 	user: one(user, {
 		fields: [giftCardUsage.userId],
@@ -121,6 +174,13 @@ export const giftCardUsageRelations = relations(giftCardUsage, ({ one }) => ({
 	}),
 }));
 
+/**
+ * @relationModel promotionRelations
+ * @domainModel Promotion
+ * @abacRole marketing_admin
+ * @permissionContext organization_id
+ * @lifecycleWindow startsAt–endsAt, isActive
+ */
 export const promotionRelations = relations(promotion, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [promotion.organizationId],
@@ -130,6 +190,12 @@ export const promotionRelations = relations(promotion, ({ one, many }) => ({
 	discounts: many(promotionDiscount),
 }));
 
+/**
+ * @relationModel promotionTranslationRelations
+ * @i18nSupport true
+ * @seoSupport true
+ * @abacRole content_localizer
+ */
 export const promotionTranslationRelations = relations(promotionTranslation, ({ one }) => ({
 	promotion: one(promotion, {
 		fields: [promotionTranslation.promotionId],
@@ -141,6 +207,12 @@ export const promotionTranslationRelations = relations(promotionTranslation, ({ 
 	}),
 }));
 
+/**
+ * @relationModel promotionDiscountRelations
+ * @businessLogic Links promotions to applied discounts
+ * @abacRole marketing_admin
+ * @auditTrail true
+ */
 export const promotionDiscountRelations = relations(promotionDiscount, ({ one }) => ({
 	promotion: one(promotion, {
 		fields: [promotionDiscount.promotionId],
