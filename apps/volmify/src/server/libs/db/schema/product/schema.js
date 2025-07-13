@@ -44,15 +44,18 @@ import {
 	pgEnum,
 	primaryKey,
 	text,
+	timestamp,
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
+import { currency } from "../currency-and-market/schema.js";
 import { organization, organizationBrand } from "../organization/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
+import { paymentPlanTypeEnum } from "./payment/schema.js";
 
 // -------------------------------------
 // PRODUCT ENUMS
@@ -302,9 +305,6 @@ export const productVariant = table(
 		 */
 		slug: slug.notNull(),
 
-		title: varchar("title", { length: 256 }).notNull(),
-		description: text("description"),
-
 		/**
 		 * @businessRule Controls variant availability for purchase
 		 * @commerceControl Enables independent variant lifecycle management
@@ -320,11 +320,84 @@ export const productVariant = table(
 		isDefault: boolean("is_default").default(false),
 
 		/**
+		 * @marketingStrategy Highlighted plan in pricing tables (typically "best value")
+		 * @conversionOptimization Draws customer attention to preferred monetization tier
+		 */
+		isFeatured: boolean("is_featured").default(false),
+
+		/**
 		 * @displayOrder Controls variant sequence in product selection interfaces
 		 * @customerExperience Typically ordered from basic to premium pricing tiers
 		 * @marketingStrategy Enables strategic variant presentation for conversion optimization
 		 */
 		sortOrder: integer("sort_order").default(0),
+
+		/**
+		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
+		 * @templatePattern Determines downstream plan table extensions
+		 */
+		type: paymentPlanTypeEnum("type").notNull(),
+
+		// /**
+		//  * @regionalPricing Optional market for regional pricing strategies
+		//  * @businessRule null = global pricing, marketId = region-specific pricing
+		//  * @multiRegionSupport Enables localized pricing overrides
+		//  */
+		// marketId: text("market_id").references(() => organizationMarket.id),
+
+		/**
+		 * @currencySupport Currency for this payment plan instance
+		 * @internationalCommerce Required for all payment plans to support global expansion
+		 */
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+
+		/**
+		 * @pricing Main price customers pay for this payment plan
+		 * @revenueFoundation Core pricing amount for revenue calculations and billing
+		 */
+		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+
+		/**
+		 * @promotionalPricing Original price for "save X%" marketing displays
+		 * @marketingStrategy Shows discount value to increase conversion rates
+		 */
+		compareAtPrice: decimal("compare_at_price", {
+			precision: 10,
+			scale: 2,
+		}),
+
+		// /**
+		//  * @taxation Tax rate for this payment plan region/market
+		//  * @legalCompliance Required for proper tax calculation and reporting
+		//  */
+		// taxRate: decimal("tax_rate", { precision: 5, scale: 4 }),
+
+		// /**
+		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
+		//  * @businessFlexibility Enables complex regional pricing strategies
+		//  */
+		// pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
+
+		/**
+		 * @featureControl JSON defining payment plan specific capabilities and limitations
+		 * @businessFlexibility Enables sophisticated feature differentiation between payment tiers
+		 * @templatePattern Extensible per-plan entitlements
+		 * @permissionResolution Drives runtime access decisions
+		 */
+		features: jsonb("features"),
+		/**
+		 * @campaignManagement When this pricing becomes effective
+		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
+		 */
+		startsAt: timestamp("starts_at").defaultNow(),
+
+		/**
+		 * @campaignManagement When this pricing expires (null = permanent)
+		 * @promotionalStrategy Supports time-limited promotional pricing
+		 */
+		endsAt: timestamp("ends_at"),
 
 		/**
 		 * @extensibility Variant-specific configuration and feature definitions
@@ -348,6 +421,66 @@ export const productVariant = table(
 		index("idx_product_variant_active").on(t.isActive),
 		index("idx_product_variant_sort").on(t.sortOrder),
 		index("idx_product_variant_default").on(t.isDefault),
+	],
+);
+
+export const productVariantTranslation = table(
+	"product_variant_translation",
+	{
+		id,
+
+		/**
+		 * @translationTarget Product variant this localized content applies to
+		 */
+		productVariantId: text("product_variant_id")
+			.notNull()
+			.references(() => productVariant.id, { onDelete: "cascade" }),
+
+		/**
+		 * @localizationContext Target locale for this translation content
+		 * @businessRule Supports region-specific payment plan marketing strategies
+		 */
+		locale: text("locale").notNull(),
+
+		/**
+		 * @translationDefault Primary translation used when locale-specific content unavailable
+		 * @businessRule Exactly one default translation per payment plan
+		 */
+		isDefault: boolean("is_default").default(false),
+
+		/**
+		 * @localizedContent Region-specific name of plan
+		 * @conversionStrategy Enables contextual pricing and positioning across locales
+		 */
+		name: text("name"),
+
+		/**
+		 * @localizedContent Region-specific plan details
+		 * @conversionStrategy Boosts international trust and clarity
+		 */
+		description: text("description"),
+
+		/**
+		 * @seoOptimization Optional SEO metadata for payment plan landing pages
+		 * @marketingStrategy Enables search optimization for pricing and promotional content
+		 */
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
+
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		// Translation Constraints
+		uniqueIndex("uq_product_variant_translation").on(t.productVariantId, t.locale),
+		uniqueIndex("uq_product_variant_translation_default")
+			.on(t.productVariantId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+
+		// Performance Indexes
+		index("idx_product_variant_translation_locale").on(t.locale),
+		index("idx_product_variant_translation_seo").on(t.seoMetadataId),
 	],
 );
 
