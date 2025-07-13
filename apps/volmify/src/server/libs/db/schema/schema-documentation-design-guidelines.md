@@ -4,473 +4,405 @@
 
 ### **Core Principles**
 - **Architecture Over Implementation**: Focus on design decisions, not code restatement
-- **Business Context First**: Explain WHY before WHAT
-- **Developer Acceleration**: Minimize time-to-understanding for new team members
-- **Cognitive Efficiency**: Avoid redundant explanations of self-evident code
+- **Business Context First**: Explain WHY before WHAT, emphasizing creator economy and e-commerce workflows
+- **Developer Acceleration**: Minimize time-to-understanding for new team members joining multi-tenant systems
+- **Cognitive Efficiency**: Avoid redundant explanations of self-evident code patterns
 
-### **Multi-Tenant Creator Platform Focus**
-Given our multi-tenant educational content platform with creator economy, documentation should emphasize:
-- **Organization-Centric Design**: How all features operate within organizational boundaries
-- **Creator Economy Integration**: How brand and professional attribution systems work together
-- **Professional Scalability**: How the architecture supports multiple profession types
-- **Cross-Schema Integration**: How professional profiles interact across organizational contexts
+### **Multi-Tenant Creator Platform with Integrated E-commerce Focus**
+Given our multi-tenant educational content platform with creator economy and sophisticated e-commerce, documentation should emphasize:
+- **Organization-Centric Design**: How all features operate within organizational boundaries with brand attribution
+- **Creator Economy Integration**: How professional attribution and revenue sharing systems work together
+- **E-commerce Foundation**: How product variants, payment plans, and pricing strategies integrate
+- **Professional Scalability**: How the architecture supports multiple profession types and cross-organizational collaboration
+- **Integrated Payment Architecture**: How payment plans eliminate pricing table redundancy while maintaining sophistication
 
 ## **📁 Documentation Structure**
 
-### **Current Folder Pattern**
+### **Current Schema Organization Pattern**
 ```
-📂 schema-folder/
-├── README.md              # 🎯 High-level overview and quick start
-├── schema.js              # 💾 Database schema with JSDoc
-├── relations.js           # 🔗 Relationships with JSDoc
-└── docs/                  # 📖 Deep-dive documentation (optional)
-    ├── architecture.md     # 🏗 Design decisions and patterns
-    ├── integration.md      # 🔗 Cross-system integration points
-    └── examples.md         # 💡 Complex usage scenarios
-```
+📂 auth/                         # User authentication and identity foundation
+├── schema.js                    # Core user identity and authentication
+└── relations.js                 # User relationship foundations
 
-### **Multi-Schema Organization Pattern**
-```
 📂 user/
-├── profile/
-│   └── instructor/
-│       ├── schema.js      # Professional profile tables
-│       └── relations.js   # Professional relationships
-└── auth/
-    ├── schema.js          # Authentication tables
-    └── relations.js       # Auth relationships
+└── profile/
+    └── instructor/              # Professional instructor profiles for creator economy
+        ├── schema.js            # Instructor identity and teaching capabilities
+        └── relations.js         # Cross-organizational instructor relationships
 
 📂 organization/
-├── schema.js              # Organization + brand + affiliations
-└── relations.js           # Cross-organizational relationships
+├── schema.js                   # Organizations + brands + markets + pricing zones
+└── relations.js                # Multi-tenant boundaries and professional affiliations
 
 📂 product/
-├── schema.js              # Core product system
-├── relations.js           # Product relationships
-└── by-type/
-    └── course/
-        └── schema.js      # Course-specific extensions
+├── schema.js                   # Multi-product foundation + variants + professional attribution
+├── relations.js                # Professional and brand attribution relationships
+├── payment/
+│   ├── schema.js              # Integrated payment plans (CTI: one-time, subscription, usage-based)
+│   └── relations.js           # Payment plan relationships and subscription management
+├── offers/
+│   ├── schema.js              # Discount campaigns and promotional strategies
+│   └── relations.js           # Promotional campaign relationships
+└── collection/
+    ├── schema.js              # Product collections and catalog organization
+    └── relations.js           # Collection membership and categorization
+
+📂 contact-info/                # Polymorphic contact management for professionals/organizations
+├── schema.js                  # Contact information foundation
+└── relations.js               # Contact relationship management
+
+📂 currency-and-market/         # International commerce and regional pricing support
+├── schema.js                  # Currency and market configuration
+└── relations.js               # Market and currency relationships
+
+📂 seo/                         # Content discovery and search optimization
+├── schema.js                  # SEO metadata and optimization
+└── relations.js               # SEO relationship management
 ```
 
 ## **📝 JSDoc Standards for Schema Files**
 
-### **File-Level Documentation**
+### **File-Level Documentation Template**
 ```javascript
 /**
- * @fileoverview [Schema Name] - [Primary Purpose]
+ * @fileoverview [Schema Name] - [Primary Business Purpose]
  * 
- * @architecture [Pattern Type] (e.g., Multi-Tenant, Professional Attribution, Cross-Organization)
- * Brief explanation of the architectural pattern and why it was chosen.
+ * @architecture [Architectural Pattern] (e.g., Multi-Tenant + Creator Attribution + E-commerce Integration)
+ * Brief explanation focusing on creator economy, e-commerce workflows, and organizational boundaries.
  * 
- * @designPattern [Specific Pattern]
- * How this schema implements the pattern and integrates with the broader system.
+ * @designPattern [Specific Pattern] + [Integration Strategy]
+ * - CTI Pattern: For extensible type hierarchies (products, payment plans, professional profiles)
+ * - Professional Attribution: Creator economy revenue sharing and content ownership
+ * - Brand Attribution: Organizational brand identity integration
+ * - Integrated Pricing: Payment plans with built-in market/currency pricing
+ * - Cross-Organizational: Professional collaboration beyond organizational boundaries
  * 
  * @integrationPoints
- * - Key system integration points
- * - Professional attribution workflows
- * - Cross-organizational collaboration patterns
+ * - Professional Attribution: Creator economy revenue sharing and content creation workflows
+ * - E-commerce Foundation: Product variants, payment plans, and subscription management
+ * - Organizational Revenue: Creator compensation and business analytics
+ * - International Commerce: Multi-currency support and regional market optimization
+ * - Brand Integration: Organizational brand identity and marketing strategies
  * 
  * @businessValue
- * Why this schema exists and what business problems it solves.
+ * Enables [specific business capability] while maintaining [key constraints like multi-tenancy].
+ * Focus on creator economy benefits and e-commerce sophistication.
  * 
  * @scalingDesign
- * How this design supports multiple professions and organizational growth.
+ * [Pattern] enables adding [new entity types] without affecting existing [workflows].
+ * Focus on how patterns support multiple creator types and payment strategies.
  */
 ```
 
-### **Table-Level Documentation**
+### **Table-Level Documentation Template**
 ```javascript
 /**
- * [Table Purpose in Business Terms]
+ * [Table Purpose in Business Terms] - [Role in Creator Economy/E-commerce]
  * 
- * @professionalContext [Professional Role] (for profession-related tables)
- * How this table supports professional identity and cross-organization collaboration.
+ * @businessLogic [Core business rules and workflows this table enables]
+ * Focus on creator economy workflows, e-commerce processes, or organizational boundaries.
  * 
- * @businessLogic
- * Key business rules and constraints that drive the design.
+ * @professionalContext [How this supports professional identity/attribution] (when applicable)
+ * Professional creator workflows, cross-organizational collaboration, revenue attribution.
  * 
- * @architecturalDecision
- * Why this design was chosen over alternatives.
+ * @ecommerceContext [How this enables e-commerce functionality] (when applicable)
+ * Product catalog management, payment processing, subscription lifecycle, pricing strategies.
  * 
- * @integrationContext
- * How this table connects to the broader application workflow.
+ * @organizationScope [How this respects multi-tenant boundaries]
+ * Organizational isolation, brand attribution, cross-organizational professional collaboration.
  * 
- * @scalabilityNote
- * How this design supports adding new professions or scaling existing ones.
+ * @architecturalDecision [Why this design over alternatives]
+ * Key design trade-offs focusing on scalability, performance, or business flexibility.
+ * 
+ * @integrationContext [How this connects to broader system workflows]
+ * Cross-schema relationships, API integration points, business process enablement.
+ * 
+ * @scalabilityPattern [How this pattern supports growth]
+ * Adding new creator types, payment models, or organizational structures.
  */
 ```
 
-### **Field-Level Documentation** (Only When Not Self-Evident)
+### **Field-Level Documentation (Selective - Only for Complex Business Rules)**
 ```javascript
 /**
- * @businessRule [Important constraint or naming convention]
- * @professionalContext [How this field supports professional identity/workflow]
- * @organizationScope [How this field respects organizational boundaries]
- * @performanceCritical [High-frequency usage in queries]
- * @scalabilityNote [How this field supports adding new professions]
+ * @businessRule [Important constraint or business logic]
+ * @professionalContext [Professional workflow relevance]
+ * @organizationScope [Multi-tenant boundary enforcement]
+ * @ecommerceContext [E-commerce workflow significance]
+ * @revenueContext [Revenue attribution or calculation relevance]
+ * @performanceCritical [High-frequency query usage]
+ * @scalabilityNote [How this supports adding new creator/payment types]
+ * @integrationPoint [External system or cross-schema significance]
+ * @ctiDiscriminator [CTI pattern type discrimination]
+ * @translationTarget [Internationalization support]
+ * @auditTrail [Compliance or tracking significance]
+ * @accessControl [Permission and security relevance]
+ * @campaignManagement [Promotional or marketing workflow relevance]
  */
 ```
 
-## **🔄 Schema File Update Instructions**
+### **Enum Documentation Template**
+```javascript
+/**
+ * [Enum Purpose] - [Business Context]
+ * 
+ * @businessLogic [How enum values drive business workflows]:
+ * - [value1]: [Business meaning and when used]
+ * - [value2]: [Business meaning and when used]
+ * - [value3]: [Business meaning and when used]
+ */
+export const enumName = pgEnum("enum_name", ["value1", "value2", "value3"]);
+```
+
+### **Index and Constraint Documentation (Selective)**
+```javascript
+// Business Constraints
+/**
+ * @businessConstraint [Complex business rule this enforces]
+ * @organizationBoundary [Multi-tenant isolation enforcement]
+ * @professionalIdentity [Professional uniqueness or attribution rule]
+ */
+uniqueIndex("constraint_name").on(table.field1, table.field2),
+
+// Performance Indexes
+/**
+ * @performanceCritical [High-frequency query pattern this optimizes]
+ * @professionalWorkflow [Professional query optimization]
+ * @ecommerceWorkflow [E-commerce query optimization]
+ * @revenueAnalytics [Revenue calculation optimization]
+ */
+index("index_name").on(table.field),
+```
+
+## **🔄 Schema File Update Standards**
 
 ### **⚠️ Critical Requirements**
 - **NEVER CREATE NEW FILES** - Always update existing schema and relations files in-place
-- **PRESERVE EXISTING COMMENTS** - Keep all existing inline comments and code structure
-- **JSDoc ENHANCEMENT ONLY** - Add JSDoc documentation without modifying existing code logic
-- **MAINTAIN IMPORTS/EXPORTS** - Preserve all existing import statements and export declarations
+- **PRESERVE EXISTING CODE** - Keep all existing code, imports, exports, and logic unchanged
+- **JSDoc ENHANCEMENT ONLY** - Add JSDoc documentation without modifying any existing functionality
+- **MAINTAIN STRUCTURE** - Preserve all existing code organization, spacing, and patterns
 
-### **📝 Update Process for Schema Files**
+### **✅ JSDoc Enhancement Process**
 
-#### **1. Schema File Updates (`schema.js`)**
+#### **1. Add File-Level JSDoc** (if missing)
 ```javascript
-// filepath: [keep exact original path]
-
-// ...existing imports... (PRESERVE ALL)
-
 /**
- * @fileoverview [Schema Name] - [Primary Purpose]
+ * @fileoverview [Schema] - [Business Purpose with Creator Economy Context]
  * 
- * @architecture [Architectural Pattern]
- * [Architecture explanation focusing on multi-tenant and professional attribution]
+ * @architecture [Pattern] + [Integration Strategy]
+ * [Architecture explanation focusing on creator economy and e-commerce integration]
  * 
- * @designPattern [Design Pattern Details]
- * [Pattern implementation details emphasizing scalability for professions]
+ * @designPattern [Specific Patterns Used]
+ * - [Pattern 1]: [How it enables creator economy features]
+ * - [Pattern 2]: [How it supports e-commerce workflows]
+ * - [Pattern 3]: [How it maintains organizational boundaries]
  * 
  * @integrationPoints
- * - [Professional attribution workflows]
- * - [Cross-organizational collaboration]
- * - [Organization boundary enforcement]
+ * - [Integration 1]: [Creator economy workflow description]
+ * - [Integration 2]: [E-commerce process description]
+ * - [Integration 3]: [Cross-organizational collaboration description]
  * 
  * @businessValue
- * [Business value explanation focusing on creator economy]
+ * [Business value with focus on creator economy and e-commerce capabilities]
  * 
  * @scalingDesign
- * [How this supports multiple professions and organizational growth]
+ * [How patterns support growth in creators, payment models, and organizations]
  */
-
-// ...existing enums and constants... (PRESERVE ALL)
-
-/**
- * [Table Business Purpose]
- * 
- * @businessLogic
- * [Key business rules focusing on professional workflows and organizational context]
- * 
- * @architecturalDecision
- * [Why this design was chosen, emphasizing scalability for professions]
- * 
- * @integrationContext
- * [How this connects to broader creator economy and organizational workflows]
- * 
- * @scalabilityNote
- * [How this design pattern can be replicated for new professions]
- */
-export const tableName = table(
-    "table_name",
-    {
-        // ...existing fields... (PRESERVE ALL)
-        /**
-         * @businessRule [Only when field has special business significance]
-         * @professionalContext [Only for profession-specific fields]
-         * @organizationScope [Only for organization boundary fields]
-         * @performanceCritical [Only for high-frequency access fields]
-         */
-        specialField: fieldDefinition,
-        
-        // ...rest of existing fields... (PRESERVE ALL)
-    },
-    (table) => [
-        // ...existing indexes and constraints... (PRESERVE ALL)
-        /**
-         * @businessConstraint [Only for complex business rule constraints]
-         * @performanceCritical [Only for critical performance indexes]
-         * @scalabilityNote [Only for indexes that support profession scalability]
-         */
-        uniqueIndex("constraint_name").on(table.field1, table.field2),
-    ],
-);
-
-// ...all other existing tables and exports... (PRESERVE ALL)
 ```
 
-#### **2. Relations File Updates (`relations.js`)**
+#### **2. Add Table-Level JSDoc** (for all major tables)
 ```javascript
-// filepath: [keep exact original path]
+/**
+ * [Business Purpose] - [Role in Creator Economy/E-commerce]
+ * 
+ * @businessLogic [Key business workflows and rules]
+ * @organizationScope [Multi-tenant boundary handling]
+ * @architecturalDecision [Why this design was chosen]
+ * @integrationContext [Cross-system workflow enablement]
+ * @scalabilityPattern [How this supports growth]
+ */
+export const tableName = table(/* existing definition unchanged */);
+```
 
-// ...existing imports... (PRESERVE ALL)
+#### **3. Add Field-Level JSDoc** (selectively - only for complex business rules)
+```javascript
+// Only add field JSDoc when field has special business significance
+/**
+ * @businessRule [Important business constraint or logic]
+ * @organizationScope [Multi-tenant relevance]
+ * @professionalContext [Creator economy relevance]
+ * @ecommerceContext [E-commerce workflow relevance]
+ * @performanceCritical [High-frequency access pattern]
+ */
+fieldName: fieldDefinition,
+```
 
+#### **4. Add Enum JSDoc** (for all enums)
+```javascript
+/**
+ * [Enum Purpose] - [Business Context]
+ * 
+ * @businessLogic [How values drive workflows]:
+ * - [value]: [Business meaning and usage context]
+ * [Continue for each enum value]
+ */
+export const enumName = pgEnum(/* existing definition unchanged */);
+```
+
+### **🚫 What NOT to Change**
+- **Any existing code logic, structure, or formatting**
+- **Import/export statements**
+- **Table, field, or relationship definitions**
+- **Index or constraint definitions**
+- **Existing comments (inline or block)**
+- **Variable names or types**
+
+### **✅ What TO Add**
+- **File-level JSDoc blocks** explaining architecture and business context
+- **Table-level JSDoc blocks** explaining business purpose and integration
+- **Selective field-level JSDoc** only for complex business rules or key workflows
+- **Enum JSDoc blocks** explaining business meaning of values
+- **Selective constraint/index JSDoc** only for complex business rules or critical performance
+
+## **📋 Relations File Documentation**
+
+### **File-Level JSDoc for Relations**
+```javascript
 /**
  * @fileoverview [Schema] Relations - [Integration Purpose]
  * 
  * @integrationPattern [Pattern Description]
- * [How relations enable cross-schema integration, focusing on professional attribution]
+ * [How relations enable creator economy workflows, e-commerce processes, and organizational collaboration]
  * 
  * @businessContext
- * [Business workflows enabled by these relations in creator economy context]
+ * [Business workflows enabled by these relations in creator economy and e-commerce context]
  * 
  * @scalabilityContext
- * [How these relation patterns support multiple professions]
+ * [How relation patterns support multiple creator types and payment strategies]
  */
+```
 
+### **Relation-Level JSDoc** (selective)
+```javascript
 /**
  * [Entity] Relations ([Role in System])
  * 
- * @integrationRole [How this entity integrates with broader system]
- * [Description of entity's role in creator economy and organizational context]
- * 
- * @businessRelationships
- * [Key business relationships focusing on professional collaboration]
- * 
- * @scalabilityPattern
- * [How this relation pattern can be replicated for new professions]
+ * @integrationRole [How this entity integrates with broader creator economy]
+ * @businessRelationships [Key workflows enabled]
+ * @scalabilityPattern [How this supports growth]
  */
-export const entityNameRelations = relations(entityName, ({ one, many }) => ({
+export const entityRelations = relations(entity, ({ one, many }) => ({
     /**
-     * @businessContext [Only for complex/important relationships]
-     * @professionalWorkflow [Only for profession-related relationships]
-     * @organizationBoundary [Only for cross-organizational relationships]
-     * @performanceCritical [Only for high-frequency relationships]
+     * @businessContext [Complex relationship significance]
+     * @professionalWorkflow [Creator economy relevance]
+     * @ecommerceWorkflow [E-commerce process relevance]
+     * @organizationBoundary [Multi-tenant relationship handling]
      */
-    relationshipName: one/many(relatedEntity, {
-        // ...existing relationship definition... (PRESERVE ALL)
-    }),
-    
-    // ...all existing relationships... (PRESERVE ALL)
+    relationName: one/many(/* existing definition unchanged */),
 }));
-
-// ...all other existing relations... (PRESERVE ALL)
 ```
 
-### **🚫 What NOT to Change**
-- **Import/Export Statements**: Keep all existing imports and exports
-- **Table Definitions**: Don't modify field definitions, types, or constraints
-- **Relationship Definitions**: Don't change existing relation configurations
-- **Index Definitions**: Don't modify existing indexes or constraints
-- **Existing Comments**: Preserve all existing inline comments
-- **Code Structure**: Maintain existing code organization and spacing
+## **🎯 Content Focus Areas**
 
-### **✅ What TO Add**
-- **File-level JSDoc**: Add comprehensive @fileoverview with architecture context
-- **Table-level JSDoc**: Add business purpose and integration context
-- **Field-level JSDoc**: Only for fields with special business rules or performance implications
-- **Relationship JSDoc**: Only for complex relationships with business significance
-- **Constraint JSDoc**: Only for constraints that implement complex business rules
-- **Scalability JSDoc**: How patterns support adding new professions
+### **Creator Economy Documentation Priority**
+1. **Professional Attribution**: How content ownership and revenue sharing works
+2. **Cross-Organizational Collaboration**: Professional identity across organizations
+3. **Brand Attribution**: Organizational brand identity and content attribution
+4. **Revenue Distribution**: Creator compensation and organizational analytics
 
-## **📋 README.md Template**
+### **E-commerce Documentation Priority**
+1. **Product Variant Architecture**: How variants enable pricing flexibility
+2. **Integrated Payment Plans**: How payment plans eliminate pricing redundancy
+3. **Subscription Management**: Customer lifecycle and access control
+4. **International Commerce**: Multi-currency and regional market support
 
-```markdown
-# **📂 [Schema Name] Schema**
+### **Multi-Tenant Documentation Priority**
+1. **Organizational Boundaries**: How data isolation and business independence works
+2. **Professional Scalability**: How patterns support multiple creator types
+3. **Brand Management**: Organizational brand identity across product catalogs
+4. **Cross-Schema Integration**: How professional profiles integrate across domains
 
-## **🎯 Architecture**
-**Pattern**: [Multi-Tenant/Professional Attribution/Cross-Organization/etc.]
-**Purpose**: [1-2 sentence business purpose in creator economy context]
+## **📖 Quality Standards**
 
-## **🏗 Core Design**
-- **[Key Design Decision 1]**: Brief explanation focusing on professional scalability
-- **[Key Design Decision 2]**: Brief explanation focusing on organizational boundaries
+### **What TO Document**
+- **Architectural decisions** and why they enable creator economy workflows
+- **Business workflows** that span multiple tables or involve complex logic
+- **Professional attribution patterns** and how they scale
+- **E-commerce integration points** and payment strategy sophistication
+- **Multi-tenant boundaries** and organizational collaboration patterns
+- **Performance-critical paths** for creator and e-commerce workflows
 
-## **🔗 System Integration**
-- **Professional Attribution**: How this participates in creator economy workflows
-- **Cross-Schema**: Key relationships with other professional/organizational domains
-- **API Layer**: Primary integration points with application logic
+### **What NOT to Document**
+- **Self-evident field purposes** that are clear from naming and types
+- **Basic CRUD operations** or standard database patterns
+- **Implementation details** that belong in code comments
+- **Repetitive explanations** across similar tables
 
-## **📊 Schema Overview**
-- **Tables**: X core tables (organization-scoped/profession-agnostic)
-- **Key Relationships**: Most important relationships for professional workflows
-- **Performance Considerations**: Critical indexes for professional queries
+### **JSDoc Annotation Guidelines**
 
-## **🚀 Quick Start**
-```javascript
-// Most common professional workflow pattern
-const example = await db.query.mainTable.findFirst({
-  where: eq(mainTable.organizationId, orgId), // Organization boundary
-  with: { 
-    professionalProfile: true,
-    organizationContext: true
-  }
-});
-```
+#### **High-Value Annotations**
+- `@businessLogic` - Core business rules and workflows
+- `@organizationScope` - Multi-tenant boundary enforcement
+- `@professionalContext` - Creator economy and professional workflows
+- `@ecommerceContext` - E-commerce and payment workflows
+- `@scalabilityPattern` - How patterns support growth
+- `@integrationContext` - Cross-system workflow enablement
+- `@architecturalDecision` - Why this design over alternatives
 
-## **🎯 Professional Scalability**
-This schema supports:
-- **Multiple Professions**: [List current and planned professions]
-- **Cross-Organization**: Professional collaboration across organizational boundaries
-- **Attribution Models**: Clear content creation and revenue attribution
+#### **Selective-Use Annotations**
+- `@performanceCritical` - Only for genuinely high-frequency access patterns
+- `@businessRule` - Only for complex or non-obvious business constraints
+- `@revenueContext` - Only for fields directly involved in revenue calculations
+- `@auditTrail` - Only for compliance or tracking-critical fields
+- `@ctiDiscriminator` - Only for CTI pattern type discrimination fields
 
-## **📖 Deep Dive**
-- [🏗 Architecture](./docs/architecture.md) - Design patterns and professional scalability
-- [🔗 Integration](./docs/integration.md) - Cross-organizational workflows  
-- [💡 Examples](./docs/examples.md) - Multi-professional collaboration scenarios
-```
+#### **Specialized Context Annotations**
+- `@translationTarget` - For internationalization support
+- `@campaignManagement` - For promotional and marketing workflows
+- `@accessControl` - For permission and security-critical fields
+- `@marketingStrategy` - For conversion optimization and customer experience
 
-## **📖 Deep Documentation (docs/ folder)**
+## **🚀 Implementation Success Metrics**
 
-### **docs/architecture.md**
-```markdown
-# **🏗 [Schema] Architecture**
+### **Developer Onboarding Effectiveness**
+- **Architecture Comprehension**: Understanding creator economy and e-commerce integration within 1 day
+- **Pattern Recognition**: Ability to identify and apply professional attribution patterns
+- **Integration Confidence**: Capability to extend systems for new creator types or payment models
+- **Multi-Tenant Understanding**: Grasping organizational boundaries and professional collaboration
 
-## **🎯 Design Pattern**
-### [Pattern Name] Implementation
-- **Why chosen**: Business/technical reasoning for creator economy
-- **Trade-offs**: What we gained/sacrificed for professional scalability
-- **Alternatives considered**: What we didn't do and why
+### **Documentation Quality Indicators**
+- **Self-Service Capability**: Developers find architectural guidance without team consultation
+- **Consistency**: Similar creator economy and e-commerce patterns documented uniformly
+- **Actionable Guidance**: Documentation enables specific implementation decisions
+- **Business Context Clarity**: Non-technical stakeholders can understand system capabilities
 
-## **🔄 Professional Workflow**
-```mermaid
-graph LR
-    A[User] --> B[Professional Profile] --> C[Organization Affiliation] --> D[Content Creation]
-```
+## **📏 Key Success Factors**
 
-## **🚨 Critical Constraints**
-- **[Constraint 1]**: Business rule for professional attribution
-- **[Constraint 2]**: Organizational boundary enforcement
+### **Creator Economy Focus**
+- **Professional Identity Management**: Multi-profile system and cross-organizational identity
+- **Content Attribution Systems**: Brand and professional attribution workflows
+- **Revenue Models**: Creator compensation and organizational analytics
+- **Collaboration Patterns**: Cross-organizational professional workflows
 
-## **⚡ Performance Architecture**
-- **Hot Path**: Critical queries for professional workflows
-- **Caching Strategy**: What should be cached for professional data
-- **Scaling Considerations**: How this handles multiple professions
+### **E-commerce Integration**
+- **Product Architecture**: Variant-based commerce with payment plan integration
+- **Payment Sophistication**: One-time, subscription, and usage-based billing models
+- **International Support**: Multi-currency and regional market optimization
+- **Subscription Lifecycle**: Customer access control and revenue tracking
 
-## **🎯 Profession Scalability**
-### Adding New Professions
-- **Pattern Replication**: How to add new profession types
-- **Integration Points**: What needs to be connected
-- **Performance Considerations**: Index and query implications
-```
+### **Multi-Tenant Excellence**
+- **Organizational Boundaries**: Data isolation with professional collaboration
+- **Scalability Patterns**: Supporting multiple creator types and business models
+- **Brand Management**: Organizational brand identity across product catalogs
+- **Performance Optimization**: Query patterns for creator economy and e-commerce workflows
 
-### **docs/integration.md**
-```markdown
-# **🔗 [Schema] Integration Points**
+## **🌟 Documentation Outcome Goals**
 
-## **🌐 Cross-Schema Workflows**
-### Professional Attribution Workflow
-```javascript
-// Show how professional attribution flows through the system
-// Focus on organization boundaries and professional identity
-```
+**JSDoc enhancement should accelerate developer understanding of:**
 
-## **🏢 Multi-Tenant Integration**
-### Organization Boundary Enforcement
-```javascript
-// How organizational context is maintained across professional workflows
-// Subject + Organization + Professional Role + Resource → Decision
-```
+1. **Creator Economy Architecture**: How professional attribution, revenue sharing, and cross-organizational collaboration work together
+2. **E-commerce Integration**: How product variants, payment plans, and subscription management create sophisticated monetization
+3. **Multi-Tenant Design**: How organizational boundaries, professional identity, and brand attribution scale across the platform
+4. **Pattern Scalability**: How existing patterns support adding new creator types, payment models, and organizational structures
 
-## **📡 API Integration**
-### Critical Endpoints
-- **[Professional Endpoint]**: How professional data is exposed
-- **[Attribution Endpoint]**: How content attribution is managed
-```
-
-### **docs/examples.md**
-```markdown
-# **💡 [Schema] Implementation Examples**
-
-## **🎯 Complex Professional Scenarios**
-### Cross-Organizational Instructor Collaboration
-**Business Context**: Instructor working across multiple organizations
-
-```javascript
-// Complete, working implementation showing:
-// - Professional identity maintenance
-// - Organization boundary respect
-// - Revenue attribution across organizations
-// Include error handling for critical paths
-```
-
-**Key Design Points**:
-- How professional identity is preserved across organizations
-- How revenue attribution works in multi-organizational context
-- What edge cases are handled for professional workflows
-
-### Multi-Professional Content Creation
-**Business Context**: Team of different professionals creating content
-
-```javascript
-// Show how multiple professions collaborate on single product
-// Focus on attribution, revenue sharing, and organizational context
-```
-```
-
-## **✅ Documentation Quality Standards**
-
-### **What TO Include**
-- **Professional workflow reasoning**: Why we chose this professional attribution design
-- **Creator economy context**: What business problems this solves for professionals
-- **Cross-organizational integration**: How professionals work across organizational boundaries
-- **Scalability implications**: How this supports multiple profession types
-- **Performance considerations**: Critical path optimizations for professional queries
-- **Attribution workflows**: How content creation and revenue attribution works
-
-### **What NOT to Include**
-- **Self-evident code**: Field types, basic constraints, obvious relationships
-- **Basic CRUD examples**: Simple insert/select/update patterns
-- **Repetitive explanations**: Information available from code inspection
-- **Low-level implementation**: Details that belong in code comments
-
-### **JSDoc Focus Areas**
-- **File level**: Architecture pattern and professional scalability
-- **Table level**: Business purpose and professional workflow integration
-- **Field level**: Only when business rules or professional attribution exists
-- **Relationship level**: Cross-organizational collaboration and professional identity
-
-## **🚀 Implementation Priority**
-
-### **Phase 1: Core Professional Architecture Documentation**
-1. **User instructor profile schema**: Professional identity and multi-profile system
-2. **Organization schema**: Multi-tenant boundaries and brand attribution
-3. **Product attribution schemas**: Professional content creation workflows
-
-### **Phase 2: Creator Economy Documentation**
-1. **Revenue attribution**: How professionals earn from content
-2. **Cross-organizational collaboration**: Instructor affiliation networks
-3. **Brand attribution**: Organization brand identity and content attribution
-
-### **Phase 3: Scalability Documentation**
-1. **New profession patterns**: How to add consultants, designers, lawyers, etc.
-2. **Performance optimization**: Query patterns for professional workflows
-3. **Integration workflows**: API patterns for professional data
-
-## **📏 Success Metrics**
-
-### **Developer Onboarding**
-- **Time to first meaningful contribution**: < 2 days
-- **Professional workflow comprehension**: Understanding attribution flows within 1 day
-- **Integration confidence**: Ability to add new profession types
-
-### **Documentation Effectiveness**
-- **Self-service capability**: Developers find answers without asking teammates
-- **Consistency**: Similar professional patterns documented similarly
-- **Maintenance burden**: Documentation updates are part of normal development flow
-
-## **🎯 Key Reminder**
-
-**JSDoc comments are meant to enhance the onboarding experience by helping developers understand the creator economy architecture, professional attribution systems, and multi-tenant organizational boundaries—not to overwhelm them with unnecessary details.**
-
-**Always update existing files in-place, never create new files. Preserve all existing code structure, comments, and logic while adding JSDoc documentation to enhance architectural understanding.**
-
-**Focus on accelerating developer understanding of professional workflows, creator economy systems, and multi-tenant organizational design, not restating what the code already expresses clearly.** 🎯
-
-## **🌟 Creator Economy Focus Areas**
-
-### **Professional Identity Management**
-- How users maintain multiple professional profiles
-- Cross-organizational professional identity preservation
-- Professional verification and credentialing workflows
-
-### **Content Attribution Systems**
-- Brand attribution for organizational content
-- Professional attribution for individual creators
-- Multi-professional collaboration on content projects
-
-### **Revenue and Recognition Models**
-- Professional revenue sharing and attribution
-- Cross-organizational revenue tracking
-- Professional performance and reputation systems
-
-### **Organizational Boundary Management**
-- How professionals operate within organizational contexts
-- Cross-organizational collaboration workflows
-- Professional affiliation and membership systems
-
-This documentation approach ensures developers understand both the technical architecture and the business context of your sophisticated creator economy platform! 🚀
+**Always preserve existing code while adding architectural context that enables confident system extension and creator economy workflow implementation.** 🎯
