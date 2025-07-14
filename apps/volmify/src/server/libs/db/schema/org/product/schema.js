@@ -54,6 +54,7 @@ import {
 	deletedAt,
 	getLocaleKey,
 	id,
+	orgTableName,
 	slug,
 	table,
 	updatedAt,
@@ -118,8 +119,8 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "active", "a
  * for separate pricing tables while maintaining sophisticated pricing strategies and promotional
  * campaign compatibility.
  */
-export const product = table(
-	"product",
+export const orgProduct = table(
+	`${orgTableName}_product`,
 	{
 		id: id.notNull(),
 
@@ -128,7 +129,7 @@ export const product = table(
 		 * @businessRule All product operations must respect organizational boundaries
 		 * @multiTenant Enables independent product catalog management per org
 		 */
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id),
 
@@ -171,10 +172,10 @@ export const product = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_slug_org").on(t.organizationId, t.slug),
+		uniqueIndex("uq_product_slug_org").on(t.orgId, t.slug),
 
 		// Performance Indexes
-		index("idx_product_organization").on(t.organizationId),
+		index("idx_product_organization").on(t.orgId),
 		index("idx_product_status").on(t.status),
 		index("idx_product_type").on(t.type),
 		index("idx_product_deleted_at").on(t.deletedAt),
@@ -182,8 +183,8 @@ export const product = table(
 
 		// Composite Indexes for Common Queries
 		index("idx_product_status_type").on(t.status, t.type),
-		index("idx_product_org_status").on(t.organizationId, t.status),
-		index("idx_product_org_type").on(t.organizationId, t.type),
+		index("idx_product_org_status").on(t.orgId, t.status),
+		index("idx_product_org_type").on(t.orgId, t.type),
 	],
 );
 
@@ -218,7 +219,7 @@ export const productTranslation = table(
 		 */
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @localizationContext Target locale for this translation content
@@ -306,7 +307,7 @@ export const productVariant = table(
 		 */
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @businessRule URL-safe identifier unique within product
@@ -543,14 +544,14 @@ export const productInstructorAttribution = table(
 		 */
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @organizationContext Org context for this professional attribution
 		 * @businessRule Ensures attribution operates within organizational boundaries
 		 * @multiTenant Maintains organizational isolation while enabling professional attribution
 		 */
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id),
 
@@ -575,15 +576,11 @@ export const productInstructorAttribution = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_instructor_org").on(
-			t.productId,
-			t.instructorProfileId,
-			t.organizationId,
-		),
+		uniqueIndex("uq_product_instructor_org").on(t.productId, t.instructorProfileId, t.orgId),
 
 		// Performance Indexes for Professional Queries
 		index("idx_product_instructor_profile").on(t.instructorProfileId),
-		index("idx_product_instructor_org").on(t.organizationId),
+		index("idx_product_instructor_org").on(t.orgId),
 		index("idx_product_instructor_product").on(t.productId),
 		index("idx_product_instructor_primary").on(t.isPrimary),
 
@@ -631,7 +628,7 @@ export const productBrandAttribution = table(
 		 */
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @brandHierarchy Primary brand attribution for main brand presentation
@@ -680,7 +677,7 @@ export const discountProduct = table(
 			.references(() => discount.id, { onDelete: "cascade" }),
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.productId] }),

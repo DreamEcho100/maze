@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
 import { createdAt, fk, getLocaleKey, id, updatedAt, userTableName } from "../../../_utils/helpers";
-import { product } from "../../../org/product/schema";
+import { orgProduct } from "../../../org/product/schema";
 import { instructorOrgAffiliation } from "../../../org/schema";
 import { contactInfo } from "../../../system/contact-info/schema";
 import { locale } from "../../../system/locale-currency-market/schema";
@@ -172,7 +172,7 @@ export const userInstructorProfileRevenue = table(
 			.references(() => instructorOrgAffiliation.id),
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id),
+			.references(() => orgProduct.id),
 		// Connect to order/transaction tables when implemented
 		orderId: text("order_id"), // Will reference order table
 		revenueAmount: decimal("revenue_amount", { precision: 12, scale: 2 }),

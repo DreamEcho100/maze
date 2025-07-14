@@ -22,7 +22,7 @@ import { locale } from "../../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../../system/seo/schema";
 import { user } from "../../../../user/schema";
 import { org, orgMember } from "../../../schema";
-import { product } from "../../schema";
+import { orgProduct } from "../../schema";
 import {
 	lesson,
 	lessonTranslation,
@@ -56,9 +56,9 @@ export const productCourseRelations = relations(productCourse, ({ one, many }) =
 	 * @ctiReference Course specializes base product for educational content delivery
 	 * @businessContext Links course content to product commerce and marketing infrastructure
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [productCourse.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 
 	/**
@@ -461,7 +461,7 @@ export const lessonRelations = relations(lesson, ({ one, many }) => ({
 	 * @contentManagement Enables organizational lesson libraries and reusability
 	 */
 	org: one(org, {
-		fields: [lesson.organizationId],
+		fields: [lesson.orgId],
 		references: [org.id],
 	}),
 

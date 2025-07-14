@@ -39,7 +39,7 @@ export const seoMetadata = table(
 	"seo_metadata",
 	{
 		id: id.notNull(),
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -87,7 +87,7 @@ export const seoMetadata = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_seo_organization").on(t.organizationId),
+		index("idx_seo_organization").on(t.orgId),
 		index("idx_seo_canonical").on(t.canonicalUrl),
 		index("idx_seo_status").on(t.status),
 		index("idx_seo_focus_keyword").on(t.focusKeyword),
@@ -393,7 +393,7 @@ export const seoAuditLog = table(
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -417,7 +417,7 @@ export const seoAuditLog = table(
 	},
 	(t) => [
 		index("idx_seo_audit_metadata").on(t.seoMetadataId),
-		index("idx_seo_audit_organization").on(t.organizationId),
+		index("idx_seo_audit_organization").on(t.orgId),
 		index("idx_seo_audit_type").on(t.changeType),
 		index("idx_seo_audit_table").on(t.changedTable),
 		index("idx_seo_audit_date").on(t.createdAt),

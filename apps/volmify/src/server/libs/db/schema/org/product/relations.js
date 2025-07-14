@@ -37,7 +37,7 @@ import { productVariantPaymentPlan } from "./payment/schema.js";
 import {
 	discountProduct,
 	discountVariant,
-	product,
+	orgProduct,
 	productBrandAttribution,
 	productInstructorAttribution,
 	// productPrice,
@@ -67,14 +67,14 @@ import {
  * revenue sharing and professional identity workflows across organizational boundaries.
  * Payment plan integration scales across product types while maintaining promotional compatibility.
  */
-export const productRelations = relations(product, ({ one, many }) => ({
+export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	/**
 	 * @organizationScope Org that owns and manages this product
 	 * @businessContext Multi-tenant product catalog within organizational boundaries
 	 * @creatorEconomy Organizational context for professional attribution and revenue workflows
 	 */
 	org: one(org, {
-		fields: [product.organizationId],
+		fields: [orgProduct.orgId],
 		references: [org.id],
 	}),
 
@@ -121,7 +121,7 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	instructorAttributions: many(productInstructorAttribution),
 
 	courseSpecialization: one(productCourse, {
-		fields: [product.id],
+		fields: [orgProduct.id],
 		references: [productCourse.productId],
 	}),
 }));
@@ -143,9 +143,9 @@ export const productTranslationRelations = relations(productTranslation, ({ one 
 	 * @businessContext Enables multi-language product marketing and conversion optimization
 	 * @globalStrategy Region-specific messaging for international market penetration
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [productTranslation.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 
 	/**
@@ -180,9 +180,9 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 	 * @businessContext Variants provide purchasable variations of core product content
 	 * @contentSeparation Product handles marketing, variant handles commerce and pricing
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [productVariant.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 
 	translations: many(productVariantTranslation),
@@ -258,9 +258,9 @@ export const productInstructorAttributionRelations = relations(
 		 * @businessContext Links professional contribution to specific content for revenue tracking
 		 * @revenueCalculation Basis for creator compensation and professional recognition workflows
 		 */
-		product: one(product, {
+		product: one(orgProduct, {
 			fields: [productInstructorAttribution.productId],
-			references: [product.id],
+			references: [orgProduct.id],
 		}),
 
 		/**
@@ -269,7 +269,7 @@ export const productInstructorAttributionRelations = relations(
 		 * @multiTenant Maintains organizational isolation while enabling professional collaboration
 		 */
 		org: one(org, {
-			fields: [productInstructorAttribution.organizationId],
+			fields: [productInstructorAttribution.orgId],
 			references: [org.id],
 		}),
 	}),
@@ -302,9 +302,9 @@ export const productBrandAttributionRelations = relations(productBrandAttributio
 	 * @businessContext Links brand identity to specific product for marketing consistency
 	 * @marketingStrategy Enables brand-specific product presentation and promotional campaigns
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [productBrandAttribution.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 }));
 
@@ -335,9 +335,9 @@ export const discountProductRelations = relations(discountProduct, ({ one }) => 
 	 * @businessContext Links promotional strategy to specific product for targeted marketing
 	 * @revenueStrategy Enables product-specific promotional pricing and conversion optimization
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [discountProduct.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 }));
 

@@ -25,7 +25,7 @@ import { locale } from "../../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../../system/seo/schema";
 import { user } from "../../../../user/schema";
 import { org, orgMember } from "../../../schema";
-import { product } from "../../schema";
+import { orgProduct } from "../../schema";
 
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?
 export const productCourseLevelEnum = pgEnum("product_course_level", [
@@ -43,7 +43,7 @@ export const productCourse = table(
 		// Which make sense to this project?
 		// I mean, what is the difference between a product and a product variant, how they work together, how they are related, and help in this context?
 		productId: fk("product_id")
-			.references(() => product.id)
+			.references(() => orgProduct.id)
 			.notNull(),
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
@@ -186,7 +186,7 @@ export const skill = table(
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
-		createdByOrganizationId: fk("created_by_organization_id")
+		createdByOrganizationId: fk("created_by_org_id")
 			.references(() => org.id)
 			.notNull(),
 
@@ -633,17 +633,14 @@ export const lesson = table(
 	"lesson",
 	{
 		id: id.notNull(),
-		organizationId: fk("organization_id")
+		orgId: fk("org_id")
 			.references(() => org.id)
 			.notNull(),
 		type: lessonTypeEnum("type").notNull(),
 	},
 	(t) => {
 		const base = "lesson";
-		return [
-			index(`idx_${base}_organization`).on(t.organizationId),
-			index(`idx_${base}_type`).on(t.type),
-		];
+		return [index(`idx_${base}_organization`).on(t.orgId), index(`idx_${base}_type`).on(t.type)];
 	},
 );
 

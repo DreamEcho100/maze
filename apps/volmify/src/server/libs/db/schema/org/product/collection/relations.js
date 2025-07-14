@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { org } from "../../schema.js";
 import { discount } from "../offers/schema.js";
-import { product } from "../schema.js";
+import { orgProduct } from "../schema.js";
 import { collection, discountCollection, productCollection } from "./schema.js";
 
 /**
@@ -23,7 +23,7 @@ export const collectionRelations = relations(collection, ({ one, many }) => ({
 	 * @permissionContext Determines who can manage this collection
 	 */
 	org: one(org, {
-		fields: [collection.organizationId],
+		fields: [collection.orgId],
 		references: [org.id],
 	}),
 
@@ -53,9 +53,9 @@ export const productCollectionRelations = relations(productCollection, ({ one })
 	/**
 	 * @abacSubject Product being assigned to a collection
 	 */
-	product: one(product, {
+	product: one(orgProduct, {
 		fields: [productCollection.productId],
-		references: [product.id],
+		references: [orgProduct.id],
 	}),
 
 	/**

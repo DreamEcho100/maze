@@ -23,13 +23,13 @@ import {
  * @relationModel discountRelations
  * @domainModel Discount
  * @abacRole marketing_admin
- * @permissionContext organization_id
+ * @permissionContext org_id
  * @lifecycleWindow startsAt–endsAt, isActive
  * @auditTrail track:coupon, promotion, usage, collection, product, variant
  */
 export const discountRelations = relations(discount, ({ one, many }) => ({
 	org: one(org, {
-		fields: [discount.organizationId],
+		fields: [discount.orgId],
 		references: [org.id],
 	}),
 	currency: one(currency, {
@@ -70,11 +70,11 @@ export const discountTranslationRelations = relations(discountTranslation, ({ on
  * @relationModel couponRelations
  * @domainModel Coupon
  * @abacRole marketing_admin
- * @permissionContext organization_id
+ * @permissionContext org_id
  */
 export const couponRelations = relations(coupon, ({ one, many }) => ({
 	org: one(org, {
-		fields: [coupon.organizationId],
+		fields: [coupon.orgId],
 		references: [org.id],
 	}),
 	discount: one(discount, {
@@ -126,13 +126,13 @@ export const discountUsageRelations = relations(discountUsage, ({ one }) => ({
  * @relationModel giftCardRelations
  * @domainModel GiftCard
  * @abacRole finance_admin
- * @permissionContext organization_id
+ * @permissionContext org_id
  * @auditTrail true
  * @compensationModel prepaid_balance
  */
 export const giftCardRelations = relations(giftCard, ({ one, many }) => ({
 	org: one(org, {
-		fields: [giftCard.organizationId],
+		fields: [giftCard.orgId],
 		references: [org.id],
 	}),
 	currency: one(currency, {
@@ -189,12 +189,12 @@ export const giftCardUsageRelations = relations(giftCardUsage, ({ one }) => ({
  * @relationModel promotionRelations
  * @domainModel Promotion
  * @abacRole marketing_admin
- * @permissionContext organization_id
+ * @permissionContext org_id
  * @lifecycleWindow startsAt–endsAt, isActive
  */
 export const promotionRelations = relations(promotion, ({ one, many }) => ({
 	org: one(org, {
-		fields: [promotion.organizationId],
+		fields: [promotion.orgId],
 		references: [org.id],
 	}),
 	translations: many(promotionTranslation),

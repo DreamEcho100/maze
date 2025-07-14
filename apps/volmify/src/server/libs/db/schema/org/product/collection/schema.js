@@ -2,7 +2,7 @@ import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, id, table, updatedAt } from "../../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { discount } from "../offers/schema.js";
-import { product } from "../schema.js";
+import { orgProduct } from "../schema.js";
 
 /**
  * @domainModel Product Collection
@@ -32,7 +32,7 @@ export const collection = table(
 		 * @abacScope FK to the owning org
 		 * @integrationContext Determines access scope and permission context
 		 */
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -70,10 +70,10 @@ export const collection = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_collection_organization").on(t.organizationId),
+		index("idx_collection_organization").on(t.orgId),
 		index("idx_collection_deleted_at").on(t.deletedAt),
 		index("idx_collection_name").on(t.name),
-		uniqueIndex("uq_collection_slug_org").on(t.organizationId, t.slug),
+		uniqueIndex("uq_collection_slug_org").on(t.orgId, t.slug),
 	],
 );
 
@@ -93,7 +93,7 @@ export const productCollection = table(
 		 */
 		productId: text("product_id")
 			.notNull()
-			.references(() => product.id, { onDelete: "cascade" }),
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @abacLink Collection it is part of

@@ -89,7 +89,7 @@ export const productVariantPaymentPlanRelations = relations(
 		 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 		 */
 		org: one(org, {
-			fields: [productVariantPaymentPlan.organizationId],
+			fields: [productVariantPaymentPlan.orgId],
 			references: [org.id],
 		}),
 
@@ -440,7 +440,7 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 	 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 	 */
 	org: one(org, {
-		fields: [userSubscription.organizationId],
+		fields: [userSubscription.orgId],
 		references: [org.id],
 	}),
 

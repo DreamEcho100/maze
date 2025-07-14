@@ -192,7 +192,7 @@ export const productVariantPaymentPlan = table(
 		 * @abacRole Plan creation/update restricted to org owners/managers
 		 * @multiTenant Separates plan configuration per organizational boundary
 		 */
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id),
 
@@ -340,7 +340,7 @@ export const productVariantPaymentPlan = table(
 		// Performance Indexes
 		index("idx_variant_payment_plan_type").on(t.type), // CTI performance critical
 		index("idx_variant_payment_plan_variant").on(t.variantId),
-		index("idx_variant_payment_plan_org").on(t.organizationId),
+		index("idx_variant_payment_plan_org").on(t.orgId),
 		index("idx_variant_payment_plan_market").on(t.marketId),
 		index("idx_variant_payment_plan_currency").on(t.currencyCode),
 		index("idx_variant_payment_plan_active").on(t.isActive),
@@ -905,7 +905,7 @@ export const usageBasedPaymentPlanTranslation = table(
  * enabling internal team subscriptions alongside external customer sales workflows
  * for comprehensive organizational subscription management.
  *
- * @abacScope tenant: organizationId, subject: userId || organizationMemberId
+ * @abacScope tenant: orgId, subject: userId || organizationMemberId
  * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
  * @ctiBinding Concrete customer-side realization of a payment plan, enabling separation
  * of billing strategy from usage enforcement
@@ -941,7 +941,7 @@ export const userSubscription = table(
 		 * @organizationScope Org context for this subscription
 		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
-		organizationId: text("organization_id")
+		orgId: text("org_id")
 			.notNull()
 			.references(() => org.id),
 
@@ -1008,7 +1008,7 @@ export const userSubscription = table(
 		// Performance indexes for subscription management
 		index("idx_user_subscription_user").on(t.userId),
 		index("idx_user_subscription_plan").on(t.planId),
-		index("idx_user_subscription_org").on(t.organizationId),
+		index("idx_user_subscription_org").on(t.orgId),
 		index("idx_user_subscription_status").on(t.status),
 		index("idx_user_subscription_member").on(t.organizationMemberId),
 		index("idx_user_subscription_access").on(t.accessExpiresAt),
@@ -1017,6 +1017,6 @@ export const userSubscription = table(
 
 		// Revenue Analytics Indexes
 		index("idx_user_subscription_revenue").on(t.totalPaid, t.currencyCode),
-		index("idx_user_subscription_org_revenue").on(t.organizationId, t.totalPaid),
+		index("idx_user_subscription_org_revenue").on(t.orgId, t.totalPaid),
 	],
 );
