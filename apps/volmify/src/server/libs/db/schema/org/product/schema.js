@@ -79,7 +79,12 @@ import { paymentPlanTypeEnum } from "./payment/schema.js";
  * - course: Educational content with instructor attribution and creator economy workflows
  * - service: Professional services and consultations with booking and delivery workflows
  */
-export const productTypeEnum = pgEnum("product_type", ["physical", "digital", "course", "service"]);
+export const productTypeEnum = pgEnum(`${orgTableName}_product_type`, [
+	"physical",
+	"digital",
+	"course",
+	"service",
+]);
 
 /**
  * Product Status - Content Lifecycle Management
@@ -89,12 +94,17 @@ export const productTypeEnum = pgEnum("product_type", ["physical", "digital", "c
  * - active: Published and available for purchase through all channels
  * - archived: Discontinued but existing purchases and subscriptions remain valid
  */
-export const productStatusEnum = pgEnum("product_status", ["draft", "active", "archived"]);
+export const productStatusEnum = pgEnum(`${orgTableName}_product_status`, [
+	"draft",
+	"active",
+	"archived",
+]);
 
 // -------------------------------------
 // CORE PRODUCT CATALOG
 // -------------------------------------
 
+const orgProductTableName = `${orgTableName}_product`;
 /**
  * Product - Multi-Tenant E-commerce Product Foundation
  *
@@ -120,7 +130,7 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "active", "a
  * campaign compatibility.
  */
 export const orgProduct = table(
-	`${orgTableName}_product`,
+	orgProductTableName,
 	{
 		id: id.notNull(),
 
@@ -139,9 +149,6 @@ export const orgProduct = table(
 		 * @marketingStrategy Enables memorable and brandable product URLs
 		 */
 		slug: slug.notNull(),
-
-		title: varchar("title", { length: 256 }).notNull(),
-		description: text("description"),
 
 		/**
 		 * @businessRule Controls product visibility and purchase availability
@@ -172,19 +179,19 @@ export const orgProduct = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_slug_org").on(t.orgId, t.slug),
+		uniqueIndex(`uq_${orgProductTableName}_slug_org`).on(t.orgId, t.slug),
 
 		// Performance Indexes
-		index("idx_product_organization").on(t.orgId),
-		index("idx_product_status").on(t.status),
-		index("idx_product_type").on(t.type),
-		index("idx_product_deleted_at").on(t.deletedAt),
-		index("idx_product_created_at").on(t.createdAt),
+		index(`idx_${orgProductTableName}_organization`).on(t.orgId),
+		index(`idx_${orgProductTableName}_status`).on(t.status),
+		index(`idx_${orgProductTableName}_type`).on(t.type),
+		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
+		index(`idx_${orgProductTableName}_created_at`).on(t.createdAt),
 
 		// Composite Indexes for Common Queries
-		index("idx_product_status_type").on(t.status, t.type),
-		index("idx_product_org_status").on(t.orgId, t.status),
-		index("idx_product_org_type").on(t.orgId, t.type),
+		index(`idx_${orgProductTableName}_status_type`).on(t.status, t.type),
+		index(`idx_${orgProductTableName}_org_status`).on(t.orgId, t.status),
+		index(`idx_${orgProductTableName}_org_type`).on(t.orgId, t.type),
 	],
 );
 
@@ -192,6 +199,7 @@ export const orgProduct = table(
 // PRODUCT INTERNATIONALIZATION
 // -------------------------------------
 
+const orgProductTranslationTableName = `${orgProductTableName}_translation`;
 /**
  * Product Translation - Multi-language Product Content
  *
@@ -208,7 +216,7 @@ export const orgProduct = table(
  * and creator attribution workflows.
  */
 export const productTranslation = table(
-	"product_translation",
+	orgProductTranslationTableName,
 	{
 		id: id.notNull(),
 
@@ -217,7 +225,7 @@ export const productTranslation = table(
 		 * @cascadeDelete Translation content removed when product is deleted
 		 * @businessRule Maintains translation data integrity with product lifecycle
 		 */
-		productId: text("product_id")
+		productId: text(`${orgTableName}_product_id`)
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -255,15 +263,18 @@ export const productTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_product_translation_product_locale_key").on(t.productId, t.localeKey),
-		uniqueIndex("uq_product_translation_default")
+		uniqueIndex(`uq_${orgProductTranslationTableName}_product_locale_key`).on(
+			t.productId,
+			t.localeKey,
+		),
+		uniqueIndex(`uq_${orgProductTranslationTableName}_default`)
 			.on(t.productId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_product_translation_product").on(t.productId),
-		index("idx_product_translation_locale_key").on(t.localeKey),
-		index("idx_product_translation_seo").on(t.seoMetadataId),
+		index(`idx_${orgProductTranslationTableName}_product`).on(t.productId),
+		index(`idx_${orgProductTranslationTableName}_locale_key`).on(t.localeKey),
+		index(`idx_${orgProductTranslationTableName}_seo`).on(t.seoMetadataId),
 	],
 );
 
@@ -271,6 +282,7 @@ export const productTranslation = table(
 // PRODUCT VARIANTS (E-COMMERCE FOUNDATION)
 // -------------------------------------
 
+const orgProductVariant = `${orgProductTableName}_variant`;
 /**
  * Product Variant - E-commerce Variation and Commerce Foundation
  *
@@ -296,7 +308,7 @@ export const productTranslation = table(
  * or organizational business model.
  */
 export const productVariant = table(
-	"product_variant",
+	orgProductVariant,
 	{
 		id: id.notNull(),
 
@@ -422,28 +434,28 @@ export const productVariant = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_variant_slug").on(t.productId, t.slug),
-		uniqueIndex("uq_product_variant_default")
+		uniqueIndex(`uq_${orgProductVariant}_slug`).on(t.productId, t.slug),
+		uniqueIndex(`uq_${orgProductVariant}_default`)
 			.on(t.productId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_product_variant_product").on(t.productId),
-		index("idx_product_variant_active").on(t.isActive),
-		index("idx_product_variant_sort").on(t.sortOrder),
-		index("idx_product_variant_default").on(t.isDefault),
+		index(`idx_${orgProductVariant}_product`).on(t.productId),
+		index(`idx_${orgProductVariant}_active`).on(t.isActive),
+		index(`idx_${orgProductVariant}_sort`).on(t.sortOrder),
+		index(`idx_${orgProductVariant}_default`).on(t.isDefault),
 	],
 );
 
 export const productVariantTranslation = table(
-	"product_variant_translation",
+	`${orgTableName}_product_variant_translation`,
 	{
 		id: id.notNull(),
 
 		/**
 		 * @translationTarget Product variant this localized content applies to
 		 */
-		productVariantId: text("product_variant_id")
+		productVariantId: text(`${orgTableName}_product_variant_id`)
 			.notNull()
 			.references(() => productVariant.id, { onDelete: "cascade" }),
 
@@ -526,7 +538,7 @@ export const productVariantTranslation = table(
  * purchase revenue generated by attributed content.
  */
 export const productInstructorAttribution = table(
-	"product_instructor_attribution",
+	`${orgTableName}_product_instructor_attribution`,
 	{
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
@@ -542,7 +554,7 @@ export const productInstructorAttribution = table(
 		 * @businessRule Links professional contribution to specific organizational content
 		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
 		 */
-		productId: text("product_id")
+		productId: text(`${orgTableName}_product_id`)
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -610,7 +622,7 @@ export const productInstructorAttribution = table(
  * customer experience across all product touchpoints and marketing channels.
  */
 export const productBrandAttribution = table(
-	"product_brand_attribution",
+	`${orgTableName}_product_brand_attribution`,
 	{
 		/**
 		 * @brandIdentity Org brand this product is attributed to
@@ -626,7 +638,7 @@ export const productBrandAttribution = table(
 		 * @businessRule Links brand identity to specific product for marketing consistency
 		 * @customerExperience Ensures consistent brand presentation in product discovery
 		 */
-		productId: text("product_id")
+		productId: text(`${orgTableName}_product_id`)
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -675,7 +687,7 @@ export const discountProduct = table(
 		discountId: text("discount_id")
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
-		productId: text("product_id")
+		productId: text(`${orgTableName}_product_id`)
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 	},
