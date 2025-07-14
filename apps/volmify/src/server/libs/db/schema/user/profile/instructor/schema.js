@@ -11,7 +11,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { createdAt, fk, id, updatedAt } from "../../../_utils/helpers";
+import { createdAt, fk, id, updatedAt, userTableName } from "../../../_utils/helpers";
 import { instructorOrgAffiliation } from "../../../org/schema";
 import { product } from "../../../product/schema";
 import { contactInfo } from "../../../system/contact-info/schema";
@@ -25,10 +25,10 @@ import { user } from "../../../user/schema";
  * Can participate across multiple organizations while maintaining identity
  */
 export const userInstructorProfile = table(
-	"user_instructor_profile",
+	`${userTableName}_instructor_profile`,
 	{
 		id: id.notNull(),
-		userId: text("user_id")
+		userId: text(`${userTableName}_id`)
 			.notNull()
 			.references(() => user.id),
 		slug: text("slug").notNull(),
@@ -94,10 +94,10 @@ export const userInstructorProfile = table(
 );
 
 export const userInstructorProfileTranslation = table(
-	"user_instructor_profile_translation",
+	`${userTableName}_instructor_profile_translation`,
 	{
 		id: id.notNull(),
-		userInstructorProfileId: fk("user_instructor_profile_id")
+		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		locale: text("locale").notNull(),
@@ -133,7 +133,7 @@ export const userInstructorProfileTranslation = table(
 );
 
 export const userInstructorProfileContactInfo = table(
-	"user_instructor_profile_contact_info",
+	`${userTableName}_instructor_profile_contact_info`,
 	{
 		id: id.notNull(),
 		instructorProfileId: text("instructor_profile_id")
@@ -161,7 +161,7 @@ export const userInstructorProfileContactInfo = table(
  * Supports the vendorRevenue connection mentioned in course schema
  */
 export const userInstructorProfileRevenue = table(
-	"user_instructor_profile_revenue",
+	`${userTableName}_instructor_profile_revenue`,
 	{
 		id: id.notNull(),
 		instructorMembershipId: text("instructor_membership_id")
@@ -185,10 +185,10 @@ export const userInstructorProfileRevenue = table(
 );
 
 export const userInstructorProfileMetrics = table(
-	"user_instructor_profile_metrics",
+	`${userTableName}_instructor_profile_metrics`,
 	{
 		id: id.notNull(),
-		userInstructorProfileId: fk("user_instructor_profile_id")
+		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		// Engagement metrics
@@ -265,10 +265,10 @@ export const userInstructorProfileMetrics = table(
 	],
 );
 export const userInstructorProfileCoursesMetrics = table(
-	"user_instructor_profile_courses_metrics",
+	`${userTableName}_instructor_profile_courses_metrics`,
 	{
 		id: id.notNull(),
-		userInstructorProfileId: fk("user_instructor_profile_id")
+		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		amount: integer("amount").default(0),

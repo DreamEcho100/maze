@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { lesson, productCourseEnrollment, skill } from "../product/by-type/course/schema.js";
 import { productVariantPaymentPlan } from "../product/payment/schema.js";
 import { productBrandAttribution, productInstructorAttribution } from "../product/schema.js";
-import { country, currency, marketTemplate } from "../system/currency-and-market/schema.js";
+import { country, currency, marketTemplate } from "../system/locale-currency-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";

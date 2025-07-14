@@ -30,7 +30,7 @@
 
 import { relations } from "drizzle-orm";
 import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
-import { currency } from "../../system/currency-and-market/schema.js";
+import { currency } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { productVariant } from "../schema.js";

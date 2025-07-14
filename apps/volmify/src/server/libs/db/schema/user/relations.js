@@ -6,12 +6,17 @@ import {
 	userLearningProfile,
 } from "../product/by-type/course/schema.js";
 import { userInstructorProfile } from "./profile/instructor/schema.js";
-import { passwordResetSession, session, user, userEmailVerificationRequests } from "./schema.js";
+import {
+	user,
+	userEmailVerificationRequest,
+	userPasswordResetSession,
+	userSession,
+} from "./schema.js";
 
 export const userRelations = relations(user, ({ many }) => ({
-	sessions: many(session),
-	userEmailVerificationRequests: many(userEmailVerificationRequests),
-	passwordResetSessions: many(passwordResetSession),
+	sessions: many(userSession),
+	userEmailVerificationRequests: many(userEmailVerificationRequest),
+	passwordResetSessions: many(userPasswordResetSession),
 	organizationMemberships: many(orgMember),
 	invitationsSent: many(orgMemberInvitation),
 	affiliations: many(instructorOrgAffiliation),
@@ -19,24 +24,24 @@ export const userRelations = relations(user, ({ many }) => ({
 	courseProductsChallengeRatings: many(productCourseChallengeRating),
 	learningProfile: many(userLearningProfile),
 }));
-export const sessionRelations = relations(session, ({ one }) => ({
+export const userSessionRelations = relations(userSession, ({ one }) => ({
 	user: one(user, {
-		fields: [session.userId],
+		fields: [userSession.userId],
 		references: [user.id],
 	}),
 }));
-export const emailVerificationRequestRelations = relations(
-	userEmailVerificationRequests,
+export const userEmailVerificationRequestRelations = relations(
+	userEmailVerificationRequest,
 	({ one }) => ({
 		user: one(user, {
-			fields: [userEmailVerificationRequests.userId],
+			fields: [userEmailVerificationRequest.userId],
 			references: [user.id],
 		}),
 	}),
 );
-export const passwordResetSessionRelations = relations(passwordResetSession, ({ one }) => ({
+export const userPasswordResetSessionRelations = relations(userPasswordResetSession, ({ one }) => ({
 	user: one(user, {
-		fields: [passwordResetSession.userId],
+		fields: [userPasswordResetSession.userId],
 		references: [user.id],
 	}),
 }));

@@ -32,21 +32,21 @@ const userReturnSchema = /** @type {const} */ ({
 });
 
 const sessionReturnTemplate = {
-	id: dbSchema.session.id,
-	userId: dbSchema.session.userId,
-	createdAt: dbSchema.session.createdAt,
-	updatedAt: dbSchema.session.updatedAt,
-	expiresAt: dbSchema.session.expiresAt,
-	ipAddress: dbSchema.session.ipAddress,
-	userAgent: dbSchema.session.userAgent,
-	twoFactorVerifiedAt: dbSchema.session.twoFactorVerifiedAt,
+	id: dbSchema.userSession.id,
+	userId: dbSchema.userSession.userId,
+	createdAt: dbSchema.userSession.createdAt,
+	updatedAt: dbSchema.userSession.updatedAt,
+	expiresAt: dbSchema.userSession.expiresAt,
+	ipAddress: dbSchema.userSession.ipAddress,
+	userAgent: dbSchema.userSession.userAgent,
+	twoFactorVerifiedAt: dbSchema.userSession.twoFactorVerifiedAt,
 	//
-	authStrategy: dbSchema.session.authStrategy,
-	revokedAt: dbSchema.session.revokedAt,
-	lastUsedAt: dbSchema.session.lastUsedAt,
-	metadata: dbSchema.session.metadata,
-	lastVerifiedAt: dbSchema.session.lastVerifiedAt,
-	lastExtendedAt: dbSchema.session.lastExtendedAt,
+	authStrategy: dbSchema.userSession.authStrategy,
+	revokedAt: dbSchema.userSession.revokedAt,
+	lastUsedAt: dbSchema.userSession.lastUsedAt,
+	metadata: dbSchema.userSession.metadata,
+	lastVerifiedAt: dbSchema.userSession.lastVerifiedAt,
+	lastExtendedAt: dbSchema.userSession.lastExtendedAt,
 };
 const sessionReturnSchema = /** @type {const} */ ({
 	id: true,
@@ -65,12 +65,12 @@ const sessionReturnSchema = /** @type {const} */ ({
 });
 
 const emailVerificationRequestReturnTemplate = {
-	id: dbSchema.userEmailVerificationRequests.id,
-	code: dbSchema.userEmailVerificationRequests.code,
-	userId: dbSchema.userEmailVerificationRequests.userId,
-	expiresAt: dbSchema.userEmailVerificationRequests.expiresAt,
-	createdAt: dbSchema.userEmailVerificationRequests.createdAt,
-	email: dbSchema.userEmailVerificationRequests.email,
+	id: dbSchema.userEmailVerificationRequest.id,
+	code: dbSchema.userEmailVerificationRequest.code,
+	userId: dbSchema.userEmailVerificationRequest.userId,
+	expiresAt: dbSchema.userEmailVerificationRequest.expiresAt,
+	createdAt: dbSchema.userEmailVerificationRequest.createdAt,
+	email: dbSchema.userEmailVerificationRequest.email,
 };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _emailVerificationRequestReturnSchema = /** @type {const} */ ({
@@ -83,14 +83,14 @@ const _emailVerificationRequestReturnSchema = /** @type {const} */ ({
 });
 
 const passwordResetSessionReturnTemplate = {
-	id: dbSchema.passwordResetSession.id,
-	userId: dbSchema.passwordResetSession.userId,
-	twoFactorVerifiedAt: dbSchema.passwordResetSession.twoFactorVerifiedAt,
-	expiresAt: dbSchema.passwordResetSession.expiresAt,
-	code: dbSchema.passwordResetSession.code,
-	createdAt: dbSchema.passwordResetSession.createdAt,
-	email: dbSchema.passwordResetSession.email,
-	emailVerifiedAt: dbSchema.passwordResetSession.emailVerifiedAt,
+	id: dbSchema.userPasswordResetSession.id,
+	userId: dbSchema.userPasswordResetSession.userId,
+	twoFactorVerifiedAt: dbSchema.userPasswordResetSession.twoFactorVerifiedAt,
+	expiresAt: dbSchema.userPasswordResetSession.expiresAt,
+	code: dbSchema.userPasswordResetSession.code,
+	createdAt: dbSchema.userPasswordResetSession.createdAt,
+	email: dbSchema.userPasswordResetSession.email,
+	emailVerifiedAt: dbSchema.userPasswordResetSession.emailVerifiedAt,
 };
 const passwordResetSessionReturnSchema = /** @type {const} */ ({
 	id: true,
@@ -315,7 +315,7 @@ export const createOneSession = async (props) => {
 	const createdAt = new Date();
 	const [session, user] = await Promise.all([
 		db
-			.insert(dbSchema.session)
+			.insert(dbSchema.userSession)
 			.values({
 				...props.data,
 				expiresAt: dateLikeToDate(props.data.expiresAt),
@@ -346,11 +346,11 @@ export const createOneSession = async (props) => {
 };
 /** @type {SessionsProvider['findOneWithUser']} */
 export const findOneSessionWithUser = async (sessionId) => {
-	return db.query.session
+	return db.query.userSession
 		.findFirst({
 			with: { user: { columns: userReturnSchema } },
 			columns: sessionReturnSchema,
-			where: and(eq(dbSchema.session.id, sessionId), isNull(dbSchema.session.revokedAt)),
+			where: and(eq(dbSchema.userSession.id, sessionId), isNull(dbSchema.userSession.revokedAt)),
 		})
 		.then(async (result) => {
 			if (!result) return null;
@@ -370,33 +370,33 @@ export const extendOneSessionExpirationDate = async (props, options) => {
 		db;
 	const updatedAt = new Date();
 	return db
-		.update(dbSchema.session)
+		.update(dbSchema.userSession)
 		.set({
 			expiresAt: dateLikeToDate(props.data.expiresAt),
 			lastExtendedAt: updatedAt,
 			updatedAt,
 		})
-		.where(eq(dbSchema.session.id, props.where.id))
+		.where(eq(dbSchema.userSession.id, props.where.id))
 		.returning(sessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
 /** @type {SessionsProvider['deleteOneById']} */
 export const deleteOneSessionById = async (sessionId) => {
-	await db.delete(dbSchema.session).where(eq(dbSchema.session.id, sessionId));
+	await db.delete(dbSchema.userSession).where(eq(dbSchema.userSession.id, sessionId));
 };
 /** @type {SessionsProvider['deleteAllByUserId']} */
 export const deleteAllSessionsByUserId = async (props, options) => {
 	const _db =
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
-	await _db.delete(dbSchema.session).where(eq(dbSchema.session.userId, props.where.userId));
+	await _db.delete(dbSchema.userSession).where(eq(dbSchema.userSession.userId, props.where.userId));
 };
 /** @type {SessionsProvider['revokeOneById']} */
 export const revokeOneSessionById = async (id) => {
 	await db
-		.update(dbSchema.session)
+		.update(dbSchema.userSession)
 		.set({ revokedAt: new Date(), updatedAt: new Date() })
-		.where(eq(dbSchema.session.id, id));
+		.where(eq(dbSchema.userSession.id, id));
 	// RedisTokenBlacklist.revokeOneById(id);
 };
 /** @type {SessionsProvider['revokeAllByUserId']} */
@@ -407,15 +407,15 @@ export const revokeAllSessionsByUserId = async (props, options) => {
 
 	// const result =
 	await _db
-		.update(dbSchema.session)
+		.update(dbSchema.userSession)
 		.set({ revokedAt: new Date(), updatedAt: new Date() })
 		.where(
 			and(
-				eq(dbSchema.session.userId, props.where.userId),
-				isNull(dbSchema.session.revokedAt), // Not revoked // eq(dbSchema.session.revokedAt, null),
+				eq(dbSchema.userSession.userId, props.where.userId),
+				isNull(dbSchema.userSession.revokedAt), // Not revoked // eq(dbSchema.session.revokedAt, null),
 			),
 		)
-		.returning({ id: dbSchema.session.id });
+		.returning({ id: dbSchema.userSession.id });
 	// RedisTokenBlacklist.revokeManyByIds(result.map((session) => session.id));
 };
 /** @type {SessionsProvider['isOneRevokedById']} */
@@ -437,8 +437,8 @@ export const isOneSessionRevokedById = async (_props) => {
 /** @type {SessionsProvider['cleanupAllExpired']} */
 export const cleanupAllSessionExpired = async () => {
 	const result = await db
-		.delete(dbSchema.session)
-		.where(lt(dbSchema.session.expiresAt, new Date()));
+		.delete(dbSchema.userSession)
+		.where(lt(dbSchema.userSession.expiresAt, new Date()));
 	// RedisTokenBlacklist.cleanupExpired();
 
 	return result.rowCount ?? 0;
@@ -449,12 +449,12 @@ export const markOneSession2FAVerified = async (props, options) => {
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
 	return _db
-		.update(dbSchema.session)
+		.update(dbSchema.userSession)
 		.set({
 			twoFactorVerifiedAt: new Date(),
 			updatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.session.id, props.where.id), isNull(dbSchema.session.revokedAt)))
+		.where(and(eq(dbSchema.userSession.id, props.where.id), isNull(dbSchema.userSession.revokedAt)))
 		.returning(sessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
@@ -463,12 +463,12 @@ export const unMarkOneSession2FAForUser = async (userId, tx) => {
 	const _db =
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (tx) ?? db;
 	return await _db
-		.update(dbSchema.session)
+		.update(dbSchema.userSession)
 		.set({
 			twoFactorVerifiedAt: null,
 			updatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.session.userId, userId), isNull(dbSchema.session.revokedAt)))
+		.where(and(eq(dbSchema.userSession.userId, userId), isNull(dbSchema.userSession.revokedAt)))
 		// .returning(sessionReturnTemplate)
 		.then((result) => result.rowCount ?? 0);
 };
@@ -514,7 +514,7 @@ export const createOnePasswordResetSession = async (props, options) => {
 		db;
 	const createdAt = new Date();
 	return _db
-		.insert(dbSchema.passwordResetSession)
+		.insert(dbSchema.userPasswordResetSession)
 		.values({
 			...props.data,
 			id: props.data.id ?? createOneIdSync(),
@@ -532,11 +532,11 @@ export const createOnePasswordResetSession = async (props, options) => {
 };
 /** @type {PasswordResetSessionsProvider['findOneWithUser']} */
 export const findOnePasswordResetSessionWithUser = async (sessionId) => {
-	return db.query.passwordResetSession
+	return db.query.userPasswordResetSession
 		.findFirst({
 			with: { user: { columns: userReturnSchema } },
 			columns: passwordResetSessionReturnSchema,
-			where: eq(dbSchema.passwordResetSession.id, sessionId),
+			where: eq(dbSchema.userPasswordResetSession.id, sessionId),
 		})
 		.then((result) => {
 			if (!result) return { session: null, user: null };
@@ -550,30 +550,30 @@ export const markOnePasswordResetSessionEmailAsVerified = async (props, options)
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
 	return _db
-		.update(dbSchema.passwordResetSession)
+		.update(dbSchema.userPasswordResetSession)
 		.set({
 			emailVerifiedAt: new Date(),
 			// updatedAt: new Date(),
 		})
-		.where(eq(dbSchema.passwordResetSession.id, props.where.id))
+		.where(eq(dbSchema.userPasswordResetSession.id, props.where.id))
 		.returning(passwordResetSessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
 /** @type {PasswordResetSessionsProvider['deleteOne']} */
 export const deleteOnePasswordResetSession = async (sessionId) => {
 	await db
-		.delete(dbSchema.passwordResetSession)
-		.where(eq(dbSchema.passwordResetSession.id, sessionId));
+		.delete(dbSchema.userPasswordResetSession)
+		.where(eq(dbSchema.userPasswordResetSession.id, sessionId));
 };
 /** @type {PasswordResetSessionsProvider['markOneTwoFactorAsVerified']} */
 export const markOnePasswordResetSessionTwoFactorAsVerified = async (sessionId) => {
 	return db
-		.update(dbSchema.passwordResetSession)
+		.update(dbSchema.userPasswordResetSession)
 		.set({
 			twoFactorVerifiedAt: new Date(),
 			// updatedAt: new Date(),
 		})
-		.where(eq(dbSchema.passwordResetSession.id, sessionId))
+		.where(eq(dbSchema.userPasswordResetSession.id, sessionId))
 		.returning(passwordResetSessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
@@ -583,8 +583,8 @@ export const deleteAllPasswordResetSessionsByUserId = async (props, options) => 
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
 	await _db
-		.delete(dbSchema.passwordResetSession)
-		.where(eq(dbSchema.passwordResetSession.userId, props.where.userId));
+		.delete(dbSchema.userPasswordResetSession)
+		.where(eq(dbSchema.userPasswordResetSession.userId, props.where.userId));
 	// .returning(passwordResetSessionReturnTemplate)
 	// .then((result) => result[0] ?? null);
 };
@@ -597,7 +597,7 @@ export const deleteAllPasswordResetSessionsByUserId = async (props, options) => 
 export const createOneEmailVerificationRequests = async (values) => {
 	const createdAt = new Date();
 	return db
-		.insert(dbSchema.userEmailVerificationRequests)
+		.insert(dbSchema.userEmailVerificationRequest)
 		.values({
 			...values,
 			id: values.id ?? createOneIdSync(),
@@ -614,8 +614,8 @@ export const deleteOneEmailVerificationRequestsByUserId = async (props, options)
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
 		db;
 	await _db
-		.delete(dbSchema.userEmailVerificationRequests)
-		.where(eq(dbSchema.userEmailVerificationRequests.userId, props.where.userId));
+		.delete(dbSchema.userEmailVerificationRequest)
+		.where(eq(dbSchema.userEmailVerificationRequest.userId, props.where.userId));
 };
 
 /** @type {UserEmailVerificationRequestsProvider['findOneByIdAndUserId']} */
@@ -623,11 +623,11 @@ export const findOneEmailVerificationRequestsByIdAndUserId = async (userId, id) 
 	console.log("___  findOneEmailVerificationRequestsByIdAndUserId userId, id", userId, id);
 	return db
 		.select(emailVerificationRequestReturnTemplate)
-		.from(dbSchema.userEmailVerificationRequests)
+		.from(dbSchema.userEmailVerificationRequest)
 		.where(
 			and(
-				eq(dbSchema.userEmailVerificationRequests.userId, userId),
-				eq(dbSchema.userEmailVerificationRequests.id, id),
+				eq(dbSchema.userEmailVerificationRequest.userId, userId),
+				eq(dbSchema.userEmailVerificationRequest.id, id),
 			),
 		)
 		.then((result) => result[0] ?? null);

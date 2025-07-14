@@ -1,12 +1,20 @@
 /** @import { UserAgent } from "@de100/auth/types" */
 
-import { index, jsonb, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, jsonb, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 import { bytea } from "../_utils/bytea.js";
-import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	id,
+	name,
+	table,
+	updatedAt,
+	userTableName,
+} from "../_utils/helpers.js";
 
 export const user = table(
-	"user",
+	userTableName,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -25,18 +33,21 @@ export const user = table(
 		recoveryCode: bytea("recovery_code"),
 		twoFactorRegisteredAt: timestamp("two_factor_registered_at", { precision: 3 }),
 	},
-	(table) => [
-		index("idx_user_created_at").on(table.createdAt),
-		index("idx_user_updated_at").on(table.updatedAt),
-		index("idx_user_last_login_at").on(table.lastLoginAt),
-		index("idx_user_display_name").on(table.displayName),
-	],
+	(table) => {
+		const base = userTableName;
+		return [
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_last_login_at`).on(table.lastLoginAt),
+			index(`idx_${base}_display_name`).on(table.displayName),
+		];
+	},
 );
 const sessionMetadataJsonb = jsonb("metadata");
 const userAgentJsonb = jsonb("user_agent_metadata");
 
-export const session = table(
-	"session",
+export const userSession = table(
+	`${userTableName}_session`,
 	{
 		id: id.notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
@@ -60,43 +71,50 @@ export const session = table(
 			sessionMetadataJsonb
 		),
 	},
-	(table) => [
-		index("idx_session_created_at").on(table.createdAt),
-		index("idx_session_updated_at").on(table.updatedAt),
-		index("idx_session_expires_at").on(table.expiresAt),
-		index("idx_session_user_id").on(table.userId),
-		index("idx_session_session_type").on(table.authStrategy),
-		index("idx_session_revoked_at").on(table.revokedAt),
-		index("idx_session_last_used_at").on(table.lastUsedAt),
-		index("idx_session_user_id_expires_at").on(table.userId, table.expiresAt),
-		index("idx_session_expires_at_created_at").on(table.expiresAt, table.createdAt),
-		index("idx_session_expires_at_revoked_at").on(table.expiresAt, table.revokedAt),
-	],
+	(table) => {
+		const base = `${userTableName}_session`;
+		return [
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_expires_at`).on(table.expiresAt),
+			index(`idx_${base}_user_id`).on(table.userId),
+			index(`idx_${base}_session_type`).on(table.authStrategy),
+			index(`idx_${base}_revoked_at`).on(table.revokedAt),
+			index(`idx_${base}_last_used_at`).on(table.lastUsedAt),
+			index(`idx_${base}_user_id_expires_at`).on(table.userId, table.expiresAt),
+			index(`idx_${base}_expires_at_created_at`).on(table.expiresAt, table.createdAt),
+			index(`idx_${base}_expires_at_revoked_at`).on(table.expiresAt, table.revokedAt),
+		];
+	},
 );
-export const userEmailVerificationRequests = table(
-	"email_verification_request",
+export const userEmailVerificationRequest = table(
+	`${userTableName}_email_verification_request`,
 	{
 		id: id.notNull(),
 		createdAt,
-		code: varchar("code", { length: 256 }).notNull().unique("uq_email_verification_request_code"),
+		code: varchar("code", { length: 256 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 	},
-	(table) => [
-		index("idx_email_verification_request_created_at").on(table.createdAt),
-		index("idx_email_verification_request_expires_at").on(table.expiresAt),
-		index("idx_email_verification_request_user_id").on(table.userId),
-	],
+	(table) => {
+		const base = `${userTableName}_email_verification_request`;
+		return [
+			uniqueIndex(`uq_${base}_code`).on(table.code),
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_expires_at`).on(table.expiresAt),
+			index(`idx_${base}_user_id`).on(table.userId),
+		];
+	},
 );
-export const passwordResetSession = table(
-	"password_reset_session",
+export const userPasswordResetSession = table(
+	`${userTableName}_password_reset_session`,
 	{
 		id: text("id").primaryKey().notNull(),
 		createdAt,
-		code: varchar("code", { length: 256 }).notNull().unique("uq_password_reset_session_code"),
+		code: varchar("code", { length: 256 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: text("user_id")
@@ -105,13 +123,17 @@ export const passwordResetSession = table(
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 	},
-	(table) => [
-		index("idx_password_reset_session_created_at").on(table.createdAt),
-		index("idx_password_reset_session_expires_at").on(table.expiresAt),
-		index("idx_password_reset_session_email").on(table.email),
-		index("idx_password_reset_session_user_id").on(table.userId),
-		index("idx_password_reset_session_code").on(table.code),
-		index("idx_password_reset_session_email_verified_at").on(table.emailVerifiedAt),
-		index("idx_password_reset_session_two_factor_verified_at").on(table.twoFactorVerifiedAt),
-	],
+	(table) => {
+		const base = `${userTableName}_password_reset_session`;
+		return [
+			uniqueIndex(`uq_${base}_code`).on(table.code),
+			index(`idx_${base}_created_at`).on(table.createdAt),
+			index(`idx_${base}_expires_at`).on(table.expiresAt),
+			index(`idx_${base}_email`).on(table.email),
+			index(`idx_${base}_user_id`).on(table.userId),
+			index(`idx_${base}_code`).on(table.code),
+			index(`idx_${base}_email_verified_at`).on(table.emailVerifiedAt),
+			index(`idx_${base}_two_factor_verified_at`).on(table.twoFactorVerifiedAt),
+		];
+	},
 );

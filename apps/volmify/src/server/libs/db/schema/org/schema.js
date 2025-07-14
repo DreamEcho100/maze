@@ -24,7 +24,7 @@ import {
 	table,
 	updatedAt,
 } from "../_utils/helpers.js";
-import { country, currency, marketTemplate } from "../system/currency-and-market/schema.js";
+import { country, currency, marketTemplate } from "../system/locale-currency-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -118,47 +118,6 @@ export const org = table(
 			index(`idx_${base}_updated_at`).on(table.updatedAt),
 			index(`idx_${base}_name`).on(table.name),
 			index(`idx_${base}_slug`).on(table.slug),
-		];
-	},
-);
-
-/**
- * Org Locale Configuration
- *
- * @abacRole Localization Context
- * Defines the locale settings for an org, allowing for
- * localized content delivery and user experience.
- * @businessLogic
- * Supports multi-regional operations by linking an org
- * to specific locale settings, enabling localized content,
- * language preferences, and regional compliance.
- * @integrationContext
- * Integrates with localization systems for content delivery
- * and user interface customization.
- */
-export const orgLocale = table(
-	`${orgTableName}_locale`,
-	{
-		// id: id.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
-		orgId: text(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
-
-		// locale: text("locale").notNull(),
-		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
-		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
-		locale: text("locale").notNull(), // e.g. "en-US", "fr-FR", "es-ES"
-	},
-	(t) => {
-		const _base = `${orgTableName}_locale`;
-		// Primary key constraint
-		return [
-			// uniqueIndex(`uq_${base}_org`).on(t.organizationId, t.languageCode, t.regionCode),
-			// primaryKey({ columns: [t.organizationId, t.languageCode, t.regionCode] }),
-			primaryKey({ columns: [t.orgId, t.locale] }),
 		];
 	},
 );

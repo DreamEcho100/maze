@@ -51,7 +51,7 @@ import {
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
 import { org, orgBrand } from "../org/schema.js";
-import { currency } from "../system/currency-and-market/schema.js";
+import { currency } from "../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
