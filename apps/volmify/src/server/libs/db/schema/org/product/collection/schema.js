@@ -1,6 +1,6 @@
 import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers.js";
-import { org } from "../../org/schema.js";
+import { createdAt, deletedAt, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { org } from "../../schema.js";
 import { discount } from "../offers/schema.js";
 import { product } from "../schema.js";
 

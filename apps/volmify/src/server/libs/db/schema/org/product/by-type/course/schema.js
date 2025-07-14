@@ -12,11 +12,19 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, fk, getLocaleKey, id, slug, table, updatedAt } from "../../../_utils/helpers";
-import { org, orgMember } from "../../../org/schema";
-import { locale } from "../../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../../system/seo/schema";
-import { user } from "../../../user/schema";
+import {
+	createdAt,
+	fk,
+	getLocaleKey,
+	id,
+	slug,
+	table,
+	updatedAt,
+} from "../../../../_utils/helpers";
+import { locale } from "../../../../system/locale-currency-market/schema";
+import { seoMetadata } from "../../../../system/seo/schema";
+import { user } from "../../../../user/schema";
+import { org, orgMember } from "../../../schema";
 import { product } from "../../schema";
 
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?

@@ -57,11 +57,11 @@ import {
 	slug,
 	table,
 	updatedAt,
-} from "../_utils/helpers.js";
-import { org, orgBrand } from "../org/schema.js";
-import { currency, locale } from "../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../system/seo/schema.js";
-import { userInstructorProfile } from "../user/profile/instructor/schema.js";
+} from "../../_utils/helpers.js";
+import { currency, locale } from "../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
+import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
+import { org, orgBrand } from "../schema.js";
 import { discount } from "./offers/schema.js";
 import { paymentPlanTypeEnum } from "./payment/schema.js";
 

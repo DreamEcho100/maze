@@ -1,5 +1,4 @@
 import { relations } from "drizzle-orm";
-import { org, orgBrandTranslation, orgMarketTranslation } from "../../org/schema.js";
 import {
 	lessonTranslation,
 	productCourseModuleSectionLessonTranslation,
@@ -7,15 +6,16 @@ import {
 	productCourseModuleTranslation,
 	productCourseTranslation,
 	skillTranslation,
-} from "../../product/by-type/course/schema.js";
+} from "../../org/product/by-type/course/schema.js";
 import {
 	couponTranslation,
 	discountTranslation,
 	giftCardTranslation,
 	promotionTranslation,
-} from "../../product/offers/schema.js";
-import { productVariantPaymentPlanTranslation } from "../../product/payment/schema.js";
-import { productTranslation, productVariantTranslation } from "../../product/schema.js";
+} from "../../org/product/offers/schema.js";
+import { productVariantPaymentPlanTranslation } from "../../org/product/payment/schema.js";
+import { productTranslation, productVariantTranslation } from "../../org/product/schema.js";
+import { org, orgBrandTranslation, orgMarketTranslation } from "../../org/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
 import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
 import {

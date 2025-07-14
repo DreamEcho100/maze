@@ -11,11 +11,11 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
-import { org } from "../../org/schema.js";
-import { currency, locale } from "../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../system/seo/schema.js";
-import { user } from "../../user/schema.js";
+import { createdAt, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../../system/seo/schema.js";
+import { user } from "../../../user/schema.js";
+import { org } from "../../schema.js";
 
 /**
  * @enumModel DiscountType

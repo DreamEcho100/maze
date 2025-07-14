@@ -1,8 +1,8 @@
 import { relations } from "drizzle-orm";
-import { org } from "../../org/schema.js";
-import { currency, locale } from "../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../system/seo/schema.js";
-import { user } from "../../user/schema.js";
+import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../../system/seo/schema.js";
+import { user } from "../../../user/schema.js";
+import { org } from "../../schema.js";
 import { discountCollection } from "../collection/schema.js";
 import { discountProduct, discountVariant } from "../schema.js";
 import {

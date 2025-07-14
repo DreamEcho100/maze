@@ -1,10 +1,9 @@
 import { relations } from "drizzle-orm";
-
-import { instructorOrgAffiliation, orgMember, orgMemberInvitation } from "../org/schema.js";
 import {
 	productCourseChallengeRating,
 	userLearningProfile,
-} from "../product/by-type/course/schema.js";
+} from "../org/product/by-type/course/schema.js";
+import { instructorOrgAffiliation, orgMember, orgMemberInvitation } from "../org/schema.js";
 import { userInstructorProfile } from "./profile/instructor/schema.js";
 import {
 	user,

@@ -1,5 +1,29 @@
 import { relations } from "drizzle-orm";
 import {
+	lessonTranslation,
+	productCourseModuleSectionLessonTranslation,
+	productCourseModuleSectionTranslation,
+	productCourseModuleTranslation,
+	productCourseTranslation,
+	skillTranslation,
+} from "../../org/product/by-type/course/schema.js";
+import {
+	couponTranslation,
+	discount,
+	discountTranslation,
+	giftCard,
+	giftCardTranslation,
+	promotionTranslation,
+} from "../../org/product/offers/schema.js";
+import {
+	oneTimePaymentPlanTranslation,
+	productVariantPaymentPlan,
+	productVariantPaymentPlanTranslation,
+	subscriptionPaymentPlanTranslation,
+	usageBasedPaymentPlanTranslation,
+} from "../../org/product/payment/schema.js";
+import { productTranslation, productVariantTranslation } from "../../org/product/schema.js";
+import {
 	orgBrandTranslation,
 	orgCurrencySettings,
 	orgMarket,
@@ -8,30 +32,6 @@ import {
 	orgPricingZone,
 	orgPricingZoneCountry,
 } from "../../org/schema.js";
-import {
-	lessonTranslation,
-	productCourseModuleSectionLessonTranslation,
-	productCourseModuleSectionTranslation,
-	productCourseModuleTranslation,
-	productCourseTranslation,
-	skillTranslation,
-} from "../../product/by-type/course/schema.js";
-import {
-	couponTranslation,
-	discount,
-	discountTranslation,
-	giftCard,
-	giftCardTranslation,
-	promotionTranslation,
-} from "../../product/offers/schema.js";
-import {
-	oneTimePaymentPlanTranslation,
-	productVariantPaymentPlan,
-	productVariantPaymentPlanTranslation,
-	subscriptionPaymentPlanTranslation,
-	usageBasedPaymentPlanTranslation,
-} from "../../product/payment/schema.js";
-import { productTranslation, productVariantTranslation } from "../../product/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
 import { seoAlternateUrl, seoMetadata } from "../seo/schema.js";
 import {

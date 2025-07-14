@@ -26,11 +26,10 @@
  */
 
 import { relations } from "drizzle-orm";
-
-import { org, orgBrand } from "../org/schema.js";
-import { locale } from "../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../system/seo/schema.js";
-import { userInstructorProfile } from "../user/profile/instructor/schema.js";
+import { locale } from "../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
+import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
+import { org, orgBrand } from "../schema.js";
 import { productCourse } from "./by-type/course/schema.js";
 import { productCollection } from "./collection/schema.js";
 import { discount } from "./offers/schema.js";

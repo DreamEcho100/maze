@@ -45,11 +45,11 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
-import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
-import { currency, locale } from "../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../system/seo/schema.js";
-import { user } from "../../user/schema.js";
+import { createdAt, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../../system/seo/schema.js";
+import { user } from "../../../user/schema.js";
+import { org, orgMarket, orgMember, orgPricingZone } from "../../schema.js";
 import { productVariant } from "../schema.js";
 
 // -------------------------------------
@@ -303,6 +303,21 @@ export const productVariantPaymentPlan = table(
 		 * @monetizationStrategy Enables content-based pricing differentiation
 		 */
 		accessTier: integer("access_tier").default(1).notNull(),
+
+		/**
+		 * @contentAccess JSON defining course content access rules for this variant
+		 * @businessFlexibility Enables sophisticated course progression and gating rules
+		 * @instructorControl Allows instructors to define variant-specific content access
+		 */
+		courseAccessRules: jsonb("course_access_rules"),
+		// Example: {
+		//   "unlock_all_modules": false,
+		//   "modules_unlock_order": "sequential", // or "any_order"
+		//   "quiz_required_for_progression": true,
+		//   "downloadable_resources": true,
+		//   "instructor_qa_access": true,
+		//   "certificate_eligible": true
+		// }
 
 		createdAt,
 		updatedAt,

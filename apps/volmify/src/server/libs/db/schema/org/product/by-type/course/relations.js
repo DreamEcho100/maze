@@ -18,10 +18,10 @@
  */
 
 import { relations } from "drizzle-orm";
-import { org, orgMember } from "../../../org/schema";
-import { locale } from "../../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../../system/seo/schema";
-import { user } from "../../../user/schema";
+import { locale } from "../../../../system/locale-currency-market/schema";
+import { seoMetadata } from "../../../../system/seo/schema";
+import { user } from "../../../../user/schema";
+import { org, orgMember } from "../../../schema";
 import { product } from "../../schema";
 import {
 	lesson,

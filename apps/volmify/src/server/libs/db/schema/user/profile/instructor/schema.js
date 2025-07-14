@@ -12,8 +12,8 @@ import {
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
 import { createdAt, fk, getLocaleKey, id, updatedAt, userTableName } from "../../../_utils/helpers";
+import { product } from "../../../org/product/schema";
 import { instructorOrgAffiliation } from "../../../org/schema";
-import { product } from "../../../product/schema";
 import { contactInfo } from "../../../system/contact-info/schema";
 import { locale } from "../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../system/seo/schema";
