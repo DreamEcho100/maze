@@ -685,15 +685,15 @@ export const orgMarketTranslation = table(
 		orgId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
+		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
+			onDelete: "set null",
+		}),
 		localeKey: getLocaleKey("locale_key")
 			.notNull()
 			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
 	},
 	(t) => {
 		const base = `${orgTableName}_market_translation`;

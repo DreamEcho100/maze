@@ -17,7 +17,7 @@ import {
 import { productVariantPaymentPlanTranslation } from "../../product/payment/schema.js";
 import { productTranslation, productVariantTranslation } from "../../product/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
-import { marketTemplateTranslation } from "../locale-currency-market/schema.js";
+import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
 import {
 	seoAlternateUrl,
 	seoCustomMeta,
@@ -189,6 +189,10 @@ export const seoAlternateUrlRelations = relations(seoAlternateUrl, ({ one }) => 
 	seoMetadata: one(seoMetadata, {
 		fields: [seoAlternateUrl.seoMetadataId],
 		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [seoAlternateUrl.localeKey],
+		references: [locale.key],
 	}),
 }));
 

@@ -33,7 +33,7 @@ import {
 } from "../../product/payment/schema.js";
 import { productTranslation, productVariantTranslation } from "../../product/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
-import { seoMetadata } from "../seo/schema.js";
+import { seoAlternateUrl, seoMetadata } from "../seo/schema.js";
 import {
 	country,
 	currency,
@@ -159,4 +159,5 @@ export const _localeRelations = relations(locale, ({ many }) => ({
 	oneTimePaymentPlansTranslations: many(oneTimePaymentPlanTranslation),
 	subscriptionPaymentPlansTranslations: many(subscriptionPaymentPlanTranslation),
 	usageBasedPaymentPlansTranslations: many(usageBasedPaymentPlanTranslation),
+	seoAlternateUrls: many(seoAlternateUrl),
 }));

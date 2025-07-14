@@ -79,10 +79,10 @@ export const locale = table(
 		key: getLocaleKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
 	},
 	(t) => {
-		const _base = "locale";
+		const base = "locale";
 		return [
-			index(`idx_${_base}_created_at`).on(t.createdAt),
-			index(`idx_${_base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_created_at`).on(t.createdAt),
+			index(`idx_${base}_updated_at`).on(t.updatedAt),
 		];
 	},
 );
@@ -112,14 +112,17 @@ export const currency = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => [
-		index("idx_currency_name").on(t.name),
-		index("idx_currency_symbol").on(t.symbol),
-		index("idx_currency_active").on(t.isActive),
-		index("idx_currency_deleted_at").on(t.deletedAt),
-		index("idx_currency_created_at").on(t.createdAt),
-		index("idx_currency_updated_at").on(t.updatedAt),
-	],
+	(t) => {
+		const base = "currency";
+		return [
+			index(`idx_${base}_name`).on(t.name),
+			index(`idx_${base}_symbol`).on(t.symbol),
+			index(`idx_${base}_active`).on(t.isActive),
+			index(`idx_${base}_deleted_at`).on(t.deletedAt),
+			index(`idx_${base}_created_at`).on(t.createdAt),
+			index(`idx_${base}_updated_at`).on(t.updatedAt),
+		];
+	},
 );
 
 /**
@@ -159,14 +162,17 @@ export const country = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => [
-		index("idx_country_iso").on(t.isoCode),
-		index("idx_country_currency").on(t.currencyCode),
-		index("idx_country_name").on(t.name),
-		index("idx_country_active").on(t.isActive),
-		index("idx_country_continent").on(t.continent),
-		index("idx_country_region").on(t.region),
-	],
+	(t) => {
+		const base = "country";
+		return [
+			index(`idx_${base}_iso`).on(t.isoCode),
+			index(`idx_${base}_currency`).on(t.currencyCode),
+			index(`idx_${base}_name`).on(t.name),
+			index(`idx_${base}_active`).on(t.isActive),
+			index(`idx_${base}_continent`).on(t.continent),
+			index(`idx_${base}_region`).on(t.region),
+		];
+	},
 );
 
 /**
@@ -202,24 +208,23 @@ export const exchangeRate = table(
 		precision: integer("precision").default(2),
 		rateType: text("rate_type"), // "mid-market", "retail", etc
 	},
-	(t) => [
-		uniqueIndex("uq_exchange_rate_period").on(
-			t.baseCurrency,
-			t.targetCurrency,
-			t.validFrom,
-			t.source,
-		),
-		index("idx_exchange_rate_currencies").on(t.baseCurrency, t.targetCurrency),
-		index("idx_exchange_rate_date").on(t.validFrom, t.validTo),
-		index("idx_exchange_rate_active_date").on(
-			t.validFrom,
-			t.validTo,
-			t.deletedAt,
-		),
-		index("idx_exchange_rate_source").on(t.source),
-		index("idx_exchange_rate_type").on(t.rateType),
-		index("idx_exchange_rate_deleted_at").on(t.deletedAt),
-	],
+	(t) => {
+		const base = "exchange_rate";
+		return [
+			uniqueIndex(`uq_${base}_period`).on(
+				t.baseCurrency,
+				t.targetCurrency,
+				t.validFrom,
+				t.source,
+			),
+			index(`idx_${base}_currencies`).on(t.baseCurrency, t.targetCurrency),
+			index(`idx_${base}_date`).on(t.validFrom, t.validTo),
+			index(`idx_${base}_active_date`).on(t.validFrom, t.validTo, t.deletedAt),
+			index(`idx_${base}_source`).on(t.source),
+			index(`idx_${base}_type`).on(t.rateType),
+			index(`idx_${base}_deleted_at`).on(t.deletedAt),
+		];
+	},
 );
 
 /**

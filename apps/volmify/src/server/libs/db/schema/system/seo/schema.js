@@ -8,8 +8,9 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
+import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
 import { org } from "../../org/schema.js";
+import { locale } from "../locale-currency-market/schema.js";
 
 // SEO status for content workflow
 export const seoStatusEnum = pgEnum("seo_status", [
@@ -42,7 +43,6 @@ export const seoMetadata = table(
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
-		// locale: text("locale").notNull(),
 		isDefault: boolean("is_default").default(false),
 
 		// SEO workflow status
@@ -117,7 +117,6 @@ export const seoOpenGraph = table(
 		imageHeight: integer("image_height"),
 		type: text("type").default("website"), // "website", "article", "video", "product"
 		siteName: text("site_name"),
-		locale: text("locale"), // "en_US", "es_ES"
 		url: text("url"),
 
 		// Type-specific data in JSONB
@@ -167,7 +166,6 @@ export const seoOpenGraph = table(
 	(t) => [
 		uniqueIndex("uq_seo_og_metadata").on(t.seoMetadataId),
 		index("idx_seo_og_type").on(t.type),
-		index("idx_seo_og_locale").on(t.locale),
 
 		// GIN index for searching type-specific data
 		index("idx_seo_og_type_data").using("gin", t.typeSpecificData),
@@ -282,7 +280,9 @@ export const seoAlternateUrl = table(
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
 
 		// Alternate URL details
-		locale: text("locale").notNull(), // "en", "es", "fr"
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		hreflang: text("hreflang").notNull(), // "en-US", "es-MX", "x-default"
 		url: text("url").notNull(),
 
@@ -294,9 +294,9 @@ export const seoAlternateUrl = table(
 	},
 	(t) => [
 		index("idx_seo_alternate_metadata").on(t.seoMetadataId),
-		index("idx_seo_alternate_locale").on(t.locale),
+		index("idx_seo_alternate_locale_key").on(t.localeKey),
 		index("idx_seo_alternate_hreflang").on(t.hreflang),
-		uniqueIndex("uq_seo_alternate_metadata_locale").on(t.seoMetadataId, t.locale),
+		uniqueIndex("uq_seo_alternate_metadata_locale_key").on(t.seoMetadataId, t.localeKey),
 	],
 );
 
