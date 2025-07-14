@@ -49,9 +49,17 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	getLocaleKey,
+	id,
+	slug,
+	table,
+	updatedAt,
+} from "../_utils/helpers.js";
 import { org, orgBrand } from "../org/schema.js";
-import { currency } from "../system/locale-currency-market/schema.js";
+import { currency, locale } from "../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
@@ -217,7 +225,9 @@ export const productTranslation = table(
 		 * @businessRule Supports region-specific product marketing strategies
 		 * @internationalExpansion Enables market-specific product messaging and SEO
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Primary translation used when locale-specific content unavailable
@@ -244,14 +254,14 @@ export const productTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_product_translation_product_locale").on(t.productId, t.locale),
+		uniqueIndex("uq_product_translation_product_locale_key").on(t.productId, t.localeKey),
 		uniqueIndex("uq_product_translation_default")
 			.on(t.productId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
 		index("idx_product_translation_product").on(t.productId),
-		index("idx_product_translation_locale").on(t.locale),
+		index("idx_product_translation_locale_key").on(t.localeKey),
 		index("idx_product_translation_seo").on(t.seoMetadataId),
 	],
 );
@@ -440,7 +450,9 @@ export const productVariantTranslation = table(
 		 * @localizationContext Target locale for this translation content
 		 * @businessRule Supports region-specific payment plan marketing strategies
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Primary translation used when locale-specific content unavailable
@@ -473,13 +485,13 @@ export const productVariantTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_product_variant_translation").on(t.productVariantId, t.locale),
+		uniqueIndex("uq_product_variant_translation").on(t.productVariantId, t.localeKey),
 		uniqueIndex("uq_product_variant_translation_default")
 			.on(t.productVariantId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_product_variant_translation_locale").on(t.locale),
+		index("idx_product_variant_translation_locale_key").on(t.localeKey),
 		index("idx_product_variant_translation_seo").on(t.seoMetadataId),
 	],
 );

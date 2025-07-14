@@ -2,7 +2,12 @@ import { relations } from "drizzle-orm";
 import { lesson, productCourseEnrollment, skill } from "../product/by-type/course/schema.js";
 import { productVariantPaymentPlan } from "../product/payment/schema.js";
 import { productBrandAttribution, productInstructorAttribution } from "../product/schema.js";
-import { country, currency, marketTemplate } from "../system/locale-currency-market/schema.js";
+import {
+	country,
+	currency,
+	locale,
+	marketTemplate,
+} from "../system/locale-currency-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -302,6 +307,10 @@ export const organizationMarketTranslationRelations = relations(
 			fields: [orgMarketTranslation.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
+		locale: one(locale, {
+			fields: [orgMarketTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
 
@@ -360,6 +369,10 @@ export const organizationBrandTranslationRelations = relations(orgBrandTranslati
 	seoMetadata: one(seoMetadata, {
 		fields: [orgBrandTranslation.seoMetadataId],
 		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [orgBrandTranslation.localeKey],
+		references: [locale.key],
 	}),
 }));
 

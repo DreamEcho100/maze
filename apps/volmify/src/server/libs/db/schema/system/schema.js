@@ -1,5 +1,5 @@
 import { index, text, varchar } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, id, name, table } from "../_utils/helpers.js";
 
 /**
  * @fileoverview System Permission Registry - ABAC Foundation
@@ -116,50 +116,50 @@ export const systemPermission = table(
 	],
 );
 
-/**
- * Locale Registry
- *
- * @abacRole Locale Definition
- * Defines supported locales for the platform, enabling
- * multi-language support and regional customization.
- * @businessLogic
- * Locales are defined by a combination of language and region codes,
- * e.g., "en-US" for English (United States).
- * @namingPattern
- * "language-region" (e.g., "en-US", "fr-FR")
- * @integrationPoints
- * - Localization middleware: Determines content language based on user locale
- * - UI rendering: Displays content in user's preferred language
- * @businessValue
- * Enables global reach and user experience personalization
- * by supporting multiple languages and regions.
- * @designPattern
- * Centralized locale registry with unique locale identifiers
- * to ensure consistent language handling across the platform.
- * @securityModel
- * - Whitelist-only approach: All supported locales must be predefined
- * - No custom locales allowed at org level
- *  Ensures consistent language handling and prevents
- * locale-related security issues.
- */
-export const locale = table(
-	"locale",
-	{
-		// id: id.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+// /**
+//  * Locale Registry
+//  *
+//  * @abacRole Locale Definition
+//  * Defines supported locales for the platform, enabling
+//  * multi-language support and regional customization.
+//  * @businessLogic
+//  * Locales are defined by a combination of language and region codes,
+//  * e.g., "en-US" for English (United States).
+//  * @namingPattern
+//  * "language-region" (e.g., "en-US", "fr-FR")
+//  * @integrationPoints
+//  * - Localization middleware: Determines content language based on user locale
+//  * - UI rendering: Displays content in user's preferred language
+//  * @businessValue
+//  * Enables global reach and user experience personalization
+//  * by supporting multiple languages and regions.
+//  * @designPattern
+//  * Centralized locale registry with unique locale identifiers
+//  * to ensure consistent language handling across the platform.
+//  * @securityModel
+//  * - Whitelist-only approach: All supported locales must be predefined
+//  * - No custom locales allowed at org level
+//  *  Ensures consistent language handling and prevents
+//  * locale-related security issues.
+//  */
+// export const locale = table(
+// 	"locale",
+// 	{
+// 		// id: id.notNull(),
+// 		createdAt,
+// 		updatedAt,
+// 		deletedAt,
 
-		// locale: text("locale").notNull(),
-		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
-		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
-		locale: text("locale").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
-	},
-	(t) => {
-		const _base = "locale";
-		return [
-			index(`idx_${_base}_created_at`).on(t.createdAt),
-			index(`idx_${_base}_updated_at`).on(t.updatedAt),
-		];
-	},
-);
+// 		// locale: text("locale").notNull(),
+// 		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
+// 		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
+// 		key: getLocaleKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
+// 	},
+// 	(t) => {
+// 		const _base = "locale";
+// 		return [
+// 			index(`idx_${_base}_created_at`).on(t.createdAt),
+// 			index(`idx_${_base}_updated_at`).on(t.updatedAt),
+// 		];
+// 	},
+// );

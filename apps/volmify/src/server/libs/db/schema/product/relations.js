@@ -28,6 +28,7 @@
 import { relations } from "drizzle-orm";
 
 import { org, orgBrand } from "../org/schema.js";
+import { locale } from "../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { productCourse } from "./by-type/course/schema.js";
@@ -43,6 +44,7 @@ import {
 	// productPrice,
 	productTranslation,
 	productVariant,
+	productVariantTranslation,
 	// productZonePrice,
 } from "./schema.js";
 
@@ -156,6 +158,10 @@ export const productTranslationRelations = relations(productTranslation, ({ one 
 		fields: [productTranslation.seoMetadataId],
 		references: [seoMetadata.id],
 	}),
+	locale: one(locale, {
+		fields: [productTranslation.localeKey],
+		references: [locale.key],
+	}),
 }));
 
 /**
@@ -180,6 +186,8 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 		references: [product.id],
 	}),
 
+	translations: many(productVariantTranslation),
+
 	/**
 	 * @paymentPlanIntegration Payment plan pricing for this variant
 	 * @businessContext Direct integration with payment plans for variant pricing
@@ -196,6 +204,26 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 	 */
 	discountVariants: many(discountVariant),
 }));
+
+export const productVariantTranslationRelations = relations(
+	productVariantTranslation,
+	({ one }) => ({
+		productVariant: one(productVariant, {
+			fields: [productVariantTranslation.productVariantId],
+			references: [productVariant.id],
+		}),
+
+		seoMetadata: one(seoMetadata, {
+			fields: [productVariantTranslation.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+
+		locale: one(locale, {
+			fields: [productVariantTranslation.localeKey],
+			references: [locale.key],
+		}),
+	}),
+);
 
 /**
  * Product Instructor Attribution Relations (Creator Economy)

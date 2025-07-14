@@ -17,6 +17,7 @@ import {
 	createdAt,
 	deletedAt,
 	fk,
+	getLocaleKey,
 	id,
 	name,
 	orgTableName,
@@ -24,7 +25,12 @@ import {
 	table,
 	updatedAt,
 } from "../_utils/helpers.js";
-import { country, currency, marketTemplate } from "../system/locale-currency-market/schema.js";
+import {
+	country,
+	currency,
+	locale,
+	marketTemplate,
+} from "../system/locale-currency-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -105,9 +111,10 @@ export const org = table(
 		logo: varchar("logo", { length: 2096 }),
 
 		/** Arbitrary JSON for custom org-specific metadata, preferences, etc. */
-		metadata: /** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
-			orgMetadataJsonb
-		),
+		metadata:
+			/** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
+				orgMetadataJsonb
+			),
 	},
 	(table) => {
 		const base = orgTableName;
@@ -157,7 +164,9 @@ export const orgTeam = table(
 		/**
 		 * Whether this team can include members from multiple departments.
 		 */
-		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
+		allowsCrossDepartmentMembers: boolean(
+			"allows_cross_department_members",
+		).default(true),
 
 		metadata: jsonb("metadata"),
 	},
@@ -250,7 +259,9 @@ export const orgDepartment = table(
 		const base = `${orgTableName}_department`;
 		return [
 			uniqueIndex(`uq_${base}_name`).on(t.orgId, t.name),
-			uniqueIndex(`uq_${base}_default`).on(t.orgId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.orgId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 			index(`idx_${base}_organization`).on(t.orgId),
 			index(`idx_${base}_active`).on(t.isActive),
 		];
@@ -287,17 +298,22 @@ export const orgMemberDepartment = table(
 		const base = `${orgTableName}_member_department`;
 		return [
 			uniqueIndex(`uq_${base}`).on(t.memberId, t.departmentId),
-			uniqueIndex(`uq_${base}_default`).on(t.memberId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.memberId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 			index(`idx_${base}_member`).on(t.memberId),
 			index(`idx_${base}_department`).on(t.departmentId),
 		];
 	},
 );
 
-export const orgMemberTeamRoleEnum = pgEnum(`${orgTableName}_member_team_role`, [
-	"admin", // Full access to manage team members, settings, and permissions
-	"member", // Scoped access based on permission groups assigned within the team
-]);
+export const orgMemberTeamRoleEnum = pgEnum(
+	`${orgTableName}_member_team_role`,
+	[
+		"admin", // Full access to manage team members, settings, and permissions
+		"member", // Scoped access based on permission groups assigned within the team
+	],
+);
 
 /**
  * Org Member ⇄ Team Assignment
@@ -365,7 +381,9 @@ export const orgTeamDepartment = table(
 		const base = `${orgTableName}_team_department`;
 		return [
 			uniqueIndex(`uq_${base}`).on(t.teamId, t.departmentId),
-			uniqueIndex(`uq_${base}_primary`).on(t.teamId, t.isPrimary).where(eq(t.isPrimary, true)),
+			uniqueIndex(`uq_${base}_primary`)
+				.on(t.teamId, t.isPrimary)
+				.where(eq(t.isPrimary, true)),
 			index(`idx_${base}_team`).on(t.teamId),
 			index(`idx_${base}_department`).on(t.departmentId),
 		];
@@ -469,13 +487,16 @@ export const orgPermissionsGroupPermission = table(
 	},
 );
 
-export const orgMemberInvitationStatusEnum = pgEnum(`${orgTableName}_member_invitation_status`, [
-	"pending", // Awaiting response
-	"accepted", // Member joined org
-	"declined", // Invitee declined
-	"cancelled", // Invite cancelled by sender
-	"revoked", // Revoked access before action
-]);
+export const orgMemberInvitationStatusEnum = pgEnum(
+	`${orgTableName}_member_invitation_status`,
+	[
+		"pending", // Awaiting response
+		"accepted", // Member joined org
+		"declined", // Invitee declined
+		"cancelled", // Invite cancelled by sender
+		"revoked", // Revoked access before action
+	],
+);
 
 /**
  * Member Invitation Table
@@ -497,7 +518,9 @@ export const orgMemberInvitation = table(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
-		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
+		status: orgMemberInvitationStatusEnum("status")
+			.notNull()
+			.default("pending"),
 		role: memberBaseRoleEnum("role").notNull().default("member"),
 		message: text("message"),
 		acceptedAt: timestamp("accepted_at", { precision: 3 }),
@@ -549,7 +572,9 @@ export const orgCurrencySettings = table(
 		const base = `${orgTableName}_currency_settings`;
 		return [
 			primaryKey({ columns: [t.orgId, t.currencyCode] }),
-			uniqueIndex(`uq_${base}_default`).on(t.orgId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.orgId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -604,7 +629,9 @@ export const orgMarket = table(
 			index(`idx_${base}_currency`).on(t.currencyCode),
 			index(`idx_${base}_priority`).on(t.priority),
 			index(`idx_${base}_deleted_at`).on(t.deletedAt),
-			uniqueIndex(`uq_${base}_org_slug`).on(t.orgId, t.slug).where(isNotNull(t.slug)),
+			uniqueIndex(`uq_${base}_org_slug`)
+				.on(t.orgId, t.slug)
+				.where(isNotNull(t.slug)),
 			index(`idx_${base}_template_custom`).on(t.templateId, t.isCustom),
 		];
 	},
@@ -632,7 +659,9 @@ export const orgMarketCountry = table(
 		const base = `${orgTableName}_market_country`;
 		return [
 			primaryKey({ columns: [t.orgMarketId, t.countryId] }),
-			uniqueIndex(`uq_${base}_default`).on(t.orgMarketId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.orgMarketId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -656,7 +685,9 @@ export const orgMarketTranslation = table(
 		orgId: text(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
@@ -667,10 +698,12 @@ export const orgMarketTranslation = table(
 	(t) => {
 		const base = `${orgTableName}_market_translation`;
 		return [
-			uniqueIndex(`uq_${base}_unique`).on(t.orgMarketId, t.locale),
-			uniqueIndex(`uq_${base}_default`).on(t.orgMarketId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_unique`).on(t.orgMarketId, t.localeKey),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.orgMarketId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 			index(`idx_${base}_organization`).on(t.orgId),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 		];
 	},
 );
@@ -772,7 +805,9 @@ export const orgBrandTranslation = table(
 		orgBrandId: fk(`${orgTableName}_brand_id`)
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
@@ -784,8 +819,10 @@ export const orgBrandTranslation = table(
 	(t) => {
 		const base = `${orgTableName}_brand_translation`;
 		return [
-			uniqueIndex(`uq_${base}_locale`).on(t.orgBrandId, t.locale),
-			uniqueIndex(`uq_${base}_default`).on(t.orgBrandId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_locale`).on(t.orgBrandId, t.localeKey),
+			uniqueIndex(`uq_${base}_default`)
+				.on(t.orgBrandId, t.isDefault)
+				.where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -872,7 +909,8 @@ export const instructorOrgAffiliation = table(
 		role: text("role"),
 		title: text("title"),
 
-		compensationType: compensationTypeEnum("compensation_type").default("revenue_share"),
+		compensationType:
+			compensationTypeEnum("compensation_type").default("revenue_share"),
 		compensationAmount: decimal("compensation_amount", {
 			precision: 10,
 			scale: 2,

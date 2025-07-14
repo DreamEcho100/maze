@@ -11,9 +11,9 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
+import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
 import { org } from "../../org/schema.js";
-import { currency } from "../../system/locale-currency-market/schema.js";
+import { currency, locale } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 
@@ -95,7 +95,9 @@ export const discountTranslation = table(
 		discountId: text("discount_id")
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
@@ -104,11 +106,11 @@ export const discountTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_discount_translation").on(t.discountId, t.locale),
+		uniqueIndex("uq_discount_translation").on(t.discountId, t.localeKey),
 		uniqueIndex("uq_discount_translation_default")
 			.on(t.discountId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_discount_translation_locale").on(t.locale),
+		index("idx_discount_translation_locale_key").on(t.localeKey),
 		index("idx_discount_translation_default").on(t.isDefault),
 	],
 );
@@ -185,7 +187,9 @@ export const couponTranslation = table(
 		couponId: text("coupon_id")
 			.notNull()
 			.references(() => coupon.id, { onDelete: "cascade" }),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
@@ -194,11 +198,11 @@ export const couponTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_coupon_translation").on(t.couponId, t.locale),
+		uniqueIndex("uq_coupon_translation").on(t.couponId, t.localeKey),
 		uniqueIndex("uq_coupon_translation_default")
 			.on(t.couponId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_coupon_translation_locale").on(t.locale),
+		index("idx_coupon_translation_locale_key").on(t.localeKey),
 		index("idx_coupon_translation_default").on(t.isDefault),
 	],
 );
@@ -254,7 +258,9 @@ export const giftCardTranslation = table(
 		giftCardId: text("gift_card_id")
 			.notNull()
 			.references(() => giftCard.id, { onDelete: "cascade" }),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
@@ -263,11 +269,11 @@ export const giftCardTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.locale),
+		uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.localeKey),
 		uniqueIndex("uq_gift_card_translation_default")
 			.on(t.giftCardId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_gift_card_translation_locale").on(t.locale),
+		index("idx_gift_card_translation_locale_key").on(t.localeKey),
 		index("idx_gift_card_translation_default").on(t.isDefault),
 	],
 );
@@ -338,7 +344,9 @@ export const promotionTranslation = table(
 		promotionId: text("promotion_id")
 			.notNull()
 			.references(() => promotion.id, { onDelete: "cascade" }),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		title: text("title"),
 		description: text("description"),
@@ -347,11 +355,11 @@ export const promotionTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_promotion_translation").on(t.promotionId, t.locale),
+		uniqueIndex("uq_promotion_translation").on(t.promotionId, t.localeKey),
 		uniqueIndex("uq_promotion_translation_default")
 			.on(t.promotionId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_promotion_translation_locale").on(t.locale),
+		index("idx_promotion_translation_locale_key").on(t.localeKey),
 		index("idx_promotion_translation_default").on(t.isDefault),
 	],
 );

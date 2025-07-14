@@ -12,8 +12,9 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, fk, id, slug, table, updatedAt } from "../../../_utils/helpers";
+import { createdAt, fk, getLocaleKey, id, slug, table, updatedAt } from "../../../_utils/helpers";
 import { org, orgMember } from "../../../org/schema";
+import { locale } from "../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 import { product } from "../../schema";
@@ -107,7 +108,12 @@ export const productCourseTranslation = table(
 		courseId: fk("course_id")
 			.references(() => productCourse.id)
 			.notNull(),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 		isDefault: boolean("is_default").default(false),
 
 		/**
@@ -130,9 +136,9 @@ export const productCourseTranslation = table(
 	(t) => {
 		const base = "product_course_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.courseId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.courseId, t.localeKey),
 			uniqueIndex(`uq_${base}_default`).on(t.courseId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 		];
 	},
 );
@@ -198,11 +204,17 @@ export const skillTranslation = table(
 		skillId: fk("skill_id")
 			.references(() => skill.id)
 			.notNull(),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 
 		name: text("name").notNull(),
 		description: text("description"),
+
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 
 		createdAt,
 		updatedAt,
@@ -210,7 +222,7 @@ export const skillTranslation = table(
 	(t) => {
 		const base = "skill_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.skillId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.skillId, t.localeKey),
 			uniqueIndex(`uq_${base}_default`).on(t.skillId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_skill`).on(t.skillId),
 			index(`idx_${base}_name`).on(t.name),
@@ -378,8 +390,12 @@ export const productCourseModuleTranslation = table(
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
-		locale: text("locale").notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		createdAt,
 		updatedAt,
@@ -387,9 +403,9 @@ export const productCourseModuleTranslation = table(
 	(t) => {
 		const base = "product_course_module_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.productCourseModuleId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.productCourseModuleId, t.localeKey),
 			index(`idx_${base}_module`).on(t.productCourseModuleId),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 			index(`idx_${base}_title`).on(t.title),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_updated_at`).on(t.updatedAt),
@@ -460,8 +476,12 @@ export const productCourseModuleSectionTranslation = table(
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
-		locale: text("locale").notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		createdAt,
 		updatedAt,
@@ -469,10 +489,10 @@ export const productCourseModuleSectionTranslation = table(
 	(t) => {
 		const base = "course_module_section_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.sectionId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.sectionId, t.localeKey),
 			uniqueIndex(`uq_${base}_default`).on(t.sectionId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_module`).on(t.sectionId),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 			index(`idx_${base}_title`).on(t.title),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_updated_at`).on(t.updatedAt),
@@ -562,26 +582,30 @@ export const productCourseModuleSectionLessonTranslation = table(
 			.references(() => productCourseModuleSectionLesson.id)
 			.notNull(),
 
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
+
 		title: text("title").notNull(),
 		description: text("description"),
-		locale: text("locale").notNull(),
 		isDefault: boolean("is_default").default(false),
 
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 		createdAt,
 		updatedAt,
 	},
 	(t) => {
 		const base = "product_course_module_section_lesson_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.sectionLessonId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.sectionLessonId, t.localeKey),
 			uniqueIndex(`uq_${base}_default`)
 				.on(t.sectionLessonId, t.isDefault)
 				.where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 			index(`idx_${base}_seo`).on(t.seoMetadataId),
 			index(`idx_${base}_lesson`).on(t.sectionLessonId),
-			index(`idx_${base}_locale`).on(t.locale),
 			index(`idx_${base}_title`).on(t.title),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_updated_at`).on(t.updatedAt),
@@ -626,9 +650,13 @@ export const lessonTranslation = table(
 		title: text("title").notNull(),
 		description: text("description"),
 		// Does a lesson even need SEO metadata? what would be the use case? pros and cons?
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 		// 	.notNull(),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		createdAt,
 		updatedAt,
@@ -636,11 +664,10 @@ export const lessonTranslation = table(
 	(t) => {
 		const base = "lesson_translation";
 		return [
-			uniqueIndex(`uq_${base}`).on(t.lessonId, t.locale),
+			uniqueIndex(`uq_${base}`).on(t.lessonId, t.localeKey),
 			uniqueIndex(`uq_${base}_default`).on(t.lessonId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale`).on(t.locale),
+			index(`idx_${base}_locale_key`).on(t.localeKey),
 			index(`idx_${base}_lesson`).on(t.lessonId),
-			index(`idx_${base}_locale`).on(t.locale),
 			index(`idx_${base}_title`).on(t.title),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_updated_at`).on(t.updatedAt),

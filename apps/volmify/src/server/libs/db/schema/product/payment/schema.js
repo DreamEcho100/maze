@@ -45,9 +45,9 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
+import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
 import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
-import { currency } from "../../system/locale-currency-market/schema.js";
+import { currency, locale } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { productVariant } from "../schema.js";
@@ -372,7 +372,9 @@ export const productVariantPaymentPlanTranslation = table(
 		 * @localizationContext Target locale for this translation content
 		 * @businessRule Supports region-specific payment plan marketing strategies
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Primary translation used when locale-specific content unavailable
@@ -405,13 +407,13 @@ export const productVariantPaymentPlanTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_variant_payment_plan_translation").on(t.planId, t.locale),
+		uniqueIndex("uq_variant_payment_plan_translation").on(t.planId, t.localeKey),
 		uniqueIndex("uq_variant_payment_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_variant_payment_plan_translation_locale").on(t.locale),
+		index("idx_variant_payment_plan_translation_locale_key").on(t.localeKey),
 		index("idx_variant_payment_plan_translation_seo").on(t.seoMetadataId),
 	],
 );
@@ -522,7 +524,9 @@ export const oneTimePaymentPlanTranslation = table(
 		/**
 		 * @localizationContext Target region-language identifier
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Fallback translation when no exact match
@@ -552,13 +556,13 @@ export const oneTimePaymentPlanTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_one_time_plan_translation").on(t.planId, t.locale),
+		uniqueIndex("uq_one_time_plan_translation").on(t.planId, t.localeKey),
 		uniqueIndex("uq_one_time_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_one_time_plan_translation_locale").on(t.locale),
+		index("idx_one_time_plan_translation_locale_key").on(t.localeKey),
 	],
 );
 
@@ -659,7 +663,9 @@ export const subscriptionPaymentPlanTranslation = table(
 		 * @localizationContext Region/market locale of the content
 		 * @permissionContext Used for regional display on public storefront
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Ensures fallback locale when no exact match
@@ -689,13 +695,13 @@ export const subscriptionPaymentPlanTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_subscription_plan_translation").on(t.planId, t.locale),
+		uniqueIndex("uq_subscription_plan_translation").on(t.planId, t.localeKey),
 		uniqueIndex("uq_subscription_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_subscription_plan_translation_locale").on(t.locale),
+		index("idx_subscription_plan_translation_locale_key").on(t.localeKey),
 	],
 );
 
@@ -814,7 +820,9 @@ export const usageBasedPaymentPlanTranslation = table(
 		/**
 		 * @localizationContext Target locale for this translation content
 		 */
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 
 		/**
 		 * @translationDefault Primary translation used when locale-specific content unavailable
@@ -841,13 +849,13 @@ export const usageBasedPaymentPlanTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_usage_plan_translation").on(t.planId, t.locale),
+		uniqueIndex("uq_usage_plan_translation").on(t.planId, t.localeKey),
 		uniqueIndex("uq_usage_plan_translation_default")
 			.on(t.planId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index("idx_usage_plan_translation_locale").on(t.locale),
+		index("idx_usage_plan_translation_locale_key").on(t.localeKey),
 	],
 );
 

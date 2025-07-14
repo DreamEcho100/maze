@@ -12,4 +12,7 @@ export const slug = varchar("slug", { length: 100 });
 export const createdAt = timestamp("created_at", { precision: 3 }).notNull().defaultNow();
 export const updatedAt = timestamp("updated_at", { precision: 3 });
 export const deletedAt = timestamp("deleted_at", { precision: 3 });
+export const getLocaleKey =
+	/** @param {string} name */
+	(name) => varchar(name, { length: 10 }); // .notNull().default("en-US");
 export const table = pgTable;

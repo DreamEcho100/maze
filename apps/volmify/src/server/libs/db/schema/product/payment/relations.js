@@ -30,7 +30,7 @@
 
 import { relations } from "drizzle-orm";
 import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
-import { currency } from "../../system/locale-currency-market/schema.js";
+import { currency, locale } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { productVariant } from "../schema.js";
@@ -194,6 +194,10 @@ export const productVariantPaymentPlanTranslationRelations = relations(
 			fields: [productVariantPaymentPlanTranslation.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
+		locale: one(locale, {
+			fields: [productVariantPaymentPlanTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
 
@@ -252,6 +256,10 @@ export const oneTimePaymentPlanTranslationRelations = relations(
 		oneTimePaymentPlan: one(oneTimePaymentPlan, {
 			fields: [oneTimePaymentPlanTranslation.planId],
 			references: [oneTimePaymentPlan.planId],
+		}),
+		locale: one(locale, {
+			fields: [oneTimePaymentPlanTranslation.localeKey],
+			references: [locale.key],
 		}),
 	}),
 );
@@ -315,6 +323,10 @@ export const subscriptionPaymentPlanTranslationRelations = relations(
 			fields: [subscriptionPaymentPlanTranslation.planId],
 			references: [subscriptionPaymentPlan.planId],
 		}),
+		locale: one(locale, {
+			fields: [subscriptionPaymentPlanTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
 
@@ -373,6 +385,10 @@ export const usageBasedPaymentPlanTranslationRelations = relations(
 		usageBasedPaymentPlan: one(usageBasedPaymentPlan, {
 			fields: [usageBasedPaymentPlanTranslation.planId],
 			references: [usageBasedPaymentPlan.planId],
+		}),
+		locale: one(locale, {
+			fields: [usageBasedPaymentPlanTranslation.localeKey],
+			references: [locale.key],
 		}),
 	}),
 );

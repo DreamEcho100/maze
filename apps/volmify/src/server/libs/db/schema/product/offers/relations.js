@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import { org } from "../../org/schema.js";
-import { currency } from "../../system/locale-currency-market/schema.js";
+import { currency, locale } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { discountCollection } from "../collection/schema.js";
@@ -60,6 +60,10 @@ export const discountTranslationRelations = relations(discountTranslation, ({ on
 		fields: [discountTranslation.seoMetadataId],
 		references: [seoMetadata.id],
 	}),
+	locale: one(locale, {
+		fields: [discountTranslation.localeKey],
+		references: [locale.key],
+	}),
 }));
 
 /**
@@ -94,6 +98,10 @@ export const couponTranslationRelations = relations(couponTranslation, ({ one })
 	seoMetadata: one(seoMetadata, {
 		fields: [couponTranslation.seoMetadataId],
 		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [couponTranslation.localeKey],
+		references: [locale.key],
 	}),
 }));
 
@@ -154,6 +162,10 @@ export const giftCardTranslationRelations = relations(giftCardTranslation, ({ on
 		fields: [giftCardTranslation.seoMetadataId],
 		references: [seoMetadata.id],
 	}),
+	locale: one(locale, {
+		fields: [giftCardTranslation.localeKey],
+		references: [locale.key],
+	}),
 }));
 
 /**
@@ -203,6 +215,10 @@ export const promotionTranslationRelations = relations(promotionTranslation, ({ 
 	seoMetadata: one(seoMetadata, {
 		fields: [promotionTranslation.seoMetadataId],
 		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [promotionTranslation.localeKey],
+		references: [locale.key],
 	}),
 }));
 

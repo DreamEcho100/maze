@@ -11,10 +11,11 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { createdAt, fk, id, updatedAt, userTableName } from "../../../_utils/helpers";
+import { createdAt, fk, getLocaleKey, id, updatedAt, userTableName } from "../../../_utils/helpers";
 import { instructorOrgAffiliation } from "../../../org/schema";
 import { product } from "../../../product/schema";
 import { contactInfo } from "../../../system/contact-info/schema";
+import { locale } from "../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 
@@ -100,7 +101,9 @@ export const userInstructorProfileTranslation = table(
 		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
-		locale: text("locale").notNull(),
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 
 		// // Professional identity
@@ -122,9 +125,9 @@ export const userInstructorProfileTranslation = table(
 		updatedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_user_instructor_profile_translation_locale").on(
+		uniqueIndex("uq_user_instructor_profile_translation_locale_key").on(
 			t.userInstructorProfileId,
-			t.locale,
+			t.localeKey,
 		),
 		uniqueIndex("uq_user_instructor_profile_translation_default")
 			.on(t.userInstructorProfileId, t.isDefault)

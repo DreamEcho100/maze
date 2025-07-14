@@ -1,11 +1,23 @@
 import { relations } from "drizzle-orm";
-import { org } from "../../org/schema.js";
+import { org, orgBrandTranslation, orgMarketTranslation } from "../../org/schema.js";
 import {
 	lessonTranslation,
 	productCourseModuleSectionLessonTranslation,
 	productCourseModuleSectionTranslation,
 	productCourseModuleTranslation,
+	productCourseTranslation,
+	skillTranslation,
 } from "../../product/by-type/course/schema.js";
+import {
+	couponTranslation,
+	discountTranslation,
+	giftCardTranslation,
+	promotionTranslation,
+} from "../../product/offers/schema.js";
+import { productVariantPaymentPlanTranslation } from "../../product/payment/schema.js";
+import { productTranslation, productVariantTranslation } from "../../product/schema.js";
+import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
+import { marketTemplateTranslation } from "../locale-currency-market/schema.js";
 import {
 	seoAlternateUrl,
 	seoCustomMeta,
@@ -43,37 +55,89 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		fields: [seoMetadata.id],
 		references: [seoTwitterCard.seoMetadataId],
 	}),
+	// One-to-many: SEO can have multiple structured data entries
+	structuredData: many(seoStructuredData),
+	// One-to-many: SEO can have multiple alternate URLs (for different locales)
+	alternateUrls: many(seoAlternateUrl),
+	// One-to-many: SEO can have multiple custom meta tags
+	customMeta: many(seoCustomMeta),
 
-	productsCoursesModules: one(productCourseModuleTranslation, {
+	marketsTemplatesTranslations: one(marketTemplateTranslation, {
+		fields: [seoMetadata.id],
+		references: [marketTemplateTranslation.seoMetadataId],
+	}),
+
+	productsCoursesTranslations: one(productCourseTranslation, {
+		fields: [seoMetadata.id],
+		references: [productCourseTranslation.seoMetadataId],
+	}),
+	skillsTranslations: one(skillTranslation, {
+		fields: [seoMetadata.id],
+		references: [skillTranslation.seoMetadataId],
+	}),
+	productsCoursesModulesTranslations: one(productCourseModuleTranslation, {
 		fields: [seoMetadata.id],
 		references: [productCourseModuleTranslation.seoMetadataId],
 	}),
-	productsCoursesModulesSections: one(productCourseModuleSectionTranslation, {
+	productsCoursesModulesSectionsTranslations: one(productCourseModuleSectionTranslation, {
 		fields: [seoMetadata.id],
 		references: [productCourseModuleSectionTranslation.seoMetadataId],
 	}),
-	productsCoursesModulesSectionsLessons: one(productCourseModuleSectionLessonTranslation, {
-		fields: [seoMetadata.id],
-		references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
-	}),
-	productsCoursesModulesLessonsTranslations: one(productCourseModuleTranslation, {
-		fields: [seoMetadata.id],
-		references: [productCourseModuleTranslation.seoMetadataId],
-	}),
-
-	lessons: one(lessonTranslation, {
+	productsCoursesModulesSectionsLessonsTranslations: one(
+		productCourseModuleSectionLessonTranslation,
+		{
+			fields: [seoMetadata.id],
+			references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
+		},
+	),
+	lessonsTranslations: one(lessonTranslation, {
 		fields: [seoMetadata.id],
 		references: [lessonTranslation.seoMetadataId],
 	}),
 
-	// One-to-many: SEO can have multiple structured data entries
-	structuredData: many(seoStructuredData),
+	orgsBrandsTranslations: one(orgBrandTranslation, {
+		fields: [seoMetadata.id],
+		references: [orgBrandTranslation.seoMetadataId],
+	}),
+	orgMarketsTranslations: one(orgMarketTranslation, {
+		fields: [seoMetadata.id],
+		references: [orgMarketTranslation.seoMetadataId],
+	}),
+	productsTranslations: one(productTranslation, {
+		fields: [seoMetadata.id],
+		references: [productTranslation.seoMetadataId],
+	}),
+	productsVariantsTranslations: one(productVariantTranslation, {
+		fields: [seoMetadata.id],
+		references: [productVariantTranslation.seoMetadataId],
+	}),
 
-	// One-to-many: SEO can have multiple alternate URLs (for different locales)
-	alternateUrls: many(seoAlternateUrl),
+	usersInstructorProfilesTranslations: one(userInstructorProfileTranslation, {
+		fields: [seoMetadata.id],
+		references: [userInstructorProfileTranslation.seoMetadataId],
+	}),
 
-	// One-to-many: SEO can have multiple custom meta tags
-	customMeta: many(seoCustomMeta),
+	discountsTranslation: one(discountTranslation, {
+		fields: [seoMetadata.id],
+		references: [discountTranslation.seoMetadataId],
+	}),
+	couponsTranslation: one(couponTranslation, {
+		fields: [seoMetadata.id],
+		references: [couponTranslation.seoMetadataId],
+	}),
+	giftCardsTranslation: one(giftCardTranslation, {
+		fields: [seoMetadata.id],
+		references: [giftCardTranslation.seoMetadataId],
+	}),
+	promotionsTranslation: one(promotionTranslation, {
+		fields: [seoMetadata.id],
+		references: [promotionTranslation.seoMetadataId],
+	}),
+
+	productsVariantsPaymentPlansTranslations: one(productVariantPaymentPlanTranslation, {
+		fields: [seoMetadata.id],
+		references: [productVariantPaymentPlanTranslation.seoMetadataId],
+	}),
 }));
 
 // -------------------------------------

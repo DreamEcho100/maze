@@ -12,6 +12,7 @@ import {
 import {
 	createdAt,
 	deletedAt,
+	getLocaleKey,
 	id,
 	name,
 	slug,
@@ -75,7 +76,7 @@ export const locale = table(
 		// locale: text("locale").notNull(),
 		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
 		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
-		locale: text("locale").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
+		key: getLocaleKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
 	},
 	(t) => {
 		const _base = "locale";
@@ -310,7 +311,9 @@ export const marketTemplateTranslation = table(
 		marketTemplateId: text("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		locale: text("locale").notNull(), // e.g., "en-US", "fr-FR"
+		localeKey: getLocaleKey("locale_key")
+			.notNull()
+			.references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: boolean("is_default").default(false),
 		name: name.notNull(),
 		description: text("description"),
@@ -321,11 +324,11 @@ export const marketTemplateTranslation = table(
 	(t) => [
 		uniqueIndex("uq_market_template_translation_unique").on(
 			t.marketTemplateId,
-			t.locale,
+			t.localeKey,
 		),
 		uniqueIndex("uq_market_template_translation_default")
 			.on(t.marketTemplateId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index("idx_market_template_translation_locale").on(t.locale),
+		index("idx_market_template_translation_locale_key").on(t.localeKey),
 	],
 );

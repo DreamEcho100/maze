@@ -19,6 +19,7 @@
 
 import { relations } from "drizzle-orm";
 import { org, orgMember } from "../../../org/schema";
+import { locale } from "../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 import { product } from "../../schema";
@@ -107,6 +108,15 @@ export const productCourseTranslationRelations = relations(productCourseTranslat
 		fields: [productCourseTranslation.courseId],
 		references: [productCourse.id],
 	}),
+
+	seoMetadata: one(seoMetadata, {
+		fields: [productCourseTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [productCourseTranslation.localeKey],
+		references: [locale.key],
+	}),
 }));
 
 /**
@@ -172,6 +182,14 @@ export const skillTranslationRelations = relations(skillTranslation, ({ one }) =
 	skill: one(skill, {
 		fields: [skillTranslation.skillId],
 		references: [skill.id],
+	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [skillTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [skillTranslation.localeKey],
+		references: [locale.key],
 	}),
 }));
 
@@ -289,6 +307,10 @@ export const productCourseModuleTranslationRelations = relations(
 			fields: [productCourseModuleTranslation.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
+		locale: one(locale, {
+			fields: [productCourseModuleTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
 
@@ -349,6 +371,10 @@ export const productCourseModuleSectionTranslationRelations = relations(
 		seoMetadata: one(seoMetadata, {
 			fields: [productCourseModuleSectionTranslation.seoMetadataId],
 			references: [seoMetadata.id],
+		}),
+		locale: one(locale, {
+			fields: [productCourseModuleSectionTranslation.localeKey],
+			references: [locale.key],
 		}),
 	}),
 );
@@ -415,6 +441,10 @@ export const productCourseModuleSectionLessonTranslationRelations = relations(
 			fields: [productCourseModuleSectionLessonTranslation.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
+		locale: one(locale, {
+			fields: [productCourseModuleSectionLessonTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
 
@@ -468,6 +498,10 @@ export const lessonTranslationRelations = relations(lessonTranslation, ({ one })
 	seoMetadata: one(seoMetadata, {
 		fields: [lessonTranslation.seoMetadataId],
 		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [lessonTranslation.localeKey],
+		references: [locale.key],
 	}),
 }));
 

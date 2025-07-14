@@ -1,18 +1,44 @@
 import { relations } from "drizzle-orm";
 import {
+	orgBrandTranslation,
 	orgCurrencySettings,
 	orgMarket,
 	orgMarketCountry,
+	orgMarketTranslation,
 	orgPricingZone,
 	orgPricingZoneCountry,
 } from "../../org/schema.js";
-import { discount, giftCard } from "../../product/offers/schema.js";
-import { productVariantPaymentPlan } from "../../product/payment/schema.js";
+import {
+	lessonTranslation,
+	productCourseModuleSectionLessonTranslation,
+	productCourseModuleSectionTranslation,
+	productCourseModuleTranslation,
+	productCourseTranslation,
+	skillTranslation,
+} from "../../product/by-type/course/schema.js";
+import {
+	couponTranslation,
+	discount,
+	discountTranslation,
+	giftCard,
+	giftCardTranslation,
+	promotionTranslation,
+} from "../../product/offers/schema.js";
+import {
+	oneTimePaymentPlanTranslation,
+	productVariantPaymentPlan,
+	productVariantPaymentPlanTranslation,
+	subscriptionPaymentPlanTranslation,
+	usageBasedPaymentPlanTranslation,
+} from "../../product/payment/schema.js";
+import { productTranslation, productVariantTranslation } from "../../product/schema.js";
+import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import {
 	country,
 	currency,
 	exchangeRate,
+	locale,
 	marketTemplate,
 	marketTemplateCountry,
 	marketTemplateTranslation,
@@ -67,32 +93,26 @@ export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
 	}),
 }));
 
-export const marketTemplateRelations = relations(
-	marketTemplate,
-	({ one, many }) => ({
-		currency: one(currency, {
-			fields: [marketTemplate.currencyCode],
-			references: [currency.code],
-		}),
-		countries: many(marketTemplateCountry),
-		translations: many(marketTemplateTranslation),
-		organizationMarkets: many(orgMarket),
+export const marketTemplateRelations = relations(marketTemplate, ({ one, many }) => ({
+	currency: one(currency, {
+		fields: [marketTemplate.currencyCode],
+		references: [currency.code],
 	}),
-);
+	countries: many(marketTemplateCountry),
+	translations: many(marketTemplateTranslation),
+	organizationMarkets: many(orgMarket),
+}));
 
-export const marketTemplateCountryRelations = relations(
-	marketTemplateCountry,
-	({ one }) => ({
-		marketTemplate: one(marketTemplate, {
-			fields: [marketTemplateCountry.marketTemplateId],
-			references: [marketTemplate.id],
-		}),
-		country: one(country, {
-			fields: [marketTemplateCountry.countryId],
-			references: [country.id],
-		}),
+export const marketTemplateCountryRelations = relations(marketTemplateCountry, ({ one }) => ({
+	marketTemplate: one(marketTemplate, {
+		fields: [marketTemplateCountry.marketTemplateId],
+		references: [marketTemplate.id],
 	}),
-);
+	country: one(country, {
+		fields: [marketTemplateCountry.countryId],
+		references: [country.id],
+	}),
+}));
 
 export const marketTemplateTranslationRelations = relations(
 	marketTemplateTranslation,
@@ -105,5 +125,38 @@ export const marketTemplateTranslationRelations = relations(
 			fields: [marketTemplateTranslation.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
+		locale: one(locale, {
+			fields: [marketTemplateTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
 );
+
+export const _localeRelations = relations(locale, ({ many }) => ({
+	marketsTemplatesTranslations: many(marketTemplateTranslation),
+
+	productsCoursesTranslations: many(productCourseTranslation),
+	skillsTranslations: many(skillTranslation),
+	productsCoursesModulesTranslations: many(productCourseModuleTranslation),
+	productsCoursesModulesSectionsTranslations: many(productCourseModuleSectionTranslation),
+	productsCoursesModulesSectionsLessonsTranslations: many(
+		productCourseModuleSectionLessonTranslation,
+	),
+	lessonsTranslations: many(lessonTranslation),
+	orgsBrandsTranslations: many(orgBrandTranslation),
+	orgMarketsTranslations: many(orgMarketTranslation),
+	productsTranslations: many(productTranslation),
+	productsVariantsTranslations: many(productVariantTranslation),
+
+	usersInstructorProfilesTranslations: many(userInstructorProfileTranslation),
+	discountsTranslation: many(discountTranslation),
+	couponsTranslation: many(couponTranslation),
+	giftCardsTranslation: many(giftCardTranslation),
+	promotionsTranslation: many(promotionTranslation),
+	productsVariantsPaymentPlansTranslations: many(productVariantPaymentPlanTranslation),
+
+	// The following is not shared with the SEO table
+	oneTimePaymentPlansTranslations: many(oneTimePaymentPlanTranslation),
+	subscriptionPaymentPlansTranslations: many(subscriptionPaymentPlanTranslation),
+	usageBasedPaymentPlansTranslations: many(usageBasedPaymentPlanTranslation),
+}));
