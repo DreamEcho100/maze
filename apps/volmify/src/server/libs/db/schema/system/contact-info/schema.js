@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, jsonb, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, table, updatedAt } from "../_utils/helpers";
+import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers";
 
 /**
  * @file Contact Info Schema – Universal Communication Hub
@@ -45,7 +45,7 @@ export const contactInfo = table(
 		id: id.notNull(),
 
 		/**
-		 * Type of the entity this contact belongs to (e.g., "organization", "user").
+		 * Type of the entity this contact belongs to (e.g., "org", "user").
 		 *
 		 * @polymorphicKey
 		 * Used together with `entityId` to uniquely associate contact with any supported entity.

@@ -29,14 +29,9 @@
  */
 
 import { relations } from "drizzle-orm";
-import { currency } from "../../currency-and-market/schema.js";
-import {
-	organization,
-	organizationMarket,
-	organizationMember,
-	organizationPricingZone,
-} from "../../organization/schema.js";
-import { seoMetadata } from "../../seo/schema.js";
+import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
+import { currency } from "../../system/currency-and-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { productVariant } from "../schema.js";
 import {
@@ -89,13 +84,13 @@ export const productVariantPaymentPlanRelations = relations(
 		}),
 
 		/**
-		 * @organizationScope Organization that owns and manages this payment strategy
-		 * @multiTenant Enables organization-specific pricing approaches and business model independence
+		 * @organizationScope Org that owns and manages this payment strategy
+		 * @multiTenant Enables org-specific pricing approaches and business model independence
 		 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 		 */
-		organization: one(organization, {
+		org: one(org, {
 			fields: [productVariantPaymentPlan.organizationId],
-			references: [organization.id],
+			references: [org.id],
 		}),
 
 		/**
@@ -103,9 +98,9 @@ export const productVariantPaymentPlanRelations = relations(
 		 * @internationalExpansion Enables purchasing power parity and market-specific monetization
 		 * @businessStrategy Regional pricing optimization for competitive positioning and local economics
 		 */
-		market: one(organizationMarket, {
+		market: one(orgMarket, {
 			fields: [productVariantPaymentPlan.marketId],
-			references: [organizationMarket.id],
+			references: [orgMarket.id],
 		}),
 
 		/**
@@ -123,9 +118,9 @@ export const productVariantPaymentPlanRelations = relations(
 		 * @businessFlexibility Enables complex regional pricing strategies beyond standard markets
 		 * @organizationalStrategy Advanced pricing control for sophisticated market segmentation
 		 */
-		pricingZone: one(organizationPricingZone, {
+		pricingZone: one(orgPricingZone, {
 			fields: [productVariantPaymentPlan.pricingZoneId],
-			references: [organizationPricingZone.id],
+			references: [orgPricingZone.id],
 		}),
 
 		/**
@@ -414,7 +409,7 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 	}),
 
 	/**
-	 * @paymentPlanReference Organization's payment plan this subscription follows
+	 * @paymentPlanReference Org's payment plan this subscription follows
 	 * @businessContext Determines pricing, features, billing cycle, and access permissions
 	 * @revenueAttribution Links subscription revenue to specific organizational payment strategies
 	 */
@@ -424,23 +419,23 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 	}),
 
 	/**
-	 * @organizationScope Organization context for subscription management and analytics
-	 * @multiTenant Enables organization-specific subscription reporting and business intelligence
+	 * @organizationScope Org context for subscription management and analytics
+	 * @multiTenant Enables org-specific subscription reporting and business intelligence
 	 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 	 */
-	organization: one(organization, {
+	org: one(org, {
 		fields: [userSubscription.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 
 	/**
-	 * @memberContext Optional organization member context for internal subscriptions
+	 * @memberContext Optional org member context for internal subscriptions
 	 * @businessRule When present, indicates internal organizational member subscription access
 	 * @accessControl Enables different access patterns and policies for internal vs external customers
 	 */
-	organizationMember: one(organizationMember, {
+	organizationMember: one(orgMember, {
 		fields: [userSubscription.organizationMemberId],
-		references: [organizationMember.id],
+		references: [orgMember.id],
 	}),
 
 	/**

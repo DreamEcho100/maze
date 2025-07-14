@@ -46,14 +46,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
-import { currency } from "../../currency-and-market/schema.js";
-import {
-	organization,
-	organizationMarket,
-	organizationMember,
-	organizationPricingZone,
-} from "../../organization/schema.js";
-import { seoMetadata } from "../../seo/schema.js";
+import { org, orgMarket, orgMember, orgPricingZone } from "../../org/schema.js";
+import { currency } from "../../system/currency-and-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { productVariant } from "../schema.js";
 
@@ -165,7 +160,7 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
  * tables. Combines payment strategy (one-time, subscription, usage) with regional pricing
  * in a single coherent system for simplified e-commerce management.
  *
- * @abacRole Plan creation/update restricted to organization owners/managers
+ * @abacRole Plan creation/update restricted to org owners/managers
  * @permissionContext Variant scope for plan visibility and organizational boundaries
  *
  * @variantLevelAttachment Payment plans are variant-specific because variants define WHAT
@@ -199,7 +194,7 @@ export const productVariantPaymentPlan = table(
 		 */
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id),
+			.references(() => org.id),
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
@@ -232,7 +227,7 @@ export const productVariantPaymentPlan = table(
 		 * @businessRule null = global pricing, marketId = region-specific pricing
 		 * @multiRegionSupport Enables localized pricing overrides
 		 */
-		marketId: text("market_id").references(() => organizationMarket.id),
+		marketId: text("market_id").references(() => orgMarket.id),
 
 		/**
 		 * @currencySupport Currency for this payment plan instance
@@ -267,7 +262,7 @@ export const productVariantPaymentPlan = table(
 		 * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		 * @businessFlexibility Enables complex regional pricing strategies
 		 */
-		pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
+		pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -359,7 +354,7 @@ export const productVariantPaymentPlan = table(
  * optimization for region-specific pricing campaigns and promotional content.
  *
  * @abacRole Readable globally; write-scoped to org admins with pricing access
- * @permissionContext Translations scoped to organization and tenant
+ * @permissionContext Translations scoped to org and tenant
  */
 export const productVariantPaymentPlanTranslation = table(
 	"product_variant_payment_plan_translation",
@@ -443,7 +438,7 @@ export const productVariantPaymentPlanTranslation = table(
  * @accessManagement Configurable access duration supports both permanent ownership
  * models and rental-style time-limited access patterns for different monetization strategies.
  *
- * @abacRole Scoped to vendor/organization with payment plan write access
+ * @abacRole Scoped to vendor/org with payment plan write access
  * @entitlementScope Access duration drives unlock window logic
  */
 export const oneTimePaymentPlan = table(
@@ -585,7 +580,7 @@ export const oneTimePaymentPlanTranslation = table(
  * customers to experience product value before payment commitment.
  *
  * @compensationModel Recurring revenue engine for instructors and organizations
- * @permissionContext Managed by organization admins with variant access
+ * @permissionContext Managed by org admins with variant access
  * @auditTrail Includes timestamps for usage analytics and plan lifecycle
  */
 export const subscriptionPaymentPlan = table(
@@ -599,7 +594,7 @@ export const subscriptionPaymentPlan = table(
 			.references(() => productVariantPaymentPlan.id),
 
 		/**
-		 * @billingCycle How frequently organization charges subscribers
+		 * @billingCycle How frequently org charges subscribers
 		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
 		billingInterval: billingIntervalEnum("billing_interval").notNull(),
@@ -644,7 +639,7 @@ export const subscriptionPaymentPlan = table(
  * @translationPattern Consistent with established schema translation architecture
  * for predictable internationalization workflows.
  *
- * @abacRole Translations readable globally; write-scoped to organization owners
+ * @abacRole Translations readable globally; write-scoped to org owners
  */
 export const subscriptionPaymentPlanTranslation = table(
 	"subscription_payment_plan_translation",
@@ -883,7 +878,7 @@ export const usageBasedPaymentPlanTranslation = table(
  * instructor attribution calculations and organizational financial reporting for
  * comprehensive creator compensation and business analytics.
  *
- * @memberContextSupport Supports both organization members and external customers
+ * @memberContextSupport Supports both org members and external customers
  * enabling internal team subscriptions alongside external customer sales workflows
  * for comprehensive organizational subscription management.
  *
@@ -912,7 +907,7 @@ export const userSubscription = table(
 			.references(() => user.id),
 
 		/**
-		 * @paymentPlanReference Organization's payment plan this subscription follows
+		 * @paymentPlanReference Org's payment plan this subscription follows
 		 * @businessRule Determines pricing, billing cycle, features, and access permissions
 		 */
 		planId: text("plan_id")
@@ -920,18 +915,18 @@ export const userSubscription = table(
 			.references(() => productVariantPaymentPlan.id),
 
 		/**
-		 * @organizationScope Organization context for this subscription
-		 * @multiTenant Enables organization-specific subscription management and reporting
+		 * @organizationScope Org context for this subscription
+		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id),
+			.references(() => org.id),
 
 		/**
-		 * @memberContext Optional organization member context for internal subscriptions
+		 * @memberContext Optional org member context for internal subscriptions
 		 * @businessRule When present, indicates internal organizational member subscription
 		 */
-		organizationMemberId: text("organization_member_id").references(() => organizationMember.id),
+		organizationMemberId: text("organization_member_id").references(() => orgMember.id),
 
 		/**
 		 * @subscriptionLifecycle Current subscription state for access control

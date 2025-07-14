@@ -8,8 +8,8 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, id, table, updatedAt } from "../_utils/helpers.js";
-import { organization } from "../organization/schema.js";
+import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
+import { org } from "../../org/schema.js";
 
 // SEO status for content workflow
 export const seoStatusEnum = pgEnum("seo_status", [
@@ -40,7 +40,7 @@ export const seoMetadata = table(
 		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 
 		// locale: text("locale").notNull(),
 		isDefault: boolean("is_default").default(false),
@@ -247,7 +247,7 @@ export const seoStructuredData = table(
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
 
 		// Schema.org type
-		schemaType: text("schema_type").notNull(), // "Course", "Product", "Organization", "FAQ", "Review"
+		schemaType: text("schema_type").notNull(), // "Course", "Product", "Org", "FAQ", "Review"
 
 		// The actual structured data
 		data: jsonb("data").notNull(),
@@ -395,7 +395,7 @@ export const seoAuditLog = table(
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 
 		// What changed
 		changeType: text("change_type").notNull(), // "created", "updated", "performance_update", "status_change"

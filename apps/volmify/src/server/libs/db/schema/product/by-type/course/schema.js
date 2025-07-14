@@ -12,16 +12,9 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	fk,
-	id,
-	slug,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers";
-import { organization, organizationMember } from "../../../organization/schema";
-import { seoMetadata } from "../../../seo/schema";
+import { createdAt, fk, id, slug, table, updatedAt } from "../../../_utils/helpers";
+import { org, orgMember } from "../../../org/schema";
+import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 import { product } from "../../schema";
 
@@ -43,9 +36,7 @@ export const productCourse = table(
 		productId: fk("product_id")
 			.references(() => product.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
-			.default(0)
-			.notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -140,9 +131,7 @@ export const productCourseTranslation = table(
 		const base = "product_course_translation";
 		return [
 			uniqueIndex(`uq_${base}`).on(t.courseId, t.locale),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.courseId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.courseId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_locale`).on(t.locale),
 		];
 	},
@@ -157,12 +146,12 @@ export const skill = table(
 		id: id.notNull(),
 		/**
 		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
-		 * @analyticsFoundation Enables cross-organization skill tracking and recommendations
+		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
 		 */
 		slug: slug.notNull(), // "react", "python", "data-analysis"
 
 		/**
-		 * @skillHierarchy Parent skill for hierarchical skill organization
+		 * @skillHierarchy Parent skill for hierarchical skill org
 		 * @marketplaceNavigation Enables nested skill browsing (Programming → JavaScript → React)
 		 */
 		// @ts-ignore
@@ -172,7 +161,7 @@ export const skill = table(
 		// .references(() => /** @type {any}*/ (skill).id),
 
 		/**
-		 * @skillCategorization Skill domain for marketplace organization
+		 * @skillCategorization Skill domain for marketplace org
 		 * @platformAnalytics Enables skill trend analysis across organizations
 		 */
 		category: text("category"), // "programming", "design", "business", "data"
@@ -184,7 +173,7 @@ export const skill = table(
 		approvedAt: boolean("approved_at").default(false),
 
 		createdByOrganizationId: fk("created_by_organization_id")
-			.references(() => organization.id)
+			.references(() => org.id)
 			.notNull(),
 
 		createdAt,
@@ -222,9 +211,7 @@ export const skillTranslation = table(
 		const base = "skill_translation";
 		return [
 			uniqueIndex(`uq_${base}`).on(t.skillId, t.locale),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.skillId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.skillId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_skill`).on(t.skillId),
 			index(`idx_${base}_name`).on(t.name),
 			index(`idx_${base}_description`).on(t.description),
@@ -414,7 +401,7 @@ export const productCourseModuleTranslation = table(
  * Product Course Module Section - Learning Sub-Unit
  *
  * @businessLogic Sections organize lessons within modules enabling granular content
- * structure and flexible learning organization for comprehensive educational content
+ * structure and flexible learning org for comprehensive educational content
  * management and student progress tracking workflows.
  */
 export const productCourseModuleSection = table(
@@ -483,9 +470,7 @@ export const productCourseModuleSectionTranslation = table(
 		const base = "course_module_section_translation";
 		return [
 			uniqueIndex(`uq_${base}`).on(t.sectionId, t.locale),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.sectionId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.sectionId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_module`).on(t.sectionId),
 			index(`idx_${base}_locale`).on(t.locale),
 			index(`idx_${base}_title`).on(t.title),
@@ -617,7 +602,7 @@ export const lesson = table(
 	{
 		id: id.notNull(),
 		organizationId: fk("organization_id")
-			.references(() => organization.id)
+			.references(() => org.id)
 			.notNull(),
 		type: lessonTypeEnum("type").notNull(),
 	},
@@ -652,9 +637,7 @@ export const lessonTranslation = table(
 		const base = "lesson_translation";
 		return [
 			uniqueIndex(`uq_${base}`).on(t.lessonId, t.locale),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.lessonId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.lessonId, t.isDefault).where(eq(t.isDefault, true)),
 			index(`idx_${base}_locale`).on(t.locale),
 			index(`idx_${base}_lesson`).on(t.lessonId),
 			index(`idx_${base}_locale`).on(t.locale),
@@ -668,33 +651,28 @@ export const lessonTranslation = table(
 // IMP: The lesson type related table are halted for now
 
 // User productCourseEnrollment & progress
-export const productCourseEnrollmentStatusEnum = pgEnum(
-	"product_course_enrollment_status",
-	[
-		"not_started",
-		"in_progress",
-		"completed",
-		// What're other valid types that will help in this project and used on other LMS systems?
-	],
-);
+export const productCourseEnrollmentStatusEnum = pgEnum("product_course_enrollment_status", [
+	"not_started",
+	"in_progress",
+	"completed",
+	// What're other valid types that will help in this project and used on other LMS systems?
+]);
 export const productCourseEnrollment = table(
 	"product_course_enrollment",
 	{
 		id: id.notNull(),
 		/**
-		 * @organizationalIdentity Organization member whose progress is tracked
+		 * @organizationalIdentity Org member whose progress is tracked
 		 * @businessRule Primary progress tracking identity for organizational learning
 		 * @accessControl Enables role-based learning experiences and organizational analytics
 		 */
 		organizationMemberId: fk("organization_member_id")
-			.references(() => organizationMember.id)
+			.references(() => orgMember.id)
 			.notNull(),
 		courseId: fk("product_course_id")
 			.references(() => productCourse.id)
 			.notNull(),
-		status: productCourseEnrollmentStatusEnum("status")
-			.default("not_started")
-			.notNull(),
+		status: productCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
 		progressPercentage: decimal("progress_percentage", {
 			precision: 5,
 			scale: 2,
@@ -727,10 +705,7 @@ export const productCourseEnrollment = table(
 	(t) => {
 		const base = "product_course_enrollment";
 		return [
-			uniqueIndex(`uq_${base}_member_course`).on(
-				t.organizationMemberId,
-				t.courseId,
-			),
+			uniqueIndex(`uq_${base}_member_course`).on(t.organizationMemberId, t.courseId),
 			index(`idx_${base}_member`).on(t.organizationMemberId),
 			index(`idx_${base}_course`).on(t.courseId),
 			index(`idx_${base}_status`).on(t.status),
@@ -782,6 +757,6 @@ export const userLearningProfile = table("user_learning_profile", {
 // IMP: `quiz` and `assignment` results tables will be handled later after the lesson types are finalized
 // IMP: The `quiz` and `assignment` will be connected to an `assessment` table that will handle the different types of assessments in A CTI way
 
-// IMP: The `review` table will be connected to the `product` table, and should it consider the `market` or `organization`?
+// IMP: The `review` table will be connected to the `product` table, and should it consider the `market` or `org`?
 // IMP: The `order` table will be connected to the `product` table, which will handled the different types of product pricing/billing/payment models
 // IMP: The `vendorRevenue` table will be connected to the `vendor` connection table that is connected to the `product` table vendors

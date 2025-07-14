@@ -12,9 +12,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, id, table, updatedAt } from "../../_utils/helpers.js";
-import { currency } from "../../currency-and-market/schema.js";
-import { organization } from "../../organization/schema.js";
-import { seoMetadata } from "../../seo/schema.js";
+import { org } from "../../org/schema.js";
+import { currency } from "../../system/currency-and-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 
 /**
@@ -45,7 +45,7 @@ export const discountAppliesToEnum = pgEnum("discount_applies_to", [
  * @table discount
  * @businessLogic Core discount rule applicable to products or orders
  * @auditTrail Traceable financial benefit allocation
- * @multiTenantPattern Scoped to organization
+ * @multiTenantPattern Scoped to org
  */
 export const discount = table(
 	"discount",
@@ -53,7 +53,7 @@ export const discount = table(
 		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 
 		type: discountTypeEnum("type").notNull(),
 		value: decimal("value", { precision: 10, scale: 2 }).notNull(),
@@ -149,7 +149,7 @@ export const coupon = table(
 		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 		discountId: text("discount_id")
 			.notNull()
 			.references(() => discount.id, { onDelete: "cascade" }),
@@ -214,7 +214,7 @@ export const giftCard = table(
 		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 		code: text("code").notNull(),
 		initialBalance: decimal("initial_balance", { precision: 10, scale: 2 }).notNull(),
 		remainingBalance: decimal("remaining_balance", { precision: 10, scale: 2 }).notNull(),
@@ -308,7 +308,7 @@ export const promotion = table(
 		id: id.notNull(),
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 		slug: text("slug").notNull(),
 		bannerImage: text("banner_image"),
 		startsAt: timestamp("starts_at"),

@@ -6,13 +6,13 @@ import { createdAt, id, name, table } from "../_utils/helpers.js";
  *
  * @architecture Attribute-Based Access Control (ABAC)
  * Implements a centralized permission registry where permissions are attributes
- * that can be dynamically assigned to subjects (users) through organization
+ * that can be dynamically assigned to subjects (users) through org
  * contexts. Supports complex permission combinations and contextual access control.
  *
  * @designPattern Registry + Attribute Assignment
  * - Registry: All possible permissions defined at system level
- * - Attributes: Permissions become attributes assigned through organization groups
- * - Context: Access control evaluated within organization boundaries
+ * - Attributes: Permissions become attributes assigned through org groups
+ * - Context: Access control evaluated within org boundaries
  *
  * @abacFlow
  * ```
@@ -39,8 +39,8 @@ import { createdAt, id, name, table } from "../_utils/helpers.js";
  *
  * @businessLogic
  * Categories represent functional domains (e.g., "content_management", "user_administration").
- * This organization supports role-based permission templates and simplifies
- * permission discovery during organization setup.
+ * This org supports role-based permission templates and simplifies
+ * permission discovery during org setup.
  *
  * @cascadeDesign
  * Cascade deletion ensures no orphaned permissions exist, maintaining ABAC
@@ -53,7 +53,7 @@ export const systemPermissionCategory = table(
 		/**
 		 * Namespace identifier for permission grouping
 		 * @businessRule snake_case, represents functional domain
-		 * @abacContext Used for attribute namespace organization
+		 * @abacContext Used for attribute namespace org
 		 */
 		name: name.notNull().unique("uq_system_permission_category_name"),
 		description: varchar("description", { length: 256 }),
@@ -82,7 +82,7 @@ export const systemPermissionCategory = table(
  * Examples: "create_course", "publish_content", "manage_users"
  *
  * @securityModel Whitelist-only approach
- * - No custom permissions at organization level
+ * - No custom permissions at org level
  * - All permissions must be predefined in this registry
  * - Enables centralized security policy management
  */

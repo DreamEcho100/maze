@@ -18,8 +18,8 @@
  */
 
 import { relations } from "drizzle-orm";
-import { organization, organizationMember } from "../../../organization/schema";
-import { seoMetadata } from "../../../seo/schema";
+import { org, orgMember } from "../../../org/schema";
+import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 import { product } from "../../schema";
 import {
@@ -46,53 +46,50 @@ import {
  *
  * @integrationRole Core educational content entity connecting product commerce
  * with learning management and instructor attribution within creator economy
- * @businessRelationships Course creation, skill attribution, module organization,
+ * @businessRelationships Course creation, skill attribution, module org,
  * student enrollment, and progress tracking for comprehensive learning analytics
  * @scalabilityPattern Supports multiple course types and instructor collaboration
  */
-export const productCourseRelations = relations(
-	productCourse,
-	({ one, many }) => ({
-		/**
-		 * @ctiReference Course specializes base product for educational content delivery
-		 * @businessContext Links course content to product commerce and marketing infrastructure
-		 */
-		product: one(product, {
-			fields: [productCourse.productId],
-			references: [product.id],
-		}),
-
-		/**
-		 * @contentStructure Course modules for hierarchical content organization
-		 * @learningManagement Enables structured educational content delivery and progress tracking
-		 */
-		modules: many(productCourseModule),
-
-		/**
-		 * @skillMapping Course skill attribution for learning pathway construction
-		 * @marketplaceIntelligence Enables skill-based course discovery and recommendations
-		 */
-		skills: many(productCourseSkill),
-
-		/**
-		 * @qualityAssurance Community-driven course quality feedback
-		 * @creatorEconomy Instructor feedback for course improvement and credibility
-		 */
-		challengeRatings: many(productCourseChallengeRating),
-
-		/**
-		 * @studentManagement Course enrollment and progress tracking
-		 * @organizationalLearning Employee training and development analytics
-		 */
-		enrollments: many(productCourseEnrollment),
-
-		/**
-		 * @internationalization Multi-language course content and marketing
-		 * @globalMarketplace Localized course positioning and discovery
-		 */
-		translations: many(productCourseTranslation),
+export const productCourseRelations = relations(productCourse, ({ one, many }) => ({
+	/**
+	 * @ctiReference Course specializes base product for educational content delivery
+	 * @businessContext Links course content to product commerce and marketing infrastructure
+	 */
+	product: one(product, {
+		fields: [productCourse.productId],
+		references: [product.id],
 	}),
-);
+
+	/**
+	 * @contentStructure Course modules for hierarchical content org
+	 * @learningManagement Enables structured educational content delivery and progress tracking
+	 */
+	modules: many(productCourseModule),
+
+	/**
+	 * @skillMapping Course skill attribution for learning pathway construction
+	 * @marketplaceIntelligence Enables skill-based course discovery and recommendations
+	 */
+	skills: many(productCourseSkill),
+
+	/**
+	 * @qualityAssurance Community-driven course quality feedback
+	 * @creatorEconomy Instructor feedback for course improvement and credibility
+	 */
+	challengeRatings: many(productCourseChallengeRating),
+
+	/**
+	 * @studentManagement Course enrollment and progress tracking
+	 * @organizationalLearning Employee training and development analytics
+	 */
+	enrollments: many(productCourseEnrollment),
+
+	/**
+	 * @internationalization Multi-language course content and marketing
+	 * @globalMarketplace Localized course positioning and discovery
+	 */
+	translations: many(productCourseTranslation),
+}));
 
 /**
  * Product Course Translation Relations (Localized Course Content)
@@ -101,19 +98,16 @@ export const productCourseRelations = relations(
  * @businessRelationships Multi-language course positioning and regional marketing
  * @scalabilityPattern Supports global marketplace expansion and localized content
  */
-export const productCourseTranslationRelations = relations(
-	productCourseTranslation,
-	({ one }) => ({
-		/**
-		 * @localizationTarget Course being translated for international markets
-		 * @businessContext Enables region-specific course marketing and positioning
-		 */
-		course: one(productCourse, {
-			fields: [productCourseTranslation.courseId],
-			references: [productCourse.id],
-		}),
+export const productCourseTranslationRelations = relations(productCourseTranslation, ({ one }) => ({
+	/**
+	 * @localizationTarget Course being translated for international markets
+	 * @businessContext Enables region-specific course marketing and positioning
+	 */
+	course: one(productCourse, {
+		fields: [productCourseTranslation.courseId],
+		references: [productCourse.id],
 	}),
-);
+}));
 
 /**
  * Skill Relations (Platform-Wide Skill Taxonomy)
@@ -124,7 +118,7 @@ export const productCourseTranslationRelations = relations(
  */
 export const skillRelations = relations(skill, ({ one, many }) => ({
 	/**
-	 * @skillHierarchy Parent skill for nested skill organization
+	 * @skillHierarchy Parent skill for nested skill org
 	 * @marketplaceNavigation Enables hierarchical skill browsing and filtering
 	 */
 	parentSkill: one(skill, {
@@ -142,12 +136,12 @@ export const skillRelations = relations(skill, ({ one, many }) => ({
 	}),
 
 	/**
-	 * @skillCreation Organization that created this skill
+	 * @skillCreation Org that created this skill
 	 * @qualityControl Skill origin tracking for taxonomy management
 	 */
-	createdByOrganization: one(organization, {
+	createdByOrganization: one(org, {
 		fields: [skill.createdByOrganizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 
 	/**
@@ -170,19 +164,16 @@ export const skillRelations = relations(skill, ({ one, many }) => ({
  * @businessRelationships Multi-language skill names for global marketplace
  * @scalabilityPattern Supports platform expansion to international markets
  */
-export const skillTranslationRelations = relations(
-	skillTranslation,
-	({ one }) => ({
-		/**
-		 * @localizationTarget Skill being translated for international taxonomy
-		 * @businessContext Enables localized skill discovery and course matching
-		 */
-		skill: one(skill, {
-			fields: [skillTranslation.skillId],
-			references: [skill.id],
-		}),
+export const skillTranslationRelations = relations(skillTranslation, ({ one }) => ({
+	/**
+	 * @localizationTarget Skill being translated for international taxonomy
+	 * @businessContext Enables localized skill discovery and course matching
+	 */
+	skill: one(skill, {
+		fields: [skillTranslation.skillId],
+		references: [skill.id],
 	}),
-);
+}));
 
 /**
  * Product Course Skill Relations (Course-Skill Attribution)
@@ -191,28 +182,25 @@ export const skillTranslationRelations = relations(
  * @businessRelationships Course skill requirements and learning outcomes
  * @scalabilityPattern Supports complex skill mapping and recommendation algorithms
  */
-export const productCourseSkillRelations = relations(
-	productCourseSkill,
-	({ one }) => ({
-		/**
-		 * @courseContext Course that teaches or requires this skill
-		 * @learningManagement Enables skill-based course organization and prerequisites
-		 */
-		course: one(productCourse, {
-			fields: [productCourseSkill.courseId],
-			references: [productCourse.id],
-		}),
-
-		/**
-		 * @skillContext Skill being taught or required by course
-		 * @marketplaceIntelligence Enables skill-based course discovery and matching
-		 */
-		skill: one(skill, {
-			fields: [productCourseSkill.skillId],
-			references: [skill.id],
-		}),
+export const productCourseSkillRelations = relations(productCourseSkill, ({ one }) => ({
+	/**
+	 * @courseContext Course that teaches or requires this skill
+	 * @learningManagement Enables skill-based course org and prerequisites
+	 */
+	course: one(productCourse, {
+		fields: [productCourseSkill.courseId],
+		references: [productCourse.id],
 	}),
-);
+
+	/**
+	 * @skillContext Skill being taught or required by course
+	 * @marketplaceIntelligence Enables skill-based course discovery and matching
+	 */
+	skill: one(skill, {
+		fields: [productCourseSkill.skillId],
+		references: [skill.id],
+	}),
+}));
 
 /**
  * Product Course Challenge Rating Relations (Course Quality Feedback)
@@ -245,37 +233,34 @@ export const productCourseChallengeRatingRelations = relations(
 );
 
 /**
- * Product Course Module Relations (Learning Unit Organization)
+ * Product Course Module Relations (Learning Unit Org)
  *
  * @integrationRole Major learning units within course structure
- * @businessRelationships Module organization, section containment, and access control
+ * @businessRelationships Module org, section containment, and access control
  * @scalabilityPattern Supports flexible course structure and content gating strategies
  */
-export const productCourseModuleRelations = relations(
-	productCourseModule,
-	({ one, many }) => ({
-		/**
-		 * @courseContext Course containing this learning module
-		 * @contentStructure Enables hierarchical course organization and navigation
-		 */
-		course: one(productCourse, {
-			fields: [productCourseModule.courseId],
-			references: [productCourse.id],
-		}),
-
-		/**
-		 * @contentStructure Sections within module for granular content organization
-		 * @learningManagement Enables detailed learning progression and analytics
-		 */
-		sections: many(productCourseModuleSection),
-
-		/**
-		 * @internationalization Multi-language module content and metadata
-		 * @globalDelivery Localized learning content for international students
-		 */
-		translations: many(productCourseModuleTranslation),
+export const productCourseModuleRelations = relations(productCourseModule, ({ one, many }) => ({
+	/**
+	 * @courseContext Course containing this learning module
+	 * @contentStructure Enables hierarchical course org and navigation
+	 */
+	course: one(productCourse, {
+		fields: [productCourseModule.courseId],
+		references: [productCourse.id],
 	}),
-);
+
+	/**
+	 * @contentStructure Sections within module for granular content org
+	 * @learningManagement Enables detailed learning progression and analytics
+	 */
+	sections: many(productCourseModuleSection),
+
+	/**
+	 * @internationalization Multi-language module content and metadata
+	 * @globalDelivery Localized learning content for international students
+	 */
+	translations: many(productCourseModuleTranslation),
+}));
 
 /**
  * Product Course Module Translation Relations (Localized Module Content)
@@ -308,10 +293,10 @@ export const productCourseModuleTranslationRelations = relations(
 );
 
 /**
- * Product Course Module Section Relations (Learning Sub-Unit Organization)
+ * Product Course Module Section Relations (Learning Sub-Unit Org)
  *
- * @integrationRole Granular content organization within modules
- * @businessRelationships Section organization, lesson containment, and access control
+ * @integrationRole Granular content org within modules
+ * @businessRelationships Section org, lesson containment, and access control
  * @scalabilityPattern Supports detailed learning progression and content monetization
  */
 export const productCourseModuleSectionRelations = relations(
@@ -319,7 +304,7 @@ export const productCourseModuleSectionRelations = relations(
 	({ one, many }) => ({
 		/**
 		 * @moduleContext Module containing this learning section
-		 * @contentStructure Enables nested learning organization and progression tracking
+		 * @contentStructure Enables nested learning org and progression tracking
 		 */
 		module: one(productCourseModule, {
 			fields: [productCourseModuleSection.moduleId],
@@ -344,7 +329,7 @@ export const productCourseModuleSectionRelations = relations(
  * Product Course Module Section Translation Relations (Localized Section Content)
  *
  * @integrationRole Internationalization support for section content
- * @businessRelationships Multi-language section organization and descriptions
+ * @businessRelationships Multi-language section org and descriptions
  * @scalabilityPattern Supports detailed localized learning experiences
  */
 export const productCourseModuleSectionTranslationRelations = relations(
@@ -372,7 +357,7 @@ export const productCourseModuleSectionTranslationRelations = relations(
  * Product Course Module Section Lesson Relations (Individual Learning Item)
  *
  * @integrationRole Links sections to reusable lesson content
- * @businessRelationships Lesson organization, progress tracking, and access control
+ * @businessRelationships Lesson org, progress tracking, and access control
  * @scalabilityPattern Supports lesson reusability and granular learning analytics
  */
 export const productCourseModuleSectionLessonRelations = relations(
@@ -380,7 +365,7 @@ export const productCourseModuleSectionLessonRelations = relations(
 	({ one, many }) => ({
 		/**
 		 * @sectionContext Section containing this lesson
-		 * @contentStructure Enables lesson organization within learning progression
+		 * @contentStructure Enables lesson org within learning progression
 		 */
 		section: one(productCourseModuleSection, {
 			fields: [productCourseModuleSectionLesson.sectionId],
@@ -437,17 +422,17 @@ export const productCourseModuleSectionLessonTranslationRelations = relations(
  * Lesson Relations (Reusable Learning Content)
  *
  * @integrationRole Reusable learning content across courses and organizations
- * @businessRelationships Lesson organization, type-specific content, and internationalization
+ * @businessRelationships Lesson org, type-specific content, and internationalization
  * @scalabilityPattern Supports content reusability and diverse lesson types
  */
 export const lessonRelations = relations(lesson, ({ one, many }) => ({
 	/**
-	 * @organizationBoundary Organization owning this lesson content
+	 * @organizationBoundary Org owning this lesson content
 	 * @contentManagement Enables organizational lesson libraries and reusability
 	 */
-	organization: one(organization, {
+	org: one(org, {
 		fields: [lesson.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 
 	/**
@@ -470,24 +455,21 @@ export const lessonRelations = relations(lesson, ({ one, many }) => ({
  * @businessRelationships Multi-language lesson delivery and content management
  * @scalabilityPattern Supports global lesson content and localized learning
  */
-export const lessonTranslationRelations = relations(
-	lessonTranslation,
-	({ one }) => ({
-		/**
-		 * @localizationTarget Lesson being translated for international delivery
-		 * @businessContext Enables localized lesson content and global course delivery
-		 */
-		lesson: one(lesson, {
-			fields: [lessonTranslation.lessonId],
-			references: [lesson.id],
-		}),
-
-		seoMetadata: one(seoMetadata, {
-			fields: [lessonTranslation.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
+export const lessonTranslationRelations = relations(lessonTranslation, ({ one }) => ({
+	/**
+	 * @localizationTarget Lesson being translated for international delivery
+	 * @businessContext Enables localized lesson content and global course delivery
+	 */
+	lesson: one(lesson, {
+		fields: [lessonTranslation.lessonId],
+		references: [lesson.id],
 	}),
-);
+
+	seoMetadata: one(seoMetadata, {
+		fields: [lessonTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+}));
 
 /**
  * Product Course Enrollment Relations (Student Course Management)
@@ -496,28 +478,25 @@ export const lessonTranslationRelations = relations(
  * @businessRelationships Course access, progress monitoring, and organizational learning
  * @scalabilityPattern Supports both public course sales and organizational training
  */
-export const productCourseEnrollmentRelations = relations(
-	productCourseEnrollment,
-	({ one }) => ({
-		/**
-		 * @organizationalContext Organization member enrolled in course
-		 * @businessRule Progress tracked per organizational membership for role-based learning
-		 */
-		organizationMember: one(organizationMember, {
-			fields: [productCourseEnrollment.organizationMemberId],
-			references: [organizationMember.id],
-		}),
-
-		/**
-		 * @courseContext Course in which student is enrolled
-		 * @learningManagement Enables course-specific progress tracking and analytics
-		 */
-		course: one(productCourse, {
-			fields: [productCourseEnrollment.courseId],
-			references: [productCourse.id],
-		}),
+export const productCourseEnrollmentRelations = relations(productCourseEnrollment, ({ one }) => ({
+	/**
+	 * @organizationalContext Org member enrolled in course
+	 * @businessRule Progress tracked per organizational membership for role-based learning
+	 */
+	organizationMember: one(orgMember, {
+		fields: [productCourseEnrollment.organizationMemberId],
+		references: [orgMember.id],
 	}),
-);
+
+	/**
+	 * @courseContext Course in which student is enrolled
+	 * @learningManagement Enables course-specific progress tracking and analytics
+	 */
+	course: one(productCourse, {
+		fields: [productCourseEnrollment.courseId],
+		references: [productCourse.id],
+	}),
+}));
 
 // export const productCourseModuleLessonProgressRelations = relations(
 //   productCourseModuleLessonProgress,
@@ -547,16 +526,13 @@ export const productCourseEnrollmentRelations = relations(
  * @businessRelationships User skill development, career progression, and platform intelligence
  * @scalabilityPattern Supports cross-organizational professional development tracking
  */
-export const userLearningProfileRelations = relations(
-	userLearningProfile,
-	({ one }) => ({
-		/**
-		 * @learningPortfolio User whose learning achievements are summarized
-		 * @professionalDevelopment Comprehensive learning profile for career advancement
-		 */
-		user: one(user, {
-			fields: [userLearningProfile.userId],
-			references: [user.id],
-		}),
+export const userLearningProfileRelations = relations(userLearningProfile, ({ one }) => ({
+	/**
+	 * @learningPortfolio User whose learning achievements are summarized
+	 * @professionalDevelopment Comprehensive learning profile for career advancement
+	 */
+	user: one(user, {
+		fields: [userLearningProfile.userId],
+		references: [user.id],
 	}),
-);
+}));

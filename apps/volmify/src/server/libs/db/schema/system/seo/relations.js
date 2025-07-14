@@ -1,11 +1,11 @@
 import { relations } from "drizzle-orm";
-import { organization } from "../organization/schema.js";
+import { org } from "../../org/schema.js";
 import {
 	lessonTranslation,
 	productCourseModuleSectionLessonTranslation,
 	productCourseModuleSectionTranslation,
 	productCourseModuleTranslation,
-} from "../product/by-type/course/schema.js";
+} from "../../product/by-type/course/schema.js";
 import {
 	seoAlternateUrl,
 	seoCustomMeta,
@@ -19,16 +19,16 @@ import {
 // SEO METADATA RELATIONS
 // -------------------------------------
 export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
-	// Many-to-one: SEO belongs to an organization
-	createdByOrganization: one(organization, {
+	// Many-to-one: SEO belongs to an org
+	createdByOrganization: one(org, {
 		fields: [seoMetadata.organizationId],
-		references: [organization.id],
+		references: [org.id],
 		relationName: "seo_metadata_created_by_org",
 	}),
 
-	// organization: one(organization, {
+	// org: one(org, {
 	// 	fields: [seoMetadata.organizationId],
-	// 	references: [organization.id],
+	// 	references: [org.id],
 	// 	relationName: "seo_metadata_organization",
 	// }),
 
@@ -52,20 +52,14 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		fields: [seoMetadata.id],
 		references: [productCourseModuleSectionTranslation.seoMetadataId],
 	}),
-	productsCoursesModulesSectionsLessons: one(
-		productCourseModuleSectionLessonTranslation,
-		{
-			fields: [seoMetadata.id],
-			references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
-		},
-	),
-	productsCoursesModulesLessonsTranslations: one(
-		productCourseModuleTranslation,
-		{
-			fields: [seoMetadata.id],
-			references: [productCourseModuleTranslation.seoMetadataId],
-		},
-	),
+	productsCoursesModulesSectionsLessons: one(productCourseModuleSectionLessonTranslation, {
+		fields: [seoMetadata.id],
+		references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
+	}),
+	productsCoursesModulesLessonsTranslations: one(productCourseModuleTranslation, {
+		fields: [seoMetadata.id],
+		references: [productCourseModuleTranslation.seoMetadataId],
+	}),
 
 	lessons: one(lessonTranslation, {
 		fields: [seoMetadata.id],
@@ -85,8 +79,8 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 // -------------------------------------
 // ORGANIZATION RELATIONS (Add SEO relation)
 // -------------------------------------
-export const organizationSeoRelations = relations(organization, ({ many }) => ({
-	// One-to-many: Organization can have multiple SEO metadata entries
+export const organizationSeoRelations = relations(org, ({ many }) => ({
+	// One-to-many: Org can have multiple SEO metadata entries
 	seoMetadata: many(seoMetadata),
 }));
 
@@ -115,30 +109,24 @@ export const seoTwitterCardRelations = relations(seoTwitterCard, ({ one }) => ({
 // -------------------------------------
 // STRUCTURED DATA RELATIONS
 // -------------------------------------
-export const seoStructuredDataRelations = relations(
-	seoStructuredData,
-	({ one }) => ({
-		// Many-to-one: Structured data belongs to SEO metadata
-		seoMetadata: one(seoMetadata, {
-			fields: [seoStructuredData.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
+export const seoStructuredDataRelations = relations(seoStructuredData, ({ one }) => ({
+	// Many-to-one: Structured data belongs to SEO metadata
+	seoMetadata: one(seoMetadata, {
+		fields: [seoStructuredData.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
-);
+}));
 
 // -------------------------------------
 // ALTERNATE URL RELATIONS
 // -------------------------------------
-export const seoAlternateUrlRelations = relations(
-	seoAlternateUrl,
-	({ one }) => ({
-		// Many-to-one: Alternate URL belongs to SEO metadata
-		seoMetadata: one(seoMetadata, {
-			fields: [seoAlternateUrl.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
+export const seoAlternateUrlRelations = relations(seoAlternateUrl, ({ one }) => ({
+	// Many-to-one: Alternate URL belongs to SEO metadata
+	seoMetadata: one(seoMetadata, {
+		fields: [seoAlternateUrl.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
-);
+}));
 
 // -------------------------------------
 // CUSTOM META RELATIONS

@@ -50,9 +50,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, id, slug, table, updatedAt } from "../_utils/helpers.js";
-import { currency } from "../currency-and-market/schema.js";
-import { organization, organizationBrand } from "../organization/schema.js";
-import { seoMetadata } from "../seo/schema.js";
+import { org, orgBrand } from "../org/schema.js";
+import { currency } from "../system/currency-and-market/schema.js";
+import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { discount } from "./offers/schema.js";
 import { paymentPlanTypeEnum } from "./payment/schema.js";
@@ -90,7 +90,7 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "active", "a
  * Product - Multi-Tenant E-commerce Product Foundation
  *
  * @businessLogic Core product catalog supporting diverse product types within organizational
- * boundaries. Every product belongs to an organization and can have multiple variants for
+ * boundaries. Every product belongs to an org and can have multiple variants for
  * different pricing strategies, access levels, or physical variations. Products serve as
  * the marketing and content foundation while variants handle pricing and commerce transactions.
  *
@@ -98,8 +98,8 @@ export const productStatusEnum = pgEnum("product_status", ["draft", "active", "a
  * workflows including content attribution, revenue sharing calculations, and cross-organizational
  * professional collaboration while maintaining clear organizational boundaries.
  *
- * @organizationScope All products are organization-scoped ensuring multi-tenant isolation
- * while enabling sophisticated product catalog management per organization with brand attribution
+ * @organizationScope All products are org-scoped ensuring multi-tenant isolation
+ * while enabling sophisticated product catalog management per org with brand attribution
  * and professional creator recognition.
  *
  * @architecturalDecision Product-variant separation enables flexible pricing strategies
@@ -116,16 +116,16 @@ export const product = table(
 		id: id.notNull(),
 
 		/**
-		 * @organizationScope Organization that owns and manages this product
+		 * @organizationScope Org that owns and manages this product
 		 * @businessRule All product operations must respect organizational boundaries
-		 * @multiTenant Enables independent product catalog management per organization
+		 * @multiTenant Enables independent product catalog management per org
 		 */
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id),
+			.references(() => org.id),
 
 		/**
-		 * @businessRule URL-safe identifier unique within organization
+		 * @businessRule URL-safe identifier unique within org
 		 * @seoOptimization Used for product page URLs and SEO-friendly links
 		 * @marketingStrategy Enables memorable and brandable product URLs
 		 */
@@ -534,13 +534,13 @@ export const productInstructorAttribution = table(
 			.references(() => product.id, { onDelete: "cascade" }),
 
 		/**
-		 * @organizationContext Organization context for this professional attribution
+		 * @organizationContext Org context for this professional attribution
 		 * @businessRule Ensures attribution operates within organizational boundaries
 		 * @multiTenant Maintains organizational isolation while enabling professional attribution
 		 */
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id),
+			.references(() => org.id),
 
 		/**
 		 * @revenueSharing Percentage of product revenue attributed to this instructor
@@ -583,7 +583,7 @@ export const productInstructorAttribution = table(
 /**
  * Product Brand Attribution - Organizational Brand Identity Integration
  *
- * @businessLogic Links products to organization brand identity for consistent marketing
+ * @businessLogic Links products to org brand identity for consistent marketing
  * and brand presentation across product catalogs. Supports organizations with multiple
  * brands or white-label scenarios where products need clear brand attribution for
  * customer recognition and marketing consistency.
@@ -604,13 +604,13 @@ export const productBrandAttribution = table(
 	"product_brand_attribution",
 	{
 		/**
-		 * @brandIdentity Organization brand this product is attributed to
+		 * @brandIdentity Org brand this product is attributed to
 		 * @businessRule Links product presentation to specific organizational brand identity
 		 * @marketingStrategy Enables consistent brand presentation across product catalog
 		 */
 		brandId: text("brand_id")
 			.notNull()
-			.references(() => organizationBrand.id),
+			.references(() => orgBrand.id),
 
 		/**
 		 * @productAttribution Product this brand attribution applies to

@@ -1,6 +1,6 @@
 import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers.js";
-import { organization } from "../../organization/schema.js";
+import { org } from "../../org/schema.js";
 import { discount } from "../offers/schema.js";
 import { product } from "../schema.js";
 
@@ -8,15 +8,15 @@ import { product } from "../schema.js";
  * @domainModel Product Collection
  * @abacRole Organizational Product Grouping
  * @businessLogic Enables merchants to organize products under shared banners,
- * promotions, or seasonal curation. Collections are per-organization and serve
+ * promotions, or seasonal curation. Collections are per-org and serve
  * both frontend browsing and backend tagging purposes.
  *
- * @permissionContext Organization-scoped access only
+ * @permissionContext Org-scoped access only
  * @multiTenantPattern OrganizationId is mandatory foreign key
  * @auditTrail Tracks soft deletions, creation, and updates
  *
  * @indexingStrategy
- * - `uq_collection_slug_org`: Ensures slug is unique per organization (used for URL routing)
+ * - `uq_collection_slug_org`: Ensures slug is unique per org (used for URL routing)
  * - `idx_collection_name`: Enables search or filtering
  * - `idx_collection_deleted_at`: Supports lifecycle filtering
  */
@@ -29,12 +29,12 @@ export const collection = table(
 		id: id.notNull(),
 
 		/**
-		 * @abacScope FK to the owning organization
+		 * @abacScope FK to the owning org
 		 * @integrationContext Determines access scope and permission context
 		 */
 		organizationId: text("organization_id")
 			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
+			.references(() => org.id, { onDelete: "cascade" }),
 
 		/**
 		 * @displayLabel Human-readable collection name

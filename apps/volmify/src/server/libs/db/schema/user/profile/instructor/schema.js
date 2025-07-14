@@ -12,10 +12,10 @@ import {
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
 import { createdAt, fk, id, updatedAt } from "../../../_utils/helpers";
-import { contactInfo } from "../../../contact-info/schema";
-import { instructorOrganizationAffiliation } from "../../../organization/schema";
+import { instructorOrgAffiliation } from "../../../org/schema";
 import { product } from "../../../product/schema";
-import { seoMetadata } from "../../../seo/schema";
+import { contactInfo } from "../../../system/contact-info/schema";
+import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
 
 /**
@@ -166,7 +166,7 @@ export const userInstructorProfileRevenue = table(
 		id: id.notNull(),
 		instructorMembershipId: text("instructor_membership_id")
 			.notNull()
-			.references(() => instructorOrganizationAffiliation.id),
+			.references(() => instructorOrgAffiliation.id),
 		productId: text("product_id")
 			.notNull()
 			.references(() => product.id),
@@ -221,7 +221,7 @@ export const userInstructorProfileMetrics = table(
 		// On what term do we count engagements? Daily, weekly, monthly, or others?
 		// totalEngagements: integer("total_engagements").default(0),
 
-		// The following is commented out because it should be handled in it's own related vendor and organization financial metrics table
+		// The following is commented out because it should be handled in it's own related vendor and org financial metrics table
 		// // Financial metrics
 		// totalRevenueGenerated: decimal("total_revenue_generated", {
 		// 	precision: 12,

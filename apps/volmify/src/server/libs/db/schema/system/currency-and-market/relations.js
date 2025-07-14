@@ -1,14 +1,13 @@
 import { relations } from "drizzle-orm";
-
+import { discount, giftCard } from "../../product/offers/schema.js";
+import { productVariantPaymentPlan } from "../../product/payment/schema.js";
 import {
-	organizationCurrencySettings,
-	organizationMarket,
-	organizationMarketCountry,
-	organizationPricingZone,
-	organizationPricingZoneCountry,
-} from "../organization/schema.js";
-import { discount, giftCard } from "../product/offers/schema.js";
-import { productVariantPaymentPlan } from "../product/payment/schema.js";
+	orgCurrencySettings,
+	orgMarket,
+	orgMarketCountry,
+	orgPricingZone,
+	orgPricingZoneCountry,
+} from "../org/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import {
 	country,
@@ -24,21 +23,21 @@ import {
  *
  * @overview
  * Defines polymorphic and hub-spoke-style relations between core currency/market
- * entities and their integrations with organization settings, pricing, internationalization,
+ * entities and their integrations with org settings, pricing, internationalization,
  * financial reporting, and localization.
  */
 
 export const currencyRelations = relations(currency, ({ many }) => ({
 	countries: many(country),
 	marketTemplates: many(marketTemplate),
-	organizationMarkets: many(organizationMarket),
+	organizationMarkets: many(orgMarket),
 	exchangeRatesBase: many(exchangeRate, { relationName: "base_currency_rates" }),
 	exchangeRatesTarget: many(exchangeRate, { relationName: "target_currency_rates" }),
-	organizationSettings: many(organizationCurrencySettings),
+	organizationSettings: many(orgCurrencySettings),
 	productVariantsPaymentPlans: many(productVariantPaymentPlan),
 	discounts: many(discount),
 	giftCards: many(giftCard),
-	pricingZones: many(organizationPricingZone),
+	pricingZones: many(orgPricingZone),
 }));
 
 export const countryRelations = relations(country, ({ one, many }) => ({
@@ -47,8 +46,8 @@ export const countryRelations = relations(country, ({ one, many }) => ({
 		references: [currency.code],
 	}),
 	marketTemplateCountries: many(marketTemplateCountry),
-	organizationMarketCountries: many(organizationMarketCountry),
-	pricingZoneCountries: many(organizationPricingZoneCountry),
+	organizationMarketCountries: many(orgMarketCountry),
+	pricingZoneCountries: many(orgPricingZoneCountry),
 }));
 
 export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
@@ -71,7 +70,7 @@ export const marketTemplateRelations = relations(marketTemplate, ({ one, many })
 	}),
 	countries: many(marketTemplateCountry),
 	translations: many(marketTemplateTranslation),
-	organizationMarkets: many(organizationMarket),
+	organizationMarkets: many(orgMarket),
 }));
 
 export const marketTemplateCountryRelations = relations(marketTemplateCountry, ({ one }) => ({

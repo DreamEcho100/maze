@@ -1,8 +1,7 @@
 import { relations } from "drizzle-orm";
-
-import { currency } from "../../currency-and-market/schema.js";
-import { organization } from "../../organization/schema.js";
-import { seoMetadata } from "../../seo/schema.js";
+import { org } from "../../org/schema.js";
+import { currency } from "../../system/currency-and-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
 import { user } from "../../user/schema.js";
 import { discountCollection } from "../collection/schema.js";
 import { discountProduct, discountVariant } from "../schema.js";
@@ -29,9 +28,9 @@ import {
  * @auditTrail track:coupon, promotion, usage, collection, product, variant
  */
 export const discountRelations = relations(discount, ({ one, many }) => ({
-	organization: one(organization, {
+	org: one(org, {
 		fields: [discount.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 	currency: one(currency, {
 		fields: [discount.currencyCode],
@@ -70,9 +69,9 @@ export const discountTranslationRelations = relations(discountTranslation, ({ on
  * @permissionContext organization_id
  */
 export const couponRelations = relations(coupon, ({ one, many }) => ({
-	organization: one(organization, {
+	org: one(org, {
 		fields: [coupon.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 	discount: one(discount, {
 		fields: [coupon.discountId],
@@ -124,9 +123,9 @@ export const discountUsageRelations = relations(discountUsage, ({ one }) => ({
  * @compensationModel prepaid_balance
  */
 export const giftCardRelations = relations(giftCard, ({ one, many }) => ({
-	organization: one(organization, {
+	org: one(org, {
 		fields: [giftCard.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 	currency: one(currency, {
 		fields: [giftCard.currencyCode],
@@ -182,9 +181,9 @@ export const giftCardUsageRelations = relations(giftCardUsage, ({ one }) => ({
  * @lifecycleWindow startsAt–endsAt, isActive
  */
 export const promotionRelations = relations(promotion, ({ one, many }) => ({
-	organization: one(organization, {
+	org: one(org, {
 		fields: [promotion.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 	translations: many(promotionTranslation),
 	discounts: many(promotionDiscount),

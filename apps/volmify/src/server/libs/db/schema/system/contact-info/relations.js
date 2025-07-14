@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { userInstructorProfileContactInfo } from "../user/profile/instructor/schema";
+import { userInstructorProfileContactInfo } from "../../user/profile/instructor/schema";
 import { contactInfo } from "./schema";
 
 /**
@@ -17,7 +17,7 @@ import { contactInfo } from "./schema";
  *
  * @useCases
  * - Instructor profile contact management
- * - Future support for organization, user, and brand-level contacts
+ * - Future support for org, user, and brand-level contacts
  * - Dynamic communication routing, support escalation, and partner outreach
  *
  * @why

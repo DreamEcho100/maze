@@ -1,0 +1,388 @@
+import { relations } from "drizzle-orm";
+import { lesson, productCourseEnrollment, skill } from "../product/by-type/course/schema.js";
+import { productVariantPaymentPlan } from "../product/payment/schema.js";
+import { productBrandAttribution, productInstructorAttribution } from "../product/schema.js";
+import { country, currency, marketTemplate } from "../system/currency-and-market/schema.js";
+import { systemPermission } from "../system/schema.js";
+import { seoMetadata } from "../system/seo/schema.js";
+import { userInstructorProfile } from "../user/profile/instructor/schema.js";
+import { user } from "../user/schema.js";
+import {
+	instructorOrgAffiliation,
+	org,
+	orgBrand,
+	orgBrandTranslation,
+	orgCurrencySettings,
+	orgDepartment,
+	orgMarket,
+	orgMarketCountry,
+	orgMarketTranslation,
+	orgMember,
+	orgMemberDepartment,
+	orgMemberInvitation,
+	orgMemberPermissionsGroup,
+	orgMemberTeam,
+	orgPermissionsGroup,
+	orgPermissionsGroupPermission,
+	orgPricingZone,
+	orgPricingZoneCountry,
+	orgTeam,
+	orgTeamDepartment,
+} from "./schema.js";
+
+/**
+ * @fileoverview Multi-Tenant ABAC-Scoped Org Relationship Map
+ *
+ * @abacScope Centralized Org Context
+ * @architecturePattern Hub-and-Spoke with Federated Attributes
+ * @integrationContext Role propagation via departments, teams, and permission groups
+ * @businessLogic Drives contextual access resolution and organizational scoping
+ * @auditTrail Relationships enable fine-grained authorization visibility
+ */
+
+/**
+ * @abacRoleContext Org
+ * @permissionContext Entity Hub — all ABAC-scoped entities originate from here
+ */
+export const organizationRelations = relations(org, ({ many }) => ({
+	members: many(orgMember),
+	teams: many(orgTeam),
+	departments: many(orgDepartment),
+	permissionGroups: many(orgPermissionsGroup),
+	currencySettings: many(orgCurrencySettings),
+	markets: many(orgMarket),
+	pricingZones: many(orgPricingZone),
+	brands: many(orgBrand),
+	instructorAffiliations: many(instructorOrgAffiliation),
+	skillsCreated: many(skill),
+	lessons: many(lesson),
+}));
+
+/**
+ * @abacSubjectContext Org Member
+ * @permissionResolution Anchor subject for organizational ABAC resolution
+ * @identityLink Bridges platform identity to organizational context
+ * @onboardingPattern Supports team/departmental affiliation, invites, and groups
+ */
+export const organizationMemberRelations = relations(orgMember, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgMember.orgId],
+		references: [org.id],
+	}),
+	user: one(user, {
+		fields: [orgMember.userId],
+		references: [user.id],
+	}),
+	memberTeams: many(orgMemberTeam),
+	memberGroups: many(orgMemberPermissionsGroup),
+	memberInvitations: many(orgMemberInvitation),
+	memberDepartments: many(orgMemberDepartment),
+	productsCoursesEnrollments: many(productCourseEnrollment),
+	lessons: many(lesson),
+}));
+
+/**
+ * @abacInheritance Department Context
+ * @permissionBridge Enables department-based inheritance for members and teams
+ * @businessLogic Models traditional hierarchy within ABAC modeling
+ */
+export const organizationDepartmentRelations = relations(orgDepartment, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgDepartment.orgId],
+		references: [org.id],
+	}),
+	memberDepartments: many(orgMemberDepartment),
+	teamDepartments: many(orgTeamDepartment),
+	instructorAffiliations: many(instructorOrgAffiliation),
+}));
+
+/**
+ * @permissionBridgeContext Team-Department Bridge
+ * @abacImplication Enables contextual inheritance from structural mapping
+ */
+export const organizationTeamDepartmentRelations = relations(orgTeamDepartment, ({ one }) => ({
+	team: one(orgTeam, {
+		fields: [orgTeamDepartment.teamId],
+		references: [orgTeam.id],
+	}),
+	department: one(orgDepartment, {
+		fields: [orgTeamDepartment.departmentId],
+		references: [orgDepartment.id],
+	}),
+}));
+
+/**
+ * @abacAssignment Member–Department Contextual Assignment
+ * @permissionScope Enables scoped permissions based on departmental affiliation
+ */
+export const organizationMemberDepartmentRelations = relations(orgMemberDepartment, ({ one }) => ({
+	member: one(orgMember, {
+		fields: [orgMemberDepartment.memberId],
+		references: [orgMember.id],
+	}),
+	department: one(orgDepartment, {
+		fields: [orgMemberDepartment.departmentId],
+		references: [orgDepartment.id],
+	}),
+}));
+
+/**
+ * @abacRoleScope Team
+ * @permissionContext Enables cross-functional and project-based roles
+ * @businessLogic Team-level access scoping for dynamic role assignment
+ */
+export const organizationTeamRelations = relations(orgTeam, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgTeam.orgId],
+		references: [org.id],
+	}),
+	teamDepartments: many(orgTeamDepartment),
+	memberTeams: many(orgMemberTeam),
+}));
+
+/**
+ * @abacAssignment Member–Team Relationship
+ * @permissionPath Enables team-scoped permission propagation
+ */
+export const organizationMemberTeamRelations = relations(orgMemberTeam, ({ one }) => ({
+	member: one(orgMember, {
+		fields: [orgMemberTeam.memberId],
+		references: [orgMember.id],
+	}),
+	team: one(orgTeam, {
+		fields: [orgMemberTeam.teamId],
+		references: [orgTeam.id],
+	}),
+}));
+
+/**
+ * @abacAssignment Permission Group Assignment
+ * @permissionAttributes Maps members to permission attribute containers
+ * @abacPreset Enables group-based attribute presets
+ */
+export const organizationMemberPermissionsGroupRelations = relations(
+	orgMemberPermissionsGroup,
+	({ one }) => ({
+		member: one(orgMember, {
+			fields: [orgMemberPermissionsGroup.memberId],
+			references: [orgMember.id],
+		}),
+		permissionGroup: one(orgPermissionsGroup, {
+			fields: [orgMemberPermissionsGroup.permissionsGroupId],
+			references: [orgPermissionsGroup.id],
+		}),
+	}),
+);
+
+/**
+ * @abacContainer Permission Group
+ * @permissionContext Groups as reusable permission attribute containers
+ * @systemBridge Links org-specific grouping to central system permissions
+ */
+export const organizationPermissionsGroupRelations = relations(
+	orgPermissionsGroup,
+	({ one, many }) => ({
+		org: one(org, {
+			fields: [orgPermissionsGroup.orgId],
+			references: [org.id],
+		}),
+		groupPermissions: many(orgPermissionsGroupPermission),
+		memberGroups: many(orgMemberPermissionsGroup),
+	}),
+);
+
+/**
+ * @abacAttributeBridge Permission Group → System Permission
+ * @systemIntegration Maps org-defined groups to core permission registry
+ */
+export const organizationPermissionsGroupPermissionRelations = relations(
+	orgPermissionsGroupPermission,
+	({ one }) => ({
+		permissionGroup: one(orgPermissionsGroup, {
+			fields: [orgPermissionsGroupPermission.permissionsGroupId],
+			references: [orgPermissionsGroup.id],
+		}),
+		systemPermission: one(systemPermission, {
+			fields: [orgPermissionsGroupPermission.systemPermissionId],
+			references: [systemPermission.id],
+		}),
+	}),
+);
+
+/**
+ * @invitationFlow Member Invitation
+ * @abacOnboarding Pre-authorization mechanism prior to subject activation
+ * @lifecycleBridge Connects invite to eventual member record
+ */
+export const organizationMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
+	org: one(org, {
+		fields: [orgMemberInvitation.orgId],
+		references: [org.id],
+	}),
+	invitedByUser: one(user, {
+		fields: [orgMemberInvitation.invitedByUserId],
+		references: [user.id],
+	}),
+	member: one(orgMember, {
+		fields: [orgMemberInvitation.memberId],
+		references: [orgMember.id],
+		relationName: "member_invitation",
+	}),
+}));
+
+/**
+ * @currencyContext Organization–Currency Association
+ * @financialGovernance Tracks preferred billing and payout currencies
+ */
+export const organizationCurrencySettingsRelations = relations(orgCurrencySettings, ({ one }) => ({
+	org: one(org, {
+		fields: [orgCurrencySettings.orgId],
+		references: [org.id],
+	}),
+	currency: one(currency, {
+		fields: [orgCurrencySettings.currencyCode],
+		references: [currency.code],
+	}),
+}));
+
+/**
+ * @marketContext Org Market Structure
+ * @i18nPattern Supports localized market experience with pricing templates
+ * @complianceScope Currency-specific regional configurations
+ */
+export const organizationMarketRelations = relations(orgMarket, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgMarket.orgId],
+		references: [org.id],
+	}),
+	template: one(marketTemplate, {
+		fields: [orgMarket.templateId],
+		references: [marketTemplate.id],
+	}),
+	currency: one(currency, {
+		fields: [orgMarket.currencyCode],
+		references: [currency.code],
+	}),
+	countries: many(orgMarketCountry),
+	translations: many(orgMarketTranslation),
+	productVariantsPaymentPlans: many(productVariantPaymentPlan),
+}));
+
+/**
+ * @regionalMapping Market–Country Bridge
+ * @i18nScope Enables country-scoped market operations
+ */
+export const organizationMarketCountryRelations = relations(orgMarketCountry, ({ one }) => ({
+	organizationMarket: one(orgMarket, {
+		fields: [orgMarketCountry.orgMarketId],
+		references: [orgMarket.id],
+	}),
+	country: one(country, {
+		fields: [orgMarketCountry.countryId],
+		references: [country.id],
+	}),
+}));
+
+/**
+ * @localizationBridge Market Translation
+ * @seoIntegration Includes SEO metadata per locale
+ */
+export const organizationMarketTranslationRelations = relations(
+	orgMarketTranslation,
+	({ one }) => ({
+		organizationMarket: one(orgMarket, {
+			fields: [orgMarketTranslation.orgMarketId],
+			references: [orgMarket.id],
+		}),
+		org: one(org, {
+			fields: [orgMarketTranslation.orgId],
+			references: [org.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgMarketTranslation.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+	}),
+);
+
+/**
+ * @pricingZone Pricing Zone Configuration
+ * @multiRegionSupport Enables regionally-scoped pricing per currency
+ */
+export const organizationPricingZoneRelations = relations(orgPricingZone, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgPricingZone.orgId],
+		references: [org.id],
+	}),
+	currency: one(currency, {
+		fields: [orgPricingZone.currencyCode],
+		references: [currency.code],
+	}),
+	countries: many(orgPricingZoneCountry),
+}));
+
+export const organizationPricingZoneCountryRelations = relations(
+	orgPricingZoneCountry,
+	({ one }) => ({
+		zone: one(orgPricingZone, {
+			fields: [orgPricingZoneCountry.zoneId],
+			references: [orgPricingZone.id],
+		}),
+		country: one(country, {
+			fields: [orgPricingZoneCountry.countryId],
+			references: [country.id],
+		}),
+	}),
+);
+
+/**
+ * @brandContext Org Brand
+ * @contentAttribution Enables multiple brands per org for product identity
+ */
+export const organizationBrandRelations = relations(orgBrand, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgBrand.orgId],
+		references: [org.id],
+	}),
+	productAttributions: many(productBrandAttribution),
+	translations: many(orgBrandTranslation),
+}));
+
+/**
+ * @localizationBridge Brand Translation
+ * @seoIntegration SEO metadata per brand locale
+ */
+export const organizationBrandTranslationRelations = relations(orgBrandTranslation, ({ one }) => ({
+	brand: one(orgBrand, {
+		fields: [orgBrandTranslation.orgBrandId],
+		references: [orgBrand.id],
+	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [orgBrandTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+}));
+
+/**
+ * @instructorNetwork Instructor Affiliation
+ * @revenueAttribution Connects instructor to org-scoped content ownership
+ * @abacScope Instructor–Org–Member bridge for scoped authorization
+ */
+export const instructorOrganizationAffiliationRelations = relations(
+	instructorOrgAffiliation,
+	({ one, many }) => ({
+		instructor: one(userInstructorProfile, {
+			fields: [instructorOrgAffiliation.instructorId],
+			references: [userInstructorProfile.id],
+		}),
+		org: one(org, {
+			fields: [instructorOrgAffiliation.orgId],
+			references: [org.id],
+		}),
+		member: one(orgMember, {
+			fields: [instructorOrgAffiliation.memberId],
+			references: [orgMember.id],
+		}),
+		productAttributions: many(productInstructorAttribution),
+	}),
+);

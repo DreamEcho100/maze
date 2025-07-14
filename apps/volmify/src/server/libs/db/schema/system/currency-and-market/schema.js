@@ -9,7 +9,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, id, name, slug, table, updatedAt } from "../../_utils/helpers.js";
 import { seoMetadata } from "../seo/schema.js";
 
 /**
@@ -27,7 +27,7 @@ import { seoMetadata } from "../seo/schema.js";
  *
  * @integrations
  * Used by pricing, billing, subscriptions, tax, localization, and storefront rendering.
- * Core to organization onboarding, multi-region launches, and financial reporting.
+ * Core to org onboarding, multi-region launches, and financial reporting.
  */
 
 /**

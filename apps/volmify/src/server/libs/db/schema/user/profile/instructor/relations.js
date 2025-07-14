@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { instructorOrganizationAffiliation } from "../../../organization/schema.js";
+import { instructorOrgAffiliation } from "../../../org/schema.js";
 import { user } from "../../../user/schema.js";
 import { userInstructorProfile, userInstructorProfileContactInfo } from "./schema.js";
 
@@ -22,7 +22,7 @@ export const userInstructorProfileRelations = relations(userInstructorProfile, (
 	/**
 	 * @organizationParticipation Instructor affiliations across organizations
 	 */
-	organizationAffiliations: many(instructorOrganizationAffiliation),
+	organizationAffiliations: many(instructorOrgAffiliation),
 
 	/**
 	 * @communicationHub Multiple contact points for instructor business

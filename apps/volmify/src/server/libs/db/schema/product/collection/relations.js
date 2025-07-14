@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 
-import { organization } from "../../organization/schema.js";
+import { org } from "../../org/schema.js";
 import { discount } from "../offers/schema.js";
 import { product } from "../schema.js";
 import { collection, discountCollection, productCollection } from "./schema.js";
@@ -15,16 +15,16 @@ import { collection, discountCollection, productCollection } from "./schema.js";
  * Enables linking collections to:
  * - Products (curation/view logic)
  * - Discounts (bulk promotional logic)
- * - Owning Organization (access boundaries)
+ * - Owning Org (access boundaries)
  */
 export const collectionRelations = relations(collection, ({ one, many }) => ({
 	/**
-	 * @abacScope Organization providing collection boundary
+	 * @abacScope Org providing collection boundary
 	 * @permissionContext Determines who can manage this collection
 	 */
-	organization: one(organization, {
+	org: one(org, {
 		fields: [collection.organizationId],
-		references: [organization.id],
+		references: [org.id],
 	}),
 
 	/**
