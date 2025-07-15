@@ -6,15 +6,8 @@ import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
 import { orgLocale, orgRegion } from "./locale-region/schema.js";
-import {
-	lesson,
-	productCourseEnrollment,
-	skill,
-} from "./product/by-type/course/schema.js";
-import {
-	productBrandAttribution,
-	productInstructorAttribution,
-} from "./product/schema.js";
+import { lesson, productCourseEnrollment, skill } from "./product/by-type/course/schema.js";
+import { productBrandAttribution, productInstructorAttribution } from "./product/schema.js";
 import {
 	instructorOrgAffiliation,
 	org,
@@ -22,15 +15,15 @@ import {
 	orgBrandTranslation,
 	orgCurrencySettings,
 	orgDepartment,
+	orgDepartmentMembership,
 	orgMember,
-	orgMemberDepartment,
 	orgMemberInvitation,
 	orgMemberPermissionsGroup,
-	orgMemberTeam,
 	orgPermissionsGroup,
 	orgPermissionsGroupPermission,
 	orgTeam,
 	orgTeamDepartment,
+	orgTeamMemberships,
 } from "./schema.js";
 
 /**
@@ -78,10 +71,10 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 		fields: [orgMember.userId],
 		references: [user.id],
 	}),
-	memberTeams: many(orgMemberTeam),
+	memberTeams: many(orgTeamMemberships),
 	memberGroups: many(orgMemberPermissionsGroup),
 	memberInvitations: many(orgMemberInvitation),
-	memberDepartments: many(orgMemberDepartment),
+	memberDepartments: many(orgDepartmentMembership),
 	productsCoursesEnrollments: many(productCourseEnrollment),
 	lessons: many(lesson),
 }));
@@ -91,54 +84,45 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
  * @permissionBridge Enables department-based inheritance for members and teams
  * @businessLogic Models traditional hierarchy within ABAC modeling
  */
-export const orgDepartmentRelations = relations(
-	orgDepartment,
-	({ one, many }) => ({
-		org: one(org, {
-			fields: [orgDepartment.orgId],
-			references: [org.id],
-		}),
-		memberDepartments: many(orgMemberDepartment),
-		teamDepartments: many(orgTeamDepartment),
-		instructorAffiliations: many(instructorOrgAffiliation),
+export const orgDepartmentRelations = relations(orgDepartment, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgDepartment.orgId],
+		references: [org.id],
 	}),
-);
+	memberDepartments: many(orgDepartmentMembership),
+	teamDepartments: many(orgTeamDepartment),
+	instructorAffiliations: many(instructorOrgAffiliation),
+}));
 
 /**
  * @permissionBridgeContext Team-Department Bridge
  * @abacImplication Enables contextual inheritance from structural mapping
  */
-export const orgTeamDepartmentRelations = relations(
-	orgTeamDepartment,
-	({ one }) => ({
-		team: one(orgTeam, {
-			fields: [orgTeamDepartment.teamId],
-			references: [orgTeam.id],
-		}),
-		department: one(orgDepartment, {
-			fields: [orgTeamDepartment.departmentId],
-			references: [orgDepartment.id],
-		}),
+export const orgTeamDepartmentRelations = relations(orgTeamDepartment, ({ one }) => ({
+	team: one(orgTeam, {
+		fields: [orgTeamDepartment.teamId],
+		references: [orgTeam.id],
 	}),
-);
+	department: one(orgDepartment, {
+		fields: [orgTeamDepartment.departmentId],
+		references: [orgDepartment.id],
+	}),
+}));
 
 /**
  * @abacAssignment Member–Department Contextual Assignment
  * @permissionScope Enables scoped permissions based on departmental affiliation
  */
-export const orgMemberDepartmentRelations = relations(
-	orgMemberDepartment,
-	({ one }) => ({
-		member: one(orgMember, {
-			fields: [orgMemberDepartment.memberId],
-			references: [orgMember.id],
-		}),
-		department: one(orgDepartment, {
-			fields: [orgMemberDepartment.departmentId],
-			references: [orgDepartment.id],
-		}),
+export const orgDepartmentMembershipRelations = relations(orgDepartmentMembership, ({ one }) => ({
+	member: one(orgMember, {
+		fields: [orgDepartmentMembership.memberId],
+		references: [orgMember.id],
 	}),
-);
+	department: one(orgDepartment, {
+		fields: [orgDepartmentMembership.departmentId],
+		references: [orgDepartment.id],
+	}),
+}));
 
 /**
  * @abacRoleScope Team
@@ -151,20 +135,20 @@ export const orgTeamRelations = relations(orgTeam, ({ one, many }) => ({
 		references: [org.id],
 	}),
 	teamDepartments: many(orgTeamDepartment),
-	memberTeams: many(orgMemberTeam),
+	memberTeams: many(orgTeamMemberships),
 }));
 
 /**
  * @abacAssignment Member–Team Relationship
  * @permissionPath Enables team-scoped permission propagation
  */
-export const orgMemberTeamRelations = relations(orgMemberTeam, ({ one }) => ({
+export const orgTeamMembershipsRelations = relations(orgTeamMemberships, ({ one }) => ({
 	member: one(orgMember, {
-		fields: [orgMemberTeam.memberId],
+		fields: [orgTeamMemberships.memberId],
 		references: [orgMember.id],
 	}),
 	team: one(orgTeam, {
-		fields: [orgMemberTeam.teamId],
+		fields: [orgTeamMemberships.teamId],
 		references: [orgTeam.id],
 	}),
 }));
@@ -193,17 +177,14 @@ export const orgMemberPermissionsGroupRelations = relations(
  * @permissionContext Groups as reusable permission attribute containers
  * @systemBridge Links org-specific grouping to central system permissions
  */
-export const orgPermissionsGroupRelations = relations(
-	orgPermissionsGroup,
-	({ one, many }) => ({
-		org: one(org, {
-			fields: [orgPermissionsGroup.orgId],
-			references: [org.id],
-		}),
-		groupPermissions: many(orgPermissionsGroupPermission),
-		memberGroups: many(orgMemberPermissionsGroup),
+export const orgPermissionsGroupRelations = relations(orgPermissionsGroup, ({ one, many }) => ({
+	org: one(org, {
+		fields: [orgPermissionsGroup.orgId],
+		references: [org.id],
 	}),
-);
+	groupPermissions: many(orgPermissionsGroupPermission),
+	memberGroups: many(orgMemberPermissionsGroup),
+}));
 
 /**
  * @abacAttributeBridge Permission Group → System Permission
@@ -228,42 +209,36 @@ export const orgPermissionsGroupPermissionRelations = relations(
  * @abacOnboarding Pre-authorization mechanism prior to subject activation
  * @lifecycleBridge Connects invite to eventual member record
  */
-export const orgMemberInvitationRelations = relations(
-	orgMemberInvitation,
-	({ one }) => ({
-		org: one(org, {
-			fields: [orgMemberInvitation.orgId],
-			references: [org.id],
-		}),
-		invitedByUser: one(user, {
-			fields: [orgMemberInvitation.invitedByUserId],
-			references: [user.id],
-		}),
-		member: one(orgMember, {
-			fields: [orgMemberInvitation.memberId],
-			references: [orgMember.id],
-			relationName: "member_invitation",
-		}),
+export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
+	org: one(org, {
+		fields: [orgMemberInvitation.orgId],
+		references: [org.id],
 	}),
-);
+	invitedByUser: one(user, {
+		fields: [orgMemberInvitation.invitedByUserId],
+		references: [user.id],
+	}),
+	member: one(orgMember, {
+		fields: [orgMemberInvitation.memberId],
+		references: [orgMember.id],
+		relationName: "member_invitation",
+	}),
+}));
 
 /**
  * @currencyContext Organization–Currency Association
  * @financialGovernance Tracks preferred billing and payout currencies
  */
-export const orgCurrencySettingsRelations = relations(
-	orgCurrencySettings,
-	({ one }) => ({
-		org: one(org, {
-			fields: [orgCurrencySettings.orgId],
-			references: [org.id],
-		}),
-		currency: one(currency, {
-			fields: [orgCurrencySettings.currencyCode],
-			references: [currency.code],
-		}),
+export const orgCurrencySettingsRelations = relations(orgCurrencySettings, ({ one }) => ({
+	org: one(org, {
+		fields: [orgCurrencySettings.orgId],
+		references: [org.id],
 	}),
-);
+	currency: one(currency, {
+		fields: [orgCurrencySettings.currencyCode],
+		references: [currency.code],
+	}),
+}));
 
 /**
  * @brandContext Org Brand
@@ -282,23 +257,20 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
  * @localizationBridge Brand Translation
  * @seoIntegration SEO metadata per brand locale
  */
-export const orgBrandTranslationRelations = relations(
-	orgBrandTranslation,
-	({ one }) => ({
-		brand: one(orgBrand, {
-			fields: [orgBrandTranslation.orgBrandId],
-			references: [orgBrand.id],
-		}),
-		seoMetadata: one(seoMetadata, {
-			fields: [orgBrandTranslation.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
-		locale: one(locale, {
-			fields: [orgBrandTranslation.localeKey],
-			references: [locale.key],
-		}),
+export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ one }) => ({
+	brand: one(orgBrand, {
+		fields: [orgBrandTranslation.orgBrandId],
+		references: [orgBrand.id],
 	}),
-);
+	seoMetadata: one(seoMetadata, {
+		fields: [orgBrandTranslation.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+	locale: one(locale, {
+		fields: [orgBrandTranslation.localeKey],
+		references: [locale.key],
+	}),
+}));
 
 /**
  * @instructorNetwork Instructor Affiliation

@@ -1,41 +1,30 @@
 import { eq } from "drizzle-orm";
 import {
 	boolean,
-	decimal,
+	foreignKey,
 	index,
 	jsonb,
 	pgEnum,
-	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
-	varchar,
 } from "drizzle-orm/pg-core";
 
 import {
 	createdAt,
 	deletedAt,
 	fk,
-	getLocaleKey,
 	id,
 	name,
-	slug,
 	table,
 	updatedAt,
 } from "../../../_utils/helpers.js";
-import {
-	currency,
-	locale,
-} from "../../../system/locale-currency-market/schema.js";
-import { systemPermission } from "../../../system/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
-import { userInstructorProfile } from "../../../user/profile/instructor/schema.js";
-import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { orgMember } from "../schema.js";
 import { orgTeam } from "../team/schema.js";
 
+const orgDepartmentTableName = `${orgTableName}_department`;
 /**
  * Organizational Department Structure
  *
@@ -44,7 +33,7 @@ import { orgTeam } from "../team/schema.js";
  * structure and influences default permissions for members and teams.
  */
 export const orgDepartment = table(
-	`${orgTableName}_department`,
+	orgDepartmentTableName,
 	{
 		id: id.notNull(),
 
@@ -52,31 +41,48 @@ export const orgDepartment = table(
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
+		/**
+		 * @domain
+		 * Departmental units used for org charts and structured ABAC.
+		 */
 		name: name.notNull(),
 		description: text("description"),
-		color: text("color"),
 
-		isDefault: boolean("is_default").default(false), // Only one per org
+		// isDefault: boolean("is_default").default(false), // Only one per org
+		// isActive: boolean("is_active").default(true),
 
-		isActive: boolean("is_active").default(true),
+		/**
+		 * @optional
+		 * Used to define nested department structures (e.g., HR > Payroll)
+		 */
+		parent_id: fk("parent_id"), // .references(() => departments.id),
 
 		createdAt,
 		updatedAt,
 		deletedAt,
+
+		metadata: jsonb("metadata"),
 	},
-	(t) => {
-		const base = `${orgTableName}_department`;
-		return [
-			uniqueIndex(`uq_${base}_name`).on(t.orgId, t.name),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.orgId, t.isDefault)
-				.where(eq(t.isDefault, true)),
-			index(`idx_${base}_org`).on(t.orgId),
-			index(`idx_${base}_active`).on(t.isActive),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgDepartmentTableName}_name`).on(t.orgId, t.name),
+		// uniqueIndex(`uq_${orgDepartmentTableName}_default`)
+		// 	.on(t.orgId, t.isDefault)
+		// 	.where(eq(t.isDefault, true)),
+		// index(`idx_${orgDepartmentTableName}_active`).on(t.isActive),
+		index(`idx_${orgDepartmentTableName}_org`).on(t.orgId),
+		foreignKey({
+			columns: [t.parent_id],
+			foreignColumns: [t.id],
+			name: `fk_${orgDepartmentTableName}_parent`,
+		}),
+	],
 );
 
+const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
+export const orgDepartmentMembershipStatusEnum = pgEnum(
+	`${orgDepartmentMembershipTableName}_status`,
+	["active", "inactive", "pending", "removed"],
+);
 /**
  * Member-Department Assignment (M:M)
  *
@@ -84,11 +90,9 @@ export const orgDepartment = table(
  * Members can belong to one or more departments. This informs both permission
  * inheritance and UI logic (like filtering or default views).
  */
-export const orgMemberDepartment = table(
-	`${orgTableName}_member_department`,
+export const orgDepartmentMembership = table(
+	orgDepartmentMembershipTableName,
 	{
-		id: id.notNull(),
-
 		memberId: text("member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
@@ -97,23 +101,28 @@ export const orgMemberDepartment = table(
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		isDefault: boolean("is_default").default(false), // Only one per member
-
+		status: orgDepartmentMembershipStatusEnum("status")
+			.notNull()
+			.default("active"),
+		// isDefault: boolean("is_default").default(false), // Only one per member
 		joinedAt: timestamp("joined_at").defaultNow(),
 
 		createdAt,
+		updatedAt,
 	},
-	(t) => {
-		const base = `${orgTableName}_member_department`;
-		return [
-			uniqueIndex(`uq_${base}`).on(t.memberId, t.departmentId),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.memberId, t.isDefault)
-				.where(eq(t.isDefault, true)),
-			index(`idx_${base}_member`).on(t.memberId),
-			index(`idx_${base}_department`).on(t.departmentId),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
+			t.memberId,
+			t.departmentId,
+		),
+		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
+		// 	.on(t.memberId, t.isDefault)
+		// 	.where(eq(t.isDefault, true)),
+		index(`idx_${orgDepartmentMembershipTableName}_member`).on(t.memberId),
+		index(`idx_${orgDepartmentMembershipTableName}_department`).on(
+			t.departmentId,
+		),
+	],
 );
 
 /**

@@ -1,39 +1,11 @@
-import { eq } from "drizzle-orm";
-import {
-	boolean,
-	decimal,
-	index,
-	jsonb,
-	pgEnum,
-	primaryKey,
-	text,
-	timestamp,
-	uniqueIndex,
-	varchar,
-} from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	getLocaleKey,
-	id,
-	name,
-	slug,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
-import {
-	currency,
-	locale,
-} from "../../../system/locale-currency-market/schema.js";
+import { createdAt, deletedAt, id, name, table, updatedAt } from "../../../_utils/helpers.js";
 import { systemPermission } from "../../../system/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
-import { userInstructorProfile } from "../../../user/profile/instructor/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { orgMember } from "../schema.js";
 import { org } from "../../schema.js";
+import { orgMember } from "../schema.js";
 
 /**
  * Permission Groups (Role Templates)

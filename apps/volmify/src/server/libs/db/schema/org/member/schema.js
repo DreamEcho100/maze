@@ -1,11 +1,6 @@
-import { eq } from "drizzle-orm";
 import {
-	boolean,
-	decimal,
 	index,
-	jsonb,
 	pgEnum,
-	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -15,29 +10,27 @@ import {
 import {
 	createdAt,
 	deletedAt,
-	fk,
-	getLocaleKey,
 	id,
-	name,
-	slug,
 	table,
 	updatedAt,
 } from "../../_utils/helpers.js";
-import { currency, locale } from "../../system/locale-currency-market/schema.js";
-import { systemPermission } from "../../system/schema.js";
-import { seoMetadata } from "../../system/seo/schema.js";
-import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { user } from "../../user/schema.js";
 import { orgTableName } from "../_utils/helpers.js";
 import { org } from "../schema.js";
 
-
-
-export const memberBaseRoleEnum = pgEnum("member_base_role", [
+export const orgMemberBaseRoleEnum = pgEnum("org_member_base_role", [
 	"admin", // Full orgal privileges; manage members, teams, configs
 	"member", // Standard member role; actual permissions governed by group mappings
+	"owner", // Full control over the org; can manage settings, members, and resources
 ]);
 
+export const orgMemberStatusEnum = pgEnum("org_member_status", [
+	"active", // Currently active member
+	"invited", // Awaiting acceptance of invitation
+	"suspended", // Temporarily suspended; cannot access org resources
+	"left", // Member has left the org
+	"removed", // Member removed by admin; cannot rejoin without new invite
+]);
 
 /**
  * Org Member (ABAC Subject)
@@ -65,12 +58,14 @@ export const orgMember = table(
 		/**
 		 * Determines baseline org access. Most logic uses permission groups for actual decisions.
 		 */
-		role: memberBaseRoleEnum("role").notNull().default("member"),
+		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 
 		/**
 		 * Status can be: invited, active, suspended, left
 		 */
-		status: varchar("status", { length: 20 }).default("active"),
+		status: orgMemberStatusEnum("status").notNull().default("invited"),
+
+		displayName: varchar("display_name", { length: 128 }),
 
 		invitedAt: timestamp("invited_at", { precision: 3 }),
 		invitedBy: text("invited_by").references(() => user.id),
@@ -84,8 +79,6 @@ export const orgMember = table(
 		];
 	},
 );
-
-
 
 export const orgMemberInvitationStatusEnum = pgEnum(
 	`${orgTableName}_member_invitation_status`,
@@ -121,7 +114,7 @@ export const orgMemberInvitation = table(
 		status: orgMemberInvitationStatusEnum("status")
 			.notNull()
 			.default("pending"),
-		role: memberBaseRoleEnum("role").notNull().default("member"),
+		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 		message: text("message"),
 		acceptedAt: timestamp("accepted_at", { precision: 3 }),
 		declinedAt: timestamp("declined_at", { precision: 3 }),

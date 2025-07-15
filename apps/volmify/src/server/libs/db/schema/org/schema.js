@@ -29,34 +29,6 @@ import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgTableName } from "./_utils/helpers.js";
 
-/**
- * @fileoverview Org Schema - Multi-Tenant ABAC Context
- *
- * @architecture Multi-Tenant ABAC (Attribute-Based Access Control)
- * Organizations define the root context for access control. Each tenant has its
- * own permission groups, departments, teams, users, and configuration. All access
- * evaluations resolve within a specific org boundary.
- *
- * @designPattern Context Boundary + Hierarchical Delegation
- * - Context Boundary: `org` is the primary tenant unit.
- * - Hierarchy: Users → Members → Departments & Teams → Permission Groups → System Permissions
- *
- * @abacFlow
- * ```
- * Subject (User) + Context (Org) + Attributes (Permissions via Groups) + Resource → Decision
- * ```
- *
- * @integrationPoints
- * - Authentication: Identifies user in context of org
- * - Authorization: ABAC policy enforcement via member/group mappings
- * - Commerce: Market-level currency, tax, and pricing configs
- * - i18n: Locale and content strategies per org
- *
- * @businessValue
- * Enables scalable B2B SaaS architecture with clean tenant isolation,
- * granular access controls, and flexible org structures (departments, teams, roles).
- */
-
 const orgMetadataJsonb = jsonb("metadata");
 
 /**
@@ -101,10 +73,9 @@ export const org = table(
 		logo: varchar("logo", { length: 2096 }),
 
 		/** Arbitrary JSON for custom org-specific metadata, preferences, etc. */
-		metadata:
-			/** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
-				orgMetadataJsonb
-			),
+		metadata: /** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
+			orgMetadataJsonb
+		),
 	},
 	(table) => {
 		const base = orgTableName;
@@ -149,9 +120,7 @@ export const orgCurrencySettings = table(
 		const base = `${orgTableName}_currency_settings`;
 		return [
 			primaryKey({ columns: [t.orgId, t.currencyCode] }),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.orgId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.orgId, t.isDefault).where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -214,9 +183,7 @@ export const orgBrandTranslation = table(
 		const base = `${orgTableName}_brand_translation`;
 		return [
 			uniqueIndex(`uq_${base}_locale`).on(t.orgBrandId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.orgBrandId, t.isDefault)
-				.where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_default`).on(t.orgBrandId, t.isDefault).where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -246,14 +213,20 @@ export const orgBrandMetrics = table(
 	},
 );
 
-export const instructorOrgAffiliationTypeEnum = pgEnum(
-	"instructor_org_affiliation_type",
-	["owner", "employee", "contractor", "guest", "partner", "volunteer"],
-);
-export const instructorOrgAffiliationStatusEnum = pgEnum(
-	"instructor_org_affiliation_status",
-	["pending", "active", "suspended", "terminated"],
-);
+export const instructorOrgAffiliationTypeEnum = pgEnum("instructor_org_affiliation_type", [
+	"owner",
+	"employee",
+	"contractor",
+	"guest",
+	"partner",
+	"volunteer",
+]);
+export const instructorOrgAffiliationStatusEnum = pgEnum("instructor_org_affiliation_status", [
+	"pending",
+	"active",
+	"suspended",
+	"terminated",
+]);
 export const instructorOrgAffiliationCompensationTypeEnum = pgEnum(
 	"instructor_org_affiliation_compensation_type",
 	["revenue_share", "flat_fee", "hourly", "salary", "per_course", "none"],
@@ -285,15 +258,12 @@ export const instructorOrgAffiliation = table(
 		joinedAt: timestamp("joined_at").defaultNow(),
 		createdAt,
 
-		affiliationType:
-			instructorOrgAffiliationTypeEnum("affiliation_type").notNull(),
+		affiliationType: instructorOrgAffiliationTypeEnum("affiliation_type").notNull(),
 		role: text("role"),
 		title: text("title"),
 
 		compensationType:
-			instructorOrgAffiliationCompensationTypeEnum("compensation_type").default(
-				"revenue_share",
-			),
+			instructorOrgAffiliationCompensationTypeEnum("compensation_type").default("revenue_share"),
 		compensationAmount: decimal("compensation_amount", {
 			precision: 10,
 			scale: 2,

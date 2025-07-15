@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
 import {
 	boolean,
-	decimal,
 	index,
 	jsonb,
 	pgEnum,
@@ -9,32 +7,23 @@ import {
 	text,
 	timestamp,
 	uniqueIndex,
-	varchar,
 } from "drizzle-orm/pg-core";
 
 import {
 	createdAt,
 	deletedAt,
-	fk,
-	getLocaleKey,
 	id,
 	name,
 	slug,
 	table,
 	updatedAt,
 } from "../../../_utils/helpers.js";
-import {
-	currency,
-	locale,
-} from "../../../system/locale-currency-market/schema.js";
-import { systemPermission } from "../../../system/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
-import { userInstructorProfile } from "../../../user/profile/instructor/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { orgMember } from "../schema.js";
 import { org } from "../../schema.js";
+import { orgMember } from "../schema.js";
 
+const orgTeamTableName = `${orgTableName}_team`;
 /**
  * Organizational Team Structure
  *
@@ -47,7 +36,7 @@ import { org } from "../../schema.js";
  * They may be short-lived (project-based) or permanent (functional).
  */
 export const orgTeam = table(
-	`${orgTableName}_team`,
+	orgTeamTableName,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -56,7 +45,10 @@ export const orgTeam = table(
 		createdBy: text("created_by")
 			.references(() => user.id)
 			.notNull(),
+
 		name: name.notNull(),
+		slug: slug.notNull(),
+		description: text("description"),
 
 		orgId: text(`${orgTableName}_id`)
 			.notNull()
@@ -76,25 +68,33 @@ export const orgTeam = table(
 
 		metadata: jsonb("metadata"),
 	},
-	(table) => {
-		const base = `${orgTableName}_team`;
-		return [
-			index(`idx_${base}_created_at`).on(table.createdAt),
-			index(`idx_${base}_updated_at`).on(table.updatedAt),
-			index(`idx_${base}_name`).on(table.name),
-			uniqueIndex(`uq_${base}_name_org`).on(table.name, table.orgId),
-		];
-	},
+	(table) => [
+		uniqueIndex(`uq_${orgTeamTableName}_name_org`).on(table.name, table.orgId),
+		index(`idx_${orgTeamTableName}_created_at`).on(table.createdAt),
+		index(`idx_${orgTeamTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${orgTeamTableName}_name`).on(table.name),
+		index(`idx_${orgTeamTableName}_org`).on(table.orgId),
+		index(`idx_${orgTeamTableName}_created_by`).on(table.createdBy),
+	],
 );
 
-export const orgMemberTeamRoleEnum = pgEnum(
-	`${orgTableName}_member_team_role`,
+export const orgTeamMembershipRoleEnum = pgEnum(
+	`${orgTableName}_team_membership_role`,
 	[
 		"admin", // Full access to manage team members, settings, and permissions
 		"member", // Scoped access based on permission groups assigned within the team
 	],
 );
-
+const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
+export const orgTeamMembershipStatusEnum = pgEnum(
+	`${orgTeamMembershipTableName}_status`,
+	[
+		"pending", // Awaiting acceptance of invitation
+		"active", // Currently active member
+		"suspended", // Temporarily suspended; cannot access team resources
+		"left", // Member has left the team
+	],
+);
 /**
  * Org Member ⇄ Team Assignment
  *
@@ -107,29 +107,27 @@ export const orgMemberTeamRoleEnum = pgEnum(
  * - Role-specific access within team scope
  * - Supports transient or permanent collaboration units
  */
-export const orgMemberTeam = table(
-	`${orgTableName}_member_team`,
+export const orgTeamMembership = table(
+	orgTeamMembershipTableName,
 	{
-		id: id.notNull(),
-		createdAt,
 		memberId: text("member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
 		teamId: text("team_id")
 			.notNull()
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
-		status: varchar("status", { length: 20 }).default("active"), // 'pending' | 'active' | 'suspended' | 'left'
-		role: orgMemberTeamRoleEnum("role").notNull().default("member"),
+		status: orgTeamMembershipStatusEnum("status").notNull().default("pending"),
+		role: orgTeamMembershipRoleEnum("role").notNull().default("member"),
 		joinedAt: timestamp("joined_at", { precision: 3 }),
+		createdAt,
+		updatedAt,
 	},
-	(t) => {
-		const base = `${orgTableName}_member_team`;
-		return [
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_status`).on(t.status),
-			index(`idx_${base}_role`).on(t.role),
-			index(`idx_${base}_joined_at`).on(t.joinedAt),
-			uniqueIndex(`uq_${base}`).on(t.memberId, t.teamId),
-		];
-	},
+	(t) => [
+		index(`idx_${orgTeamMembershipTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgTeamMembershipTableName}_status`).on(t.status),
+		index(`idx_${orgTeamMembershipTableName}_role`).on(t.role),
+		index(`idx_${orgTeamMembershipTableName}_joined_at`).on(t.joinedAt),
+		uniqueIndex(`uq_${orgTeamMembershipTableName}`).on(t.memberId, t.teamId),
+		primaryKey({ columns: [t.memberId, t.teamId] }),
+	],
 );
