@@ -1,10 +1,5 @@
 import { relations } from "drizzle-orm";
-import {
-	country,
-	currency,
-	locale,
-	marketTemplate,
-} from "../system/locale-currency-market/schema.js";
+import { currency, locale } from "../system/locale-currency-market/schema.js";
 import { systemPermission } from "../system/schema.js";
 import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -16,7 +11,6 @@ import {
 	productCourseEnrollment,
 	skill,
 } from "./product/by-type/course/schema.js";
-import { productVariantPaymentPlan } from "./product/payment/schema.js";
 import {
 	productBrandAttribution,
 	productInstructorAttribution,
@@ -28,9 +22,6 @@ import {
 	orgBrandTranslation,
 	orgCurrencySettings,
 	orgDepartment,
-	orgMarket,
-	orgMarketCountry,
-	orgMarketTranslation,
 	orgMember,
 	orgMemberDepartment,
 	orgMemberInvitation,
@@ -38,8 +29,6 @@ import {
 	orgMemberTeam,
 	orgPermissionsGroup,
 	orgPermissionsGroupPermission,
-	orgPricingZone,
-	orgPricingZoneCountry,
 	orgTeam,
 	orgTeamDepartment,
 } from "./schema.js";
@@ -64,8 +53,6 @@ export const orgRelations = relations(org, ({ many }) => ({
 	departments: many(orgDepartment),
 	permissionGroups: many(orgPermissionsGroup),
 	currencySettings: many(orgCurrencySettings),
-	markets: many(orgMarket),
-	pricingZones: many(orgPricingZone),
 	brands: many(orgBrand),
 	instructorAffiliations: many(instructorOrgAffiliation),
 	skillsCreated: many(skill),
@@ -274,106 +261,6 @@ export const orgCurrencySettingsRelations = relations(
 		currency: one(currency, {
 			fields: [orgCurrencySettings.currencyCode],
 			references: [currency.code],
-		}),
-	}),
-);
-
-/**
- * @marketContext Org Market Structure
- * @i18nPattern Supports localized market experience with pricing templates
- * @complianceScope Currency-specific regional configurations
- */
-export const orgMarketRelations = relations(orgMarket, ({ one, many }) => ({
-	org: one(org, {
-		fields: [orgMarket.orgId],
-		references: [org.id],
-	}),
-	template: one(marketTemplate, {
-		fields: [orgMarket.templateId],
-		references: [marketTemplate.id],
-	}),
-	currency: one(currency, {
-		fields: [orgMarket.currencyCode],
-		references: [currency.code],
-	}),
-	countries: many(orgMarketCountry),
-	translations: many(orgMarketTranslation),
-	productVariantsPaymentPlans: many(productVariantPaymentPlan),
-}));
-
-/**
- * @regionalMapping Market–Country Bridge
- * @i18nScope Enables country-scoped market operations
- */
-export const orgMarketCountryRelations = relations(
-	orgMarketCountry,
-	({ one }) => ({
-		orgMarket: one(orgMarket, {
-			fields: [orgMarketCountry.orgMarketId],
-			references: [orgMarket.id],
-		}),
-		country: one(country, {
-			fields: [orgMarketCountry.countryId],
-			references: [country.id],
-		}),
-	}),
-);
-
-/**
- * @localizationBridge Market Translation
- * @seoIntegration Includes SEO metadata per locale
- */
-export const orgMarketTranslationRelations = relations(
-	orgMarketTranslation,
-	({ one }) => ({
-		orgMarket: one(orgMarket, {
-			fields: [orgMarketTranslation.orgMarketId],
-			references: [orgMarket.id],
-		}),
-		org: one(org, {
-			fields: [orgMarketTranslation.orgId],
-			references: [org.id],
-		}),
-		seoMetadata: one(seoMetadata, {
-			fields: [orgMarketTranslation.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
-		locale: one(locale, {
-			fields: [orgMarketTranslation.localeKey],
-			references: [locale.key],
-		}),
-	}),
-);
-
-/**
- * @pricingZone Pricing Zone Configuration
- * @multiRegionSupport Enables regionally-scoped pricing per currency
- */
-export const orgPricingZoneRelations = relations(
-	orgPricingZone,
-	({ one, many }) => ({
-		org: one(org, {
-			fields: [orgPricingZone.orgId],
-			references: [org.id],
-		}),
-		currency: one(currency, {
-			fields: [orgPricingZone.currencyCode],
-			references: [currency.code],
-		}),
-		countries: many(orgPricingZoneCountry),
-	}),
-);
-
-export const orgPricingZoneCountryRelations = relations(
-	orgPricingZoneCountry,
-	({ one }) => ({
-		zone: one(orgPricingZone, {
-			fields: [orgPricingZoneCountry.zoneId],
-			references: [orgPricingZone.id],
-		}),
-		country: one(country, {
-			fields: [orgPricingZoneCountry.countryId],
-			references: [country.id],
 		}),
 	}),
 );

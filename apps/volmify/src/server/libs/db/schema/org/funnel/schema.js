@@ -11,6 +11,7 @@ import {
 	deletedAt,
 	fk,
 	id,
+	slug,
 	table,
 	updatedAt,
 } from "../../_utils/helpers";
@@ -29,6 +30,7 @@ export const orgFunnel = table(orgFunnelTableName, {
 	orgId: fk(`${orgTableName}_id`)
 		.references(() => org.id)
 		.notNull(),
+	slug: slug.notNull(),
 	// defaultLocaleKey: getLocaleKey("default_locale_key")
 	// 	.references(() => locale.key)
 	// 	.notNull(),

@@ -33,6 +33,7 @@ export const orgRegionRelations = relations(orgRegion, ({ many, one }) => ({
 
 	//
 	orgsTaxRates: many(orgTaxRateI18n),
+	// TODO: countries
 }));
 export const orgTaxCategoryI18nRelations = relations(
 	orgTaxCategoryI18n,
