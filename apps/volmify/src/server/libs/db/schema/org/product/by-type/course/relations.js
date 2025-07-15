@@ -3,17 +3,17 @@
  *
  * @integrationPattern Course Content + Professional Attribution + Multi-Tenant Learning Management
  * Relations enabling comprehensive educational content delivery with instructor attribution,
- * skill-based learning pathways, and organizational learning management within creator
+ * skill-based learning pathways, and orgal learning management within creator
  * economy workflows and multi-tenant e-commerce platform architecture.
  *
  * @businessContext
  * Educational content relations supporting instructor-led creator economy with sophisticated
  * learning management, progress tracking, and skill attribution for both public course
- * sales and organizational training scenarios within multi-tenant boundaries.
+ * sales and orgal training scenarios within multi-tenant boundaries.
  *
  * @scalabilityContext
  * Relation patterns support multiple instructor types, diverse content structures, and
- * cross-organizational professional development while maintaining organizational boundaries
+ * cross-orgal professional development while maintaining orgal boundaries
  * and enabling platform-wide skill tracking and course recommendation systems.
  */
 
@@ -81,7 +81,7 @@ export const productCourseRelations = relations(productCourse, ({ one, many }) =
 
 	/**
 	 * @studentManagement Course enrollment and progress tracking
-	 * @organizationalLearning Employee training and development analytics
+	 * @orgalLearning Employee training and development analytics
 	 */
 	enrollments: many(productCourseEnrollment),
 
@@ -124,7 +124,7 @@ export const productCourseTranslationRelations = relations(productCourseTranslat
  *
  * @integrationRole Global skill management for course attribution and user tracking
  * @businessRelationships Skill hierarchy, course mapping, and marketplace intelligence
- * @scalabilityPattern Supports skill taxonomy growth and cross-organizational standardization
+ * @scalabilityPattern Supports skill taxonomy growth and cross-orgal standardization
  */
 export const skillRelations = relations(skill, ({ one, many }) => ({
 	/**
@@ -451,14 +451,14 @@ export const productCourseModuleSectionLessonTranslationRelations = relations(
 /**
  * Lesson Relations (Reusable Learning Content)
  *
- * @integrationRole Reusable learning content across courses and organizations
+ * @integrationRole Reusable learning content across courses and orgs
  * @businessRelationships Lesson org, type-specific content, and internationalization
  * @scalabilityPattern Supports content reusability and diverse lesson types
  */
 export const lessonRelations = relations(lesson, ({ one, many }) => ({
 	/**
-	 * @organizationBoundary Org owning this lesson content
-	 * @contentManagement Enables organizational lesson libraries and reusability
+	 * @orgBoundary Org owning this lesson content
+	 * @contentManagement Enables orgal lesson libraries and reusability
 	 */
 	org: one(org, {
 		fields: [lesson.orgId],
@@ -508,17 +508,17 @@ export const lessonTranslationRelations = relations(lessonTranslation, ({ one })
 /**
  * Product Course Enrollment Relations (Student Course Management)
  *
- * @integrationRole Student enrollment and progress tracking within organizational context
- * @businessRelationships Course access, progress monitoring, and organizational learning
- * @scalabilityPattern Supports both public course sales and organizational training
+ * @integrationRole Student enrollment and progress tracking within orgal context
+ * @businessRelationships Course access, progress monitoring, and orgal learning
+ * @scalabilityPattern Supports both public course sales and orgal training
  */
 export const productCourseEnrollmentRelations = relations(productCourseEnrollment, ({ one }) => ({
 	/**
-	 * @organizationalContext Org member enrolled in course
-	 * @businessRule Progress tracked per organizational membership for role-based learning
+	 * @orgalContext Org member enrolled in course
+	 * @businessRule Progress tracked per orgal membership for role-based learning
 	 */
-	organizationMember: one(orgMember, {
-		fields: [productCourseEnrollment.organizationMemberId],
+	orgMember: one(orgMember, {
+		fields: [productCourseEnrollment.orgMemberId],
 		references: [orgMember.id],
 	}),
 
@@ -558,7 +558,7 @@ export const productCourseEnrollmentRelations = relations(productCourseEnrollmen
  *
  * @integrationRole Aggregated user learning achievements and skill portfolio
  * @businessRelationships User skill development, career progression, and platform intelligence
- * @scalabilityPattern Supports cross-organizational professional development tracking
+ * @scalabilityPattern Supports cross-orgal professional development tracking
  */
 export const userLearningProfileRelations = relations(userLearningProfile, ({ one }) => ({
 	/**

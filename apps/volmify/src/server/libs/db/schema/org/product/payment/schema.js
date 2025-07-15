@@ -4,14 +4,14 @@
  * @architecture Variant-Level Payment Strategies with Integrated Market/Currency Pricing
  * Payment plan system attached to productVariant with integrated pricing eliminating productPrice
  * redundancy. Supports sophisticated payment strategies including one-time purchases, subscriptions,
- * and usage-based billing within organizational boundaries while maintaining creator economy
+ * and usage-based billing within orgal boundaries while maintaining creator economy
  * revenue attribution workflows.
  *
  * @designPattern CTI + Integrated Pricing + Translation + Multi-Tenant + Creator Attribution
  * - Variant-Level Attachment: Payment plans define HOW customers pay for specific product variants
  * - Integrated Pricing: Market/currency pricing built directly into payment plans
  * - CTI Specialization: One-time, subscription, usage-based extensions with type-specific features
- * - Creator Attribution: Revenue tracking for instructor attribution and organizational analytics
+ * - Creator Attribution: Revenue tracking for instructor attribution and orgal analytics
  * - No ProductPrice: Eliminates redundant pricing tables for simplified architecture
  *
  * @integrationPoints
@@ -22,7 +22,7 @@
  * - Translation System: Localized payment marketing for international expansion
  *
  * @businessValue
- * Enables organizations to implement sophisticated monetization strategies for their product
+ * Enables orgs to implement sophisticated monetization strategies for their product
  * variants while maintaining clear creator attribution, supporting international markets,
  * and providing comprehensive subscription lifecycle management for modern e-commerce.
  *
@@ -161,7 +161,7 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
  * in a single coherent system for simplified e-commerce management.
  *
  * @abacRole Plan creation/update restricted to org owners/managers
- * @permissionContext Variant scope for plan visibility and organizational boundaries
+ * @permissionContext Variant scope for plan visibility and orgal boundaries
  *
  * @variantLevelAttachment Payment plans are variant-specific because variants define WHAT
  * customers purchase (features, access levels) while payment plans define HOW they pay for it.
@@ -171,8 +171,8 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
  * eliminating productPrice table redundancy and simplifying pricing management workflows.
  * Regional pricing, currency support, tax rates, and promotional pricing all integrated.
  *
- * @organizationalRevenue Revenue tracking supports creator economy workflows with instructor
- * attribution and organizational analytics for comprehensive financial reporting and
+ * @orgalRevenue Revenue tracking supports creator economy workflows with instructor
+ * attribution and orgal analytics for comprehensive financial reporting and
  * creator compensation calculations.
  */
 export const productVariantPaymentPlan = table(
@@ -190,7 +190,7 @@ export const productVariantPaymentPlan = table(
 
 		/**
 		 * @abacRole Plan creation/update restricted to org owners/managers
-		 * @multiTenant Separates plan configuration per organizational boundary
+		 * @multiTenant Separates plan configuration per orgal boundary
 		 */
 		orgId: text("org_id")
 			.notNull()
@@ -355,7 +355,7 @@ export const productVariantPaymentPlan = table(
  * Product Variant Payment Plan Translation - Multi-language Payment Marketing
  *
  * @businessLogic Multi-language support for payment plan marketing content enabling
- * organizations to localize pricing strategies for different markets and regions.
+ * orgs to localize pricing strategies for different markets and regions.
  * Essential for international expansion and region-specific conversion optimization.
  *
  * @translationPattern Follows established schema translation pattern with locale-specific
@@ -598,7 +598,7 @@ export const oneTimePaymentPlanTranslation = table(
  * @customerAcquisition Trial period capabilities reduce purchase friction and enable
  * customers to experience product value before payment commitment.
  *
- * @compensationModel Recurring revenue engine for instructors and organizations
+ * @compensationModel Recurring revenue engine for instructors and orgs
  * @permissionContext Managed by org admins with variant access
  * @auditTrail Includes timestamps for usage analytics and plan lifecycle
  */
@@ -882,30 +882,30 @@ export const usageBasedPaymentPlanTranslation = table(
  * User Subscription - Customer Payment Instance and Access Management
  *
  * @businessLogic Customer subscription instances tracking how users purchase and access
- * organizational payment plans. Manages subscription lifecycle, access control, and
- * revenue tracking completely separate from how organizations create pricing strategies.
+ * orgal payment plans. Manages subscription lifecycle, access control, and
+ * revenue tracking completely separate from how orgs create pricing strategies.
  *
  * @accessControl Links customer payment status to product content access enabling
  * dynamic content availability based on subscription status, payment plan features,
- * and organizational access policies for comprehensive customer experience management.
+ * and orgal access policies for comprehensive customer experience management.
  *
  * @subscriptionLifecycle Tracks complete customer journey from purchase through active
  * usage to cancellation providing comprehensive subscription management capabilities
- * for customer service, retention workflows, and organizational analytics.
+ * for customer service, retention workflows, and orgal analytics.
  *
  * @paymentGatewayIntegration External subscription IDs link internal subscription
  * management to payment processors enabling automated subscription state synchronization
  * and billing cycle management through webhook integration.
  *
- * @organizationalRevenue Revenue tracking supports creator economy workflows with
- * instructor attribution calculations and organizational financial reporting for
+ * @orgalRevenue Revenue tracking supports creator economy workflows with
+ * instructor attribution calculations and orgal financial reporting for
  * comprehensive creator compensation and business analytics.
  *
  * @memberContextSupport Supports both org members and external customers
  * enabling internal team subscriptions alongside external customer sales workflows
- * for comprehensive organizational subscription management.
+ * for comprehensive orgal subscription management.
  *
- * @abacScope tenant: orgId, subject: userId || organizationMemberId
+ * @abacScope tenant: orgId, subject: userId || orgMemberId
  * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
  * @ctiBinding Concrete customer-side realization of a payment plan, enabling separation
  * of billing strategy from usage enforcement
@@ -914,7 +914,7 @@ export const usageBasedPaymentPlanTranslation = table(
  * @revenueLineItem Canonical source for calculating actualized revenue, linked to
  * accounting and analytics domains
  * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
- * via organizationMemberId
+ * via orgMemberId
  */
 export const userSubscription = table(
 	"user_subscription",
@@ -938,7 +938,7 @@ export const userSubscription = table(
 			.references(() => productVariantPaymentPlan.id),
 
 		/**
-		 * @organizationScope Org context for this subscription
+		 * @orgScope Org context for this subscription
 		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
 		orgId: text("org_id")
@@ -947,9 +947,9 @@ export const userSubscription = table(
 
 		/**
 		 * @memberContext Optional org member context for internal subscriptions
-		 * @businessRule When present, indicates internal organizational member subscription
+		 * @businessRule When present, indicates internal orgal member subscription
 		 */
-		organizationMemberId: text("organization_member_id").references(() => orgMember.id),
+		orgMemberId: text("org_member_id").references(() => orgMember.id),
 
 		/**
 		 * @subscriptionLifecycle Current subscription state for access control
@@ -971,7 +971,7 @@ export const userSubscription = table(
 
 		/**
 		 * @revenueTracking Total amount customer has paid for this subscription
-		 * @creatorEconomy Basis for instructor revenue sharing and organizational analytics
+		 * @creatorEconomy Basis for instructor revenue sharing and orgal analytics
 		 */
 		totalPaid: decimal("total_paid", { precision: 12, scale: 2 }).default("0"),
 
@@ -1010,7 +1010,7 @@ export const userSubscription = table(
 		index("idx_user_subscription_plan").on(t.planId),
 		index("idx_user_subscription_org").on(t.orgId),
 		index("idx_user_subscription_status").on(t.status),
-		index("idx_user_subscription_member").on(t.organizationMemberId),
+		index("idx_user_subscription_member").on(t.orgMemberId),
 		index("idx_user_subscription_access").on(t.accessExpiresAt),
 		index("idx_user_subscription_external").on(t.externalSubscriptionId),
 		index("idx_user_subscription_currency").on(t.currencyCode),

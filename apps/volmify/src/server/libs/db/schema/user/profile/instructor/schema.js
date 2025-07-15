@@ -23,7 +23,7 @@ import { user } from "../../../user/schema";
  * Instructor Profile - User-based content creator identity
  *
  * @businessLogic Individual instructor profile for course creation
- * Can participate across multiple organizations while maintaining identity
+ * Can participate across multiple orgs while maintaining identity
  */
 export const userInstructorProfile = table(
 	`${userTableName}_instructor_profile`,

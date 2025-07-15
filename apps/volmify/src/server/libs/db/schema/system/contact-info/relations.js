@@ -23,7 +23,7 @@ import { contactInfo } from "./schema";
  * @why
  * Traditional one-to-one contact models break down in multi-tenant, multi-role platforms like Volmify.
  * This polymorphic structure enables flexible contact ownership, communication orchestration, and
- * tailored contact strategies across all professional and organizational layers.
+ * tailored contact strategies across all professional and orgal layers.
  */
 
 /**
@@ -45,7 +45,7 @@ export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	 * (e.g., primary, billing, support) for communication workflows.
 	 *
 	 * @businessContext
-	 * Instructor relationships often span multiple organizations, roles, and
+	 * Instructor relationships often span multiple orgs, roles, and
 	 * responsibilities — this allows differentiated contacts per scenario.
 	 *
 	 * @usedIn

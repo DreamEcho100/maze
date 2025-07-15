@@ -3,8 +3,8 @@
  *
  * @architecture Multi-Tenant Product Catalog + Professional Attribution + Payment Plan Integration
  * E-commerce product system supporting multiple product types (physical, digital, course, service)
- * with organizational boundaries, professional content attribution, and integrated payment strategies.
- * Designed for creator economy where instructors create educational content within organizational contexts
+ * with orgal boundaries, professional content attribution, and integrated payment strategies.
+ * Designed for creator economy where instructors create educational content within orgal contexts
  * while maintaining clear revenue attribution and brand identity integration.
  *
  * @designPattern CTI + Professional Attribution + Brand Attribution + Variant-Based Commerce + Payment Integration
@@ -22,7 +22,7 @@
  * - Promotional Integration: Discount campaigns and promotional strategies for revenue optimization
  *
  * @businessValue
- * Enables organizations to create and monetize diverse product catalogs while maintaining
+ * Enables orgs to create and monetize diverse product catalogs while maintaining
  * clear attribution to professional creators and brand identity. Supports sophisticated
  * e-commerce scenarios from simple physical products to complex educational content with
  * comprehensive creator economy revenue sharing and promotional campaign management.
@@ -59,7 +59,10 @@ import {
 	table,
 	updatedAt,
 } from "../../_utils/helpers.js";
-import { currency, locale } from "../../system/locale-currency-market/schema.js";
+import {
+	currency,
+	locale,
+} from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { org, orgBrand } from "../schema.js";
@@ -89,7 +92,7 @@ export const productTypeEnum = pgEnum(`${orgTableName}_product_type`, [
 /**
  * Product Status - Content Lifecycle Management
  *
- * @businessLogic Controls product visibility and availability in organizational catalogs:
+ * @businessLogic Controls product visibility and availability in orgal catalogs:
  * - draft: Under development, not visible to customers or searchable
  * - active: Published and available for purchase through all channels
  * - archived: Discontinued but existing purchases and subscriptions remain valid
@@ -108,16 +111,16 @@ const orgProductTableName = `${orgTableName}_product`;
 /**
  * Product - Multi-Tenant E-commerce Product Foundation
  *
- * @businessLogic Core product catalog supporting diverse product types within organizational
+ * @businessLogic Core product catalog supporting diverse product types within orgal
  * boundaries. Every product belongs to an org and can have multiple variants for
  * different pricing strategies, access levels, or physical variations. Products serve as
  * the marketing and content foundation while variants handle pricing and commerce transactions.
  *
  * @professionalContext Course products connect to instructor profiles for creator economy
- * workflows including content attribution, revenue sharing calculations, and cross-organizational
- * professional collaboration while maintaining clear organizational boundaries.
+ * workflows including content attribution, revenue sharing calculations, and cross-orgal
+ * professional collaboration while maintaining clear orgal boundaries.
  *
- * @organizationScope All products are org-scoped ensuring multi-tenant isolation
+ * @orgScope All products are org-scoped ensuring multi-tenant isolation
  * while enabling sophisticated product catalog management per org with brand attribution
  * and professional creator recognition.
  *
@@ -135,8 +138,8 @@ export const orgProduct = table(
 		id: id.notNull(),
 
 		/**
-		 * @organizationScope Org that owns and manages this product
-		 * @businessRule All product operations must respect organizational boundaries
+		 * @orgScope Org that owns and manages this product
+		 * @businessRule All product operations must respect orgal boundaries
 		 * @multiTenant Enables independent product catalog management per org
 		 */
 		orgId: text("org_id")
@@ -153,7 +156,7 @@ export const orgProduct = table(
 		/**
 		 * @businessRule Controls product visibility and purchase availability
 		 * @workflowControl Enables draft → active → archived lifecycle management
-		 * @organizationalControl Allows organizations to manage product availability independently
+		 * @orgalControl Allows orgs to manage product availability independently
 		 */
 		status: productStatusEnum("status").default("draft").notNull(),
 
@@ -182,7 +185,7 @@ export const orgProduct = table(
 		uniqueIndex(`uq_${orgProductTableName}_slug_org`).on(t.orgId, t.slug),
 
 		// Performance Indexes
-		index(`idx_${orgProductTableName}_organization`).on(t.orgId),
+		index(`idx_${orgProductTableName}_org`).on(t.orgId),
 		index(`idx_${orgProductTableName}_status`).on(t.status),
 		index(`idx_${orgProductTableName}_type`).on(t.type),
 		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
@@ -203,7 +206,7 @@ const orgProductTranslationTableName = `${orgProductTableName}_translation`;
 /**
  * Product Translation - Multi-language Product Content
  *
- * @businessLogic Enables organizations to localize product content for international
+ * @businessLogic Enables orgs to localize product content for international
  * markets while maintaining consistent product catalog structure and business logic.
  * Essential for global expansion and region-specific marketing strategies.
  *
@@ -211,7 +214,7 @@ const orgProductTranslationTableName = `${orgProductTableName}_translation`;
  * in international markets while supporting region-specific SEO optimization and
  * cultural adaptation of product messaging.
  *
- * @organizationalStrategy Supports organizations expanding into international markets
+ * @orgalStrategy Supports orgs expanding into international markets
  * with localized product presentations while maintaining centralized product management
  * and creator attribution workflows.
  */
@@ -305,7 +308,7 @@ const orgProductVariant = `${orgProductTableName}_variant`;
  *
  * @scalabilityPattern Variant-based commerce scales across all product types while
  * maintaining consistent pricing and payment workflows regardless of product complexity
- * or organizational business model.
+ * or orgal business model.
  */
 export const productVariant = table(
 	orgProductVariant,
@@ -366,7 +369,7 @@ export const productVariant = table(
 		//  * @businessRule null = global pricing, marketId = region-specific pricing
 		//  * @multiRegionSupport Enables localized pricing overrides
 		//  */
-		// marketId: text("market_id").references(() => organizationMarket.id),
+		// marketId: text("market_id").references(() => orgMarket.id),
 
 		/**
 		 * @currencySupport Currency for this payment plan instance
@@ -401,7 +404,7 @@ export const productVariant = table(
 		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		//  * @businessFlexibility Enables complex regional pricing strategies
 		//  */
-		// pricingZoneId: text("pricing_zone_id").references(() => organizationPricingZone.id),
+		// pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -498,7 +501,10 @@ export const productVariantTranslation = table(
 	},
 	(t) => [
 		// Translation Constraints
-		uniqueIndex("uq_product_variant_translation").on(t.productVariantId, t.localeKey),
+		uniqueIndex("uq_product_variant_translation").on(
+			t.productVariantId,
+			t.localeKey,
+		),
 		uniqueIndex("uq_product_variant_translation_default")
 			.on(t.productVariantId, t.isDefault)
 			.where(eq(t.isDefault, true)),
@@ -519,19 +525,19 @@ export const productVariantTranslation = table(
  * @businessLogic Links products to instructor profiles for creator economy workflows
  * including content attribution, revenue sharing calculations, and professional recognition.
  * Enables instructors to receive credit and compensation for educational content creation
- * within organizational boundaries while supporting cross-organizational collaboration.
+ * within orgal boundaries while supporting cross-orgal collaboration.
  *
- * @professionalContext Instructors maintain professional identity across organizations
- * while content attribution respects organizational boundaries. Revenue sharing enables
- * fair compensation for content creation within organizational business models.
+ * @professionalContext Instructors maintain professional identity across orgs
+ * while content attribution respects orgal boundaries. Revenue sharing enables
+ * fair compensation for content creation within orgal business models.
  *
- * @organizationScope Attribution operates within organizational context ensuring multi-tenant
+ * @orgScope Attribution operates within orgal context ensuring multi-tenant
  * isolation while enabling professional collaboration and revenue sharing workflows that
- * respect organizational business policies and creator compensation structures.
+ * respect orgal business policies and creator compensation structures.
  *
  * @scalabilityPattern This attribution pattern can be replicated for other professional
  * types (consultants, designers, coaches) enabling diverse creator economy scenarios within
- * multi-tenant organizational architecture while maintaining consistent attribution workflows.
+ * multi-tenant orgal architecture while maintaining consistent attribution workflows.
  *
  * @revenueIntegration Revenue sharing percentages integrate with payment plan revenue
  * calculations to ensure accurate creator compensation based on actual subscription and
@@ -543,7 +549,7 @@ export const productInstructorAttribution = table(
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
 		 * @businessRule Links professional identity to content creation and revenue sharing
-		 * @crossOrganizational Professional identity maintained across organizational boundaries
+		 * @crossOrganizational Professional identity maintained across orgal boundaries
 		 */
 		instructorProfileId: text("instructor_profile_id")
 			.notNull()
@@ -551,7 +557,7 @@ export const productInstructorAttribution = table(
 
 		/**
 		 * @contentAttribution Product this instructor contributed to creating
-		 * @businessRule Links professional contribution to specific organizational content
+		 * @businessRule Links professional contribution to specific orgal content
 		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
 		 */
 		productId: text(`${orgTableName}_product_id`)
@@ -559,9 +565,9 @@ export const productInstructorAttribution = table(
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
-		 * @organizationContext Org context for this professional attribution
-		 * @businessRule Ensures attribution operates within organizational boundaries
-		 * @multiTenant Maintains organizational isolation while enabling professional attribution
+		 * @orgContext Org context for this professional attribution
+		 * @businessRule Ensures attribution operates within orgal boundaries
+		 * @multiTenant Maintains orgal isolation while enabling professional attribution
 		 */
 		orgId: text("org_id")
 			.notNull()
@@ -588,7 +594,11 @@ export const productInstructorAttribution = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_instructor_org").on(t.productId, t.instructorProfileId, t.orgId),
+		uniqueIndex("uq_product_instructor_org").on(
+			t.productId,
+			t.instructorProfileId,
+			t.orgId,
+		),
 
 		// Performance Indexes for Professional Queries
 		index("idx_product_instructor_profile").on(t.instructorProfileId),
@@ -597,7 +607,10 @@ export const productInstructorAttribution = table(
 		index("idx_product_instructor_primary").on(t.isPrimary),
 
 		// Revenue Attribution Queries
-		index("idx_product_instructor_revenue").on(t.productId, t.revenueSharePercentage),
+		index("idx_product_instructor_revenue").on(
+			t.productId,
+			t.revenueSharePercentage,
+		),
 	],
 );
 
@@ -605,17 +618,17 @@ export const productInstructorAttribution = table(
  * Product Brand Attribution - Organizational Brand Identity Integration
  *
  * @businessLogic Links products to org brand identity for consistent marketing
- * and brand presentation across product catalogs. Supports organizations with multiple
+ * and brand presentation across product catalogs. Supports orgs with multiple
  * brands or white-label scenarios where products need clear brand attribution for
  * customer recognition and marketing consistency.
  *
- * @brandStrategy Enables organizations to manage multiple brands or white-label products
+ * @brandStrategy Enables orgs to manage multiple brands or white-label products
  * while maintaining clear brand attribution for marketing campaigns, customer communication,
  * and brand identity consistency across diverse product catalogs.
  *
- * @organizationScope Brand attribution operates within organizational boundaries enabling
+ * @orgScope Brand attribution operates within orgal boundaries enabling
  * sophisticated brand management strategies while maintaining multi-tenant isolation and
- * organizational control over brand identity and product presentation.
+ * orgal control over brand identity and product presentation.
  *
  * @marketingIntegration Brand attribution integrates with product marketing, promotional
  * campaigns, and customer communication to ensure consistent brand presentation and
@@ -626,7 +639,7 @@ export const productBrandAttribution = table(
 	{
 		/**
 		 * @brandIdentity Org brand this product is attributed to
-		 * @businessRule Links product presentation to specific organizational brand identity
+		 * @businessRule Links product presentation to specific orgal brand identity
 		 * @marketingStrategy Enables consistent brand presentation across product catalog
 		 */
 		brandId: text("brand_id")
@@ -673,11 +686,11 @@ export const productBrandAttribution = table(
  * Discount Product - Product-Level Discount Application
  *
  * @businessLogic Links discount campaigns to specific products enabling targeted
- * promotional strategies and marketing campaigns within organizational boundaries.
+ * promotional strategies and marketing campaigns within orgal boundaries.
  * Supports product-specific promotional campaigns for revenue optimization and
  * customer acquisition strategies.
  *
- * @promotionalStrategy Enables organizations to create product-specific promotional
+ * @promotionalStrategy Enables orgs to create product-specific promotional
  * campaigns while maintaining compatibility with payment plan pricing and variant-based
  * commerce workflows for comprehensive promotional campaign management.
  */

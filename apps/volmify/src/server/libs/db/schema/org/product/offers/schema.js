@@ -73,7 +73,7 @@ export const discount = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_discount_organization").on(t.orgId),
+		index("idx_discount_org").on(t.orgId),
 		index("idx_discount_type").on(t.type),
 		index("idx_discount_active").on(t.isActive),
 		index("idx_discount_applies_to").on(t.appliesTo),
@@ -168,7 +168,7 @@ export const coupon = table(
 	},
 	(t) => [
 		uniqueIndex("uq_coupon_code_org").on(t.orgId, t.code),
-		index("idx_coupon_organization").on(t.orgId),
+		index("idx_coupon_org").on(t.orgId),
 		index("idx_coupon_discount").on(t.discountId),
 		index("idx_coupon_active").on(t.isActive),
 		index("idx_coupon_dates").on(t.startsAt, t.endsAt),
@@ -236,7 +236,7 @@ export const giftCard = table(
 	},
 	(t) => [
 		uniqueIndex("uq_gift_card_code_org").on(t.orgId, t.code),
-		index("idx_gift_card_organization").on(t.orgId),
+		index("idx_gift_card_org").on(t.orgId),
 		index("idx_gift_card_currency").on(t.currencyCode),
 		index("idx_gift_card_user").on(t.issuedToUserId),
 		index("idx_gift_card_email").on(t.issuedToEmail),
@@ -326,7 +326,7 @@ export const promotion = table(
 	},
 	(t) => [
 		uniqueIndex("uq_promotion_slug_org").on(t.orgId, t.slug),
-		index("idx_promotion_organization").on(t.orgId),
+		index("idx_promotion_org").on(t.orgId),
 		index("idx_promotion_active").on(t.isActive),
 		index("idx_promotion_dates").on(t.startsAt, t.endsAt),
 		index("idx_promotion_active_dates").on(t.isActive, t.startsAt, t.endsAt),

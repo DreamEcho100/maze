@@ -176,13 +176,13 @@ export const skill = table(
 
 		/**
 		 * @skillCategorization Skill domain for marketplace org
-		 * @platformAnalytics Enables skill trend analysis across organizations
+		 * @platformAnalytics Enables skill trend analysis across orgs
 		 */
 		category: text("category"), // "programming", "design", "business", "data"
 
 		/**
 		 * @platformManagement Global skill approval status for marketplace quality
-		 * @qualityControl Prevents skill taxonomy fragmentation across organizations
+		 * @qualityControl Prevents skill taxonomy fragmentation across orgs
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
@@ -640,7 +640,7 @@ export const lesson = table(
 	},
 	(t) => {
 		const base = "lesson";
-		return [index(`idx_${base}_organization`).on(t.orgId), index(`idx_${base}_type`).on(t.type)];
+		return [index(`idx_${base}_org`).on(t.orgId), index(`idx_${base}_type`).on(t.type)];
 	},
 );
 
@@ -694,11 +694,11 @@ export const productCourseEnrollment = table(
 	{
 		id: id.notNull(),
 		/**
-		 * @organizationalIdentity Org member whose progress is tracked
-		 * @businessRule Primary progress tracking identity for organizational learning
-		 * @accessControl Enables role-based learning experiences and organizational analytics
+		 * @orgalIdentity Org member whose progress is tracked
+		 * @businessRule Primary progress tracking identity for orgal learning
+		 * @accessControl Enables role-based learning experiences and orgal analytics
 		 */
-		organizationMemberId: fk("organization_member_id")
+		orgMemberId: fk("org_member_id")
 			.references(() => orgMember.id)
 			.notNull(),
 		courseId: fk("product_course_id")
@@ -726,7 +726,7 @@ export const productCourseEnrollment = table(
 		//  enrollmentNotes
 		//  adminNotes
 		// /**
-		//  * @engagementTracking Total learning time for organizational productivity analytics
+		//  * @engagementTracking Total learning time for orgal productivity analytics
 		//  * @learningOptimization Helps optimize course content and delivery methods
 		//  */
 		// totalTimeSpentSeconds: integer("total_time_spent_seconds").default(0),
@@ -737,8 +737,8 @@ export const productCourseEnrollment = table(
 	(t) => {
 		const base = "product_course_enrollment";
 		return [
-			uniqueIndex(`uq_${base}_member_course`).on(t.organizationMemberId, t.courseId),
-			index(`idx_${base}_member`).on(t.organizationMemberId),
+			uniqueIndex(`uq_${base}_member_course`).on(t.orgMemberId, t.courseId),
+			index(`idx_${base}_member`).on(t.orgMemberId),
 			index(`idx_${base}_course`).on(t.courseId),
 			index(`idx_${base}_status`).on(t.status),
 			index(`idx_${base}_progress`).on(t.progressPercentage),
@@ -752,8 +752,8 @@ export const productCourseEnrollment = table(
 /**
  * USER LEARNING SUMMARY - Cross-Organizational Learning Profile
  *
- * @businessLogic Aggregated learning summary across all organizational memberships
- * enabling user-centric learning portfolio and cross-organizational skill tracking
+ * @businessLogic Aggregated learning summary across all orgal memberships
+ * enabling user-centric learning portfolio and cross-orgal skill tracking
  * for comprehensive professional development and career progression analytics.
  */
 export const userLearningProfile = table("user_learning_profile", {
@@ -764,7 +764,7 @@ export const userLearningProfile = table("user_learning_profile", {
 		.unique(),
 
 	/**
-	 * @learningPortfolio Aggregated learning statistics across organizations
+	 * @learningPortfolio Aggregated learning statistics across orgs
 	 * @professionalDevelopment Comprehensive learning achievements for career tracking
 	 */
 	totalCoursesCompleted: integer("total_courses_completed").default(0),
@@ -772,7 +772,7 @@ export const userLearningProfile = table("user_learning_profile", {
 	totalCertificatesEarned: integer("total_certificates_earned").default(0),
 
 	/**
-	 * @skillPortfolio Aggregated skills across all organizational learning
+	 * @skillPortfolio Aggregated skills across all orgal learning
 	 * @marketplaceProfile Skills summary for marketplace recommendations and matching
 	 */
 	acquiredSkills: jsonb("acquired_skills"), // Array of skills with proficiency levels

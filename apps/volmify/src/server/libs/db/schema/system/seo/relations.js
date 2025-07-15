@@ -41,7 +41,7 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	// org: one(org, {
 	// 	fields: [seoMetadata.orgId],
 	// 	references: [org.id],
-	// 	relationName: "seo_metadata_organization",
+	// 	relationName: "seo_metadata_org",
 	// }),
 
 	// One-to-one: SEO can have one Open Graph configuration
@@ -143,7 +143,7 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 // -------------------------------------
 // ORGANIZATION RELATIONS (Add SEO relation)
 // -------------------------------------
-export const organizationSeoRelations = relations(org, ({ many }) => ({
+export const orgSeoRelations = relations(org, ({ many }) => ({
 	// One-to-many: Org can have multiple SEO metadata entries
 	seoMetadata: many(seoMetadata),
 }));

@@ -7,7 +7,7 @@ import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers
  *
  * @context
  * This polymorphic contact info table enables centralized communication management
- * for all Volmify entities — organizations, brands, users, and professionals. It serves
+ * for all Volmify entities — orgs, brands, users, and professionals. It serves
  * as the single source of truth for emails, phone numbers, and outreach preferences.
  *
  * @architecture Polymorphic Entity Pattern

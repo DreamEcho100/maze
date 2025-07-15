@@ -87,7 +87,7 @@ export const seoMetadata = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_seo_organization").on(t.orgId),
+		index("idx_seo_org").on(t.orgId),
 		index("idx_seo_canonical").on(t.canonicalUrl),
 		index("idx_seo_status").on(t.status),
 		index("idx_seo_focus_keyword").on(t.focusKeyword),
@@ -417,7 +417,7 @@ export const seoAuditLog = table(
 	},
 	(t) => [
 		index("idx_seo_audit_metadata").on(t.seoMetadataId),
-		index("idx_seo_audit_organization").on(t.orgId),
+		index("idx_seo_audit_org").on(t.orgId),
 		index("idx_seo_audit_type").on(t.changeType),
 		index("idx_seo_audit_table").on(t.changedTable),
 		index("idx_seo_audit_date").on(t.createdAt),

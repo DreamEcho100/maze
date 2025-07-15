@@ -12,9 +12,9 @@ import {
 /**
  * Instructor Profile Relations
  *
- * @instructorIdentity Global instructor identity across organizations
+ * @instructorIdentity Global instructor identity across orgs
  * Enables instructors to maintain consistent professional identity while
- * participating in multiple organizational contexts.
+ * participating in multiple orgal contexts.
  */
 export const userInstructorProfileRelations = relations(userInstructorProfile, ({ one, many }) => ({
 	/**
@@ -26,9 +26,9 @@ export const userInstructorProfileRelations = relations(userInstructorProfile, (
 	}),
 
 	/**
-	 * @organizationParticipation Instructor affiliations across organizations
+	 * @orgParticipation Instructor affiliations across orgs
 	 */
-	organizationAffiliations: many(instructorOrgAffiliation),
+	orgAffiliations: many(instructorOrgAffiliation),
 
 	/**
 	 * @communicationHub Multiple contact points for instructor business

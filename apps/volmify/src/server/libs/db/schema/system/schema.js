@@ -71,11 +71,11 @@ export const systemPermissionCategory = table(
  *
  * @abacRole Permission Attribute Definition
  * Each permission represents an atomic attribute that can be assigned to subjects
- * within organizational contexts. Forms the foundation for all access control
+ * within orgal contexts. Forms the foundation for all access control
  * decisions in the ABAC system.
  *
  * @immutabilityConstraint
- * Permission names become immutable once referenced by organizations to prevent
+ * Permission names become immutable once referenced by orgs to prevent
  * breaking existing access control policies and maintain audit trail integrity.
  *
  * @attributeNaming action_resource pattern enables clear policy definition
@@ -94,7 +94,7 @@ export const systemPermission = table(
 		 * Unique permission attribute identifier
 		 * @abacAttribute Core attribute for access control decisions
 		 * @namingPattern action_resource (e.g., "create_course", "delete_user")
-		 * @immutable Once referenced by organizations, should not change
+		 * @immutable Once referenced by orgs, should not change
 		 */
 		name: name.notNull().unique("uq_system_permission_name"),
 		description: varchar("description", { length: 256 }),

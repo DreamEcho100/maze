@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { orgRegion } from "../../org/locale-region/schema.js";
 import {
 	lessonTranslation,
 	productCourseModuleSectionLessonTranslation,
@@ -32,6 +33,7 @@ import {
 	orgPricingZone,
 	orgPricingZoneCountry,
 } from "../../org/schema.js";
+import { orgTaxRate } from "../../org/tax/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
 import { seoAlternateUrl, seoMetadata } from "../seo/schema.js";
 import {
@@ -56,18 +58,22 @@ import {
 export const currencyRelations = relations(currency, ({ many }) => ({
 	countries: many(country),
 	marketTemplates: many(marketTemplate),
-	organizationMarkets: many(orgMarket),
+	orgMarkets: many(orgMarket),
 	exchangeRatesBase: many(exchangeRate, {
 		relationName: "base_currency_rates",
 	}),
 	exchangeRatesTarget: many(exchangeRate, {
 		relationName: "target_currency_rates",
 	}),
-	organizationSettings: many(orgCurrencySettings),
+	orgSettings: many(orgCurrencySettings),
 	productVariantsPaymentPlans: many(productVariantPaymentPlan),
 	discounts: many(discount),
 	giftCards: many(giftCard),
 	pricingZones: many(orgPricingZone),
+
+	//
+	orgTaxRates: many(orgTaxRate),
+	orgsRegions: many(orgRegion),
 }));
 
 export const countryRelations = relations(country, ({ one, many }) => ({
@@ -76,7 +82,7 @@ export const countryRelations = relations(country, ({ one, many }) => ({
 		references: [currency.code],
 	}),
 	marketTemplateCountries: many(marketTemplateCountry),
-	organizationMarketCountries: many(orgMarketCountry),
+	orgMarketCountries: many(orgMarketCountry),
 	pricingZoneCountries: many(orgPricingZoneCountry),
 }));
 
@@ -100,10 +106,10 @@ export const marketTemplateRelations = relations(marketTemplate, ({ one, many })
 	}),
 	countries: many(marketTemplateCountry),
 	translations: many(marketTemplateTranslation),
-	organizationMarkets: many(orgMarket),
+	orgMarkets: many(orgMarket),
 }));
 
-export const marketTemplateCountryRelations = relations(marketTemplateCountry, ({ one }) => ({
+export const marketTemplateCountryRelations = relations(marketTemplateCountry, ({ one, many }) => ({
 	marketTemplate: one(marketTemplate, {
 		fields: [marketTemplateCountry.marketTemplateId],
 		references: [marketTemplate.id],
@@ -112,6 +118,7 @@ export const marketTemplateCountryRelations = relations(marketTemplateCountry, (
 		fields: [marketTemplateCountry.countryId],
 		references: [country.id],
 	}),
+	orgsRegions: many(orgRegion),
 }));
 
 export const marketTemplateTranslationRelations = relations(

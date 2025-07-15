@@ -70,7 +70,7 @@ export const collection = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_collection_organization").on(t.orgId),
+		index("idx_collection_org").on(t.orgId),
 		index("idx_collection_deleted_at").on(t.deletedAt),
 		index("idx_collection_name").on(t.name),
 		uniqueIndex("uq_collection_slug_org").on(t.orgId, t.slug),

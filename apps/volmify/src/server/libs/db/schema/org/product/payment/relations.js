@@ -2,13 +2,13 @@
  * @fileoverview Product Payment Relations - Variant-Level Payment Integration
  *
  * @integrationPattern Variant-Based Payment Relations + CTI + Creator Economy Integration
- * Enables comprehensive payment plan relationships with product variants, organizational
+ * Enables comprehensive payment plan relationships with product variants, orgal
  * boundaries, and customer subscriptions while maintaining optimal query performance through
  * CTI pattern and specialized relation definitions for e-commerce monetization workflows.
  *
  * @businessContext
  * Payment relations support variant-level e-commerce monetization workflows including
- * organizational pricing strategies, creator economy revenue attribution, multi-currency
+ * orgal pricing strategies, creator economy revenue attribution, multi-currency
  * international expansion, and customer subscription lifecycle management for sophisticated
  * product monetization and comprehensive business analytics.
  *
@@ -19,8 +19,8 @@
  *
  * @creatorEconomyIntegration
  * Payment relations integrate with instructor attribution systems enabling revenue sharing
- * calculations and creator compensation workflows within organizational boundaries while
- * supporting cross-organizational professional collaboration patterns.
+ * calculations and creator compensation workflows within orgal boundaries while
+ * supporting cross-orgal professional collaboration patterns.
  *
  * @variantIntegration
  * Deep integration with productVariant system maintains consistency with established
@@ -50,7 +50,7 @@ import {
  * Product Variant Payment Plan Relations (CTI Root)
  *
  * @integrationRole Central payment plan relationships for variant-level monetization
- * Connects payment plans to product variants, organizational boundaries, currencies, and
+ * Connects payment plans to product variants, orgal boundaries, currencies, and
  * specialized payment types while supporting comprehensive pricing strategies, international
  * expansion, and creator economy revenue attribution workflows.
  *
@@ -84,7 +84,7 @@ export const productVariantPaymentPlanRelations = relations(
 		}),
 
 		/**
-		 * @organizationScope Org that owns and manages this payment strategy
+		 * @orgScope Org that owns and manages this payment strategy
 		 * @multiTenant Enables org-specific pricing approaches and business model independence
 		 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 		 */
@@ -116,7 +116,7 @@ export const productVariantPaymentPlanRelations = relations(
 		/**
 		 * @pricingZoneIntegration Optional pricing zone for specialized regional pricing
 		 * @businessFlexibility Enables complex regional pricing strategies beyond standard markets
-		 * @organizationalStrategy Advanced pricing control for sophisticated market segmentation
+		 * @orgalStrategy Advanced pricing control for sophisticated market segmentation
 		 */
 		pricingZone: one(orgPricingZone, {
 			fields: [productVariantPaymentPlan.pricingZoneId],
@@ -150,7 +150,7 @@ export const productVariantPaymentPlanRelations = relations(
 
 		/**
 		 * @subscriptionManagement Customer subscriptions using this payment plan
-		 * @revenueTracking Links organizational pricing strategies to actual subscription revenue
+		 * @revenueTracking Links orgal pricing strategies to actual subscription revenue
 		 * @creatorEconomy Revenue data for instructor attribution and compensation calculations
 		 */
 		subscriptions: many(userSubscription),
@@ -161,14 +161,14 @@ export const productVariantPaymentPlanRelations = relations(
  * Product Variant Payment Plan Translation Relations
  *
  * @integrationRole Multi-language support for payment plan marketing content
- * Enables organizations to localize payment plan presentations for different markets
+ * Enables orgs to localize payment plan presentations for different markets
  * while maintaining consistent underlying pricing and business logic for international expansion.
  *
  * @marketingStrategy Localized content improves conversion rates and customer experience
  * in international markets while supporting region-specific pricing campaigns and
  * promotional strategies for optimal market penetration.
  *
- * @businessContext Essential for organizations expanding into international markets with
+ * @businessContext Essential for orgs expanding into international markets with
  * region-specific marketing messages, pricing explanations, and value propositions
  * tailored to local market conditions and customer preferences.
  */
@@ -219,7 +219,7 @@ export const productVariantPaymentPlanTranslationRelations = relations(
 export const oneTimePaymentPlanRelations = relations(oneTimePaymentPlan, ({ one, many }) => ({
 	/**
 	 * @ctiParent Links to base payment plan attributes and relationships
-	 * @businessContext Provides access to common payment plan fields, pricing, and organizational context
+	 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
 	 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
 	 */
 	paymentPlan: one(productVariantPaymentPlan, {
@@ -239,10 +239,10 @@ export const oneTimePaymentPlanRelations = relations(oneTimePaymentPlan, ({ one,
  * One-Time Payment Plan Translation Relations
  *
  * @integrationRole Multi-language support for one-time payment plan specific content
- * Enables organizations to localize gift messaging, access policies, and transfer procedures
+ * Enables orgs to localize gift messaging, access policies, and transfer procedures
  * for different markets while addressing regional legal requirements and cultural preferences.
  *
- * @businessContext Essential for organizations offering gift purchases and account transfers
+ * @businessContext Essential for orgs offering gift purchases and account transfers
  * in international markets with different legal frameworks and cultural expectations around
  * digital product ownership and sharing.
  */
@@ -284,7 +284,7 @@ export const subscriptionPaymentPlanRelations = relations(
 	({ one, many }) => ({
 		/**
 		 * @ctiParent Links to base payment plan attributes and relationships
-		 * @businessContext Provides access to common payment plan fields, pricing, and organizational context
+		 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
 		 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
 		 */
 		paymentPlan: one(productVariantPaymentPlan, {
@@ -305,10 +305,10 @@ export const subscriptionPaymentPlanRelations = relations(
  * Subscription Payment Plan Translation Relations
  *
  * @integrationRole Multi-language support for subscription payment plan specific content
- * Enables organizations to localize billing descriptions, trial messaging, and cancellation
+ * Enables orgs to localize billing descriptions, trial messaging, and cancellation
  * policies for different markets while addressing regional legal and regulatory requirements.
  *
- * @businessContext Essential for organizations offering subscription services in international
+ * @businessContext Essential for orgs offering subscription services in international
  * markets with different regulatory frameworks around recurring billing, trial periods, and
  * subscription cancellation policies.
  */
@@ -348,7 +348,7 @@ export const subscriptionPaymentPlanTranslationRelations = relations(
 export const usageBasedPaymentPlanRelations = relations(usageBasedPaymentPlan, ({ one, many }) => ({
 	/**
 	 * @ctiParent Links to base payment plan attributes and relationships
-	 * @businessContext Provides access to common payment plan fields, pricing, and organizational context
+	 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
 	 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
 	 */
 	paymentPlan: one(productVariantPaymentPlan, {
@@ -368,10 +368,10 @@ export const usageBasedPaymentPlanRelations = relations(usageBasedPaymentPlan, (
  * Usage-Based Payment Plan Translation Relations
  *
  * @integrationRole Multi-language support for usage-based payment plan specific content
- * Enables organizations to localize usage descriptions, pricing explanations, and billing
+ * Enables orgs to localize usage descriptions, pricing explanations, and billing
  * policies for different markets while explaining complex usage-based billing models clearly.
  *
- * @businessContext Essential for organizations offering usage-based services in international
+ * @businessContext Essential for orgs offering usage-based services in international
  * markets where complex pricing models require clear explanation and customer education for
  * optimal adoption and customer satisfaction.
  */
@@ -397,17 +397,17 @@ export const usageBasedPaymentPlanTranslationRelations = relations(
  * User Subscription Relations
  *
  * @integrationRole Customer subscription instances with comprehensive lifecycle tracking
- * Links customer payments to organizational payment plans while maintaining access control,
+ * Links customer payments to orgal payment plans while maintaining access control,
  * subscription management, and creator economy revenue attribution for comprehensive customer
  * and business relationship management.
  *
  * @businessContext Manages customer relationships and subscription lifecycles while integrating
- * with organizational payment strategies, creator economy revenue sharing, and international
+ * with orgal payment strategies, creator economy revenue sharing, and international
  * currency management for comprehensive subscription commerce and creator compensation.
  *
  * @creatorEconomyIntegration Revenue tracking enables instructor attribution calculations and
- * organizational analytics for creator compensation workflows while maintaining clear
- * organizational boundaries and professional attribution patterns.
+ * orgal analytics for creator compensation workflows while maintaining clear
+ * orgal boundaries and professional attribution patterns.
  *
  * @performanceCritical Relations optimized for high-frequency subscription status checks,
  * access control queries, and revenue attribution calculations essential for customer
@@ -427,7 +427,7 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 	/**
 	 * @paymentPlanReference Org's payment plan this subscription follows
 	 * @businessContext Determines pricing, features, billing cycle, and access permissions
-	 * @revenueAttribution Links subscription revenue to specific organizational payment strategies
+	 * @revenueAttribution Links subscription revenue to specific orgal payment strategies
 	 */
 	paymentPlan: one(productVariantPaymentPlan, {
 		fields: [userSubscription.planId],
@@ -435,7 +435,7 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 	}),
 
 	/**
-	 * @organizationScope Org context for subscription management and analytics
+	 * @orgScope Org context for subscription management and analytics
 	 * @multiTenant Enables org-specific subscription reporting and business intelligence
 	 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
 	 */
@@ -446,11 +446,11 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
 
 	/**
 	 * @memberContext Optional org member context for internal subscriptions
-	 * @businessRule When present, indicates internal organizational member subscription access
+	 * @businessRule When present, indicates internal orgal member subscription access
 	 * @accessControl Enables different access patterns and policies for internal vs external customers
 	 */
-	organizationMember: one(orgMember, {
-		fields: [userSubscription.organizationMemberId],
+	orgMember: one(orgMember, {
+		fields: [userSubscription.orgMemberId],
 		references: [orgMember.id],
 	}),
 

@@ -76,7 +76,31 @@ export const locale = table(
 		// locale: text("locale").notNull(),
 		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
 		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
+		// code
+		// label
 		key: getLocaleKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
+
+		/**
+		 * @displayInfo Human-readable locale information
+		 * @platformUI Locale display in admin interfaces
+		 */
+		name: text("name").notNull(), // "English (United States)"
+		nativeName: text("native_name").notNull(), // "English (United States)"
+		languageCode: text("language_code").notNull(), // "en"
+		countryCode: text("country_code"), // "US"
+
+		/**
+		 * @platformManagement Locale availability and configuration
+		 * @businessRule Controls locale availability across platform
+		 */
+		isActive: boolean("is_active").default(true),
+		isRTL: boolean("is_rtl").default(false),
+
+		// /**
+		//  * @marketingInfo Locale market information for business intelligence
+		//  * @businessStrategy Regional market characteristics
+		//  */
+		// marketTier: text("market_tier"), // "primary", "secondary", "emerging"
 	},
 	(t) => {
 		const base = "locale";
@@ -102,7 +126,7 @@ export const locale = table(
 export const currency = table(
 	"currency",
 	{
-		code: text("code").primaryKey(), // ISO 4217 code (e.g., "USD")
+		code: text("code").primaryKey().notNull(), // ISO 4217 code (e.g., "USD")
 		name: name.notNull(),
 		symbol: text("symbol").notNull(),
 		numericCode: text("numeric_code"),
@@ -211,12 +235,7 @@ export const exchangeRate = table(
 	(t) => {
 		const base = "exchange_rate";
 		return [
-			uniqueIndex(`uq_${base}_period`).on(
-				t.baseCurrency,
-				t.targetCurrency,
-				t.validFrom,
-				t.source,
-			),
+			uniqueIndex(`uq_${base}_period`).on(t.baseCurrency, t.targetCurrency, t.validFrom, t.source),
 			index(`idx_${base}_currencies`).on(t.baseCurrency, t.targetCurrency),
 			index(`idx_${base}_date`).on(t.validFrom, t.validTo),
 			index(`idx_${base}_active_date`).on(t.validFrom, t.validTo, t.deletedAt),
@@ -327,10 +346,7 @@ export const marketTemplateTranslation = table(
 		}),
 	},
 	(t) => [
-		uniqueIndex("uq_market_template_translation_unique").on(
-			t.marketTemplateId,
-			t.localeKey,
-		),
+		uniqueIndex("uq_market_template_translation_unique").on(t.marketTemplateId, t.localeKey),
 		uniqueIndex("uq_market_template_translation_default")
 			.on(t.marketTemplateId, t.isDefault)
 			.where(eq(t.isDefault, true)),

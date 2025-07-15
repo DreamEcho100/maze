@@ -16,7 +16,7 @@ export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(userSession),
 	userEmailVerificationRequests: many(userEmailVerificationRequest),
 	passwordResetSessions: many(userPasswordResetSession),
-	organizationMemberships: many(orgMember),
+	orgMemberships: many(orgMember),
 	invitationsSent: many(orgMemberInvitation),
 	affiliations: many(instructorOrgAffiliation),
 	instructorProfiles: many(userInstructorProfile),
