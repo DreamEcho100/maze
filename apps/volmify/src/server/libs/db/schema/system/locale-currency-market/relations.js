@@ -17,21 +17,23 @@ import {
 	promotionTranslation,
 } from "../../org/product/offers/schema.js";
 import {
-	oneTimePaymentPlanTranslation,
-	productVariantPaymentPlan,
-	productVariantPaymentPlanTranslation,
-	subscriptionPaymentPlanTranslation,
-	usageBasedPaymentPlanTranslation,
+	orgProductVariantPaymentPlan,
+	// orgUsageBasedPaymentPlanI18n,
+	orgProductVariantPaymentPlanI18n,
+	orgProductVariantPaymentPlanOneTimeType,
+	orgProductVariantPaymentPlanOneTimeTypeI18n,
+	orgProductVariantPaymentPlanSubscriptionType,
+	orgProductVariantPaymentPlanSubscriptionTypeI18n,
 } from "../../org/product/payment/schema.js";
 import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import {
 	orgBrandTranslation,
 	orgCurrencySettings,
-	orgMarket,
-	orgMarketCountry,
-	orgMarketTranslation,
-	orgPricingZone,
-	orgPricingZoneCountry,
+	// orgMarket,
+	// orgMarketCountry,
+	// orgMarketTranslation,
+	// orgPricingZone,
+	// orgPricingZoneCountry,
 } from "../../org/schema.js";
 import { orgTaxRate } from "../../org/tax/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
@@ -58,7 +60,7 @@ import {
 export const currencyRelations = relations(currency, ({ many }) => ({
 	countries: many(country),
 	marketTemplates: many(marketTemplate),
-	orgMarkets: many(orgMarket),
+	// orgMarkets: many(orgMarket),
 	exchangeRatesBase: many(exchangeRate, {
 		relationName: "base_currency_rates",
 	}),
@@ -66,14 +68,19 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 		relationName: "target_currency_rates",
 	}),
 	orgSettings: many(orgCurrencySettings),
-	productVariantsPaymentPlans: many(productVariantPaymentPlan),
+	productVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
 	discounts: many(discount),
 	giftCards: many(giftCard),
-	pricingZones: many(orgPricingZone),
+	// pricingZones: many(orgPricingZone),
 
 	//
 	orgTaxRates: many(orgTaxRate),
 	orgsRegions: many(orgRegion),
+
+	orgsProductsVariantsPaymentPlansOneTimeType: many(orgProductVariantPaymentPlanOneTimeType),
+	orgsProductsVariantsPaymentPlansSubscriptionType: many(
+		orgProductVariantPaymentPlanSubscriptionType,
+	),
 }));
 
 export const countryRelations = relations(country, ({ one, many }) => ({
@@ -82,8 +89,8 @@ export const countryRelations = relations(country, ({ one, many }) => ({
 		references: [currency.code],
 	}),
 	marketTemplateCountries: many(marketTemplateCountry),
-	orgMarketCountries: many(orgMarketCountry),
-	pricingZoneCountries: many(orgPricingZoneCountry),
+	// orgMarketCountries: many(orgMarketCountry),
+	// pricingZoneCountries: many(orgPricingZoneCountry),
 }));
 
 export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
@@ -106,7 +113,7 @@ export const marketTemplateRelations = relations(marketTemplate, ({ one, many })
 	}),
 	countries: many(marketTemplateCountry),
 	translations: many(marketTemplateTranslation),
-	orgMarkets: many(orgMarket),
+	// orgMarkets: many(orgMarket),
 }));
 
 export const marketTemplateCountryRelations = relations(marketTemplateCountry, ({ one, many }) => ({
@@ -151,7 +158,7 @@ export const _localeRelations = relations(locale, ({ many }) => ({
 	),
 	lessonsTranslations: many(lessonTranslation),
 	orgsBrandsTranslations: many(orgBrandTranslation),
-	orgMarketsTranslations: many(orgMarketTranslation),
+	// orgMarketsTranslations: many(orgMarketTranslation),
 	productsTranslations: many(orgProductI18n),
 	productsVariantsTranslations: many(orgProductVariantI18n),
 
@@ -160,11 +167,11 @@ export const _localeRelations = relations(locale, ({ many }) => ({
 	couponsTranslation: many(couponTranslation),
 	giftCardsTranslation: many(giftCardTranslation),
 	promotionsTranslation: many(promotionTranslation),
-	productsVariantsPaymentPlansTranslations: many(productVariantPaymentPlanTranslation),
+	productsVariantsPaymentPlansTranslations: many(orgProductVariantPaymentPlanI18n),
 
 	// The following is not shared with the SEO table
-	oneTimePaymentPlansTranslations: many(oneTimePaymentPlanTranslation),
-	subscriptionPaymentPlansTranslations: many(subscriptionPaymentPlanTranslation),
-	usageBasedPaymentPlansTranslations: many(usageBasedPaymentPlanTranslation),
+	oneTimePaymentPlansTranslations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
+	subscriptionPaymentPlansTranslations: many(orgProductVariantPaymentPlanSubscriptionTypeI18n),
+	// usageBasedPaymentPlansTranslations: many(orgUsageBasedPaymentPlanI18n),
 	seoAlternateUrls: many(seoAlternateUrl),
 }));

@@ -33,7 +33,7 @@ import { org, orgBrand } from "../schema.js";
 import { productCourse } from "./by-type/course/schema.js";
 import { productCollection } from "./collection/schema.js";
 import { discountProduct, discountVariant } from "./offers/schema.js";
-import { productVariantPaymentPlan } from "./payment/schema.js";
+import { orgProductVariantPaymentPlan } from "./payment/schema.js";
 import {
 	// discountProduct,
 	// discountVariant,
@@ -194,7 +194,7 @@ export const productVariantRelations = relations(orgProductVariant, ({ one, many
 	 * @revenueOptimization Supports subscription, one-time purchase, and free access models
 	 * @multiCurrencySupport Maintains multi-currency pricing for global markets
 	 */
-	paymentPlans: many(productVariantPaymentPlan),
+	paymentPlans: many(orgProductVariantPaymentPlan),
 
 	/**
 	 * @promotionalStrategy Variant-specific discount campaign integration

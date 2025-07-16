@@ -15,7 +15,7 @@ import {
 	giftCardTranslation,
 	promotionTranslation,
 } from "../../org/product/offers/schema.js";
-import { productVariantPaymentPlanTranslation } from "../../org/product/payment/schema.js";
+import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
 import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
@@ -125,34 +125,39 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [promotionTranslation.seoMetadataId],
 	}),
 
-	productsVariantsPaymentPlansTranslations: one(productVariantPaymentPlanTranslation, {
+	productsVariantsPaymentPlansTranslations: one(orgProductVariantPaymentPlanI18n, {
 		fields: [seoMetadata.id],
-		references: [productVariantPaymentPlanTranslation.seoMetadataId],
+		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
 	}),
 
-	orgsFunnelsI18n: one(orgFunnelI18n, {
+	//
+	orgFunnelI18n: one(orgFunnelI18n, {
 		fields: [seoMetadata.id],
 		references: [orgFunnelI18n.seoMetadataId],
 	}),
-	orgsTaxesCategoriesI18n: one(orgTaxCategoryI18n, {
+	orgTaxCategoryI18n: one(orgTaxCategoryI18n, {
 		fields: [seoMetadata.id],
 		references: [orgTaxCategoryI18n.seoMetadataId],
 	}),
-	orgsRegionsI18n: one(orgRegionI18n, {
+	orgRegionI18n: one(orgRegionI18n, {
 		fields: [seoMetadata.id],
 		references: [orgRegionI18n.seoMetadataId],
 	}),
-	orgsProductsI18n: one(orgProductI18n, {
+	orgProductI18n: one(orgProductI18n, {
 		fields: [seoMetadata.id],
 		references: [orgProductI18n.seoMetadataId],
 	}),
-	orgsProductsVariantsI18n: one(orgProductVariantI18n, {
+	orgProductVariantI18n: one(orgProductVariantI18n, {
 		fields: [seoMetadata.id],
 		references: [orgProductVariantI18n.seoMetadataId],
 	}),
-	orgsTaxesRatesI18n: one(orgTaxRateI18n, {
+	orgTaxRateI18n: one(orgTaxRateI18n, {
 		fields: [seoMetadata.id],
 		references: [orgTaxRateI18n.seoMetadataId],
+	}),
+	productVariantPaymentPlanI18n: one(orgProductVariantPaymentPlanI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
 	}),
 }));
 

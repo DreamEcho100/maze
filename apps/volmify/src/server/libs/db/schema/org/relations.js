@@ -10,6 +10,10 @@ import { orgDepartment } from "./member/department/schema.js";
 import { orgMember, orgMemberInvitation } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
 import { lesson, productCourseEnrollment, skill } from "./product/by-type/course/schema.js";
+import {
+	orgProductVariantPaymentPlan,
+	orgProductVariantPaymentPlanMemberSubscription,
+} from "./product/payment/schema.js";
 import { orgProductBrandAttribution, orgProductInstructorAttribution } from "./product/schema.js";
 import {
 	instructorOrgAffiliation,
@@ -58,6 +62,8 @@ export const orgRelations = relations(org, ({ many }) => ({
 	locales: many(orgLocale),
 	regions: many(orgRegion),
 	funnels: many(orgFunnel),
+	membersSubscriptions: many(orgProductVariantPaymentPlanMemberSubscription),
+	productsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
 }));
 
 /**

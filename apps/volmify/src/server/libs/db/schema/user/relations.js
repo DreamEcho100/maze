@@ -5,6 +5,7 @@ import {
 	productCourseChallengeRating,
 	userLearningProfile,
 } from "../org/product/by-type/course/schema.js";
+import { orgProductVariantPaymentPlanMemberSubscription } from "../org/product/payment/schema.js";
 import { instructorOrgAffiliation } from "../org/schema.js";
 import { userInstructorProfile } from "./profile/instructor/schema.js";
 import {
@@ -26,6 +27,10 @@ export const userRelations = relations(user, ({ many }) => ({
 	orgMemberships: many(orgMember),
 	invitationsSent: many(orgMemberInvitation),
 	createdTeams: many(orgTeam),
+
+	orgsProductsVariantsPaymentPlansSubscription: many(
+		orgProductVariantPaymentPlanMemberSubscription,
+	),
 }));
 export const userSessionRelations = relations(userSession, ({ one }) => ({
 	user: one(user, {

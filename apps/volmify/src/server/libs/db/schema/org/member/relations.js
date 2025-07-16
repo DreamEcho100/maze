@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 
 import { user } from "../../user/schema.js";
+import { orgProductVariantPaymentPlanMemberSubscription } from "../product/payment/schema.js";
 import { org } from "../schema.js";
 import { orgMember, orgMemberInvitation } from "./schema";
 import { orgTeamMembership } from "./team/schema.js";
@@ -17,6 +18,7 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	invitations: many(orgMemberInvitation),
 	teamsMemberships: many(orgTeamMembership),
 	departmentMemberships: many(org),
+	productsVariantsPaymentPlansSubscriptions: many(orgProductVariantPaymentPlanMemberSubscription),
 }));
 
 export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({

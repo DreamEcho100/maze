@@ -58,13 +58,12 @@ import {
 	table,
 	updatedAt,
 } from "../../_utils/helpers.js";
-import { currency } from "../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../system/seo/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { org, orgBrand } from "../schema.js";
 import { orgTaxCategory } from "../tax/schema.js";
-import { paymentPlanTypeEnum } from "./payment/schema.js";
+import { orgProductVariantPaymentTypeEnum } from "./payment/schema.js";
 
 const orgProductTableName = `${orgTableName}_product`;
 // -------------------------------------
@@ -323,7 +322,7 @@ export const orgProductVariant = table(
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
 		 * @templatePattern Determines downstream plan table extensions
 		 */
-		type: paymentPlanTypeEnum("type").notNull(),
+		type: orgProductVariantPaymentTypeEnum("type").notNull(),
 
 		// /**
 		//  * @regionalPricing Optional market for regional pricing strategies
@@ -332,30 +331,32 @@ export const orgProductVariant = table(
 		//  */
 		// marketId: text("market_id").references(() => orgMarket.id),
 
-		/**
-		 * @currencySupport Currency for this payment plan instance
-		 * @internationalCommerce Required for all payment plans to support global expansion
-		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		// NOTE: The price for the product variant will be through the 1-m `orgProductVariantPaymentPlan`
+		// /**
+		//  * @currencySupport Currency for this payment plan instance
+		//  * @internationalCommerce Required for all payment plans to support global expansion
+		//  */
+		// currencyCode: text("currency_code")
+		// 	.notNull()
+		// 	.references(() => currency.code),
 
-		/**
-		 * @pricing Main price customers pay for this payment plan
-		 * @revenueFoundation Core pricing amount for revenue calculations and billing
-		 */
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+		// /**
+		//  * @pricing Main price customers pay for this payment plan
+		//  * @revenueFoundation Core pricing amount for revenue calculations and billing
+		//  */
+		// price: decimal("price", { precision: 10, scale: 2 }).notNull(),
 
-		/**
-		 * @promotionalPricing Original price for "save X%" marketing displays
-		 * @marketingStrategy Shows discount value to increase conversion rates
-		 */
-		compareAtPrice: decimal("compare_at_price", {
-			precision: 10,
-			scale: 2,
-		}),
+		// /**
+		//  * @promotionalPricing Original price for "save X%" marketing displays
+		//  * @marketingStrategy Shows discount value to increase conversion rates
+		//  */
+		// compareAtPrice: decimal("compare_at_price", {
+		// 	precision: 10,
+		// 	scale: 2,
+		// }),
 
-		tax_category_id: fk("tax_category_id")
+		// Q: Should the `tax_category_id` be here or in the `orgProductVariantPaymentPlan`
+		taxCategoryId: fk("tax_category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
 
@@ -411,22 +412,18 @@ export const orgProductVariant = table(
 		index(`idx_${orgProductVariantTable}_default`).on(t.isDefault),
 		index(`idx_${orgProductVariantTable}_featured`).on(t.isFeatured),
 		index(`idx_${orgProductVariantTable}_type`).on(t.type),
-		index(`idx_${orgProductVariantTable}_currency_code`).on(t.currencyCode),
+		// index(`idx_${orgProductVariantTable}_currency_code`).on(t.currencyCode),
 		index(`idx_${orgProductVariantTable}_starts_at`).on(t.startsAt),
 		index(`idx_${orgProductVariantTable}_ends_at`).on(t.endsAt),
 		index(`idx_${orgProductVariantTable}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductVariantTable}_updated_at`).on(t.updatedAt),
 		index(`idx_${orgProductVariantTable}_deleted_at`).on(t.deletedAt),
-		index(`idx_${orgProductVariantTable}_tax_category_id`).on(
-			t.tax_category_id,
-		),
+		index(`idx_${orgProductVariantTable}_tax_category_id`).on(t.taxCategoryId),
 	],
 );
 
 const orgProductVariantI18nTableName = `${orgProductVariantTable}_i18n`;
-export const orgProductVariantI18n = buildOrgI18nTable(
-	orgProductVariantI18nTableName,
-)(
+export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantI18nTableName)(
 	{
 		variantId: text("variant_id")
 			.notNull()
@@ -538,13 +535,9 @@ export const orgProductInstructorAttribution = table(
 		),
 
 		// Performance Indexes for Professional Queries
-		index(`idx_${orgProductInstructorAttributionTableName}_profile_id`).on(
-			t.instructorProfileId,
-		),
+		index(`idx_${orgProductInstructorAttributionTableName}_profile_id`).on(t.instructorProfileId),
 		index(`idx_${orgProductInstructorAttributionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductInstructorAttributionTableName}_product_id`).on(
-			t.productId,
-		),
+		index(`idx_${orgProductInstructorAttributionTableName}_product_id`).on(t.productId),
 		// index(`idx_${orgProductInstructorAttributionTableName}_primary`).on(t.isPrimary),
 
 		// Revenue Attribution Queries
@@ -553,15 +546,9 @@ export const orgProductInstructorAttribution = table(
 			t.revenueSharePercentage,
 		),
 
-		index(`idx_${orgProductInstructorAttributionTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgProductInstructorAttributionTableName}_updated_at`).on(
-			t.updatedAt,
-		),
-		index(`idx_${orgProductInstructorAttributionTableName}_deleted_at`).on(
-			t.deletedAt,
-		),
+		index(`idx_${orgProductInstructorAttributionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductInstructorAttributionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductInstructorAttributionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 

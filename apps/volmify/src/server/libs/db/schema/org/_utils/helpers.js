@@ -4,6 +4,8 @@ import { createdAt, deletedAt, getLocaleKey, table, updatedAt } from "../../_uti
 import { orgLocale } from "../locale-region/schema";
 
 export const orgTableName = "org";
+
+// TODO: Needs a better generic handling to be able to infer the other internal defined fields on the `extraConfig` parameter
 /**
  * @template {string} TTableName
  * @param {TTableName} baseTableName

@@ -2,6 +2,8 @@ import { relations } from "drizzle-orm";
 import { currency } from "../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../system/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
+import { orgProductVariantPaymentPlan } from "../product/payment/schema";
+import { orgProductVariant } from "../product/schema";
 import {
 	orgTaxCategory,
 	orgTaxCategoryI18n,
@@ -12,6 +14,8 @@ import {
 
 export const orgTaxCategoryRelations = relations(orgTaxCategory, ({ many }) => ({
 	translations: many(orgTaxCategoryI18n),
+	productsVariants: many(orgProductVariant),
+	productsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
 }));
 export const orgTaxCategoryI18nRelations = relations(orgTaxCategoryI18n, ({ one }) => ({
 	category: one(orgTaxCategory, {

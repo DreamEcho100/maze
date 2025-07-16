@@ -1,38 +1,4 @@
-/**
- * @fileoverview Product Variant Payment Plans - CTI-Based Monetization with Multi-Tenant Pricing
- *
- * @architecture Variant-Level Payment Strategies with Integrated Market/Currency Pricing
- * Payment plan system attached to productVariant with integrated pricing eliminating productPrice
- * redundancy. Supports sophisticated payment strategies including one-time purchases, subscriptions,
- * and usage-based billing within orgal boundaries while maintaining creator economy
- * revenue attribution workflows.
- *
- * @designPattern CTI + Integrated Pricing + Translation + Multi-Tenant + Creator Attribution
- * - Variant-Level Attachment: Payment plans define HOW customers pay for specific product variants
- * - Integrated Pricing: Market/currency pricing built directly into payment plans
- * - CTI Specialization: One-time, subscription, usage-based extensions with type-specific features
- * - Creator Attribution: Revenue tracking for instructor attribution and orgal analytics
- * - No ProductPrice: Eliminates redundant pricing tables for simplified architecture
- *
- * @integrationPoints
- * - ProductVariant Integration: Payment strategies attached to e-commerce foundation
- * - Organizational Revenue: Creator economy revenue sharing and instructor attribution
- * - Multi-Currency Commerce: International market expansion with currency localization
- * - Customer Lifecycle: Subscription management and access control workflows
- * - Translation System: Localized payment marketing for international expansion
- *
- * @businessValue
- * Enables orgs to implement sophisticated monetization strategies for their product
- * variants while maintaining clear creator attribution, supporting international markets,
- * and providing comprehensive subscription lifecycle management for modern e-commerce.
- *
- * @scalingDesign
- * CTI pattern enables adding new payment types (freemium, corporate, enterprise) without
- * affecting existing payment workflows. Variant-level attachment scales with product catalog
- * growth while maintaining consistent pricing architecture across all product types.
- */
-
-import { eq, isNotNull, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -45,15 +11,24 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
-import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import {
+	createdAt,
+	deletedAt,
+	fk,
+	id,
+	table,
+	updatedAt,
+} from "../../../_utils/helpers.js";
+import { currency } from "../../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
-import { orgTableName } from "../../_utils/helpers.js";
+import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
+import { orgMember } from "../../member/schema.js";
 import {
 	org,
 	// , orgMarket, orgMember, orgPricingZone
 } from "../../schema.js";
+import { orgTaxCategory } from "../../tax/schema.js";
 import { orgProductVariant } from "../schema.js";
 
 // -------------------------------------
@@ -68,11 +43,10 @@ import { orgProductVariant } from "../schema.js";
  * - subscription: Recurring billing for continued access (SaaS, premium memberships)
  * - usage_based: Pay-per-consumption billing (API calls, content downloads, processing time)
  */
-export const paymentPlanTypeEnum = pgEnum("payment_plan_type", [
-	"one_time",
-	"subscription",
-	"usage_based",
-]);
+export const orgProductVariantPaymentTypeEnum = pgEnum(
+	`${orgTableName}_payment_plan_type`,
+	["one_time", "subscription", "usage_based"],
+);
 
 /**
  * Billing Intervals - Recurring Payment Frequency
@@ -84,13 +58,10 @@ export const paymentPlanTypeEnum = pgEnum("payment_plan_type", [
  * - quarterly: 3-month billing cycles for seasonal programs
  * - yearly: Annual subscriptions typically offering cost savings
  */
-export const billingIntervalEnum = pgEnum("billing_interval", [
-	"daily",
-	"weekly",
-	"monthly",
-	"quarterly",
-	"yearly",
-]);
+export const orgProductVariantPaymentBillingIntervalEnum = pgEnum(
+	`${orgTableName}_billing_interval`,
+	["daily", "weekly", "monthly", "quarterly", "yearly"],
+);
 
 /**
  * Subscription Status - Customer Subscription Lifecycle
@@ -105,16 +76,19 @@ export const billingIntervalEnum = pgEnum("billing_interval", [
  * - unpaid: Multiple payment failures, access suspended
  * - paused: Temporarily suspended subscription with access preserved
  */
-export const subscriptionStatusEnum = pgEnum("subscription_status", [
-	"incomplete",
-	"incomplete_expired",
-	"trialing",
-	"active",
-	"past_due",
-	"canceled",
-	"unpaid",
-	"paused",
-]);
+export const orgProductVariantPaymentSubscriptionStatusEnum = pgEnum(
+	`${orgTableName}_subscription_status`,
+	[
+		"incomplete",
+		"incomplete_expired",
+		"trialing",
+		"active",
+		"past_due",
+		"canceled",
+		"unpaid",
+		"paused",
+	],
+);
 
 /**
  * Usage Types - Measurable Consumption Metrics
@@ -128,15 +102,18 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
  * - lesson_views: Content consumption billing for educational products
  * - processing_time: Computation time billing for service-based products
  */
-export const usageTypeEnum = pgEnum("usage_type", [
-	"api_calls",
-	"downloads",
-	"storage_usage",
-	"bandwidth_usage",
-	"course_completions",
-	"lesson_views",
-	"processing_time",
-]);
+export const orgProductVariantPaymentUsageTypeEnum = pgEnum(
+	`${orgTableName}_usage_type`,
+	[
+		"api_calls",
+		"downloads",
+		"storage_usage",
+		"bandwidth_usage",
+		"course_completions",
+		"lesson_views",
+		"processing_time",
+	],
+);
 
 /**
  * Usage Pricing Models - Consumption-to-Revenue Strategies
@@ -146,16 +123,16 @@ export const usageTypeEnum = pgEnum("usage_type", [
  * - tiered: Different prices for different usage volume tiers (volume incentives)
  * - volume: Bulk pricing based on total usage volume (enterprise scaling)
  */
-export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
-	"per_unit",
-	"tiered",
-	"volume",
-]);
+export const orgProductVariantPaymentUsagePricingModelEnum = pgEnum(
+	`${orgTableName}_usage_pricing_model`,
+	["per_unit", "tiered", "volume"],
+);
 
 // -------------------------------------
 // VARIANT PAYMENT PLANS (WITH INTEGRATED PRICING)
 // -------------------------------------
 
+const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_payment_plan`;
 /**
  * Product Variant Payment Plan - Integrated Payment Strategy with Pricing
  *
@@ -179,8 +156,8 @@ export const usagePricingModelEnum = pgEnum("usage_pricing_model", [
  * attribution and orgal analytics for comprehensive financial reporting and
  * creator compensation calculations.
  */
-export const productVariantPaymentPlan = table(
-	"product_variant_payment_plan",
+export const orgProductVariantPaymentPlan = table(
+	orgProductVariantPaymentPlanTableName,
 	{
 		id: id.notNull(),
 
@@ -201,10 +178,15 @@ export const productVariantPaymentPlan = table(
 			.references(() => org.id),
 
 		/**
+		 * This is an optional tax category connection that overrides the one on the `orgProductVariant`
+		 */
+		taxCategoryId: fk("tax_category_id").references(() => orgTaxCategory.id),
+
+		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
 		 * @templatePattern Determines downstream plan table extensions
 		 */
-		type: paymentPlanTypeEnum("type").notNull(),
+		type: orgProductVariantPaymentTypeEnum("type").notNull(),
 
 		name: text("name").notNull(),
 		slug: text("slug").notNull(),
@@ -225,35 +207,6 @@ export const productVariantPaymentPlan = table(
 		 * @uiControl Controls pricing table sequence for optimal conversion flow
 		 */
 		sortOrder: integer("sort_order").default(0),
-
-		/**
-		 * @currencySupport Currency for this payment plan instance
-		 * @internationalCommerce Required for all payment plans to support global expansion
-		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
-
-		/**
-		 * @pricing Main price customers pay for this payment plan
-		 * @revenueFoundation Core pricing amount for revenue calculations and billing
-		 */
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-
-		/**
-		 * @promotionalPricing Original price for "save X%" marketing displays
-		 * @marketingStrategy Shows discount value to increase conversion rates
-		 */
-		compareAtPrice: decimal("compare_at_price", {
-			precision: 10,
-			scale: 2,
-		}),
-
-		/**
-		 * @taxation Tax rate for this payment plan region/market
-		 * @legalCompliance Required for proper tax calculation and reporting
-		 */
-		taxRate: decimal("tax_rate", { precision: 5, scale: 4 }),
 
 		// /**
 		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
@@ -294,11 +247,11 @@ export const productVariantPaymentPlan = table(
 		 */
 		endsAt: timestamp("ends_at"),
 
-		/**
-		 * @extensibility Additional payment plan metadata for integrations and analytics
-		 * @integrationContext Third-party platform support
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @extensibility Additional payment plan metadata for integrations and analytics
+		//  * @integrationContext Third-party platform support
+		//  */
+		// metadata: jsonb("metadata"),
 
 		/**
 		 * @accessControl Access tier granted by this payment plan
@@ -308,53 +261,81 @@ export const productVariantPaymentPlan = table(
 		 */
 		accessTier: integer("access_tier").default(1).notNull(),
 
-		/**
-		 * @contentAccess JSON defining course content access rules for this variant
-		 * @businessFlexibility Enables sophisticated course progression and gating rules
-		 * @instructorControl Allows instructors to define variant-specific content access
-		 */
-		courseAccessRules: jsonb("course_access_rules"),
-		// Example: {
-		//   "unlock_all_modules": false,
-		//   "modules_unlock_order": "sequential", // or "any_order"
-		//   "quiz_required_for_progression": true,
-		//   "downloadable_resources": true,
-		//   "instructor_qa_access": true,
-		//   "certificate_eligible": true
-		// }
+		// /**
+		//  * @contentAccess JSON defining course content access rules for this variant
+		//  * @businessFlexibility Enables sophisticated course progression and gating rules
+		//  * @instructorControl Allows instructors to define variant-specific content access
+		//  */
+		// courseAccessRules: jsonb("course_access_rules"),
+		// // Example: {
+		// //   "unlock_all_modules": false,
+		// //   "modules_unlock_order": "sequential", // or "any_order"
+		// //   "quiz_required_for_progression": true,
+		// //   "downloadable_resources": true,
+		// //   "instructor_qa_access": true,
+		// //   "certificate_eligible": true
+		// // }
 
 		createdAt,
 		updatedAt,
+		deletedAt,
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_variant_payment_plan_slug").on(t.variantId, t.slug),
-		uniqueIndex("uq_variant_payment_plan_default")
+		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_slug`).on(
+			t.variantId,
+			t.slug,
+		),
+		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_default`)
 			.on(t.variantId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
-		// Market/Currency Pricing Constraints (Integrated from ProductPrice)
-		uniqueIndex("uq_variant_plan_market_currency")
-			.on(t.variantId, t.type, t.marketId, t.currencyCode)
-			.where(isNotNull(t.marketId)),
-		uniqueIndex("uq_variant_plan_global_currency")
-			.on(t.variantId, t.type, t.currencyCode)
-			.where(isNull(t.marketId)),
-
 		// Performance Indexes
-		index("idx_variant_payment_plan_type").on(t.type), // CTI performance critical
-		index("idx_variant_payment_plan_variant").on(t.variantId),
-		index("idx_variant_payment_plan_org").on(t.orgId),
-		index("idx_variant_payment_plan_market").on(t.marketId),
-		index("idx_variant_payment_plan_currency").on(t.currencyCode),
-		index("idx_variant_payment_plan_active").on(t.isActive),
-		index("idx_variant_payment_plan_featured").on(t.isFeatured),
-		index("idx_variant_payment_plan_dates").on(t.startsAt, t.endsAt),
-		index("idx_variant_payment_plan_zone").on(t.pricingZoneId),
-		index("idx_variant_payment_plan_price").on(t.price), // Revenue analytics
+		index(`idx_${orgProductVariantPaymentPlanTableName}_type`).on(t.type), // CTI performance critical
+		index(`idx_${orgProductVariantPaymentPlanTableName}_variant_id`).on(
+			t.variantId,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_tax_category_id`).on(
+			t.taxCategoryId,
+		),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_currency`).on(
+		// 	t.currencyCode,
+		// ),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_active`).on(t.isActive),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(
+			t.isFeatured,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(
+			t.startsAt,
+			t.endsAt,
+		),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_price`).on(t.price), // Revenue analytics
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
+		// 	t.compareAtPrice,
+		// ),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(
+			t.accessTier,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_sort_order`).on(
+			t.sortOrder,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(
+			t.features,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(
+			t.deletedAt,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_updated_at`).on(
+			t.updatedAt,
+		),
 	],
 );
 
+const orgProductVariantPaymentPlanI18nTableName = `${orgProductVariantPaymentPlanTableName}_i18n`;
 /**
  * Product Variant Payment Plan Translation - Multi-language Payment Marketing
  *
@@ -375,72 +356,36 @@ export const productVariantPaymentPlan = table(
  * @abacRole Readable globally; write-scoped to org admins with pricing access
  * @permissionContext Translations scoped to org and tenant
  */
-export const productVariantPaymentPlanTranslation = table(
-	"product_variant_payment_plan_translation",
+export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
+	orgProductVariantPaymentPlanI18nTableName,
+)(
 	{
-		id: id.notNull(),
+		planId: fk("plan_id")
+			.references(() => orgProductVariantPaymentPlan.id)
+			.notNull(),
 
-		/**
-		 * @translationTarget Parent payment plan receiving this translation
-		 */
-		planId: text("plan_id")
-			.notNull()
-			.references(() => productVariantPaymentPlan.id, { onDelete: "cascade" }),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 
-		/**
-		 * @localizationContext Target locale for this translation content
-		 * @businessRule Supports region-specific payment plan marketing strategies
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
-		/**
-		 * @translationDefault Primary translation used when locale-specific content unavailable
-		 * @businessRule Exactly one default translation per payment plan
-		 */
-		isDefault: boolean("is_default").default(false),
-
-		/**
-		 * @localizedContent Region-specific name of plan
-		 * @conversionStrategy Enables contextual pricing and positioning across locales
-		 */
-		name: text("name"),
-
-		/**
-		 * @localizedContent Region-specific plan details
-		 * @conversionStrategy Boosts international trust and clarity
-		 */
+		name: text("name").notNull(),
 		description: text("description"),
-
-		/**
-		 * @seoOptimization Optional SEO metadata for payment plan landing pages
-		 * @marketingStrategy Enables search optimization for pricing and promotional content
-		 */
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
-
-		createdAt,
-		updatedAt,
 	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex("uq_variant_payment_plan_translation").on(t.planId, t.localeKey),
-		uniqueIndex("uq_variant_payment_plan_translation_default")
-			.on(t.planId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index("idx_variant_payment_plan_translation_locale_key").on(t.localeKey),
-		index("idx_variant_payment_plan_translation_seo").on(t.seoMetadataId),
-	],
+	{
+		fkKey: "planId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_seo_metadata_id`).on(t.seoMetadataId),
+			index(`idx_${tableName}_plan_id`).on(t.planId),
+			index(`idx_${tableName}_name`).on(t.name),
+		],
+	},
 );
 
 // -------------------------------------
 // CTI SPECIALIZATION TABLES
 // -------------------------------------
 
+const orgProductVariantPaymentPlanOneTimeTypeTableName = `${orgProductVariantPaymentPlanTableName}_one_time_type`;
 /**
  * One-Time Payment Plan - Traditional E-commerce Purchase Model
  *
@@ -462,15 +407,38 @@ export const productVariantPaymentPlanTranslation = table(
  * @abacRole Scoped to vendor/org with payment plan write access
  * @entitlementScope Access duration drives unlock window logic
  */
-export const oneTimePaymentPlan = table(
-	"one_time_payment_plan",
+export const orgProductVariantPaymentPlanOneTimeType = table(
+	orgProductVariantPaymentPlanOneTimeTypeTableName,
 	{
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
 		planId: text("plan_id")
 			.primaryKey()
-			.references(() => productVariantPaymentPlan.id),
+			.references(() => orgProductVariantPaymentPlan.id),
+
+		/**
+		 * @currencySupport Currency for this payment plan instance
+		 * @internationalCommerce Required for all payment plans to support global expansion
+		 */
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+
+		/**
+		 * @pricing Main price customers pay for this payment plan
+		 * @revenueFoundation Core pricing amount for revenue calculations and billing
+		 */
+		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+
+		/**
+		 * @promotionalPricing Original price for "save X%" marketing displays
+		 * @marketingStrategy Shows discount value to increase conversion rates
+		 */
+		compareAtPrice: decimal("compare_at_price", {
+			precision: 10,
+			scale: 2,
+		}),
 
 		/**
 		 * @accessControl Days of access after purchase (null = lifetime access)
@@ -509,13 +477,31 @@ export const oneTimePaymentPlan = table(
 	},
 	(t) => [
 		// Performance indexes for one-time payment management
-		index("idx_one_time_plan_lifetime").on(t.isLifetimeAccess),
-		index("idx_one_time_plan_duration").on(t.accessDurationDays),
-		index("idx_one_time_plan_gifting").on(t.allowGifting),
-		index("idx_one_time_plan_transferable").on(t.isTransferable),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_lifetime_access`,
+		).on(t.isLifetimeAccess),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_access_duration_days`,
+		).on(t.accessDurationDays),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_allow_gifting`,
+		).on(t.allowGifting),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_is_transferable`,
+		).on(t.isTransferable),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_max_purchases`,
+		).on(t.maxPurchasesPerUser),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_created_at`,
+		).on(t.createdAt),
+		index(
+			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_updated_at`,
+		).on(t.updatedAt),
 	],
 );
 
+const orgProductVariantPaymentPlanOneTimeTypeI18nTableName = `${orgProductVariantPaymentPlanOneTimeTypeTableName}_i18n`;
 /**
  * One-Time Payment Plan Translation - Localized Purchase Content
  *
@@ -528,29 +514,18 @@ export const oneTimePaymentPlan = table(
  *
  * @abacRole Write access limited to org admins and pricing managers
  */
-export const oneTimePaymentPlanTranslation = table(
-	"one_time_payment_plan_translation",
+export const orgProductVariantPaymentPlanOneTimeTypeI18n = buildOrgI18nTable(
+	orgProductVariantPaymentPlanOneTimeTypeI18nTableName,
+)(
 	{
-		id: id.notNull(),
-
 		/**
 		 * @translationTarget Parent one-time plan for this localized version
 		 */
 		planId: text("plan_id")
 			.notNull()
-			.references(() => oneTimePaymentPlan.planId, { onDelete: "cascade" }),
-
-		/**
-		 * @localizationContext Target region-language identifier
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
-		/**
-		 * @translationDefault Fallback translation when no exact match
-		 */
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgProductVariantPaymentPlanOneTimeType.planId, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @localizedContent Text shown to gift recipients
@@ -569,22 +544,16 @@ export const oneTimePaymentPlanTranslation = table(
 		 * @complianceContext Helps avoid support misunderstandings
 		 */
 		transferPolicy: text("transfer_policy"),
-
-		createdAt,
-		updatedAt,
 	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex("uq_one_time_plan_translation").on(t.planId, t.localeKey),
-		uniqueIndex("uq_one_time_plan_translation_default")
-			.on(t.planId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index("idx_one_time_plan_translation_locale_key").on(t.localeKey),
-	],
+	{
+		fkKey: "planId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_plan_id`).on(t.planId),
+		],
+	},
 );
 
+const orgProductVariantPaymentPlanSubscriptionTypeTableName = `${orgProductVariantPaymentPlanTableName}_subscription_type`;
 /**
  * Subscription Payment Plan - Recurring Billing Model
  *
@@ -606,21 +575,45 @@ export const oneTimePaymentPlanTranslation = table(
  * @permissionContext Managed by org admins with variant access
  * @auditTrail Includes timestamps for usage analytics and plan lifecycle
  */
-export const subscriptionPaymentPlan = table(
-	"subscription_payment_plan",
+export const orgProductVariantPaymentPlanSubscriptionType = table(
+	orgProductVariantPaymentPlanSubscriptionTypeTableName,
 	{
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
 		planId: text("plan_id")
 			.primaryKey()
-			.references(() => productVariantPaymentPlan.id),
+			.references(() => orgProductVariantPaymentPlan.id),
+
+		/**
+		 * @currencySupport Currency for this payment plan instance
+		 * @internationalCommerce Required for all payment plans to support global expansion
+		 */
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+
+		/**
+		 * @pricing Main price customers pay for this payment plan
+		 * @revenueFoundation Core pricing amount for revenue calculations and billing
+		 */
+		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+
+		/**
+		 * @promotionalPricing Original price for "save X%" marketing displays
+		 * @marketingStrategy Shows discount value to increase conversion rates
+		 */
+		compareAtPrice: decimal("compare_at_price", {
+			precision: 10,
+			scale: 2,
+		}),
 
 		/**
 		 * @billingCycle How frequently org charges subscribers
 		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
-		billingInterval: billingIntervalEnum("billing_interval").notNull(),
+		billingInterval:
+			orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
 
 		/**
 		 * @billingCycle Multiplier for billing interval enabling custom periods
@@ -645,13 +638,31 @@ export const subscriptionPaymentPlan = table(
 	},
 	(t) => [
 		// Performance indexes for subscription management
-		index("idx_subscription_plan_interval").on(t.billingInterval),
-		index("idx_subscription_plan_count").on(t.intervalCount),
-		index("idx_subscription_plan_trial").on(t.trialPeriodDays),
-		index("idx_subscription_plan_setup_fee").on(t.setupFee),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_interval`,
+		).on(t.billingInterval),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_count`,
+		).on(t.intervalCount),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_trial`,
+		).on(t.trialPeriodDays),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_setup_fee`,
+		).on(t.setupFee),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_created_at`,
+		).on(t.createdAt),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_updated_at`,
+		).on(t.updatedAt),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_plan_id`,
+		).on(t.planId),
 	],
 );
 
+const orgProductVariantPaymentPlanSubscriptionTypeI18nTableName = `${orgProductVariantPaymentPlanSubscriptionTypeTableName}_i18n`;
 /**
  * Subscription Payment Plan Translation - Localized Subscription Content
  *
@@ -664,224 +675,201 @@ export const subscriptionPaymentPlan = table(
  *
  * @abacRole Translations readable globally; write-scoped to org owners
  */
-export const subscriptionPaymentPlanTranslation = table(
-	"subscription_payment_plan_translation",
-	{
-		id: id.notNull(),
+export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
+	buildOrgI18nTable(orgProductVariantPaymentPlanSubscriptionTypeI18nTableName)(
+		{
+			/**
+			 * @translationTarget Target subscription plan
+			 */
+			planId: text("plan_id")
+				.notNull()
+				.references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
+					onDelete: "cascade",
+				}),
 
-		/**
-		 * @translationTarget Target subscription plan
-		 */
-		planId: text("plan_id")
-			.notNull()
-			.references(() => subscriptionPaymentPlan.planId, {
-				onDelete: "cascade",
-			}),
+			isDefault: boolean("is_default").default(false),
 
-		/**
-		 * @localizationContext Region/market locale of the content
-		 * @permissionContext Used for regional display on public storefront
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
+			/**
+			 * @localizedContent Localized recurring cycle description
+			 * @onboardingContent Improves understanding for end customers
+			 */
+			billingDescription: text("billing_description"),
 
-		/**
-		 * @translationDefault Ensures fallback locale when no exact match
-		 */
-		isDefault: boolean("is_default").default(false),
+			/**
+			 * @localizedContent Localized message for free trial info
+			 * @conversionCopy Increases conversion during signup
+			 */
+			trialMessage: text("trial_message"),
 
-		/**
-		 * @localizedContent Localized recurring cycle description
-		 * @onboardingContent Improves understanding for end customers
-		 */
-		billingDescription: text("billing_description"),
+			/**
+			 * @localizedContent Cancellation rules and expectations
+			 * @complianceContext Required in regulated markets (e.g., EU, CA)
+			 */
+			cancellationPolicy: text("cancellation_policy"),
+		},
+		{
+			fkKey: "planId",
+			extraConfig: (t, tableName) => [
+				index(`idx_${tableName}_plan_id`).on(t.planId),
+			],
+		},
+	);
 
-		/**
-		 * @localizedContent Localized message for free trial info
-		 * @conversionCopy Increases conversion during signup
-		 */
-		trialMessage: text("trial_message"),
+// const orgUsageBasedPaymentPlanTableName = `${orgTableName}_usage_based_payment_type`;
+// /**
+//  * Usage-Based Payment Plan - Consumption-Based Billing Model
+//  *
+//  * @businessLogic Pay-per-consumption product billing based on measurable usage metrics
+//  * enabling sophisticated revenue optimization aligned with actual customer engagement.
+//  * Supports complex pricing models from simple per-unit charges to tiered volume pricing.
+//  *
+//  * @ctiSpecialization Extends productVariantPaymentPlan with usage tracking and variable
+//  * pricing attributes for consumption-based billing workflows and metered access control.
+//  *
+//  * @usageMetricsSystem Flexible usage type system supports various measurable customer
+//  * interactions enabling precise value-based pricing models aligned with product consumption.
+//  *
+//  * @variablePricingStrategy Multiple pricing models from linear per-unit to complex tiered
+//  * structures with freemium allowances and minimum charges for sophisticated monetization.
+//  *
+//  * @revenueOptimization Usage-based billing enables revenue scaling with customer success
+//  * while providing predictable minimum revenue through freemium models and base charges.
+//  *
+//  * @abacRole Entitlements enforced via usage limits
+//  * @integrationContext Tied to counters (views, storage, API hits, etc.)
+//  */
+// export const orgUsageBasedPaymentPlan = table(
+// 	orgUsageBasedPaymentPlanTableName,
+// 	{
+// 		/**
+// 		 * @ctiReference Links to base payment plan for common attributes and pricing
+// 		 */
+// 		planId: text("plan_id")
+// 			.primaryKey()
+// 			.references(() => orgProductVariantPaymentPlan.id),
 
-		/**
-		 * @localizedContent Cancellation rules and expectations
-		 * @complianceContext Required in regulated markets (e.g., EU, CA)
-		 */
-		cancellationPolicy: text("cancellation_policy"),
+// 		/**
+// 		 * @usageMetric Measurable customer action triggering billing charges
+// 		 * @businessModel Defines unit of value for usage-based pricing strategy
+// 		 */
+// 		usageType: orgUsageTypeEnum("usage_type").notNull(),
 
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex("uq_subscription_plan_translation").on(t.planId, t.localeKey),
-		uniqueIndex("uq_subscription_plan_translation_default")
-			.on(t.planId, t.isDefault)
-			.where(eq(t.isDefault, true)),
+// 		/**
+// 		 * @pricingStrategy How usage metrics translate to billing amounts
+// 		 * @revenueOptimization Different models enable various usage-based monetization approaches
+// 		 */
+// 		pricingModel: orgUsagePricingModelEnum("pricing_model").notNull(),
 
-		// Performance Indexes
-		index("idx_subscription_plan_translation_locale_key").on(t.localeKey),
-	],
-);
+// 		/**
+// 		 * @tieredPricing Complex pricing structure for volume discounts and usage incentives
+// 		 * @businessStrategy Encourages higher usage through bulk pricing benefits
+// 		 * @entitlementScope Used for feature metering
+// 		 */
+// 		pricingTiers: jsonb("pricing_tiers"),
 
-/**
- * Usage-Based Payment Plan - Consumption-Based Billing Model
- *
- * @businessLogic Pay-per-consumption product billing based on measurable usage metrics
- * enabling sophisticated revenue optimization aligned with actual customer engagement.
- * Supports complex pricing models from simple per-unit charges to tiered volume pricing.
- *
- * @ctiSpecialization Extends productVariantPaymentPlan with usage tracking and variable
- * pricing attributes for consumption-based billing workflows and metered access control.
- *
- * @usageMetricsSystem Flexible usage type system supports various measurable customer
- * interactions enabling precise value-based pricing models aligned with product consumption.
- *
- * @variablePricingStrategy Multiple pricing models from linear per-unit to complex tiered
- * structures with freemium allowances and minimum charges for sophisticated monetization.
- *
- * @revenueOptimization Usage-based billing enables revenue scaling with customer success
- * while providing predictable minimum revenue through freemium models and base charges.
- *
- * @abacRole Entitlements enforced via usage limits
- * @integrationContext Tied to counters (views, storage, API hits, etc.)
- */
-export const usageBasedPaymentPlan = table(
-	"usage_based_payment_plan",
-	{
-		/**
-		 * @ctiReference Links to base payment plan for common attributes and pricing
-		 */
-		planId: text("plan_id")
-			.primaryKey()
-			.references(() => productVariantPaymentPlan.id),
+// 		/**
+// 		 * @billingCycle How often usage is calculated and charged
+// 		 * @operationalEfficiency Most usage billing is monthly for processing efficiency
+// 		 */
+// 		billingPeriod: orgBillingIntervalEnum("billing_period").default("monthly"),
 
-		/**
-		 * @usageMetric Measurable customer action triggering billing charges
-		 * @businessModel Defines unit of value for usage-based pricing strategy
-		 */
-		usageType: usageTypeEnum("usage_type").notNull(),
+// 		/**
+// 		 * @revenueProtection Minimum charge per billing period regardless of usage
+// 		 * @businessModel Ensures baseline revenue even during low consumption periods
+// 		 */
+// 		minimumCharge: decimal("minimum_charge", {
+// 			precision: 12,
+// 			scale: 2,
+// 		}).default("0"),
 
-		/**
-		 * @pricingStrategy How usage metrics translate to billing amounts
-		 * @revenueOptimization Different models enable various usage-based monetization approaches
-		 */
-		pricingModel: usagePricingModelEnum("pricing_model").notNull(),
+// 		/**
+// 		 * @freemiumModel Free usage allowance before billing charges begin
+// 		 * @customerAcquisition Enables product trial and reduces adoption friction
+// 		 */
+// 		includedUsage: integer("included_usage").default(0),
 
-		/**
-		 * @tieredPricing Complex pricing structure for volume discounts and usage incentives
-		 * @businessStrategy Encourages higher usage through bulk pricing benefits
-		 * @entitlementScope Used for feature metering
-		 */
-		pricingTiers: jsonb("pricing_tiers"),
+// 		createdAt,
+// 		updatedAt,
+// 	},
+// 	(t) => [
+// 		// Performance indexes for usage-based billing management
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_type`).on(t.usageType),
+// 		// index(`idx_${orgUsageBasedPaymentPlanTableName}_model`).on(t.pricingModel),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_period`).on(
+// 			t.billingPeriod,
+// 		),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_minimum`).on(
+// 			t.minimumCharge,
+// 		),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_included_usage`).on(
+// 			t.includedUsage,
+// 		),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_created_at`).on(
+// 			t.createdAt,
+// 		),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_updated_at`).on(
+// 			t.updatedAt,
+// 		),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_plan_id`).on(t.planId),
+// 	],
+// );
+// const orgUsageBasedPaymentPlanI18nTableName = `${orgUsageBasedPaymentPlanTableName}_i18n`;
+// /**
+//  * Usage-Based Payment Plan Translation - Localized Usage Content
+//  *
+//  * @businessLogic Multi-language support for usage-based payment plan specific content
+//  * including usage descriptions, pricing explanations, and billing policies for different
+//  * markets and complex usage model education requirements.
+//  *
+//  * @translationPattern Consistent with established schema translation architecture
+//  * for predictable internationalization workflows.
+//  *
+//  * @marketAdaptation Localizes metric explanations and billing semantics for global
+//  * engagement and comprehension.
+//  *
+//  * @billingEducation Helps demystify complex pricing mechanics (e.g., tiers, included usage)
+//  * for non-native audiences.
+//  */
+// export const orgUsageBasedPaymentPlanI18n = buildOrgI18nTable(
+// 	orgUsageBasedPaymentPlanI18nTableName,
+// )(
+// 	{
+// 		/**
+// 		 * @translationTarget Parent usage-based plan
+// 		 */
+// 		planId: text("plan_id")
+// 			.notNull()
+// 			.references(() => orgUsageBasedPaymentPlan.planId, {
+// 				onDelete: "cascade",
+// 			}),
+// 		/**
+// 		 * @localizedContent Localized usage metric explanation
+// 		 */
+// 		usageDescription: text("usage_description"),
 
-		/**
-		 * @billingCycle How often usage is calculated and charged
-		 * @operationalEfficiency Most usage billing is monthly for processing efficiency
-		 */
-		billingPeriod: billingIntervalEnum("billing_period").default("monthly"),
+// 		/**
+// 		 * @localizedContent Localized pricing model description
+// 		 */
+// 		pricingExplanation: text("pricing_explanation"),
 
-		/**
-		 * @revenueProtection Minimum charge per billing period regardless of usage
-		 * @businessModel Ensures baseline revenue even during low consumption periods
-		 */
-		minimumCharge: decimal("minimum_charge", {
-			precision: 12,
-			scale: 2,
-		}).default("0"),
-
-		/**
-		 * @freemiumModel Free usage allowance before billing charges begin
-		 * @customerAcquisition Enables product trial and reduces adoption friction
-		 */
-		includedUsage: integer("included_usage").default(0),
-
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		// Performance indexes for usage-based billing management
-		index("idx_usage_plan_type").on(t.usageType),
-		index("idx_usage_plan_model").on(t.pricingModel),
-		index("idx_usage_plan_period").on(t.billingPeriod),
-		index("idx_usage_plan_minimum").on(t.minimumCharge),
-	],
-);
-
-/**
- * Usage-Based Payment Plan Translation - Localized Usage Content
- *
- * @businessLogic Multi-language support for usage-based payment plan specific content
- * including usage descriptions, pricing explanations, and billing policies for different
- * markets and complex usage model education requirements.
- *
- * @translationPattern Consistent with established schema translation architecture
- * for predictable internationalization workflows.
- *
- * @marketAdaptation Localizes metric explanations and billing semantics for global
- * engagement and comprehension.
- *
- * @billingEducation Helps demystify complex pricing mechanics (e.g., tiers, included usage)
- * for non-native audiences.
- */
-export const usageBasedPaymentPlanTranslation = table(
-	"usage_based_payment_plan_translation",
-	{
-		id: id.notNull(),
-
-		/**
-		 * @translationTarget Parent usage-based plan
-		 */
-		planId: text("plan_id")
-			.notNull()
-			.references(() => usageBasedPaymentPlan.planId, { onDelete: "cascade" }),
-
-		/**
-		 * @localizationContext Target locale for this translation content
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
-		/**
-		 * @translationDefault Primary translation used when locale-specific content unavailable
-		 */
-		isDefault: boolean("is_default").default(false),
-
-		/**
-		 * @localizedContent Localized usage metric explanation
-		 */
-		usageDescription: text("usage_description"),
-
-		/**
-		 * @localizedContent Localized pricing model description
-		 */
-		pricingExplanation: text("pricing_explanation"),
-
-		/**
-		 * @localizedContent Localized billing policy and calculation methods
-		 */
-		billingPolicy: text("billing_policy"),
-
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex("uq_usage_plan_translation").on(t.planId, t.localeKey),
-		uniqueIndex("uq_usage_plan_translation_default")
-			.on(t.planId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index("idx_usage_plan_translation_locale_key").on(t.localeKey),
-	],
-);
+// 		/**
+// 		 * @localizedContent Localized billing policy and calculation methods
+// 		 */
+// 		billingPolicy: text("billing_policy"),
+// 	},
+// 	{
+// 		fkKey: "planId",
+// 		extraConfig: (t, tableName) => [
+// 			index(`idx_${tableName}_plan_id`).on(t.planId),
+// 		],
+// 	},
+// );
 
 // -------------------------------------
 // USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
 // -------------------------------------
 
+const orgProductVariantPaymentPlanMemberSubscriptionTableName = `${orgTableName}_product_variant_payment_member_subscription`;
 /**
  * User Subscription - Customer Payment Instance and Access Management
  *
@@ -920,11 +908,12 @@ export const usageBasedPaymentPlanTranslation = table(
  * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
  * via orgMemberId
  */
-export const userSubscription = table(
-	"user_subscription",
+export const orgProductVariantPaymentPlanMemberSubscription = table(
+	orgProductVariantPaymentPlanMemberSubscriptionTableName,
 	{
 		id: id.notNull(),
 
+		// TODO: change to purchased by user
 		/**
 		 * @customerReference Customer who owns this subscription instance
 		 * @accessControl Primary relationship for content access permissions and customer service
@@ -939,7 +928,7 @@ export const userSubscription = table(
 		 */
 		planId: text("plan_id")
 			.notNull()
-			.references(() => productVariantPaymentPlan.id),
+			.references(() => orgProductVariantPaymentPlan.id),
 
 		/**
 		 * @orgScope Org context for this subscription
@@ -959,7 +948,10 @@ export const userSubscription = table(
 		 * @subscriptionLifecycle Current subscription state for access control
 		 * @accessControl Determines customer's access to product content and features
 		 */
-		status: subscriptionStatusEnum("status").default("active"),
+		status:
+			orgProductVariantPaymentSubscriptionStatusEnum("status").default(
+				"active",
+			),
 
 		/**
 		 * @accessControl When customer first gained access to subscribed content
@@ -1010,17 +1002,37 @@ export const userSubscription = table(
 	},
 	(t) => [
 		// Performance indexes for subscription management
-		index("idx_user_subscription_user").on(t.userId),
-		index("idx_user_subscription_plan").on(t.planId),
-		index("idx_user_subscription_org").on(t.orgId),
-		index("idx_user_subscription_status").on(t.status),
-		index("idx_user_subscription_member").on(t.orgMemberId),
-		index("idx_user_subscription_access").on(t.accessExpiresAt),
-		index("idx_user_subscription_external").on(t.externalSubscriptionId),
-		index("idx_user_subscription_currency").on(t.currencyCode),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`,
+		).on(t.userId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`,
+		).on(t.planId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`,
+		).on(t.orgId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`,
+		).on(t.status),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`,
+		).on(t.orgMemberId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`,
+		).on(t.accessExpiresAt),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
+		).on(t.externalSubscriptionId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`,
+		).on(t.currencyCode),
 
 		// Revenue Analytics Indexes
-		index("idx_user_subscription_revenue").on(t.totalPaid, t.currencyCode),
-		index("idx_user_subscription_org_revenue").on(t.orgId, t.totalPaid),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`,
+		).on(t.totalPaid, t.currencyCode),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`,
+		).on(t.orgId, t.totalPaid),
 	],
 );
