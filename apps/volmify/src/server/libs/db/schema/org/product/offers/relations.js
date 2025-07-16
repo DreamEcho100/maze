@@ -4,13 +4,15 @@ import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { org } from "../../schema.js";
 import { discountCollection } from "../collection/schema.js";
-import { discountProduct, discountVariant } from "../schema.js";
+import { orgProduct, orgProductVariant } from "../schema.js";
 import {
 	coupon,
 	couponTranslation,
 	discount,
+	discountProduct,
 	discountTranslation,
 	discountUsage,
+	discountVariant,
 	giftCard,
 	giftCardTranslation,
 	giftCardUsage,
@@ -236,5 +238,72 @@ export const promotionDiscountRelations = relations(promotionDiscount, ({ one })
 	discount: one(discount, {
 		fields: [promotionDiscount.discountId],
 		references: [discount.id],
+	}),
+}));
+
+/**
+ * Discount Product Relations (Promotional Integration)
+ *
+ * @integrationRole Product-level discount campaign relationships
+ * Connects discount campaigns to products enabling targeted promotional strategies
+ * while maintaining compatibility with payment plan pricing and e-commerce workflows.
+ *
+ * @promotionalStrategy Enables product-specific promotional campaigns for revenue
+ * optimization and customer acquisition while integrating with payment plan pricing
+ * for comprehensive promotional campaign management.
+ */
+export const discountProductRelations = relations(discountProduct, ({ one }) => ({
+	/**
+	 * @promotionalCampaign Discount campaign this product application belongs to
+	 * @businessContext Links product to specific promotional strategy and revenue optimization
+	 * @marketingStrategy Enables targeted promotional campaigns for customer acquisition
+	 */
+	discount: one(discount, {
+		fields: [discountProduct.discountId],
+		references: [discount.id],
+	}),
+
+	/**
+	 * @productTarget Product this discount campaign applies to
+	 * @businessContext Links promotional strategy to specific product for targeted marketing
+	 * @revenueStrategy Enables product-specific promotional pricing and conversion optimization
+	 */
+	product: one(orgProduct, {
+		fields: [discountProduct.productId],
+		references: [orgProduct.id],
+	}),
+}));
+
+/**
+ * Discount Variant Relations (Granular Promotional Integration)
+ *
+ * @integrationRole Variant-level discount campaign relationships
+ * Connects discount campaigns to specific product variants enabling granular promotional
+ * strategies for different pricing tiers and access levels while maintaining payment
+ * plan pricing compatibility.
+ *
+ * @promotionalStrategy Enables variant-specific promotional campaigns for precise revenue
+ * optimization and customer conversion strategies while integrating with payment plan
+ * pricing for sophisticated promotional campaign workflows.
+ */
+export const discountVariantRelations = relations(discountVariant, ({ one }) => ({
+	/**
+	 * @promotionalCampaign Discount campaign this variant application belongs to
+	 * @businessContext Links variant to specific promotional strategy for granular pricing control
+	 * @conversionStrategy Enables targeted promotional campaigns for specific access levels
+	 */
+	discount: one(discount, {
+		fields: [discountVariant.discountId],
+		references: [discount.id],
+	}),
+
+	/**
+	 * @variantTarget Product variant this discount campaign applies to
+	 * @businessContext Links promotional strategy to specific variant for granular marketing
+	 * @revenueOptimization Enables variant-specific promotional pricing and conversion strategies
+	 */
+	variant: one(orgProductVariant, {
+		fields: [discountVariant.variantId],
+		references: [orgProductVariant.id],
 	}),
 }));

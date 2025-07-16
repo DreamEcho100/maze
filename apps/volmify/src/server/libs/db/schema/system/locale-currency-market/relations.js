@@ -23,7 +23,7 @@ import {
 	subscriptionPaymentPlanTranslation,
 	usageBasedPaymentPlanTranslation,
 } from "../../org/product/payment/schema.js";
-import { productTranslation, productVariantTranslation } from "../../org/product/schema.js";
+import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import {
 	orgBrandTranslation,
 	orgCurrencySettings,
@@ -152,8 +152,8 @@ export const _localeRelations = relations(locale, ({ many }) => ({
 	lessonsTranslations: many(lessonTranslation),
 	orgsBrandsTranslations: many(orgBrandTranslation),
 	orgMarketsTranslations: many(orgMarketTranslation),
-	productsTranslations: many(productTranslation),
-	productsVariantsTranslations: many(productVariantTranslation),
+	productsTranslations: many(orgProductI18n),
+	productsVariantsTranslations: many(orgProductVariantI18n),
 
 	usersInstructorProfilesTranslations: many(userInstructorProfileTranslation),
 	discountsTranslation: many(discountTranslation),

@@ -28,7 +28,7 @@ export const buildOrgI18nTable =
 				// orgId: fk(`${orgTableName}_id`)
 				// 	.references(() => org.id)
 				// 	.notNull(),
-				orgLocaleKey: getLocaleKey("org_locale_key")
+				localeKey: getLocaleKey("org_locale_key")
 					.notNull()
 					.references(() => orgLocale.localeKey),
 				isDefault: boolean("is_default").default(false),
@@ -37,12 +37,12 @@ export const buildOrgI18nTable =
 				deletedAt,
 			},
 			(t) => [
-				primaryKey({ columns: [t[options.fkKey], t.orgLocaleKey] }),
+				primaryKey({ columns: [t[options.fkKey], t.localeKey] }),
 				uniqueIndex(`uq_${tableName}_default`)
 					.on(t[options.fkKey], t.isDefault)
 					.where(eq(t.isDefault, true)),
 				// index(`idx_${tableName}_org_id`).on(t.orgId),
-				index(`idx_${tableName}_org_locale_key`).on(t.orgLocaleKey),
+				index(`idx_${tableName}_org_locale_key`).on(t.localeKey),
 				index(`idx_${tableName}_default`).on(t.isDefault),
 				index(`idx_${tableName}_created_at`).on(t.createdAt),
 				index(`idx_${tableName}_updated_at`).on(t.updatedAt),

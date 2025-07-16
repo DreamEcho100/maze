@@ -59,6 +59,7 @@ import {
 	updatedAt,
 } from "../../_utils/helpers.js";
 import { currency } from "../../system/locale-currency-market/schema.js";
+import { seoMetadata } from "../../system/seo/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { org, orgBrand } from "../schema.js";
@@ -201,7 +202,7 @@ export const orgProduct = table(
 // PRODUCT INTERNATIONALIZATION
 // -------------------------------------
 
-const orgProductTranslationTableName = `${orgProductTableName}_translation`;
+const orgProductI18nTableName = `${orgProductTableName}_i18n`;
 /**
  * Product Translation - Multi-language Product Content
  *
@@ -217,11 +218,14 @@ const orgProductTranslationTableName = `${orgProductTableName}_translation`;
  * with localized product presentations while maintaining centralized product management
  * and creator attribution workflows.
  */
-export const productTranslation = buildOrgI18nTable(orgProductTranslationTableName)(
+export const orgProductI18n = buildOrgI18nTable(orgProductI18nTableName)(
 	{
 		productId: text("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
 
 		title: text("title"),
 		description: text("description"),
@@ -239,7 +243,7 @@ export const productTranslation = buildOrgI18nTable(orgProductTranslationTableNa
 // PRODUCT VARIANTS (E-COMMERCE FOUNDATION)
 // -------------------------------------
 
-const orgProductVariant = `${orgProductTableName}_variant`;
+const orgProductVariantTable = `${orgProductTableName}_variant`;
 /**
  * Product Variant - E-commerce Variation and Commerce Foundation
  *
@@ -264,8 +268,8 @@ const orgProductVariant = `${orgProductTableName}_variant`;
  * maintaining consistent pricing and payment workflows regardless of product complexity
  * or orgal business model.
  */
-export const productVariant = table(
-	orgProductVariant,
+export const orgProductVariant = table(
+	orgProductVariantTable,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -395,34 +399,42 @@ export const productVariant = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex(`uq_${orgProductVariant}_slug`).on(t.productId, t.slug),
-		uniqueIndex(`uq_${orgProductVariant}_default`)
+		uniqueIndex(`uq_${orgProductVariantTable}_slug`).on(t.productId, t.slug),
+		uniqueIndex(`uq_${orgProductVariantTable}_default`)
 			.on(t.productId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index(`idx_${orgProductVariant}_product_id`).on(t.productId),
-		index(`idx_${orgProductVariant}_active`).on(t.isActive),
-		index(`idx_${orgProductVariant}_sort`).on(t.sortOrder),
-		index(`idx_${orgProductVariant}_default`).on(t.isDefault),
-		index(`idx_${orgProductVariant}_featured`).on(t.isFeatured),
-		index(`idx_${orgProductVariant}_type`).on(t.type),
-		index(`idx_${orgProductVariant}_currency_code`).on(t.currencyCode),
-		index(`idx_${orgProductVariant}_starts_at`).on(t.startsAt),
-		index(`idx_${orgProductVariant}_ends_at`).on(t.endsAt),
-		index(`idx_${orgProductVariant}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductVariant}_updated_at`).on(t.updatedAt),
-		index(`idx_${orgProductVariant}_deleted_at`).on(t.deletedAt),
-		index(`idx_${orgProductVariant}_tax_category_id`).on(t.tax_category_id),
+		index(`idx_${orgProductVariantTable}_product_id`).on(t.productId),
+		index(`idx_${orgProductVariantTable}_active`).on(t.isActive),
+		index(`idx_${orgProductVariantTable}_sort`).on(t.sortOrder),
+		index(`idx_${orgProductVariantTable}_default`).on(t.isDefault),
+		index(`idx_${orgProductVariantTable}_featured`).on(t.isFeatured),
+		index(`idx_${orgProductVariantTable}_type`).on(t.type),
+		index(`idx_${orgProductVariantTable}_currency_code`).on(t.currencyCode),
+		index(`idx_${orgProductVariantTable}_starts_at`).on(t.startsAt),
+		index(`idx_${orgProductVariantTable}_ends_at`).on(t.endsAt),
+		index(`idx_${orgProductVariantTable}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductVariantTable}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductVariantTable}_deleted_at`).on(t.deletedAt),
+		index(`idx_${orgProductVariantTable}_tax_category_id`).on(
+			t.tax_category_id,
+		),
 	],
 );
 
-const orgProductVariantTranslationTableName = `${orgProductVariant}_translation`;
-export const productVariantTranslation = buildOrgI18nTable(orgProductVariantTranslationTableName)(
+const orgProductVariantI18nTableName = `${orgProductVariantTable}_i18n`;
+export const orgProductVariantI18n = buildOrgI18nTable(
+	orgProductVariantI18nTableName,
+)(
 	{
 		variantId: text("variant_id")
 			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
+			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
+
 		name: text("name"),
 		description: text("description"),
 	},
@@ -439,6 +451,7 @@ export const productVariantTranslation = buildOrgI18nTable(orgProductVariantTran
 // PROFESSIONAL ATTRIBUTION (CREATOR ECONOMY)
 // -------------------------------------
 
+const orgProductInstructorAttributionTableName = `${orgProductTableName}_instructor_attribution`;
 /**
  * Product Instructor Attribution - Creator Economy Professional Attribution
  *
@@ -463,9 +476,11 @@ export const productVariantTranslation = buildOrgI18nTable(orgProductVariantTran
  * calculations to ensure accurate creator compensation based on actual subscription and
  * purchase revenue generated by attributed content.
  */
-export const productInstructorAttribution = table(
-	`${orgProductTableName}_instructor_attribution`,
+export const orgProductInstructorAttribution = table(
+	orgProductInstructorAttributionTableName,
 	{
+		id: id.notNull(),
+
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
 		 * @businessRule Links professional identity to content creation and revenue sharing
@@ -503,30 +518,54 @@ export const productInstructorAttribution = table(
 			scale: 2,
 		}).default("0.00"),
 
-		/**
-		 * @professionalRole Instructor's role in content creation and delivery
-		 * @businessRule Primary instructors typically handle content creation and student interaction
-		 * @attributionHierarchy Enables clear professional responsibility and recognition
-		 */
-		isPrimary: boolean("is_primary").default(false),
+		// /**
+		//  * @professionalRole Instructor's role in content creation and delivery
+		//  * @businessRule Primary instructors typically handle content creation and student interaction
+		//  * @attributionHierarchy Enables clear professional responsibility and recognition
+		//  */
+		// isPrimary: boolean("is_primary").default(false),
 
 		createdAt,
+		updatedAt,
+		deletedAt,
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_instructor_org").on(t.productId, t.instructorProfileId, t.orgId),
+		uniqueIndex(`uq_${orgProductInstructorAttributionTableName}_org`).on(
+			t.productId,
+			t.instructorProfileId,
+			t.orgId,
+		),
 
 		// Performance Indexes for Professional Queries
-		index("idx_product_instructor_profile").on(t.instructorProfileId),
-		index("idx_product_instructor_org").on(t.orgId),
-		index("idx_product_instructor_product").on(t.productId),
-		index("idx_product_instructor_primary").on(t.isPrimary),
+		index(`idx_${orgProductInstructorAttributionTableName}_profile_id`).on(
+			t.instructorProfileId,
+		),
+		index(`idx_${orgProductInstructorAttributionTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgProductInstructorAttributionTableName}_product_id`).on(
+			t.productId,
+		),
+		// index(`idx_${orgProductInstructorAttributionTableName}_primary`).on(t.isPrimary),
 
 		// Revenue Attribution Queries
-		index("idx_product_instructor_revenue").on(t.productId, t.revenueSharePercentage),
+		index(`idx_${orgProductInstructorAttributionTableName}_revenue`).on(
+			t.productId,
+			t.revenueSharePercentage,
+		),
+
+		index(`idx_${orgProductInstructorAttributionTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgProductInstructorAttributionTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+		index(`idx_${orgProductInstructorAttributionTableName}_deleted_at`).on(
+			t.deletedAt,
+		),
 	],
 );
 
+const orgProductBrandTableName = `${orgProductTableName}_brand_attribution`;
 /**
  * Product Brand Attribution - Organizational Brand Identity Integration
  *
@@ -547,8 +586,8 @@ export const productInstructorAttribution = table(
  * campaigns, and customer communication to ensure consistent brand presentation and
  * customer experience across all product touchpoints and marketing channels.
  */
-export const productBrandAttribution = table(
-	`${orgProductTableName}_brand_attribution`,
+export const orgProductBrandAttribution = table(
+	orgProductBrandTableName,
 	{
 		/**
 		 * @brandIdentity Org brand this product is attributed to
@@ -568,25 +607,23 @@ export const productBrandAttribution = table(
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
-		/**
-		 * @brandHierarchy Primary brand attribution for main brand presentation
-		 * @businessRule One primary brand per product for clear customer brand recognition
-		 * @marketingStrategy Primary brand used in product marketing and customer communication
-		 */
-		isPrimary: boolean("is_primary").default(true),
+		// /**
+		//  * @brandHierarchy Primary brand attribution for main brand presentation
+		//  * @businessRule One primary brand per product for clear customer brand recognition
+		//  * @marketingStrategy Primary brand used in product marketing and customer communication
+		//  */
+		// isPrimary: boolean("is_primary").default(true),
 
 		createdAt,
 	},
 	(t) => [
 		// Business Constraints
 		primaryKey({ columns: [t.brandId, t.productId] }),
-		uniqueIndex("uq_product_brand_primary")
-			.on(t.productId, t.isPrimary)
-			.where(eq(t.isPrimary, true)),
+		// uniqueIndex("uq_product_brand_primary")
+		// 	.on(t.productId, t.isPrimary)
+		// 	.where(eq(t.isPrimary, true)),
 
 		// Performance Indexes
-		index("idx_product_brand_product").on(t.productId),
-		index("idx_product_brand_brand").on(t.brandId),
-		index("idx_product_brand_primary").on(t.isPrimary),
+		index(`idx_${orgProductBrandTableName}_created_at`).on(t.createdAt),
 	],
 );

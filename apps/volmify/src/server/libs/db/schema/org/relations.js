@@ -10,7 +10,7 @@ import { orgDepartment } from "./member/department/schema.js";
 import { orgMember, orgMemberInvitation } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
 import { lesson, productCourseEnrollment, skill } from "./product/by-type/course/schema.js";
-import { productBrandAttribution, productInstructorAttribution } from "./product/schema.js";
+import { orgProductBrandAttribution, orgProductInstructorAttribution } from "./product/schema.js";
 import {
 	instructorOrgAffiliation,
 	org,
@@ -253,7 +253,7 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
 		fields: [orgBrand.orgId],
 		references: [org.id],
 	}),
-	productAttributions: many(productBrandAttribution),
+	productAttributions: many(orgProductBrandAttribution),
 	translations: many(orgBrandTranslation),
 }));
 
@@ -296,6 +296,6 @@ export const instructorOrganizationAffiliationRelations = relations(
 			fields: [instructorOrgAffiliation.memberId],
 			references: [orgMember.id],
 		}),
-		productAttributions: many(productInstructorAttribution),
+		productAttributions: many(orgProductInstructorAttribution),
 	}),
 );

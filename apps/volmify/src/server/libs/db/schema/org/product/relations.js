@@ -32,18 +32,18 @@ import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { org, orgBrand } from "../schema.js";
 import { productCourse } from "./by-type/course/schema.js";
 import { productCollection } from "./collection/schema.js";
-import { discount } from "./offers/schema.js";
+import { discountProduct, discountVariant } from "./offers/schema.js";
 import { productVariantPaymentPlan } from "./payment/schema.js";
 import {
-	discountProduct,
-	discountVariant,
+	// discountProduct,
+	// discountVariant,
 	orgProduct,
-	productBrandAttribution,
-	productInstructorAttribution,
+	orgProductBrandAttribution,
 	// productPrice,
-	productTranslation,
-	productVariant,
-	productVariantTranslation,
+	orgProductI18n,
+	orgProductInstructorAttribution,
+	orgProductVariant,
+	orgProductVariantI18n,
 	// productZonePrice,
 } from "./schema.js";
 
@@ -83,14 +83,14 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	 * @marketingLocalization Enables region-specific product marketing and SEO optimization
 	 * @globalExpansion Essential for international product catalog expansion strategies
 	 */
-	translations: many(productTranslation),
+	translations: many(orgProductI18n),
 
 	/**
 	 * @ecommerceFoundation Product variations enabling sophisticated pricing strategies
 	 * @businessModel Variants define purchasable variations with different features and pricing
 	 * @paymentIntegration Variants connect directly to payment plans for integrated commerce
 	 */
-	variants: many(productVariant),
+	variants: many(orgProductVariant),
 
 	/**
 	 * @catalogManagement Product collection membership for orgal catalog structure
@@ -111,14 +111,14 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	 * @marketplacePresentation Brand-based product presentation and customer recognition
 	 * @orgalStrategy Supports multi-brand and white-label product strategies
 	 */
-	brandAttributions: many(productBrandAttribution),
+	brandAttributions: many(orgProductBrandAttribution),
 
 	/**
 	 * @professionalAttribution Instructor creator attributions for this product
 	 * @creatorEconomy Creator revenue sharing and professional collaboration tracking
 	 * @revenueIntegration Professional attribution integrates with payment plan revenue calculations
 	 */
-	instructorAttributions: many(productInstructorAttribution),
+	instructorAttributions: many(orgProductInstructorAttribution),
 
 	courseSpecialization: one(productCourse, {
 		fields: [orgProduct.id],
@@ -137,14 +137,14 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
  * in international markets while supporting region-specific SEO optimization and
  * cultural adaptation for global expansion strategies.
  */
-export const productTranslationRelations = relations(productTranslation, ({ one }) => ({
+export const productTranslationRelations = relations(orgProductI18n, ({ one }) => ({
 	/**
 	 * @translationTarget Product this localized content applies to
 	 * @businessContext Enables multi-language product marketing and conversion optimization
 	 * @globalStrategy Region-specific messaging for international market penetration
 	 */
 	product: one(orgProduct, {
-		fields: [productTranslation.productId],
+		fields: [orgProductI18n.productId],
 		references: [orgProduct.id],
 	}),
 
@@ -154,11 +154,11 @@ export const productTranslationRelations = relations(productTranslation, ({ one 
 	 * @organicGrowth Improves product discoverability in international search engines
 	 */
 	seoMetadata: one(seoMetadata, {
-		fields: [productTranslation.seoMetadataId],
+		fields: [orgProductI18n.seoMetadataId],
 		references: [seoMetadata.id],
 	}),
 	locale: one(locale, {
-		fields: [productTranslation.localeKey],
+		fields: [orgProductI18n.localeKey],
 		references: [locale.key],
 	}),
 }));
@@ -174,18 +174,18 @@ export const productTranslationRelations = relations(productTranslation, ({ one 
  * table complexity while maintaining sophisticated pricing strategies and promotional
  * campaign compatibility for comprehensive e-commerce monetization.
  */
-export const productVariantRelations = relations(productVariant, ({ one, many }) => ({
+export const productVariantRelations = relations(orgProductVariant, ({ one, many }) => ({
 	/**
 	 * @ecommerceIntegration Parent product this variant belongs to
 	 * @businessContext Variants provide purchasable variations of core product content
 	 * @contentSeparation Product handles marketing, variant handles commerce and pricing
 	 */
 	product: one(orgProduct, {
-		fields: [productVariant.productId],
+		fields: [orgProductVariant.productId],
 		references: [orgProduct.id],
 	}),
 
-	translations: many(productVariantTranslation),
+	translations: many(orgProductVariantI18n),
 
 	/**
 	 * @paymentPlanIntegration Payment plan pricing for this variant
@@ -204,25 +204,22 @@ export const productVariantRelations = relations(productVariant, ({ one, many })
 	discountVariants: many(discountVariant),
 }));
 
-export const productVariantTranslationRelations = relations(
-	productVariantTranslation,
-	({ one }) => ({
-		productVariant: one(productVariant, {
-			fields: [productVariantTranslation.variantId],
-			references: [productVariant.id],
-		}),
-
-		seoMetadata: one(seoMetadata, {
-			fields: [productVariantTranslation.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
-
-		locale: one(locale, {
-			fields: [productVariantTranslation.localeKey],
-			references: [locale.key],
-		}),
+export const productVariantTranslationRelations = relations(orgProductVariantI18n, ({ one }) => ({
+	productVariant: one(orgProductVariant, {
+		fields: [orgProductVariantI18n.variantId],
+		references: [orgProductVariant.id],
 	}),
-);
+
+	seoMetadata: one(seoMetadata, {
+		fields: [orgProductVariantI18n.seoMetadataId],
+		references: [seoMetadata.id],
+	}),
+
+	locale: one(locale, {
+		fields: [orgProductVariantI18n.localeKey],
+		references: [locale.key],
+	}),
+}));
 
 /**
  * Product Instructor Attribution Relations (Creator Economy)
@@ -241,7 +238,7 @@ export const productVariantTranslationRelations = relations(
  * purchase revenue generated by attributed content.
  */
 export const productInstructorAttributionRelations = relations(
-	productInstructorAttribution,
+	orgProductInstructorAttribution,
 	({ one }) => ({
 		/**
 		 * @professionalIdentity Instructor profile for content attribution and revenue sharing
@@ -249,7 +246,7 @@ export const productInstructorAttributionRelations = relations(
 		 * @crossOrganizational Professional identity maintained across orgal boundaries
 		 */
 		instructorProfile: one(userInstructorProfile, {
-			fields: [productInstructorAttribution.instructorProfileId],
+			fields: [orgProductInstructorAttribution.instructorProfileId],
 			references: [userInstructorProfile.id],
 		}),
 
@@ -259,7 +256,7 @@ export const productInstructorAttributionRelations = relations(
 		 * @revenueCalculation Basis for creator compensation and professional recognition workflows
 		 */
 		product: one(orgProduct, {
-			fields: [productInstructorAttribution.productId],
+			fields: [orgProductInstructorAttribution.productId],
 			references: [orgProduct.id],
 		}),
 
@@ -269,7 +266,7 @@ export const productInstructorAttributionRelations = relations(
 		 * @multiTenant Maintains orgal isolation while enabling professional collaboration
 		 */
 		org: one(org, {
-			fields: [productInstructorAttribution.orgId],
+			fields: [orgProductInstructorAttribution.orgId],
 			references: [org.id],
 		}),
 	}),
@@ -286,91 +283,27 @@ export const productInstructorAttributionRelations = relations(
  * while maintaining clear brand attribution for marketing consistency and customer experience
  * across diverse product catalogs and promotional campaigns.
  */
-export const productBrandAttributionRelations = relations(productBrandAttribution, ({ one }) => ({
-	/**
-	 * @brandIdentity Org brand this attribution applies to
-	 * @businessContext Links brand identity to product presentation and marketing consistency
-	 * @customerExperience Ensures consistent brand presentation across product discovery workflows
-	 */
-	brand: one(orgBrand, {
-		fields: [productBrandAttribution.brandId],
-		references: [orgBrand.id],
-	}),
+export const productBrandAttributionRelations = relations(
+	orgProductBrandAttribution,
+	({ one }) => ({
+		/**
+		 * @brandIdentity Org brand this attribution applies to
+		 * @businessContext Links brand identity to product presentation and marketing consistency
+		 * @customerExperience Ensures consistent brand presentation across product discovery workflows
+		 */
+		brand: one(orgBrand, {
+			fields: [orgProductBrandAttribution.brandId],
+			references: [orgBrand.id],
+		}),
 
-	/**
-	 * @productAttribution Product this brand attribution applies to
-	 * @businessContext Links brand identity to specific product for marketing consistency
-	 * @marketingStrategy Enables brand-specific product presentation and promotional campaigns
-	 */
-	product: one(orgProduct, {
-		fields: [productBrandAttribution.productId],
-		references: [orgProduct.id],
+		/**
+		 * @productAttribution Product this brand attribution applies to
+		 * @businessContext Links brand identity to specific product for marketing consistency
+		 * @marketingStrategy Enables brand-specific product presentation and promotional campaigns
+		 */
+		product: one(orgProduct, {
+			fields: [orgProductBrandAttribution.productId],
+			references: [orgProduct.id],
+		}),
 	}),
-}));
-
-/**
- * Discount Product Relations (Promotional Integration)
- *
- * @integrationRole Product-level discount campaign relationships
- * Connects discount campaigns to products enabling targeted promotional strategies
- * while maintaining compatibility with payment plan pricing and e-commerce workflows.
- *
- * @promotionalStrategy Enables product-specific promotional campaigns for revenue
- * optimization and customer acquisition while integrating with payment plan pricing
- * for comprehensive promotional campaign management.
- */
-export const discountProductRelations = relations(discountProduct, ({ one }) => ({
-	/**
-	 * @promotionalCampaign Discount campaign this product application belongs to
-	 * @businessContext Links product to specific promotional strategy and revenue optimization
-	 * @marketingStrategy Enables targeted promotional campaigns for customer acquisition
-	 */
-	discount: one(discount, {
-		fields: [discountProduct.discountId],
-		references: [discount.id],
-	}),
-
-	/**
-	 * @productTarget Product this discount campaign applies to
-	 * @businessContext Links promotional strategy to specific product for targeted marketing
-	 * @revenueStrategy Enables product-specific promotional pricing and conversion optimization
-	 */
-	product: one(orgProduct, {
-		fields: [discountProduct.productId],
-		references: [orgProduct.id],
-	}),
-}));
-
-/**
- * Discount Variant Relations (Granular Promotional Integration)
- *
- * @integrationRole Variant-level discount campaign relationships
- * Connects discount campaigns to specific product variants enabling granular promotional
- * strategies for different pricing tiers and access levels while maintaining payment
- * plan pricing compatibility.
- *
- * @promotionalStrategy Enables variant-specific promotional campaigns for precise revenue
- * optimization and customer conversion strategies while integrating with payment plan
- * pricing for sophisticated promotional campaign workflows.
- */
-export const discountVariantRelations = relations(discountVariant, ({ one }) => ({
-	/**
-	 * @promotionalCampaign Discount campaign this variant application belongs to
-	 * @businessContext Links variant to specific promotional strategy for granular pricing control
-	 * @conversionStrategy Enables targeted promotional campaigns for specific access levels
-	 */
-	discount: one(discount, {
-		fields: [discountVariant.discountId],
-		references: [discount.id],
-	}),
-
-	/**
-	 * @variantTarget Product variant this discount campaign applies to
-	 * @businessContext Links promotional strategy to specific variant for granular marketing
-	 * @revenueOptimization Enables variant-specific promotional pricing and conversion strategies
-	 */
-	variant: one(productVariant, {
-		fields: [discountVariant.variantId],
-		references: [productVariant.id],
-	}),
-}));
+);

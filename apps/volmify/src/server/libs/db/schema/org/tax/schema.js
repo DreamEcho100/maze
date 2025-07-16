@@ -9,6 +9,7 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
+import { seoMetadata } from "../../system/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
 
@@ -25,11 +26,16 @@ export const orgTaxCategory = table(
 	},
 	(t) => [primaryKey({ columns: [t.id] })],
 );
-export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
+const orgTaxCategoryI18nTableName = `${orgTaxCategoryTableName}_i18n`;
+export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)(
 	{
 		categoryId: fk("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
+
 		name: varchar("name", { length: 64 }).notNull(),
 		description: varchar("description", { length: 256 }),
 	},
@@ -87,11 +93,16 @@ export const orgTaxRate = table(
 		index(`idx_${orgTaxRateTableName}_ends_at`).on(t.endsAt),
 	],
 );
-export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
+const orgTaxRateI18nTableName = `${orgTaxRateTableName}_i18n`;
+export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateI18nTableName)(
 	{
 		rateId: fk("rate_id")
 			.references(() => orgTaxRate.id)
 			.notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
+			.notNull(),
+
 		name: varchar("name", { length: 128 }).notNull(),
 		description: varchar("description", { length: 256 }),
 	},

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { boolean, index, integer, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
 import { currency, locale } from "../../system/locale-currency-market/schema";
+import { seoMetadata } from "../../system/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
 
@@ -77,10 +78,14 @@ export const orgRegion = table(
 			.where(eq(t.deletedAt, null)),
 	],
 );
-export const orgTaxCategoryI18n = buildOrgI18nTable(orgRegionTableName)(
+const orgRegionI18nTableName = `${orgRegionTableName}_i18n`;
+export const orgRegionI18n = buildOrgI18nTable(orgRegionI18nTableName)(
 	{
 		regionId: fk("org_region_id")
 			.references(() => orgRegion.id)
+			.notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
 			.notNull(),
 		name: varchar("name", { length: 64 }).notNull(),
 		description: varchar("description", { length: 256 }),

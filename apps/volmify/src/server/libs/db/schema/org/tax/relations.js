@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { currency } from "../../system/locale-currency-market/schema";
+import { seoMetadata } from "../../system/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
 import {
 	orgTaxCategory,
@@ -9,21 +10,19 @@ import {
 	orgTaxRateTaxCategory,
 } from "./schema";
 
-export const orgTaxCategoryRelations = relations(
-	orgTaxCategory,
-	({ many }) => ({
-		translations: many(orgTaxCategoryI18n),
+export const orgTaxCategoryRelations = relations(orgTaxCategory, ({ many }) => ({
+	translations: many(orgTaxCategoryI18n),
+}));
+export const orgTaxCategoryI18nRelations = relations(orgTaxCategoryI18n, ({ one }) => ({
+	category: one(orgTaxCategory, {
+		fields: [orgTaxCategoryI18n.categoryId],
+		references: [orgTaxCategory.id],
 	}),
-);
-export const orgTaxCategoryI18nRelations = relations(
-	orgTaxCategoryI18n,
-	({ one }) => ({
-		category: one(orgTaxCategory, {
-			fields: [orgTaxCategoryI18n.categoryId],
-			references: [orgTaxCategory.id],
-		}),
+	seoMetadata: one(seoMetadata, {
+		fields: [orgTaxCategoryI18n.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
-);
+}));
 
 export const orgTaxRateRelations = relations(orgTaxRate, ({ many, one }) => ({
 	region: one(orgRegion, {
@@ -42,21 +41,22 @@ export const orgTaxRateI18nRelations = relations(orgTaxRateI18n, ({ one }) => ({
 		references: [orgTaxRate.id],
 	}),
 	orgLocale: one(orgLocale, {
-		fields: [orgTaxRateI18n.orgLocaleKey],
+		fields: [orgTaxRateI18n.localeKey],
 		references: [orgLocale.localeKey],
+	}),
+	seoMetadata: one(seoMetadata, {
+		fields: [orgTaxRateI18n.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
 }));
 
-export const orgTaxRateTaxCategoryRelations = relations(
-	orgTaxRateTaxCategory,
-	({ one }) => ({
-		taxRate: one(orgTaxRate, {
-			fields: [orgTaxRateTaxCategory.rateId],
-			references: [orgTaxRate.id],
-		}),
-		category: one(orgTaxCategory, {
-			fields: [orgTaxRateTaxCategory.categoryId],
-			references: [orgTaxCategory.id],
-		}),
+export const orgTaxRateTaxCategoryRelations = relations(orgTaxRateTaxCategory, ({ one }) => ({
+	taxRate: one(orgTaxRate, {
+		fields: [orgTaxRateTaxCategory.rateId],
+		references: [orgTaxRate.id],
 	}),
-);
+	category: one(orgTaxCategory, {
+		fields: [orgTaxRateTaxCategory.categoryId],
+		references: [orgTaxCategory.id],
+	}),
+}));

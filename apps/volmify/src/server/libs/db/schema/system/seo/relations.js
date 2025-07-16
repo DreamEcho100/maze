@@ -1,4 +1,6 @@
 import { relations } from "drizzle-orm";
+import { orgFunnelI18n } from "../../org/funnel/schema.js";
+import { orgRegionI18n } from "../../org/locale-region/schema.js";
 import {
 	lessonTranslation,
 	productCourseModuleSectionLessonTranslation,
@@ -14,8 +16,9 @@ import {
 	promotionTranslation,
 } from "../../org/product/offers/schema.js";
 import { productVariantPaymentPlanTranslation } from "../../org/product/payment/schema.js";
-import { productTranslation, productVariantTranslation } from "../../org/product/schema.js";
-import { org, orgBrandTranslation, orgMarketTranslation } from "../../org/schema.js";
+import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
+import { org, orgBrandTranslation } from "../../org/schema.js";
+import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
 import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
 import {
@@ -99,18 +102,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		fields: [seoMetadata.id],
 		references: [orgBrandTranslation.seoMetadataId],
 	}),
-	orgMarketsTranslations: one(orgMarketTranslation, {
-		fields: [seoMetadata.id],
-		references: [orgMarketTranslation.seoMetadataId],
-	}),
-	productsTranslations: one(productTranslation, {
-		fields: [seoMetadata.id],
-		references: [productTranslation.seoMetadataId],
-	}),
-	productsVariantsTranslations: one(productVariantTranslation, {
-		fields: [seoMetadata.id],
-		references: [productVariantTranslation.seoMetadataId],
-	}),
 
 	usersInstructorProfilesTranslations: one(userInstructorProfileTranslation, {
 		fields: [seoMetadata.id],
@@ -137,6 +128,31 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	productsVariantsPaymentPlansTranslations: one(productVariantPaymentPlanTranslation, {
 		fields: [seoMetadata.id],
 		references: [productVariantPaymentPlanTranslation.seoMetadataId],
+	}),
+
+	orgsFunnelsI18n: one(orgFunnelI18n, {
+		fields: [seoMetadata.id],
+		references: [orgFunnelI18n.seoMetadataId],
+	}),
+	orgsTaxesCategoriesI18n: one(orgTaxCategoryI18n, {
+		fields: [seoMetadata.id],
+		references: [orgTaxCategoryI18n.seoMetadataId],
+	}),
+	orgsRegionsI18n: one(orgRegionI18n, {
+		fields: [seoMetadata.id],
+		references: [orgRegionI18n.seoMetadataId],
+	}),
+	orgsProductsI18n: one(orgProductI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductI18n.seoMetadataId],
+	}),
+	orgsProductsVariantsI18n: one(orgProductVariantI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductVariantI18n.seoMetadataId],
+	}),
+	orgsTaxesRatesI18n: one(orgTaxRateI18n, {
+		fields: [seoMetadata.id],
+		references: [orgTaxRateI18n.seoMetadataId],
 	}),
 }));
 

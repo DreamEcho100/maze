@@ -50,8 +50,11 @@ import { currency, locale } from "../../../system/locale-currency-market/schema.
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { org, orgMarket, orgMember, orgPricingZone } from "../../schema.js";
-import { productVariant } from "../schema.js";
+import {
+	org,
+	// , orgMarket, orgMember, orgPricingZone
+} from "../../schema.js";
+import { orgProductVariant } from "../schema.js";
 
 // -------------------------------------
 // PAYMENT PLAN ENUMS
@@ -187,7 +190,7 @@ export const productVariantPaymentPlan = table(
 		 */
 		variantId: text("variant_id")
 			.notNull()
-			.references(() => productVariant.id),
+			.references(() => orgProductVariant.id),
 
 		/**
 		 * @abacRole Plan creation/update restricted to org owners/managers
@@ -224,13 +227,6 @@ export const productVariantPaymentPlan = table(
 		sortOrder: integer("sort_order").default(0),
 
 		/**
-		 * @regionalPricing Optional market for regional pricing strategies
-		 * @businessRule null = global pricing, marketId = region-specific pricing
-		 * @multiRegionSupport Enables localized pricing overrides
-		 */
-		marketId: text("market_id").references(() => orgMarket.id),
-
-		/**
 		 * @currencySupport Currency for this payment plan instance
 		 * @internationalCommerce Required for all payment plans to support global expansion
 		 */
@@ -259,11 +255,18 @@ export const productVariantPaymentPlan = table(
 		 */
 		taxRate: decimal("tax_rate", { precision: 5, scale: 4 }),
 
-		/**
-		 * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
-		 * @businessFlexibility Enables complex regional pricing strategies
-		 */
-		pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
+		// /**
+		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
+		//  * @businessFlexibility Enables complex regional pricing strategies
+		//  */
+		// pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
+
+		// /**
+		//  * @regionalPricing Optional market for regional pricing strategies
+		//  * @businessRule null = global pricing, marketId = region-specific pricing
+		//  * @multiRegionSupport Enables localized pricing overrides
+		//  */
+		// marketId: text("market_id").references(() => orgMarket.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations

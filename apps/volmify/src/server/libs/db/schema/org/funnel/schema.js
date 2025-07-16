@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, primaryKey, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, fk, id, slug, table, updatedAt } from "../../_utils/helpers";
+import { seoMetadata } from "../../system/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
 import { org } from "../schema";
@@ -13,7 +14,7 @@ const orgFunnelTableName = `${orgTableName}_funnel`;
  */
 export const orgFunnel = table(orgFunnelTableName, {
 	id: id.notNull(),
-	orgId: text(`${orgTableName}_id`)
+	orgId: fk(`${orgTableName}_id`)
 		.references(() => org.id)
 		.notNull(),
 	slug: slug.notNull(),
@@ -25,14 +26,18 @@ export const orgFunnel = table(orgFunnelTableName, {
 	deletedAt,
 });
 
+const orgFunnelI18nTableName = `${orgFunnelTableName}_i18n`;
 /**
  * @domain Funnels → Locales
  * @description Join table to assign available locale per funnel.
  */
-export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
+export const orgFunnelI18n = buildOrgI18nTable(orgFunnelI18nTableName)(
 	{
 		funnelId: fk("funnel_id")
 			.references(() => orgFunnel.id)
+			.notNull(),
+		seoMetadataId: fk("seo_metadata_id")
+			.references(() => seoMetadata.id)
 			.notNull(),
 		name: varchar("name", { length: 128 }).notNull(),
 		description: varchar("description", { length: 256 }),

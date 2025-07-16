@@ -12,13 +12,23 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
-import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import {
+	createdAt,
+	fk,
+	getLocaleKey,
+	id,
+	table,
+	updatedAt,
+} from "../../../_utils/helpers.js";
+import {
+	currency,
+	locale,
+} from "../../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
-import { orgProduct, productVariant } from "../schema.js";
+import { orgProduct, orgProductVariant } from "../schema.js";
 
 /**
  * @enumModel DiscountType
@@ -169,7 +179,7 @@ export const discountVariant = table(
 			.references(() => discount.id, { onDelete: "cascade" }),
 		variantId: text("variant_id")
 			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
+			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.variantId] }),
@@ -285,8 +295,14 @@ export const giftCard = table(
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		code: text("code").notNull(),
-		initialBalance: decimal("initial_balance", { precision: 10, scale: 2 }).notNull(),
-		remainingBalance: decimal("remaining_balance", { precision: 10, scale: 2 }).notNull(),
+		initialBalance: decimal("initial_balance", {
+			precision: 10,
+			scale: 2,
+		}).notNull(),
+		remainingBalance: decimal("remaining_balance", {
+			precision: 10,
+			scale: 2,
+		}).notNull(),
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),

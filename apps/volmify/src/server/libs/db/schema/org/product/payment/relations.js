@@ -29,11 +29,14 @@
  */
 
 import { relations } from "drizzle-orm";
-import { currency, locale } from "../../../system/locale-currency-market/schema.js";
+import {
+	currency,
+	locale,
+} from "../../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { org, orgMarket, orgMember, orgPricingZone } from "../../schema.js";
-import { productVariant } from "../schema.js";
+import { orgProductVariant } from "../schema.js";
 import {
 	oneTimePaymentPlan,
 	oneTimePaymentPlanTranslation,
@@ -78,9 +81,9 @@ export const productVariantPaymentPlanRelations = relations(
 		 * @businessContext Multiple payment strategies per variant enable sophisticated pricing tiers
 		 * @ecommerceFoundation Maintains consistency with established variant-based e-commerce architecture
 		 */
-		productVariant: one(productVariant, {
+		productVariant: one(orgProductVariant, {
 			fields: [productVariantPaymentPlan.variantId],
-			references: [productVariant.id],
+			references: [orgProductVariant.id],
 		}),
 
 		/**
@@ -216,24 +219,27 @@ export const productVariantPaymentPlanTranslationRelations = relations(
  * support viral growth through gift economy while enabling corporate training scenarios
  * and family sharing arrangements for enhanced customer value.
  */
-export const oneTimePaymentPlanRelations = relations(oneTimePaymentPlan, ({ one, many }) => ({
-	/**
-	 * @ctiParent Links to base payment plan attributes and relationships
-	 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
-	 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
-	 */
-	paymentPlan: one(productVariantPaymentPlan, {
-		fields: [oneTimePaymentPlan.planId],
-		references: [productVariantPaymentPlan.id],
-	}),
+export const oneTimePaymentPlanRelations = relations(
+	oneTimePaymentPlan,
+	({ one, many }) => ({
+		/**
+		 * @ctiParent Links to base payment plan attributes and relationships
+		 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
+		 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
+		 */
+		paymentPlan: one(productVariantPaymentPlan, {
+			fields: [oneTimePaymentPlan.planId],
+			references: [productVariantPaymentPlan.id],
+		}),
 
-	/**
-	 * @translationSupport Multi-language one-time payment plan content
-	 * @marketingLocalization Enables region-specific gift messaging, access policies, and transfer procedures
-	 * @customerExperience Localized policies and messaging improve customer understanding and satisfaction
-	 */
-	translations: many(oneTimePaymentPlanTranslation),
-}));
+		/**
+		 * @translationSupport Multi-language one-time payment plan content
+		 * @marketingLocalization Enables region-specific gift messaging, access policies, and transfer procedures
+		 * @customerExperience Localized policies and messaging improve customer understanding and satisfaction
+		 */
+		translations: many(oneTimePaymentPlanTranslation),
+	}),
+);
 
 /**
  * One-Time Payment Plan Translation Relations
@@ -345,24 +351,27 @@ export const subscriptionPaymentPlanTranslationRelations = relations(
  * providing predictable minimum revenue through freemium allowances and base charges for
  * sophisticated monetization aligned with customer value realization.
  */
-export const usageBasedPaymentPlanRelations = relations(usageBasedPaymentPlan, ({ one, many }) => ({
-	/**
-	 * @ctiParent Links to base payment plan attributes and relationships
-	 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
-	 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
-	 */
-	paymentPlan: one(productVariantPaymentPlan, {
-		fields: [usageBasedPaymentPlan.planId],
-		references: [productVariantPaymentPlan.id],
-	}),
+export const usageBasedPaymentPlanRelations = relations(
+	usageBasedPaymentPlan,
+	({ one, many }) => ({
+		/**
+		 * @ctiParent Links to base payment plan attributes and relationships
+		 * @businessContext Provides access to common payment plan fields, pricing, and orgal context
+		 * @dataConsistency Ensures CTI pattern integrity and optimal query performance
+		 */
+		paymentPlan: one(productVariantPaymentPlan, {
+			fields: [usageBasedPaymentPlan.planId],
+			references: [productVariantPaymentPlan.id],
+		}),
 
-	/**
-	 * @translationSupport Multi-language usage-based payment plan content
-	 * @marketingLocalization Enables region-specific usage descriptions and pricing explanations
-	 * @customerEducation Localized explanations of complex usage billing models for customer clarity
-	 */
-	translations: many(usageBasedPaymentPlanTranslation),
-}));
+		/**
+		 * @translationSupport Multi-language usage-based payment plan content
+		 * @marketingLocalization Enables region-specific usage descriptions and pricing explanations
+		 * @customerEducation Localized explanations of complex usage billing models for customer clarity
+		 */
+		translations: many(usageBasedPaymentPlanTranslation),
+	}),
+);
 
 /**
  * Usage-Based Payment Plan Translation Relations
@@ -413,54 +422,57 @@ export const usageBasedPaymentPlanTranslationRelations = relations(
  * access control queries, and revenue attribution calculations essential for customer
  * experience and creator economy workflows.
  */
-export const userSubscriptionRelations = relations(userSubscription, ({ one }) => ({
-	/**
-	 * @customerReference Customer who owns this subscription instance
-	 * @accessControl Primary relationship for content access permissions and customer service workflows
-	 * @businessCritical Essential for subscription management and customer experience optimization
-	 */
-	user: one(user, {
-		fields: [userSubscription.userId],
-		references: [user.id],
-	}),
+export const userSubscriptionRelations = relations(
+	userSubscription,
+	({ one }) => ({
+		/**
+		 * @customerReference Customer who owns this subscription instance
+		 * @accessControl Primary relationship for content access permissions and customer service workflows
+		 * @businessCritical Essential for subscription management and customer experience optimization
+		 */
+		user: one(user, {
+			fields: [userSubscription.userId],
+			references: [user.id],
+		}),
 
-	/**
-	 * @paymentPlanReference Org's payment plan this subscription follows
-	 * @businessContext Determines pricing, features, billing cycle, and access permissions
-	 * @revenueAttribution Links subscription revenue to specific orgal payment strategies
-	 */
-	paymentPlan: one(productVariantPaymentPlan, {
-		fields: [userSubscription.planId],
-		references: [productVariantPaymentPlan.id],
-	}),
+		/**
+		 * @paymentPlanReference Org's payment plan this subscription follows
+		 * @businessContext Determines pricing, features, billing cycle, and access permissions
+		 * @revenueAttribution Links subscription revenue to specific orgal payment strategies
+		 */
+		paymentPlan: one(productVariantPaymentPlan, {
+			fields: [userSubscription.planId],
+			references: [productVariantPaymentPlan.id],
+		}),
 
-	/**
-	 * @orgScope Org context for subscription management and analytics
-	 * @multiTenant Enables org-specific subscription reporting and business intelligence
-	 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
-	 */
-	org: one(org, {
-		fields: [userSubscription.orgId],
-		references: [org.id],
-	}),
+		/**
+		 * @orgScope Org context for subscription management and analytics
+		 * @multiTenant Enables org-specific subscription reporting and business intelligence
+		 * @creatorEconomy Organizational context for instructor attribution and revenue sharing workflows
+		 */
+		org: one(org, {
+			fields: [userSubscription.orgId],
+			references: [org.id],
+		}),
 
-	/**
-	 * @memberContext Optional org member context for internal subscriptions
-	 * @businessRule When present, indicates internal orgal member subscription access
-	 * @accessControl Enables different access patterns and policies for internal vs external customers
-	 */
-	orgMember: one(orgMember, {
-		fields: [userSubscription.orgMemberId],
-		references: [orgMember.id],
-	}),
+		/**
+		 * @memberContext Optional org member context for internal subscriptions
+		 * @businessRule When present, indicates internal orgal member subscription access
+		 * @accessControl Enables different access patterns and policies for internal vs external customers
+		 */
+		orgMember: one(orgMember, {
+			fields: [userSubscription.orgMemberId],
+			references: [orgMember.id],
+		}),
 
-	/**
-	 * @currencyTracking Currency used for subscription billing and revenue tracking
-	 * @internationalCommerce Essential for multi-currency subscription revenue analytics
-	 * @financialReporting Critical for accurate revenue reporting and creator economy compensation
-	 */
-	currency: one(currency, {
-		fields: [userSubscription.currencyCode],
-		references: [currency.code],
+		/**
+		 * @currencyTracking Currency used for subscription billing and revenue tracking
+		 * @internationalCommerce Essential for multi-currency subscription revenue analytics
+		 * @financialReporting Critical for accurate revenue reporting and creator economy compensation
+		 */
+		currency: one(currency, {
+			fields: [userSubscription.currencyCode],
+			references: [currency.code],
+		}),
 	}),
-}));
+);
