@@ -1,11 +1,13 @@
 import { boolean, index, jsonb, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, name, table, updatedAt } from "../../../_utils/helpers.js";
-import { systemPermission } from "../../../system/schema.js";
-import { user } from "../../../user/schema.js";
-import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
-import { orgMember } from "../schema.js";
+import { createdAt, deletedAt, id, name, table, updatedAt } from "../../../../_utils/helpers.js";
+import { systemPermission } from "../../../../system/schema.js";
+import { user } from "../../../../user/schema.js";
+import { orgTableName } from "../../../_utils/helpers.js";
+import { org } from "../../../schema.js";
+import { orgMember } from "../../schema.js";
+
+// NOTE: is the concept o groups really needed on this system?
 
 /**
  * Permission Groups (Role Templates)

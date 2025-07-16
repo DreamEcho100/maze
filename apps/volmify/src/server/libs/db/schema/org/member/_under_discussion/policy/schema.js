@@ -10,35 +10,25 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	fk,
-	id,
-	name,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
+import { createdAt, fk, id, name, table, updatedAt } from "../../../../_utils/helpers.js";
 // import {
 // } from { user } from "../../../user/schema.js";
-import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
-import { orgDepartment } from "../department/schema.js";
-import { orgMember } from "../schema.js";
-import { orgTeam } from "../team/schema.js";
+import { orgTableName } from "../../../_utils/helpers.js";
+import { org } from "../../../schema.js";
+import { orgDepartment } from "../../department/schema.js";
+import { orgMember } from "../../schema.js";
+import { orgTeam } from "../../team/schema.js";
 
 const prgPermissionTableName = `${orgTableName}_permission`;
-export const orgPermissionScopeEnum = pgEnum(
-	`${prgPermissionTableName}_scope`,
-	[
-		"global", // Applies to all resources in the org
-		"organization", // Applies to all resources within the organization
-		"resource", // Applies to a specific resource
-		// "team", // Applies to all resources within a specific team
-		// "department", // Applies to all resources within a specific department
-		// "member", // Applies to all resources owned by a specific member
-		// "custom", // Custom scope defined by the application
-	],
-);
+export const orgPermissionScopeEnum = pgEnum(`${prgPermissionTableName}_scope`, [
+	"global", // Applies to all resources in the org
+	"organization", // Applies to all resources within the organization
+	"resource", // Applies to a specific resource
+	// "team", // Applies to all resources within a specific team
+	// "department", // Applies to all resources within a specific department
+	// "member", // Applies to all resources owned by a specific member
+	// "custom", // Custom scope defined by the application
+]);
 /**
  * @domain Permissions
  * @description A fine-grained action that can be granted via a policy (e.g., "edit_invoice").
@@ -92,13 +82,10 @@ export const orgPolicy = table(
 );
 
 const orgPolicyRuleTableName = `${orgPolicyTableName}_rule`;
-export const orgPolicyRuleEffectEnum = pgEnum(
-	`${orgPolicyTableName}_rule_effect`,
-	[
-		"allow", // Grants permission if conditions are met
-		"deny", // Explicitly denies permission if conditions are met
-	],
-);
+export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyTableName}_rule_effect`, [
+	"allow", // Grants permission if conditions are met
+	"deny", // Explicitly denies permission if conditions are met
+]);
 
 // 🎭 Role-to-Policy Grouping & Templates
 // *   A “Role” is a template made of policies.
@@ -134,7 +121,7 @@ export const rolePolicyAssignments = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.roleId, t.policyId] }),
-		index(`idx_role_policy_assignments_created_at`).on(t.createdAt),
+		index("idx_role_policy_assignments_created_at").on(t.createdAt),
 	],
 );
 

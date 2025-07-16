@@ -21,7 +21,7 @@ import {
 } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
-import { orgMember } from "../schema.js";
+import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
 /**
@@ -161,8 +161,8 @@ export const orgTeamDepartment = table(
 			uniqueIndex(`uq_${base}_primary`)
 				.on(t.teamId, t.isPrimary)
 				.where(eq(t.isPrimary, true)),
-			index(`idx_${base}_team`).on(t.teamId),
-			index(`idx_${base}_department`).on(t.departmentId),
+			index(`idx_${base}_team_id`).on(t.teamId),
+			index(`idx_${base}_department_id`).on(t.departmentId),
 		];
 	},
 );
