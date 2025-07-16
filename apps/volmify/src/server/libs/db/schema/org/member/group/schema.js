@@ -21,7 +21,7 @@ export const orgPermissionsGroup = table(
 		createdAt,
 		updatedAt,
 		deletedAt,
-		createdBy: text("created_by").references(() => user.id), // Nullable for seeded/system roles
+		createdById: text("created_by").references(() => user.id), // Nullable for seeded/system roles
 		name: name.notNull(),
 		description: varchar("description", { length: 256 }),
 		orgId: text(`${orgTableName}_id`)
@@ -84,7 +84,7 @@ export const orgMemberPermissionsGroup = table(
 	{
 		id: id.notNull(),
 		createdAt,
-		createdBy: text("created_by").references(() => user.id), // Optional audit trail
+		createdById: text("created_by_id").references(() => user.id), // Optional audit trail
 		memberId: text("member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
@@ -100,6 +100,8 @@ export const orgMemberPermissionsGroup = table(
 			uniqueIndex(`uq_${base}`).on(t.memberId, t.permissionsGroupId),
 			index(`idx_${base}_member_id`).on(t.memberId),
 			index(`idx_${base}_group_id`).on(t.permissionsGroupId),
+			index(`idx_${base}_created_at`).on(t.createdAt),
+			index(`idx_${base}_created_by_id`).on(t.createdById),
 		];
 	},
 );

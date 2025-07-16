@@ -52,7 +52,7 @@ export const org = table(
 		 * Creator becomes the first `admin` and is granted full permissions.
 		 * Enables automatic role provisioning during onboarding.
 		 */
-		createdBy: text("created_by")
+		createdById: text("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
@@ -86,6 +86,7 @@ export const org = table(
 			index(`idx_${base}_updated_at`).on(table.updatedAt),
 			index(`idx_${base}_name`).on(table.name),
 			index(`idx_${base}_slug`).on(table.slug),
+			index(`idx_${base}_created_by_id`).on(table.createdById),
 		];
 	},
 );

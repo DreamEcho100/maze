@@ -12,6 +12,7 @@ import {
 import {
 	createdAt,
 	deletedAt,
+	fk,
 	id,
 	name,
 	slug,
@@ -42,7 +43,7 @@ export const orgTeam = table(
 		createdAt,
 		updatedAt,
 		deletedAt,
-		createdBy: text("created_by")
+		createdById: fk("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
@@ -62,9 +63,7 @@ export const orgTeam = table(
 		/**
 		 * Whether this team can include members from multiple departments.
 		 */
-		allowsCrossDepartmentMembers: boolean(
-			"allows_cross_department_members",
-		).default(true),
+		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
 
 		metadata: jsonb("metadata"),
 	},
@@ -74,27 +73,21 @@ export const orgTeam = table(
 		index(`idx_${orgTeamTableName}_updated_at`).on(table.updatedAt),
 		index(`idx_${orgTeamTableName}_name`).on(table.name),
 		index(`idx_${orgTeamTableName}_org`).on(table.orgId),
-		index(`idx_${orgTeamTableName}_created_by`).on(table.createdBy),
+		index(`idx_${orgTeamTableName}_created_by_id`).on(table.createdById),
 	],
 );
 
-export const orgTeamMembershipRoleEnum = pgEnum(
-	`${orgTableName}_team_membership_role`,
-	[
-		"admin", // Full access to manage team members, settings, and permissions
-		"member", // Scoped access based on permission groups assigned within the team
-	],
-);
+export const orgTeamMembershipRoleEnum = pgEnum(`${orgTableName}_team_membership_role`, [
+	"admin", // Full access to manage team members, settings, and permissions
+	"member", // Scoped access based on permission groups assigned within the team
+]);
 const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
-export const orgTeamMembershipStatusEnum = pgEnum(
-	`${orgTeamMembershipTableName}_status`,
-	[
-		"pending", // Awaiting acceptance of invitation
-		"active", // Currently active member
-		"suspended", // Temporarily suspended; cannot access team resources
-		"left", // Member has left the team
-	],
-);
+export const orgTeamMembershipStatusEnum = pgEnum(`${orgTeamMembershipTableName}_status`, [
+	"pending", // Awaiting acceptance of invitation
+	"active", // Currently active member
+	"suspended", // Temporarily suspended; cannot access team resources
+	"left", // Member has left the team
+]);
 /**
  * Org Member ⇄ Team Assignment
  *
@@ -127,7 +120,6 @@ export const orgTeamMembership = table(
 		index(`idx_${orgTeamMembershipTableName}_status`).on(t.status),
 		index(`idx_${orgTeamMembershipTableName}_role`).on(t.role),
 		index(`idx_${orgTeamMembershipTableName}_joined_at`).on(t.joinedAt),
-		uniqueIndex(`uq_${orgTeamMembershipTableName}`).on(t.memberId, t.teamId),
 		primaryKey({ columns: [t.memberId, t.teamId] }),
 	],
 );

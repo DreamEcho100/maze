@@ -6,6 +6,9 @@ import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
 import { orgLocale, orgRegion } from "./locale-region/schema.js";
+import { orgDepartment } from "./member/department/schema.js";
+import { orgMember, orgMemberInvitation } from "./member/schema.js";
+import { orgTeam } from "./member/team/schema.js";
 import { lesson, productCourseEnrollment, skill } from "./product/by-type/course/schema.js";
 import { productBrandAttribution, productInstructorAttribution } from "./product/schema.js";
 import {
@@ -14,16 +17,16 @@ import {
 	orgBrand,
 	orgBrandTranslation,
 	orgCurrencySettings,
-	orgDepartment,
-	orgDepartmentMembership,
-	orgMember,
-	orgMemberInvitation,
-	orgMemberPermissionsGroup,
-	orgPermissionsGroup,
-	orgPermissionsGroupPermission,
-	orgTeam,
-	orgTeamDepartment,
-	orgTeamMemberships,
+	// orgDepartment,
+	// orgDepartmentMembership,
+	// orgMember,
+	// orgMemberInvitation,
+	// orgMemberPermissionsGroup,
+	// orgPermissionsGroup,
+	// orgPermissionsGroupPermission,
+	// orgTeam,
+	// orgTeamDepartment,
+	// orgTeamMemberships,
 } from "./schema.js";
 
 /**
@@ -42,6 +45,7 @@ import {
  */
 export const orgRelations = relations(org, ({ many }) => ({
 	members: many(orgMember),
+	membersInvitations: many(orgMemberInvitation),
 	teams: many(orgTeam),
 	departments: many(orgDepartment),
 	permissionGroups: many(orgPermissionsGroup),

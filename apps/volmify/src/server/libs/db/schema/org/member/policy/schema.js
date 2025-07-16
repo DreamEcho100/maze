@@ -4,6 +4,7 @@ import {
 	index,
 	jsonb,
 	pgEnum,
+	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -25,7 +26,19 @@ import { orgDepartment } from "../department/schema.js";
 import { orgMember } from "../schema.js";
 import { orgTeam } from "../team/schema.js";
 
-export const prgPermissionTableName = `${orgTableName}_permission`;
+const prgPermissionTableName = `${orgTableName}_permission`;
+export const orgPermissionScopeEnum = pgEnum(
+	`${prgPermissionTableName}_scope`,
+	[
+		"global", // Applies to all resources in the org
+		"organization", // Applies to all resources within the organization
+		"resource", // Applies to a specific resource
+		// "team", // Applies to all resources within a specific team
+		// "department", // Applies to all resources within a specific department
+		// "member", // Applies to all resources owned by a specific member
+		// "custom", // Custom scope defined by the application
+	],
+);
 /**
  * @domain Permissions
  * @description A fine-grained action that can be granted via a policy (e.g., "edit_invoice").
@@ -40,8 +53,10 @@ export const orgPermission = table(
 		 * Used in policies and code to reference specific permissions.
 		 */
 		key: varchar("key", { length: 64 }).notNull(), // e.g., "view_reports"
-
 		description: text("description"),
+		// scope: varchar('scope', { length: 16 }).$type<'global' | 'organization' | 'resource'>().default('organization').notNull(),
+		scope: orgPermissionScopeEnum("scope").notNull().default("organization"), // e.g., "global", "organization", "resource"
+
 		createdAt,
 		updatedAt,
 	},
@@ -85,6 +100,44 @@ export const orgPolicyRuleEffectEnum = pgEnum(
 	],
 );
 
+// 🎭 Role-to-Policy Grouping & Templates
+// *   A “Role” is a template made of policies.
+// *   When a role is assigned to a user, all linked policies are added to their assignments.
+// *   You can render roles as presets in the admin panel.
+const orgRoleTableName = `${orgTableName}_role`;
+export const orgRole = table(
+	orgRoleTableName,
+	{
+		id: id.notNull(),
+		name: varchar("name", { length: 64 }).notNull(),
+		description: varchar("description", { length: 256 }),
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index(`idx_${orgRoleTableName}_name`).on(t.name),
+		index(`idx_${orgRoleTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgRoleTableName}_updated_at`).on(t.updatedAt),
+		uniqueIndex(`uq_${orgRoleTableName}_name`).on(t.name),
+	],
+);
+export const rolePolicyAssignments = table(
+	"role_policy_assignments",
+	{
+		roleId: fk("role_id")
+			.references(() => orgRole.id)
+			.notNull(),
+		policyId: fk("policy_id")
+			.references(() => orgPolicy.id)
+			.notNull(),
+		createdAt,
+	},
+	(t) => [
+		primaryKey({ columns: [t.roleId, t.policyId] }),
+		index(`idx_role_policy_assignments_created_at`).on(t.createdAt),
+	],
+);
+
 /**
  * @domain ABAC
  * @description A conditional rule that links a permission to a policy.
@@ -110,6 +163,8 @@ export const orgPolicyRule = table(orgPolicyRuleTableName, {
 	 * Can represent allow/deny, priority, or scoped rule logic
 	 */
 	effect: orgPolicyRuleEffectEnum("effect").notNull().default("allow"),
+
+	// json_logic: jsonb('json_logic'), // optional override of raw DSL
 });
 
 const orgPolicyAssignmentTableName = `${orgPolicyTableName}_assignment`;
@@ -167,8 +222,8 @@ export const orgPolicyAssignment = table(
 	],
 );
 
-// Audit Logging (Who tried what, when, and why)
-// export const accessLogs = pgTable('access_logs', {
+// // Audit Logging (Who tried what, when, and why)
+// export const accessLogs = table('access_logs', {
 //   id: id.notNull(),
 //   member_id: fk('member_id').notNull(),
 //   permission: varchar('permission', { length: 64 }).notNull(),
@@ -177,4 +232,37 @@ export const orgPolicyAssignment = table(
 //   result: varchar('result', { length: 8 }).$type<'allow' | 'deny'>().notNull(),
 //   context: text('context'),
 //   timestamp: timestamp('timestamp').defaultNow(),
+
+//   permission_key: varchar('permission_key', { length: 64 }).notNull(),
+//   granted: boolean('granted').notNull(),
+//   evaluated_at: timestamp('evaluated_at').defaultNow(),
+//   context_json: jsonb('context_json'), // includes scope, member, rules used
 // });
+
+/*
+interface Condition {
+  field: string;
+  operator: '$eq' | '$ne' | '$gt' | '$lt' | '$in' | '$any';
+  value: string;
+};
+interface ExportablePolicy {
+  name: string;
+  description?: string;
+  permissions: {
+    permissionKey: string;
+    effect: 'allow' | 'deny';
+    condition: string; // ABAC DSL string
+  }[];
+};
+interface PermissionGraph {
+  memberId: string;
+  permissions: {
+    key: string;
+    effect: 'allow' | 'deny';
+    source: 'direct' | 'team' | 'department' | 'role';
+    ruleId: string;
+    policyId: string;
+    via?: string; // role name or team name
+  }[];
+};
+*/

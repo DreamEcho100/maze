@@ -5,8 +5,8 @@ import {
 	index,
 	jsonb,
 	pgEnum,
+	primaryKey,
 	text,
-	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -22,7 +22,6 @@ import {
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { orgMember } from "../schema.js";
-import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
 /**
@@ -55,7 +54,7 @@ export const orgDepartment = table(
 		 * @optional
 		 * Used to define nested department structures (e.g., HR > Payroll)
 		 */
-		parent_id: fk("parent_id"), // .references(() => departments.id),
+		parentId: fk("parent_id"), // .references(() => departments.id),
 
 		createdAt,
 		updatedAt,
@@ -64,17 +63,18 @@ export const orgDepartment = table(
 		metadata: jsonb("metadata"),
 	},
 	(t) => [
+		foreignKey({
+			columns: [t.parentId],
+			foreignColumns: [t.id],
+			name: `fk_${orgDepartmentTableName}_parent`,
+		}),
 		uniqueIndex(`uq_${orgDepartmentTableName}_name`).on(t.orgId, t.name),
 		// uniqueIndex(`uq_${orgDepartmentTableName}_default`)
 		// 	.on(t.orgId, t.isDefault)
 		// 	.where(eq(t.isDefault, true)),
 		// index(`idx_${orgDepartmentTableName}_active`).on(t.isActive),
-		index(`idx_${orgDepartmentTableName}_org`).on(t.orgId),
-		foreignKey({
-			columns: [t.parent_id],
-			foreignColumns: [t.id],
-			name: `fk_${orgDepartmentTableName}_parent`,
-		}),
+		index(`idx_${orgDepartmentTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgDepartmentTableName}_parent_id`).on(t.parentId),
 	],
 );
 
@@ -83,47 +83,54 @@ export const orgDepartmentMembershipStatusEnum = pgEnum(
 	`${orgDepartmentMembershipTableName}_status`,
 	["active", "inactive", "pending", "removed"],
 );
-/**
- * Member-Department Assignment (M:M)
- *
- * @abacRole Structural Permission Grouping
- * Members can belong to one or more departments. This informs both permission
- * inheritance and UI logic (like filtering or default views).
- */
-export const orgDepartmentMembership = table(
-	orgDepartmentMembershipTableName,
-	{
-		memberId: text("member_id")
-			.notNull()
-			.references(() => orgMember.id, { onDelete: "cascade" }),
 
-		departmentId: text("department_id")
-			.notNull()
-			.references(() => orgDepartment.id, { onDelete: "cascade" }),
+// NOTE: is the following needed?
+// /**
+//  * Member-Department Assignment (M:M)
+//  *
+//  * @abacRole Structural Permission Grouping
+//  * Members can belong to one or more departments. This informs both permission
+//  * inheritance and UI logic (like filtering or default views).
+//  */
+// export const orgDepartmentMembership = table(
+// 	orgDepartmentMembershipTableName,
+// 	{
+// 		memberId: text("member_id")
+// 			.notNull()
+// 			.references(() => orgMember.id, { onDelete: "cascade" }),
 
-		status: orgDepartmentMembershipStatusEnum("status")
-			.notNull()
-			.default("active"),
-		// isDefault: boolean("is_default").default(false), // Only one per member
-		joinedAt: timestamp("joined_at").defaultNow(),
+// 		departmentId: text("department_id")
+// 			.notNull()
+// 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
-			t.memberId,
-			t.departmentId,
-		),
-		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
-		// 	.on(t.memberId, t.isDefault)
-		// 	.where(eq(t.isDefault, true)),
-		index(`idx_${orgDepartmentMembershipTableName}_member`).on(t.memberId),
-		index(`idx_${orgDepartmentMembershipTableName}_department`).on(
-			t.departmentId,
-		),
-	],
-);
+// 		status: orgDepartmentMembershipStatusEnum("status")
+// 			.notNull()
+// 			.default("active"),
+// 		// isDefault: boolean("is_default").default(false), // Only one per member
+// 		joinedAt: timestamp("joined_at").defaultNow(),
+
+// 		createdAt,
+// 		updatedAt,
+// 	},
+// 	(t) => [
+// 		primaryKey({ columns: [t.memberId, t.departmentId] }),
+// 		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
+// 		// 	t.memberId,
+// 		// 	t.departmentId,
+// 		// ),
+// 		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
+// 		// 	.on(t.memberId, t.isDefault)
+// 		// 	.where(eq(t.isDefault, true)),
+// 		index(`idx_${orgDepartmentMembershipTableName}_member_id`).on(t.memberId),
+// 		index(`idx_${orgDepartmentMembershipTableName}_department_id`).on(
+// 			t.departmentId,
+// 		),
+// 		index(`idx_${orgDepartmentMembershipTableName}_status`).on(t.status),
+// 		index(`idx_${orgDepartmentMembershipTableName}_joined_at`).on(t.joinedAt),
+// 		index(`idx_${orgDepartmentMembershipTableName}_created_at`).on(t.createdAt),
+// 		index(`idx_${orgDepartmentMembershipTableName}_updated_at`).on(t.updatedAt),
+// 	],
+// );
 
 /**
  * Team ⇄ Department Mapping
@@ -135,7 +142,6 @@ export const orgDepartmentMembership = table(
 export const orgTeamDepartment = table(
 	`${orgTableName}_team_department`,
 	{
-		id: id.notNull(),
 		teamId: fk("team_id")
 			.notNull()
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
@@ -151,7 +157,7 @@ export const orgTeamDepartment = table(
 	(t) => {
 		const base = `${orgTableName}_team_department`;
 		return [
-			uniqueIndex(`uq_${base}`).on(t.teamId, t.departmentId),
+			primaryKey({ columns: [t.teamId, t.departmentId] }),
 			uniqueIndex(`uq_${base}_primary`)
 				.on(t.teamId, t.isPrimary)
 				.where(eq(t.isPrimary, true)),
