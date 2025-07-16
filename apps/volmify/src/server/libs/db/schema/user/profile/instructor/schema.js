@@ -145,15 +145,15 @@ export const userInstructorProfileContactInfo = table(
 		contactInfoId: text("contact_info_id")
 			.notNull()
 			.references(() => contactInfo.id, { onDelete: "cascade" }),
-		isPrimary: boolean("is_primary").default(false),
+		// isPrimary: boolean("is_primary").default(false),
 		createdAt,
 	},
 	(t) => [
 		index("idx_instructor_contact_profile").on(t.instructorProfileId),
 		index("idx_instructor_contact_info").on(t.contactInfoId),
-		uniqueIndex("uq_instructor_contact_primary")
-			.on(t.instructorProfileId, t.isPrimary)
-			.where(eq(t.isPrimary, true)),
+		// uniqueIndex("uq_instructor_contact_primary")
+		// 	.on(t.instructorProfileId, t.isPrimary)
+		// 	.where(eq(t.isPrimary, true)),
 	],
 );
 

@@ -1,6 +1,14 @@
 import { boolean, index, jsonb, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, id, name, table, updatedAt } from "../../../../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	fk,
+	id,
+	name,
+	table,
+	updatedAt,
+} from "../../../../_utils/helpers.js";
 import { systemPermission } from "../../../../system/schema.js";
 import { user } from "../../../../user/schema.js";
 import { orgTableName } from "../../../_utils/helpers.js";
@@ -26,7 +34,7 @@ export const orgPermissionsGroup = table(
 		createdById: text("created_by").references(() => user.id), // Nullable for seeded/system roles
 		name: name.notNull(),
 		description: varchar("description", { length: 256 }),
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		isSystem: boolean("is_system").default(false), // Flag for system-defined groups

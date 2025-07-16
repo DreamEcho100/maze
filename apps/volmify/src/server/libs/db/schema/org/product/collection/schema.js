@@ -1,5 +1,6 @@
 import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { discount } from "../offers/schema.js";
 import { orgProduct } from "../schema.js";
@@ -32,7 +33,7 @@ export const collection = table(
 		 * @abacScope FK to the owning org
 		 * @integrationContext Determines access scope and permission context
 		 */
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 

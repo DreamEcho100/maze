@@ -45,10 +45,11 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
 import { currency, locale } from "../../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
+import { orgTableName } from "../../_utils/helpers.js";
 import { org, orgMarket, orgMember, orgPricingZone } from "../../schema.js";
 import { productVariant } from "../schema.js";
 
@@ -192,7 +193,7 @@ export const productVariantPaymentPlan = table(
 		 * @abacRole Plan creation/update restricted to org owners/managers
 		 * @multiTenant Separates plan configuration per orgal boundary
 		 */
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 
@@ -941,7 +942,7 @@ export const userSubscription = table(
 		 * @orgScope Org context for this subscription
 		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 

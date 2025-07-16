@@ -6,16 +6,19 @@ import {
 	integer,
 	jsonb,
 	pgEnum,
+	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../../_utils/helpers.js";
 import { currency, locale } from "../../../system/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
+import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
+import { orgProduct, productVariant } from "../schema.js";
 
 /**
  * @enumModel DiscountType
@@ -51,7 +54,7 @@ export const discount = table(
 	"discount",
 	{
 		id: id.notNull(),
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -116,6 +119,68 @@ export const discountTranslation = table(
 );
 
 /**
+ * Discount Product - Product-Level Discount Application
+ *
+ * @businessLogic Links discount campaigns to specific products enabling targeted
+ * promotional strategies and marketing campaigns within orgal boundaries.
+ * Supports product-specific promotional campaigns for revenue optimization and
+ * customer acquisition strategies.
+ *
+ * @promotionalStrategy Enables orgs to create product-specific promotional
+ * campaigns while maintaining compatibility with payment plan pricing and variant-based
+ * commerce workflows for comprehensive promotional campaign management.
+ */
+export const discountProduct = table(
+	"discount_product",
+	{
+		discountId: text("discount_id")
+			.notNull()
+			.references(() => discount.id, { onDelete: "cascade" }),
+		productId: text("product_id")
+			.notNull()
+			.references(() => orgProduct.id, { onDelete: "cascade" }),
+	},
+	(t) => [
+		primaryKey({ columns: [t.discountId, t.productId] }),
+
+		// Performance Indexes
+		index("idx_discount_product_discount").on(t.discountId),
+		index("idx_discount_product_product").on(t.productId),
+	],
+);
+
+/**
+ * Discount Variant - Variant-Level Discount Application
+ *
+ * @businessLogic Links discount campaigns to specific product variants enabling
+ * granular promotional strategies for different pricing tiers and access levels.
+ * Supports variant-specific promotional campaigns that integrate with payment plan
+ * pricing for sophisticated promotional strategy implementation.
+ *
+ * @promotionalStrategy Enables targeted promotional campaigns at the variant level
+ * for precise revenue optimization and customer conversion strategies while maintaining
+ * compatibility with payment plan pricing and promotional campaign workflows.
+ */
+export const discountVariant = table(
+	"discount_variant",
+	{
+		discountId: text("discount_id")
+			.notNull()
+			.references(() => discount.id, { onDelete: "cascade" }),
+		variantId: text("variant_id")
+			.notNull()
+			.references(() => productVariant.id, { onDelete: "cascade" }),
+	},
+	(t) => [
+		primaryKey({ columns: [t.discountId, t.variantId] }),
+
+		// Performance Indexes
+		index("idx_discount_variant_discount").on(t.discountId),
+		index("idx_discount_variant_variant").on(t.variantId),
+	],
+);
+
+/**
  * @table discount_usage
  * @auditTrail Tracks who used a discount and when
  * @businessLogic Enables enforcing usage limits and personalization
@@ -149,7 +214,7 @@ export const coupon = table(
 	"coupon",
 	{
 		id: id.notNull(),
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		discountId: text("discount_id")
@@ -216,7 +281,7 @@ export const giftCard = table(
 	"gift_card",
 	{
 		id: id.notNull(),
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		code: text("code").notNull(),
@@ -312,7 +377,7 @@ export const promotion = table(
 	"promotion",
 	{
 		id: id.notNull(),
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		slug: text("slug").notNull(),

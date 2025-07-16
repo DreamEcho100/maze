@@ -51,7 +51,7 @@ export const orgTeam = table(
 		slug: slug.notNull(),
 		description: text("description"),
 
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -77,11 +77,11 @@ export const orgTeam = table(
 	],
 );
 
-export const orgTeamMembershipRoleEnum = pgEnum(`${orgTableName}_team_membership_role`, [
+const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
+export const orgTeamMembershipRoleEnum = pgEnum(`${orgTeamMembershipTableName}_role`, [
 	"admin", // Full access to manage team members, settings, and permissions
 	"member", // Scoped access based on permission groups assigned within the team
 ]);
-const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
 export const orgTeamMembershipStatusEnum = pgEnum(`${orgTeamMembershipTableName}_status`, [
 	"pending", // Awaiting acceptance of invitation
 	"active", // Currently active member

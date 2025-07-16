@@ -263,7 +263,7 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
  */
 export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ one }) => ({
 	brand: one(orgBrand, {
-		fields: [orgBrandTranslation.orgBrandId],
+		fields: [orgBrandTranslation.brandId],
 		references: [orgBrand.id],
 	}),
 	seoMetadata: one(seoMetadata, {

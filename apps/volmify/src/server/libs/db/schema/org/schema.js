@@ -100,7 +100,7 @@ export const org = table(
 export const orgCurrencySettings = table(
 	`${orgTableName}_currency_settings`,
 	{
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		currencyCode: text("currency_code")
@@ -136,7 +136,7 @@ export const orgBrand = table(
 	`${orgTableName}_brand`,
 	{
 		id: id.notNull(),
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 		name: name.notNull(),
@@ -166,7 +166,7 @@ export const orgBrandTranslation = table(
 	`${orgTableName}_brand_translation`,
 	{
 		id: id.notNull(),
-		orgBrandId: fk(`${orgTableName}_brand_id`)
+		brandId: fk("brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		localeKey: getLocaleKey("locale_key")
@@ -183,8 +183,8 @@ export const orgBrandTranslation = table(
 	(t) => {
 		const base = `${orgTableName}_brand_translation`;
 		return [
-			uniqueIndex(`uq_${base}_locale`).on(t.orgBrandId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.orgBrandId, t.isDefault).where(eq(t.isDefault, true)),
+			uniqueIndex(`uq_${base}_locale`).on(t.brandId, t.localeKey),
+			uniqueIndex(`uq_${base}_default`).on(t.brandId, t.isDefault).where(eq(t.isDefault, true)),
 		];
 	},
 );
@@ -253,7 +253,7 @@ export const instructorOrgAffiliation = table(
 		memberId: fk("member_id").references(() => orgMember.id, {
 			onDelete: "set null",
 		}),
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 		joinedAt: timestamp("joined_at").defaultNow(),
@@ -309,7 +309,7 @@ export const instructorOrgAffiliation = table(
 // export const orgLocale = table(
 // 	`${orgTableName}_locale`,
 // 	{
-// 		orgId: text(`${orgTableName}_id`)
+// 		orgId: text(`org_id`)
 // 			.notNull()
 // 			.references(() => org.id, { onDelete: "cascade" }),
 // 		locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"

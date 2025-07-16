@@ -8,14 +8,7 @@ import {
 	timestamp,
 	varchar,
 } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	id,
-	table,
-	updatedAt,
-} from "../../_utils/helpers";
+import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
 
@@ -49,10 +42,7 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 	},
 );
 
-export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", [
-	"percent",
-	"fixed",
-]);
+export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", ["percent", "fixed"]);
 const orgTaxRateTableName = `${orgTableName}_tax_rates`;
 /**
  * @domain Taxation
@@ -109,7 +99,7 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 		fkKey: "rateId",
 		extraConfig: (t, tableName) => [
 			index(`idx_${tableName}_name`).on(t.name),
-			index(`idx_${tableName}_tax_rate_id`).on(t.rateId),
+			index(`idx_${tableName}_rate_id`).on(t.rateId),
 		],
 	},
 );

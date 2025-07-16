@@ -1,20 +1,6 @@
 import { eq } from "drizzle-orm";
-import {
-	boolean,
-	index,
-	primaryKey,
-	uniqueIndex,
-	varchar,
-} from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	id,
-	slug,
-	table,
-	updatedAt,
-} from "../../_utils/helpers";
+import { boolean, index, primaryKey, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { createdAt, deletedAt, fk, id, slug, table, updatedAt } from "../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
 import { org } from "../schema";
@@ -27,7 +13,7 @@ const orgFunnelTableName = `${orgTableName}_funnel`;
  */
 export const orgFunnel = table(orgFunnelTableName, {
 	id: id.notNull(),
-	orgId: fk(`${orgTableName}_id`)
+	orgId: text(`${orgTableName}_id`)
 		.references(() => org.id)
 		.notNull(),
 	slug: slug.notNull(),
@@ -145,15 +131,11 @@ export const orgFunnelDomain = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.funnelId, t.regionId] }),
-		uniqueIndex(`uq_${orgFunnelDomainTableName}_domain`)
-			.on(t.domain)
-			.where(eq(t.deletedAt, null)),
+		uniqueIndex(`uq_${orgFunnelDomainTableName}_domain`).on(t.domain).where(eq(t.deletedAt, null)),
 		index(`idx_${orgFunnelDomainTableName}_funnel_id`).on(t.funnelId),
 		index(`idx_${orgFunnelDomainTableName}_region_id`).on(t.regionId),
 		// index(`idx_${orgFunnelDomainTableName}_locale_key`).on(t.getLocaleKey),
-		index(`idx_${orgFunnelDomainTableName}_is_custom_domain`).on(
-			t.isCustomDomain,
-		),
+		index(`idx_${orgFunnelDomainTableName}_is_custom_domain`).on(t.isCustomDomain),
 		index(`idx_${orgFunnelDomainTableName}_is_subdomain`).on(t.isSubdomain),
 		index(`idx_${orgFunnelDomainTableName}_is_canonical`).on(t.isCanonical),
 		index(`idx_${orgFunnelDomainTableName}_is_managed_dns`).on(t.isManagedDns),

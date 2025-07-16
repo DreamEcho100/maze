@@ -208,7 +208,7 @@ export const productVariantTranslationRelations = relations(
 	productVariantTranslation,
 	({ one }) => ({
 		productVariant: one(productVariant, {
-			fields: [productVariantTranslation.productVariantId],
+			fields: [productVariantTranslation.variantId],
 			references: [productVariant.id],
 		}),
 

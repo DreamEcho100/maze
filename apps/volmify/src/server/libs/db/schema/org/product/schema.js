@@ -46,29 +46,26 @@ import {
 	text,
 	timestamp,
 	uniqueIndex,
-	varchar,
 } from "drizzle-orm/pg-core";
 
 import {
 	createdAt,
 	deletedAt,
-	getLocaleKey,
+	fk,
 	id,
-	orgTableName,
+	// orgTableName,
 	slug,
 	table,
 	updatedAt,
 } from "../../_utils/helpers.js";
-import {
-	currency,
-	locale,
-} from "../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../system/seo/schema.js";
+import { currency } from "../../system/locale-currency-market/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
+import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { org, orgBrand } from "../schema.js";
-import { discount } from "./offers/schema.js";
+import { orgTaxCategory } from "../tax/schema.js";
 import { paymentPlanTypeEnum } from "./payment/schema.js";
 
+const orgProductTableName = `${orgTableName}_product`;
 // -------------------------------------
 // PRODUCT ENUMS
 // -------------------------------------
@@ -82,7 +79,7 @@ import { paymentPlanTypeEnum } from "./payment/schema.js";
  * - course: Educational content with instructor attribution and creator economy workflows
  * - service: Professional services and consultations with booking and delivery workflows
  */
-export const productTypeEnum = pgEnum(`${orgTableName}_product_type`, [
+export const productTypeEnum = pgEnum(`${orgProductTableName}_type`, [
 	"physical",
 	"digital",
 	"course",
@@ -97,7 +94,7 @@ export const productTypeEnum = pgEnum(`${orgTableName}_product_type`, [
  * - active: Published and available for purchase through all channels
  * - archived: Discontinued but existing purchases and subscriptions remain valid
  */
-export const productStatusEnum = pgEnum(`${orgTableName}_product_status`, [
+export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 	"draft",
 	"active",
 	"archived",
@@ -107,7 +104,6 @@ export const productStatusEnum = pgEnum(`${orgTableName}_product_status`, [
 // CORE PRODUCT CATALOG
 // -------------------------------------
 
-const orgProductTableName = `${orgTableName}_product`;
 /**
  * Product - Multi-Tenant E-commerce Product Foundation
  *
@@ -139,10 +135,10 @@ export const orgProduct = table(
 
 		/**
 		 * @orgScope Org that owns and manages this product
-		 * @businessRule All product operations must respect orgal boundaries
+		 * @businessRule All product operations must respect to org boundaries
 		 * @multiTenant Enables independent product catalog management per org
 		 */
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 
@@ -167,14 +163,17 @@ export const orgProduct = table(
 		 */
 		type: productTypeEnum("type").default("physical").notNull(),
 
-		thumbnail: varchar("thumbnail", { length: 1024 }),
+		// TODO: media connection with resource table for product images, videos, etc
+		// thumbnail: varchar("thumbnail", { length: 1024 }),
+		// featuredThumbnailId
+		// featuredResourceId
 
-		/**
-		 * @extensibility Type-specific configuration and feature flags
-		 * @courseExample {"certificate_available": true, "downloadable_resources": true}
-		 * @businessFlexibility Enables product-specific features without schema changes
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @extensibility Type-specific configuration and feature flags
+		//  * @courseExample {"certificate_available": true, "downloadable_resources": true}
+		//  * @businessFlexibility Enables product-specific features without schema changes
+		//  */
+		// metadata: jsonb("metadata"),
 
 		createdAt,
 		updatedAt,
@@ -185,7 +184,7 @@ export const orgProduct = table(
 		uniqueIndex(`uq_${orgProductTableName}_slug_org`).on(t.orgId, t.slug),
 
 		// Performance Indexes
-		index(`idx_${orgProductTableName}_org`).on(t.orgId),
+		index(`idx_${orgProductTableName}_org_id`).on(t.orgId),
 		index(`idx_${orgProductTableName}_status`).on(t.status),
 		index(`idx_${orgProductTableName}_type`).on(t.type),
 		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
@@ -218,67 +217,22 @@ const orgProductTranslationTableName = `${orgProductTableName}_translation`;
  * with localized product presentations while maintaining centralized product management
  * and creator attribution workflows.
  */
-export const productTranslation = table(
-	orgProductTranslationTableName,
+export const productTranslation = buildOrgI18nTable(orgProductTranslationTableName)(
 	{
-		id: id.notNull(),
-
-		/**
-		 * @translationTarget Product this localized content applies to
-		 * @cascadeDelete Translation content removed when product is deleted
-		 * @businessRule Maintains translation data integrity with product lifecycle
-		 */
-		productId: text(`${orgTableName}_product_id`)
+		productId: text("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
-		/**
-		 * @localizationContext Target locale for this translation content
-		 * @businessRule Supports region-specific product marketing strategies
-		 * @internationalExpansion Enables market-specific product messaging and SEO
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
-		/**
-		 * @translationDefault Primary translation used when locale-specific content unavailable
-		 * @constraint Exactly one default translation per product enforced by unique index
-		 * @fallbackStrategy Ensures product content always available regardless of locale
-		 */
-		isDefault: boolean("is_default").default(false),
-
-		// Localized Content
 		title: text("title"),
 		description: text("description"),
-
-		/**
-		 * @seoOptimization Optional SEO metadata for product landing pages
-		 * @marketingStrategy Enables search optimization for localized product content
-		 * @organicGrowth Improves product discoverability in international search engines
-		 */
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
-
-		createdAt,
-		updatedAt,
 	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex(`uq_${orgProductTranslationTableName}_product_locale_key`).on(
-			t.productId,
-			t.localeKey,
-		),
-		uniqueIndex(`uq_${orgProductTranslationTableName}_default`)
-			.on(t.productId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index(`idx_${orgProductTranslationTableName}_product`).on(t.productId),
-		index(`idx_${orgProductTranslationTableName}_locale_key`).on(t.localeKey),
-		index(`idx_${orgProductTranslationTableName}_seo`).on(t.seoMetadataId),
-	],
+	{
+		fkKey: "productId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_title`).on(t.title),
+			index(`idx_${tableName}_product_id`).on(t.productId),
+		],
+	},
 );
 
 // -------------------------------------
@@ -314,6 +268,9 @@ export const productVariant = table(
 	orgProductVariant,
 	{
 		id: id.notNull(),
+		createdAt,
+		updatedAt,
+		deletedAt,
 
 		/**
 		 * @ecommerceIntegration Parent product this variant belongs to
@@ -394,6 +351,10 @@ export const productVariant = table(
 			scale: 2,
 		}),
 
+		tax_category_id: fk("tax_category_id")
+			.references(() => orgTaxCategory.id)
+			.notNull(),
+
 		// /**
 		//  * @taxation Tax rate for this payment plan region/market
 		//  * @legalCompliance Required for proper tax calculation and reporting
@@ -425,15 +386,12 @@ export const productVariant = table(
 		 */
 		endsAt: timestamp("ends_at"),
 
-		/**
-		 * @extensibility Variant-specific configuration and feature definitions
-		 * @courseExample {"support_level": "email", "max_downloads": 5, "certificate": true}
-		 * @businessFlexibility Enables variant-specific features without schema changes
-		 */
-		metadata: jsonb("metadata"),
-
-		createdAt,
-		updatedAt,
+		// /**
+		//  * @extensibility Variant-specific configuration and feature definitions
+		//  * @courseExample {"support_level": "email", "max_downloads": 5, "certificate": true}
+		//  * @businessFlexibility Enables variant-specific features without schema changes
+		//  */
+		// metadata: jsonb("metadata"),
 	},
 	(t) => [
 		// Business Constraints
@@ -443,76 +401,38 @@ export const productVariant = table(
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
-		index(`idx_${orgProductVariant}_product`).on(t.productId),
+		index(`idx_${orgProductVariant}_product_id`).on(t.productId),
 		index(`idx_${orgProductVariant}_active`).on(t.isActive),
 		index(`idx_${orgProductVariant}_sort`).on(t.sortOrder),
 		index(`idx_${orgProductVariant}_default`).on(t.isDefault),
+		index(`idx_${orgProductVariant}_featured`).on(t.isFeatured),
+		index(`idx_${orgProductVariant}_type`).on(t.type),
+		index(`idx_${orgProductVariant}_currency_code`).on(t.currencyCode),
+		index(`idx_${orgProductVariant}_starts_at`).on(t.startsAt),
+		index(`idx_${orgProductVariant}_ends_at`).on(t.endsAt),
+		index(`idx_${orgProductVariant}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductVariant}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductVariant}_deleted_at`).on(t.deletedAt),
+		index(`idx_${orgProductVariant}_tax_category_id`).on(t.tax_category_id),
 	],
 );
 
-export const productVariantTranslation = table(
-	`${orgTableName}_product_variant_translation`,
+const orgProductVariantTranslationTableName = `${orgProductVariant}_translation`;
+export const productVariantTranslation = buildOrgI18nTable(orgProductVariantTranslationTableName)(
 	{
-		id: id.notNull(),
-
-		/**
-		 * @translationTarget Product variant this localized content applies to
-		 */
-		productVariantId: text(`${orgTableName}_product_variant_id`)
+		variantId: text("variant_id")
 			.notNull()
 			.references(() => productVariant.id, { onDelete: "cascade" }),
-
-		/**
-		 * @localizationContext Target locale for this translation content
-		 * @businessRule Supports region-specific payment plan marketing strategies
-		 */
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
-		/**
-		 * @translationDefault Primary translation used when locale-specific content unavailable
-		 * @businessRule Exactly one default translation per payment plan
-		 */
-		isDefault: boolean("is_default").default(false),
-
-		/**
-		 * @localizedContent Region-specific name of plan
-		 * @conversionStrategy Enables contextual pricing and positioning across locales
-		 */
 		name: text("name"),
-
-		/**
-		 * @localizedContent Region-specific plan details
-		 * @conversionStrategy Boosts international trust and clarity
-		 */
 		description: text("description"),
-
-		/**
-		 * @seoOptimization Optional SEO metadata for payment plan landing pages
-		 * @marketingStrategy Enables search optimization for pricing and promotional content
-		 */
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
-
-		createdAt,
-		updatedAt,
 	},
-	(t) => [
-		// Translation Constraints
-		uniqueIndex("uq_product_variant_translation").on(
-			t.productVariantId,
-			t.localeKey,
-		),
-		uniqueIndex("uq_product_variant_translation_default")
-			.on(t.productVariantId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index("idx_product_variant_translation_locale_key").on(t.localeKey),
-		index("idx_product_variant_translation_seo").on(t.seoMetadataId),
-	],
+	{
+		fkKey: "variantId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_name`).on(t.name),
+			index(`idx_${tableName}_variant_id`).on(t.variantId),
+		],
+	},
 );
 
 // -------------------------------------
@@ -544,7 +464,7 @@ export const productVariantTranslation = table(
  * purchase revenue generated by attributed content.
  */
 export const productInstructorAttribution = table(
-	`${orgTableName}_product_instructor_attribution`,
+	`${orgProductTableName}_instructor_attribution`,
 	{
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
@@ -560,7 +480,7 @@ export const productInstructorAttribution = table(
 		 * @businessRule Links professional contribution to specific orgal content
 		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
 		 */
-		productId: text(`${orgTableName}_product_id`)
+		productId: text("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -569,7 +489,7 @@ export const productInstructorAttribution = table(
 		 * @businessRule Ensures attribution operates within orgal boundaries
 		 * @multiTenant Maintains orgal isolation while enabling professional attribution
 		 */
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 
@@ -594,11 +514,7 @@ export const productInstructorAttribution = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex("uq_product_instructor_org").on(
-			t.productId,
-			t.instructorProfileId,
-			t.orgId,
-		),
+		uniqueIndex("uq_product_instructor_org").on(t.productId, t.instructorProfileId, t.orgId),
 
 		// Performance Indexes for Professional Queries
 		index("idx_product_instructor_profile").on(t.instructorProfileId),
@@ -607,10 +523,7 @@ export const productInstructorAttribution = table(
 		index("idx_product_instructor_primary").on(t.isPrimary),
 
 		// Revenue Attribution Queries
-		index("idx_product_instructor_revenue").on(
-			t.productId,
-			t.revenueSharePercentage,
-		),
+		index("idx_product_instructor_revenue").on(t.productId, t.revenueSharePercentage),
 	],
 );
 
@@ -635,7 +548,7 @@ export const productInstructorAttribution = table(
  * customer experience across all product touchpoints and marketing channels.
  */
 export const productBrandAttribution = table(
-	`${orgTableName}_product_brand_attribution`,
+	`${orgProductTableName}_brand_attribution`,
 	{
 		/**
 		 * @brandIdentity Org brand this product is attributed to
@@ -651,7 +564,7 @@ export const productBrandAttribution = table(
 		 * @businessRule Links brand identity to specific product for marketing consistency
 		 * @customerExperience Ensures consistent brand presentation in product discovery
 		 */
-		productId: text(`${orgTableName}_product_id`)
+		productId: text("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -660,7 +573,7 @@ export const productBrandAttribution = table(
 		 * @businessRule One primary brand per product for clear customer brand recognition
 		 * @marketingStrategy Primary brand used in product marketing and customer communication
 		 */
-		isPrimary: boolean("is_primary").default(false),
+		isPrimary: boolean("is_primary").default(true),
 
 		createdAt,
 	},
@@ -675,71 +588,5 @@ export const productBrandAttribution = table(
 		index("idx_product_brand_product").on(t.productId),
 		index("idx_product_brand_brand").on(t.brandId),
 		index("idx_product_brand_primary").on(t.isPrimary),
-	],
-);
-
-// -------------------------------------
-// DISCOUNT INTEGRATION TABLES
-// -------------------------------------
-
-/**
- * Discount Product - Product-Level Discount Application
- *
- * @businessLogic Links discount campaigns to specific products enabling targeted
- * promotional strategies and marketing campaigns within orgal boundaries.
- * Supports product-specific promotional campaigns for revenue optimization and
- * customer acquisition strategies.
- *
- * @promotionalStrategy Enables orgs to create product-specific promotional
- * campaigns while maintaining compatibility with payment plan pricing and variant-based
- * commerce workflows for comprehensive promotional campaign management.
- */
-export const discountProduct = table(
-	"discount_product",
-	{
-		discountId: text("discount_id")
-			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-		productId: text(`${orgTableName}_product_id`)
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
-	},
-	(t) => [
-		primaryKey({ columns: [t.discountId, t.productId] }),
-
-		// Performance Indexes
-		index("idx_discount_product_discount").on(t.discountId),
-		index("idx_discount_product_product").on(t.productId),
-	],
-);
-
-/**
- * Discount Variant - Variant-Level Discount Application
- *
- * @businessLogic Links discount campaigns to specific product variants enabling
- * granular promotional strategies for different pricing tiers and access levels.
- * Supports variant-specific promotional campaigns that integrate with payment plan
- * pricing for sophisticated promotional strategy implementation.
- *
- * @promotionalStrategy Enables targeted promotional campaigns at the variant level
- * for precise revenue optimization and customer conversion strategies while maintaining
- * compatibility with payment plan pricing and promotional campaign workflows.
- */
-export const discountVariant = table(
-	"discount_variant",
-	{
-		discountId: text("discount_id")
-			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-		variantId: text("variant_id")
-			.notNull()
-			.references(() => productVariant.id, { onDelete: "cascade" }),
-	},
-	(t) => [
-		primaryKey({ columns: [t.discountId, t.variantId] }),
-
-		// Performance Indexes
-		index("idx_discount_variant_discount").on(t.discountId),
-		index("idx_discount_variant_variant").on(t.variantId),
 	],
 );

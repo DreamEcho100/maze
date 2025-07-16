@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
 import {
-	boolean,
 	foreignKey,
 	index,
 	jsonb,
@@ -36,7 +34,7 @@ export const orgDepartment = table(
 	{
 		id: id.notNull(),
 
-		orgId: text(`${orgTableName}_id`)
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -132,6 +130,11 @@ export const orgDepartmentMembershipStatusEnum = pgEnum(
 // 	],
 // );
 
+const orgTeamDepartmentTableName = `${orgDepartmentTableName}_team`;
+export const orgTeamDepartmentRelationshipTypeEnum = pgEnum(
+	`${orgTeamDepartmentTableName}_relationship_type`,
+	["lead", "collaboration", "support"],
+);
 /**
  * Team ⇄ Department Mapping
  *
@@ -140,7 +143,7 @@ export const orgDepartmentMembershipStatusEnum = pgEnum(
  * permission inheritance across domains.
  */
 export const orgTeamDepartment = table(
-	`${orgTableName}_team_department`,
+	`${orgTeamDepartmentTableName}`,
 	{
 		teamId: fk("team_id")
 			.notNull()
@@ -149,8 +152,10 @@ export const orgTeamDepartment = table(
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		isPrimary: boolean("is_primary").default(false), // Single primary department per team
-		relationshipType: text("relationship_type").default("collaboration"), // 'lead' | 'collaboration' | 'support'
+		// isPrimary: boolean("is_primary").default(false), // Single primary department per team
+		relationshipType: orgTeamDepartmentRelationshipTypeEnum("relationship_type")
+			.notNull()
+			.default("collaboration"),
 
 		createdAt,
 	},
@@ -158,9 +163,9 @@ export const orgTeamDepartment = table(
 		const base = `${orgTableName}_team_department`;
 		return [
 			primaryKey({ columns: [t.teamId, t.departmentId] }),
-			uniqueIndex(`uq_${base}_primary`)
-				.on(t.teamId, t.isPrimary)
-				.where(eq(t.isPrimary, true)),
+			// uniqueIndex(`uq_${base}_primary`)
+			// 	.on(t.teamId, t.isPrimary)
+			// 	.where(eq(t.isPrimary, true)),
 			index(`idx_${base}_team_id`).on(t.teamId),
 			index(`idx_${base}_department_id`).on(t.departmentId),
 		];

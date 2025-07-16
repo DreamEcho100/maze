@@ -8,7 +8,8 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
+import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
+import { orgTableName } from "../../org/_utils/helpers.js";
 import { org } from "../../org/schema.js";
 import { locale } from "../locale-currency-market/schema.js";
 
@@ -39,7 +40,8 @@ export const seoMetadata = table(
 	"seo_metadata",
 	{
 		id: id.notNull(),
-		orgId: text("org_id")
+		// TODO: to be moved to the org folder structure
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -393,7 +395,7 @@ export const seoAuditLog = table(
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
-		orgId: text("org_id")
+		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
