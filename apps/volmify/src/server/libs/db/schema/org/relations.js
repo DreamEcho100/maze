@@ -8,13 +8,21 @@ import { orgLocale, orgRegion } from "./locale-region/schema.js";
 import { orgDepartment } from "./member/department/schema.js";
 import { orgMember, orgMemberInvitation } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
-import { lesson, skill } from "./product/by-type/course/schema.js";
-import { orgCoupon, orgDiscount, orgGiftCard, orgPromotion } from "./product/offers/schema.js";
+import { orgLesson, skill } from "./product/by-type/course/schema.js";
+import {
+	orgCoupon,
+	orgDiscount,
+	orgGiftCard,
+	orgPromotion,
+} from "./product/offers/schema.js";
 import {
 	orgProductVariantPaymentPlan,
 	orgProductVariantPaymentPlanMemberSubscription,
 } from "./product/payment/schema.js";
-import { orgProductBrandAttribution, orgProductInstructorAttribution } from "./product/schema.js";
+import {
+	orgProductBrandAttribution,
+	orgProductInstructorAttribution,
+} from "./product/schema.js";
 import {
 	instructorOrgAffiliation,
 	org,
@@ -57,7 +65,7 @@ export const orgRelations = relations(org, ({ many }) => ({
 	brands: many(orgBrand),
 	instructorAffiliations: many(instructorOrgAffiliation),
 	skillsCreated: many(skill),
-	lessons: many(lesson),
+	lessons: many(orgLesson),
 
 	locales: many(orgLocale),
 	regions: many(orgRegion),
@@ -76,36 +84,42 @@ export const orgRelations = relations(org, ({ many }) => ({
  * @abacOnboarding Pre-authorization mechanism prior to subject activation
  * @lifecycleBridge Connects invite to eventual member record
  */
-export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
-	org: one(org, {
-		fields: [orgMemberInvitation.orgId],
-		references: [org.id],
+export const orgMemberInvitationRelations = relations(
+	orgMemberInvitation,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgMemberInvitation.orgId],
+			references: [org.id],
+		}),
+		invitedByUser: one(user, {
+			fields: [orgMemberInvitation.invitedByUserId],
+			references: [user.id],
+		}),
+		member: one(orgMember, {
+			fields: [orgMemberInvitation.memberId],
+			references: [orgMember.id],
+			relationName: "member_invitation",
+		}),
 	}),
-	invitedByUser: one(user, {
-		fields: [orgMemberInvitation.invitedByUserId],
-		references: [user.id],
-	}),
-	member: one(orgMember, {
-		fields: [orgMemberInvitation.memberId],
-		references: [orgMember.id],
-		relationName: "member_invitation",
-	}),
-}));
+);
 
 /**
  * @currencyContext Organization–Currency Association
  * @financialGovernance Tracks preferred billing and payout currencies
  */
-export const orgCurrencySettingsRelations = relations(orgCurrencySettings, ({ one }) => ({
-	org: one(org, {
-		fields: [orgCurrencySettings.orgId],
-		references: [org.id],
+export const orgCurrencySettingsRelations = relations(
+	orgCurrencySettings,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgCurrencySettings.orgId],
+			references: [org.id],
+		}),
+		currency: one(currency, {
+			fields: [orgCurrencySettings.currencyCode],
+			references: [currency.code],
+		}),
 	}),
-	currency: one(currency, {
-		fields: [orgCurrencySettings.currencyCode],
-		references: [currency.code],
-	}),
-}));
+);
 
 /**
  * @brandContext Org Brand
@@ -124,20 +138,23 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
  * @localizationBridge Brand Translation
  * @seoIntegration SEO metadata per brand locale
  */
-export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ one }) => ({
-	brand: one(orgBrand, {
-		fields: [orgBrandTranslation.brandId],
-		references: [orgBrand.id],
+export const orgBrandTranslationRelations = relations(
+	orgBrandTranslation,
+	({ one }) => ({
+		brand: one(orgBrand, {
+			fields: [orgBrandTranslation.brandId],
+			references: [orgBrand.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgBrandTranslation.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(locale, {
+			fields: [orgBrandTranslation.localeKey],
+			references: [locale.key],
+		}),
 	}),
-	seoMetadata: one(seoMetadata, {
-		fields: [orgBrandTranslation.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-	locale: one(locale, {
-		fields: [orgBrandTranslation.localeKey],
-		references: [locale.key],
-	}),
-}));
+);
 
 /**
  * @instructorNetwork Instructor Affiliation

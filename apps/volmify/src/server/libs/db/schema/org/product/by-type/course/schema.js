@@ -8,12 +8,14 @@ import {
 	integer,
 	jsonb,
 	pgEnum,
+	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import {
 	createdAt,
+	deletedAt,
 	fk,
 	getLocaleKey,
 	id,
@@ -23,20 +25,21 @@ import {
 } from "../../../../_utils/helpers";
 import { locale } from "../../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../../system/seo/schema";
-import { user } from "../../../../user/schema";
-import { org, orgMember } from "../../../schema";
+import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
+import { orgMember } from "../../../member/schema";
+// import { user } from "../../../../user/schema";
+import { org } from "../../../schema";
 import { orgProduct } from "../../schema";
 
+const orgProductCourseTableName = `${orgTableName}_product_course`;
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?
-export const productCourseLevelEnum = pgEnum("product_course_level", [
-	"beginner",
-	"intermediate",
-	"advanced",
-	"expert",
-]);
+export const orgProductCourseLevelEnum = pgEnum(
+	`${orgProductCourseTableName}_level`,
+	["beginner", "intermediate", "advanced", "expert"],
+);
 
-export const productCourse = table(
-	"product_course",
+export const orgProductCourse = table(
+	orgProductCourseTableName,
 	{
 		id: id.notNull(),
 		// Hmm, should the connection be to the `product` table or the `productVariant` table? why? pros and cons?
@@ -45,7 +48,9 @@ export const productCourse = table(
 		productId: fk("product_id")
 			.references(() => orgProduct.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
+			.default(0)
+			.notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -56,7 +61,7 @@ export const productCourse = table(
 		 * @customerSegmentation Enables clear course sequencing and student self-selection
 		 * @qualitativeMeasure Human-readable prerequisite knowledge indicator
 		 */
-		level: productCourseLevelEnum("level").default("beginner").notNull(),
+		level: orgProductCourseLevelEnum("level").default("beginner").notNull(),
 
 		/**
 		 * @contentComplexity Granular difficulty rating within educational level (1-10 scale)
@@ -94,36 +99,35 @@ export const productCourse = table(
 		// And the pricing model will be in a CTI many-to-many relationship with the `product` table
 		// As it can be subscription, one-time purchase, or free
 	},
-	(t) => {
-		const base = "product_course";
-		return [
-			index(`idx_${base}_product`).on(t.productId),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-			index(`idx_${base}_level`).on(t.level),
-			index(`idx_${base}_difficulty`).on(t.difficulty),
-			index(`idx_${base}_duration`).on(t.estimatedDurationInMinutes),
-			index(`idx_${base}_level_rating`).on(t.avgUserLevelRating),
-			index(`idx_${base}_difficulty_rating`).on(t.avgUserDifficultyRating),
-		];
-	},
+	(t) => [
+		index(`idx_${orgProductCourseI18nTableName}_product`).on(t.productId),
+		index(`idx_${orgProductCourseI18nTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseI18nTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseI18nTableName}_level`).on(t.level),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty`).on(t.difficulty),
+		index(`idx_${orgProductCourseI18nTableName}_duration`).on(
+			t.estimatedDurationInMinutes,
+		),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating`).on(
+			t.avgUserLevelRating,
+		),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating`).on(
+			t.avgUserDifficultyRating,
+		),
+	],
 );
 
-export const productCourseTranslation = table(
-	"product_course_translation",
+const orgProductCourseI18nTableName = `${orgProductCourseTableName}_i18n`;
+export const orgProductCourseI18n = buildOrgI18nTable(
+	orgProductCourseI18nTableName,
+)(
 	{
-		id: id.notNull(),
 		courseId: fk("course_id")
-			.references(() => productCourse.id)
+			.references(() => orgProductCourse.id)
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
 		seoMetadataId: fk("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
-		isDefault: boolean("is_default").default(false),
-
 		/**
 		 * @localizedContent Course-specific localized metadata
 		 * @marketingStrategy Region-specific course positioning and messaging
@@ -137,25 +141,22 @@ export const productCourseTranslation = table(
 		 * @customerFacing User-friendly outcomes vs structured skill data
 		 */
 		learningOutcomes: text("learning_outcomes").array(),
-
-		createdAt,
-		updatedAt,
 	},
-	(t) => {
-		const base = "product_course_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.courseId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.courseId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale_key`).on(t.localeKey),
-		];
+	{
+		fkKey: "courseId",
+		extraConfig: (self, tableName) => [
+			index(`idx_${tableName}_course_id`).on(self.courseId),
+		],
 	},
 );
 
+const skillTableName = "skill";
+// Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
 /**
  * SKILLS TAXONOMY - Platform-Wide Skill Management
  */
 export const skill = table(
-	"skill",
+	skillTableName,
 	{
 		id: id.notNull(),
 		/**
@@ -186,6 +187,8 @@ export const skill = table(
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
+		appliedByOrgId: fk("applied_by_org_id").references(() => org.id),
+
 		createdByOrganizationId: fk("created_by_org_id")
 			.references(() => org.id)
 			.notNull(),
@@ -193,20 +196,24 @@ export const skill = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "skill";
-		return [
-			uniqueIndex(`uq_${base}_slug`).on(t.slug),
-			index(`idx_${base}_category`).on(t.category),
-			index(`idx_${base}_parent`).on(t.parentSkillId),
-			index(`idx_${base}_approved`).on(t.approvedAt),
-			index(`idx_${base}_creator_org`).on(t.createdByOrganizationId),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(
+			t.appliedByOrgId,
+			t.slug,
+		),
+		index(`idx_${skillTableName}_category`).on(t.category),
+		index(`idx_${skillTableName}_parent_skill_id`).on(t.parentSkillId),
+		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),
+		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
+		index(`idx_${skillTableName}_created_at`).on(t.createdAt),
+		index(`idx_${skillTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrganizationId),
+	],
 );
 
-export const skillTranslation = table(
-	"skill_translation",
+const skillI18nTableName = `${skillTableName}_i18n`;
+export const skillI18n = table(
+	skillI18nTableName,
 	{
 		id: id.notNull(),
 		skillId: fk("skill_id")
@@ -215,7 +222,7 @@ export const skillTranslation = table(
 		localeKey: getLocaleKey("locale_key")
 			.notNull()
 			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+		// isDefault: boolean("is_default").default(false),
 
 		name: text("name").notNull(),
 		description: text("description"),
@@ -227,44 +234,44 @@ export const skillTranslation = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "skill_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.skillId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.skillId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_skill`).on(t.skillId),
-			index(`idx_${base}_name`).on(t.name),
-			index(`idx_${base}_description`).on(t.description),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
+		// uniqueIndex(`uq_${skillI18nTableName}_default`)
+		// 	.on(t.skillId, t.isDefault)
+		// 	.where(eq(t.isDefault, true)),
+		index(`idx_${skillI18nTableName}_skill`).on(t.skillId),
+		index(`idx_${skillI18nTableName}_name`).on(t.name),
+		index(`idx_${skillI18nTableName}_description`).on(t.description),
+		index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
+		index(`idx_${skillI18nTableName}_updated_at`).on(t.updatedAt),
+	],
 );
 
+const orgProductCourseSkillTableName = `${orgProductCourseTableName}_skill`;
 /**
  * COURSE SKILLS - Structured Course Skill Attribution
  */
-export const productCourseSkill = table(
-	"product_course_skill",
+export const orgProductCourseSkill = table(
+	orgProductCourseSkillTableName,
 	{
 		courseId: fk("course_id")
-			.references(() => productCourse.id)
+			.references(() => orgProductCourse.id)
 			.notNull(),
 		skillId: fk("skill_id")
 			.references(() => skill.id)
 			.notNull(),
 
-		/**
-		 * @skillRole Whether skill is taught or prerequisite
-		 * @learningPathway Enables prerequisite validation and learning path construction
-		 */
-		isLearningOutcome: boolean("is_learning_outcome").default(true), // vs prerequisite
+		// /**
+		//  * @skillRole Whether skill is taught or prerequisite
+		//  * @learningPathway Enables prerequisite validation and learning path construction
+		//  */
+		// isLearningOutcome: boolean("is_learning_outcome").default(true), // vs prerequisite
 
-		/**
-		 * @skillMastery Target proficiency level for learning outcomes
-		 * @marketplaceMatching Enables precise skill level matching for recommendations
-		 */
-		proficiencyLevel: text("proficiency_level"), // "beginner", "intermediate", "advanced", "expert"
+		// /**
+		//  * @skillMastery Target proficiency level for learning outcomes
+		//  * @marketplaceMatching Enables precise skill level matching for recommendations
+		//  */
+		// proficiencyLevel: text("proficiency_level"), // "beginner", "intermediate", "advanced", "expert"
 
 		/**
 		 * @skillWeight Importance of this skill in course curriculum (1-10)
@@ -273,20 +280,31 @@ export const productCourseSkill = table(
 		weight: integer("weight").default(5),
 
 		createdAt,
+		updatedAt,
+		deletedAt,
 	},
-	(t) => {
-		const base = "product_course_skill";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.courseId, t.skillId),
-			index(`idx_${base}_outcome`).on(t.isLearningOutcome),
-			index(`idx_${base}_proficiency`).on(t.proficiencyLevel),
-			index(`idx_${base}_weight`).on(t.weight),
-			index(`idx_${base}_course`).on(t.courseId),
-			index(`idx_${base}_skill`).on(t.skillId),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(
+			t.courseId,
+			t.skillId,
+		),
+		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(t.isLearningOutcome),
+		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(t.proficiencyLevel),
+		index(`idx_${orgProductCourseSkillTableName}_weight`).on(t.weight),
+		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(t.skillId),
+		index(`idx_${orgProductCourseSkillTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(t.deletedAt),
+		// TODO: a check constraint for the weight 1-10
+		// check
+	],
 );
 
+// TODO: add an i18n to `orgProductCourseSkill`
+
+// Q: Should the course rater be able to update or create many courses challenge ratings?
+const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_product_course_challenge_rating`;
 /**
  * Course Rating - Community-Driven Course Assessment
  *
@@ -294,28 +312,28 @@ export const productCourseSkill = table(
  * community-driven quality assurance and course improvement feedback for instructors
  * within creator economy quality optimization workflows.
  */
-export const productCourseChallengeRating = table(
-	"product_course_challenge_rating",
+export const orgMemberProductCourseChallengeRating = table(
+	orgMemberProductCourseChallengeRatingTableName,
 	{
 		id: id.notNull(),
 		courseId: fk("course_id")
-			.references(() => productCourse.id)
+			.references(() => orgProductCourse.id)
 			.notNull(),
-		userId: fk("user_id")
-			.references(() => user.id)
+		memberId: fk("member_id")
+			.references(() => orgMember.id)
 			.notNull(),
 
 		/**
 		 * @qualityFeedback User assessment of course level accuracy (1-5 stars)
 		 * @creatorFeedback Helps instructors understand if course matches advertised level
 		 */
-		levelRating: integer("level_rating"), // 1-5 scale
+		levelRating: integer("level_rating"), // 1-10 scale
 
 		/**
 		 * @complexityFeedback User assessment of course difficulty accuracy (1-5 stars)
 		 * @courseImprovement Enables instructors to adjust content complexity based on feedback
 		 */
-		difficultyRating: integer("difficulty_rating"), // 1-5 scale
+		difficultyRating: integer("difficulty_rating"), // 1-10 scale
 
 		/**
 		 * @qualitativeFeedback Optional explanation for ratings
@@ -323,29 +341,46 @@ export const productCourseChallengeRating = table(
 		 */
 		feedback: text("feedback"),
 
+		metadata: jsonb("metadata"),
+
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "product_course_challenge_rating";
-		return [
-			uniqueIndex(`uq_${base}_user`).on(t.courseId, t.userId),
-			index(`idx_${base}_course`).on(t.courseId),
-			index(`idx_${base}_user`).on(t.userId),
-			index(`idx_${base}_level`).on(t.levelRating),
-			index(`idx_${base}_difficulty`).on(t.difficultyRating),
-			index(`idx_${base}_created`).on(t.createdAt),
-		];
-	},
+	(t) => [
+		uniqueIndex(
+			`uq_${orgMemberProductCourseChallengeRatingTableName}_member`,
+		).on(t.courseId, t.memberId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course`).on(
+			t.courseId,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member`).on(
+			t.memberId,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level`).on(
+			t.levelRating,
+		),
+		index(
+			`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty`,
+		).on(t.difficultyRating),
+		index(
+			`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`,
+		).on(t.createdAt),
+		index(
+			`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`,
+		).on(t.createdAt),
+		// TODO: a check constraint for the `difficultyRating` and `levelRating` 1-10
+		// check
+	],
 );
 
+const orgProductCourseModuleTableName = `${orgProductCourseTableName}_module`;
 // Naming problem: should it be `module` or `section`?
-export const productCourseModule = table(
-	"product_course_module",
+export const orgProductCourseModule = table(
+	orgProductCourseModuleTableName,
 	{
 		id: id.notNull(),
 		courseId: fk("product_course_id")
-			.references(() => productCourse.id)
+			.references(() => orgProductCourse.id)
 			.notNull(),
 
 		/**
@@ -354,6 +389,7 @@ export const productCourseModule = table(
 		 */
 		sortOrder: integer("sort_order").notNull(),
 
+		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Minimum variant access tier required for module access
 		 * @businessModel Enables premium module gating for higher-tier purchases
@@ -378,49 +414,48 @@ export const productCourseModule = table(
 		//  // Section settings
 		//  settings: jsonb("settings"),
 	},
-	(t) => {
-		const base = "product_course_module";
-		return [
-			uniqueIndex(`uq_${base}_sort`).on(t.courseId, t.sortOrder),
-			index(`idx_${base}_course`).on(t.courseId),
-			index(`idx_${base}_access_tier`).on(t.requiredAccessTier),
-			index(`idx_${base}_required`).on(t.isRequired),
-			index(`idx_${base}_duration`).on(t.estimatedDurationInMinutes),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(
+			t.courseId,
+			t.sortOrder,
+		),
+		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(
+			t.requiredAccessTier,
+		),
+		index(`idx_${orgProductCourseModuleTableName}_required`).on(t.isRequired),
+		index(`idx_${orgProductCourseModuleTableName}_duration`).on(
+			t.estimatedDurationInMinutes,
+		),
+		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
+		// check
+	],
 );
-export const productCourseModuleTranslation = table(
-	"product_course_module_translation",
+
+const orgProductCourseModuleI18nTableName = `${orgProductCourseModuleTableName}_i18n`;
+export const orgProductCourseModuleI18n = buildOrgI18nTable(
+	orgProductCourseModuleI18nTableName,
+)(
 	{
-		id: id.notNull(),
-		productCourseModuleId: fk("product_course_module_id")
-			.references(() => productCourseModule.id)
+		moduleId: fk("moduleId")
+			.references(() => orgProductCourseModule.id)
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
 		seoMetadataId: fk("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
-		updatedAt,
 	},
-	(t) => {
-		const base = "product_course_module_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.productCourseModuleId, t.localeKey),
-			index(`idx_${base}_module`).on(t.productCourseModuleId),
-			index(`idx_${base}_locale_key`).on(t.localeKey),
-			index(`idx_${base}_title`).on(t.title),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-		];
+	{
+		fkKey: "moduleId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_module_id`).on(t.moduleId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
 	},
 );
 
+const orgProductCourseModuleSectionTableName = `${orgProductCourseTableName}_module_section`;
 /**
  * Product Course Module Section - Learning Sub-Unit
  *
@@ -428,12 +463,12 @@ export const productCourseModuleTranslation = table(
  * structure and flexible learning org for comprehensive educational content
  * management and student progress tracking workflows.
  */
-export const productCourseModuleSection = table(
-	"product_course_module_section",
+export const orgProductCourseModuleSection = table(
+	orgProductCourseModuleSectionTableName,
 	{
 		id: id.notNull(),
 		moduleId: fk("module_id")
-			.references(() => productCourseModule.id)
+			.references(() => orgProductCourseModule.id)
 			.notNull(),
 
 		/**
@@ -442,6 +477,7 @@ export const productCourseModuleSection = table(
 		 */
 		sortOrder: integer("sort_order").notNull(),
 
+		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Optional additional access requirements for premium sections
 		 * @businessFlexibility Enables section-level access control for advanced monetization
@@ -463,52 +499,59 @@ export const productCourseModuleSection = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "module_section";
-		return [
-			uniqueIndex(`uq_${base}_sort`).on(t.moduleId, t.sortOrder),
-			index(`idx_${base}_module`).on(t.moduleId),
-			index(`idx_${base}_access_tier`).on(t.requiredAccessTier),
-			index(`idx_${base}_required`).on(t.isRequired),
-			index(`idx_${base}_duration`).on(t.estimatedDurationInMinutes),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
+			t.moduleId,
+			t.sortOrder,
+		),
+		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(
+			t.moduleId,
+		),
+		index(
+			`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`,
+		).on(t.requiredAccessTier),
+		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(
+			t.isRequired,
+		),
+		index(
+			`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`,
+		).on(t.estimatedDurationInMinutes),
+		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
+		// check
+	],
 );
 
-export const productCourseModuleSectionTranslation = table(
-	"product_course_module_section_translation",
+const orgProductCourseModuleSectionI18nTableName = `${orgProductCourseModuleSectionTableName}_i18n`;
+export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
+	orgProductCourseModuleSectionI18nTableName,
+)(
 	{
-		id: id.notNull(),
 		sectionId: fk("section_id")
-			.references(() => productCourseModuleSection.id)
+			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
 		seoMetadataId: fk("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
-		updatedAt,
 	},
-	(t) => {
-		const base = "course_module_section_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.sectionId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.sectionId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_module`).on(t.sectionId),
-			index(`idx_${base}_locale_key`).on(t.localeKey),
-			index(`idx_${base}_title`).on(t.title),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-			index(`idx_${base}_seo`).on(t.seoMetadataId),
-		];
+	{
+		fkKey: "sectionId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_section_id`).on(t.sectionId),
+			index(`idx_${tName}_title`).on(t.title),
+			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
+		],
 	},
 );
 
+const orgProductCourseModuleSectionLessonTableName = `${orgProductCourseTableName}_module_section_lesson`;
 // The following will be for the lessons within the modules
 // Things to consider for Lessons:
 // - Are reusable across modules/courses
@@ -523,16 +566,16 @@ export const productCourseModuleSectionTranslation = table(
  * and progress tracking for comprehensive learning analytics and student engagement
  * optimization within structured educational content architecture.
  */
-export const productCourseModuleSectionLesson = table(
-	"product_course_module_section_lesson",
+export const orgProductCourseModuleSectionLesson = table(
+	orgProductCourseModuleSectionLessonTableName,
 	{
 		id: id.notNull(),
 
 		sectionId: fk("section_id")
-			.references(() => productCourseModuleSection.id)
+			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
 		lessonId: fk("lesson_id")
-			.references(() => lesson.id)
+			.references(() => orgLesson.id)
 			.notNull(),
 
 		/**
@@ -541,6 +584,7 @@ export const productCourseModuleSectionLesson = table(
 		 */
 		sortOrder: integer("sort_order").notNull(),
 
+		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Lesson-level access requirements for granular content gating
 		 * @monetizationStrategy Enables individual lesson gating for premium content
@@ -569,25 +613,43 @@ export const productCourseModuleSectionLesson = table(
 		//  // Lesson settings (type-specific configurations)
 		//  settings
 	},
-	(t) => {
-		const base = "product_course_module_section_lesson";
-		return [
-			uniqueIndex(`uq_${base}_sort`).on(t.sectionId, t.sortOrder),
-			uniqueIndex(`uq_${base}`).on(t.sectionId, t.lessonId),
-			index(`idx_${base}_section`).on(t.sectionId),
-			index(`idx_${base}_lesson`).on(t.lessonId),
-			index(`idx_${base}_access_tier`).on(t.requiredAccessTier),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}_sort`).on(
+			t.sectionId,
+			t.sortOrder,
+		),
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(
+			t.sectionId,
+			t.lessonId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(
+			t.sectionId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(
+			t.lessonId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_access_tier`).on(
+			t.requiredAccessTier,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
+		// check
+	],
 );
 
+const orgProductCourseModuleSectionLessonI18nTableName = `${orgProductCourseModuleSectionLessonTableName}_i18n`;
 // This table can be used to override the lesson metadata for a specific module
-export const productCourseModuleSectionLessonTranslation = table(
-	"product_course_module_section_lesson_translation",
+export const orgProductCourseModuleSectionLessonI18n = table(
+	orgProductCourseModuleSectionLessonI18nTableName,
 	{
 		id: id.notNull(),
-		sectionLessonId: fk("section_lesson_id")
-			.references(() => productCourseModuleSectionLesson.id)
+		lessonId: fk("lesson_id")
+			.references(() => orgProductCourseModuleSectionLesson.id)
 			.notNull(),
 
 		localeKey: getLocaleKey("locale_key")
@@ -604,24 +666,39 @@ export const productCourseModuleSectionLessonTranslation = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "product_course_module_section_lesson_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.sectionLessonId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`)
-				.on(t.sectionLessonId, t.isDefault)
-				.where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale_key`).on(t.localeKey),
-			index(`idx_${base}_seo`).on(t.seoMetadataId),
-			index(`idx_${base}_lesson`).on(t.sectionLessonId),
-			index(`idx_${base}_title`).on(t.title),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-		];
-	},
+	(t) => [
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonI18nTableName}`).on(
+			t.lessonId,
+			t.localeKey,
+		),
+		uniqueIndex(
+			`uq_${orgProductCourseModuleSectionLessonI18nTableName}_default`,
+		)
+			.on(t.lessonId, t.isDefault)
+			.where(eq(t.isDefault, true)),
+		index(
+			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_locale_key`,
+		).on(t.localeKey),
+		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_seo`).on(
+			t.seoMetadataId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_lesson`).on(
+			t.lessonId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_title`).on(
+			t.title,
+		),
+		index(
+			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_created_at`,
+		).on(t.createdAt),
+		index(
+			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_updated_at`,
+		).on(t.updatedAt),
+	],
 );
 
-export const lessonTypeEnum = pgEnum("lesson_type", [
+const orgLessonTableName = `${orgTableName}_lesson`;
+export const orgLessonTypeEnum = pgEnum(`${orgLessonTableName}_type`, [
 	"video",
 	"text",
 	"quiz",
@@ -629,82 +706,74 @@ export const lessonTypeEnum = pgEnum("lesson_type", [
 	// "file",
 	// What're other valid types that will help in this project and used on other LMS systems?
 ]);
-export const lesson = table(
-	"lesson",
+export const orgLesson = table(
+	orgLessonTableName,
 	{
 		id: id.notNull(),
 		orgId: fk("org_id")
 			.references(() => org.id)
 			.notNull(),
-		type: lessonTypeEnum("type").notNull(),
+		type: orgLessonTypeEnum("type").notNull(),
+		createdAt,
 	},
-	(t) => {
-		const base = "lesson";
-		return [index(`idx_${base}_org`).on(t.orgId), index(`idx_${base}_type`).on(t.type)];
-	},
+	(t) => [
+		index(`idx_${orgLessonTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgLessonTableName}_type`).on(t.type),
+		index(`idx_${orgLessonTableName}_created_at`).on(t.createdAt),
+	],
 );
 
-export const lessonTranslation = table(
-	"lesson_translation",
+const orgLessonI18nTableName = `${orgLessonTableName}_i18n`;
+export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
 	{
-		id: id.notNull(),
 		lessonId: fk("lesson_id")
-			.references(() => lesson.id)
+			.references(() => orgLesson.id)
 			.notNull(),
-
+		// Does a lesson even need SEO metadata? what would be the use case? pros and cons?
+		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		// .notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		// Does a lesson even need SEO metadata? what would be the use case? pros and cons?
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-		// 	.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
-		updatedAt,
 	},
-	(t) => {
-		const base = "lesson_translation";
-		return [
-			uniqueIndex(`uq_${base}`).on(t.lessonId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.lessonId, t.isDefault).where(eq(t.isDefault, true)),
-			index(`idx_${base}_locale_key`).on(t.localeKey),
-			index(`idx_${base}_lesson`).on(t.lessonId),
-			index(`idx_${base}_title`).on(t.title),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
-		];
+	{
+		fkKey: "lessonId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_lesson_id`).on(t.lessonId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
 	},
 );
 
 // IMP: The lesson type related table are halted for now
 
+const orgMemberProductCourseEnrollmentTableName = `${orgTableName}_member_product_course_enrollment`;
 // User productCourseEnrollment & progress
-export const productCourseEnrollmentStatusEnum = pgEnum("product_course_enrollment_status", [
-	"not_started",
-	"in_progress",
-	"completed",
-	// What're other valid types that will help in this project and used on other LMS systems?
-]);
-export const productCourseEnrollment = table(
-	"product_course_enrollment",
+export const orgMemberProductCourseEnrollmentStatusEnum = pgEnum(
+	`${orgMemberProductCourseEnrollmentTableName}_enrollment_status`,
+	[
+		"not_started",
+		"in_progress",
+		"completed",
+		// What're other valid types that will help in this project and used on other LMS systems?
+	],
+);
+export const orgMemberProductCourseEnrollment = table(
+	orgMemberProductCourseEnrollmentTableName,
 	{
-		id: id.notNull(),
 		/**
 		 * @orgalIdentity Org member whose progress is tracked
 		 * @businessRule Primary progress tracking identity for orgal learning
 		 * @accessControl Enables role-based learning experiences and orgal analytics
 		 */
-		orgMemberId: fk("org_member_id")
+		memberId: fk("member_id")
 			.references(() => orgMember.id)
 			.notNull(),
-		courseId: fk("product_course_id")
-			.references(() => productCourse.id)
+		courseId: fk("course_id")
+			.references(() => orgProductCourse.id)
 			.notNull(),
-		status: productCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
+		status: orgMemberProductCourseEnrollmentStatusEnum("status")
+			.default("not_started")
+			.notNull(),
 		progressPercentage: decimal("progress_percentage", {
 			precision: 5,
 			scale: 2,
@@ -734,21 +803,39 @@ export const productCourseEnrollment = table(
 		createdAt,
 		updatedAt,
 	},
-	(t) => {
-		const base = "product_course_enrollment";
-		return [
-			uniqueIndex(`uq_${base}_member_course`).on(t.orgMemberId, t.courseId),
-			index(`idx_${base}_member`).on(t.orgMemberId),
-			index(`idx_${base}_course`).on(t.courseId),
-			index(`idx_${base}_status`).on(t.status),
-			index(`idx_${base}_progress`).on(t.progressPercentage),
-			index(`idx_${base}_completed`).on(t.completedAt),
-			index(`idx_${base}_enrolled`).on(t.enrolledAt),
-			index(`idx_${base}_last_access`).on(t.lastAccessedAt),
-		];
-	},
+	(t) => [
+		primaryKey({ columns: [t.memberId, t.courseId] }),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(
+			t.memberId,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(
+			t.courseId,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(
+			t.status,
+		),
+		index(
+			`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`,
+		).on(t.progressPercentage),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(
+			t.completedAt,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(
+			t.enrolledAt,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(
+			t.lastAccessedAt,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+	],
 );
 
+const orgMemberLearningProfileTableName = `${orgTableName}_member_learning_profile`;
 /**
  * USER LEARNING SUMMARY - Cross-Organizational Learning Profile
  *
@@ -756,35 +843,59 @@ export const productCourseEnrollment = table(
  * enabling user-centric learning portfolio and cross-orgal skill tracking
  * for comprehensive professional development and career progression analytics.
  */
-export const userLearningProfile = table("user_learning_profile", {
-	id: id.notNull(),
-	userId: fk("user_id")
-		.references(() => user.id)
-		.notNull()
-		.unique(),
+export const orgMemberLearningProfile = table(
+	orgMemberLearningProfileTableName,
+	{
+		id: id.notNull(),
+		memberId: fk("member_id")
+			.references(() => orgMember.id)
+			.notNull()
+			.unique(),
 
-	/**
-	 * @learningPortfolio Aggregated learning statistics across orgs
-	 * @professionalDevelopment Comprehensive learning achievements for career tracking
-	 */
-	totalCoursesCompleted: integer("total_courses_completed").default(0),
-	totalLearningHours: integer("total_learning_hours").default(0),
-	totalCertificatesEarned: integer("total_certificates_earned").default(0),
+		/**
+		 * @learningPortfolio Aggregated learning statistics across orgs
+		 * @professionalDevelopment Comprehensive learning achievements for career tracking
+		 */
+		totalCoursesCompleted: integer("total_courses_completed").default(0),
+		totalLearningInMinutes: integer("total_learning_in_minutes").default(0),
+		totalCertificatesEarned: integer("total_certificates_earned").default(0),
 
-	/**
-	 * @skillPortfolio Aggregated skills across all orgal learning
-	 * @marketplaceProfile Skills summary for marketplace recommendations and matching
-	 */
-	acquiredSkills: jsonb("acquired_skills"), // Array of skills with proficiency levels
+		/**
+		 * @skillPortfolio Aggregated skills across the org learning
+		 * @marketplaceProfile Skills summary for marketplace recommendations and matching
+		 */
+		acquiredSkills: jsonb("acquired_skills"), // Array of skills with proficiency levels
 
-	/**
-	 * @learningPreferences User learning behavior patterns for personalization
-	 * @platformIntelligence Data for improving course recommendations and platform experience
-	 */
-	learningMetadata: jsonb("learning_metadata"),
+		/**
+		 * @learningPreferences User learning behavior patterns for personalization
+		 * @platformIntelligence Data for improving course recommendations and platform experience
+		 */
+		learningMetadata: jsonb("learning_metadata"),
 
-	updatedAt,
-});
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),
+
+		index(
+			`idx_${orgMemberLearningProfileTableName}_total_courses_completed`,
+		).on(t.totalCoursesCompleted),
+		index(
+			`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`,
+		).on(t.totalLearningInMinutes),
+		index(
+			`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`,
+		).on(t.totalCertificatesEarned),
+
+		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgMemberLearningProfileTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+	],
+);
 
 // IMP: `quiz` and `assignment` results tables will be handled later after the lesson types are finalized
 // IMP: The `quiz` and `assignment` will be connected to an `assessment` table that will handle the different types of assessments in A CTI way

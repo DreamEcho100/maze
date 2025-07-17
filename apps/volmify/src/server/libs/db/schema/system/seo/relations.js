@@ -2,12 +2,12 @@ import { relations } from "drizzle-orm";
 import { orgFunnelI18n } from "../../org/funnel/schema.js";
 import { orgRegionI18n } from "../../org/locale-region/schema.js";
 import {
-	lessonTranslation,
-	productCourseModuleSectionLessonTranslation,
-	productCourseModuleSectionTranslation,
-	productCourseModuleTranslation,
-	productCourseTranslation,
-	skillTranslation,
+	orgLessonI18n,
+	orgProductCourseI18n,
+	orgProductCourseModuleI18n,
+	orgProductCourseModuleSectionI18n,
+	orgProductCourseModuleSectionLessonI18n,
+	skillI18n,
 } from "../../org/product/by-type/course/schema.js";
 import {
 	orgCouponI18n,
@@ -16,11 +16,17 @@ import {
 	orgPromotionI18n,
 } from "../../org/product/offers/schema.js";
 import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
-import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
+import {
+	orgProductI18n,
+	orgProductVariantI18n,
+} from "../../org/product/schema.js";
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
 import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
-import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
+import {
+	locale,
+	marketTemplateTranslation,
+} from "../locale-currency-market/schema.js";
 import {
 	seoAlternateUrl,
 	seoCustomMeta,
@@ -70,32 +76,35 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [marketTemplateTranslation.seoMetadataId],
 	}),
 
-	productsCoursesTranslations: one(productCourseTranslation, {
+	productsCoursesTranslations: one(orgProductCourseI18n, {
 		fields: [seoMetadata.id],
-		references: [productCourseTranslation.seoMetadataId],
+		references: [orgProductCourseI18n.seoMetadataId],
 	}),
-	skillsTranslations: one(skillTranslation, {
+	skillsTranslations: one(skillI18n, {
 		fields: [seoMetadata.id],
-		references: [skillTranslation.seoMetadataId],
+		references: [skillI18n.seoMetadataId],
 	}),
-	productsCoursesModulesTranslations: one(productCourseModuleTranslation, {
+	productsCoursesModulesTranslations: one(orgProductCourseModuleI18n, {
 		fields: [seoMetadata.id],
-		references: [productCourseModuleTranslation.seoMetadataId],
+		references: [orgProductCourseModuleI18n.seoMetadataId],
 	}),
-	productsCoursesModulesSectionsTranslations: one(productCourseModuleSectionTranslation, {
-		fields: [seoMetadata.id],
-		references: [productCourseModuleSectionTranslation.seoMetadataId],
-	}),
-	productsCoursesModulesSectionsLessonsTranslations: one(
-		productCourseModuleSectionLessonTranslation,
+	productsCoursesModulesSectionsTranslations: one(
+		orgProductCourseModuleSectionI18n,
 		{
 			fields: [seoMetadata.id],
-			references: [productCourseModuleSectionLessonTranslation.seoMetadataId],
+			references: [orgProductCourseModuleSectionI18n.seoMetadataId],
 		},
 	),
-	lessonsTranslations: one(lessonTranslation, {
+	productsCoursesModulesSectionsLessonsTranslations: one(
+		orgProductCourseModuleSectionLessonI18n,
+		{
+			fields: [seoMetadata.id],
+			references: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
+		},
+	),
+	lessonsTranslations: one(orgLessonI18n, {
 		fields: [seoMetadata.id],
-		references: [lessonTranslation.seoMetadataId],
+		references: [orgLessonI18n.seoMetadataId],
 	}),
 
 	orgsBrandsTranslations: one(orgBrandTranslation, {
@@ -125,10 +134,13 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [orgPromotionI18n.seoMetadataId],
 	}),
 
-	productsVariantsPaymentPlansTranslations: one(orgProductVariantPaymentPlanI18n, {
-		fields: [seoMetadata.id],
-		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
-	}),
+	productsVariantsPaymentPlansTranslations: one(
+		orgProductVariantPaymentPlanI18n,
+		{
+			fields: [seoMetadata.id],
+			references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
+		},
+	),
 
 	//
 	orgFunnelI18n: one(orgFunnelI18n, {
@@ -194,28 +206,34 @@ export const seoTwitterCardRelations = relations(seoTwitterCard, ({ one }) => ({
 // -------------------------------------
 // STRUCTURED DATA RELATIONS
 // -------------------------------------
-export const seoStructuredDataRelations = relations(seoStructuredData, ({ one }) => ({
-	// Many-to-one: Structured data belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoStructuredData.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoStructuredDataRelations = relations(
+	seoStructuredData,
+	({ one }) => ({
+		// Many-to-one: Structured data belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoStructuredData.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // ALTERNATE URL RELATIONS
 // -------------------------------------
-export const seoAlternateUrlRelations = relations(seoAlternateUrl, ({ one }) => ({
-	// Many-to-one: Alternate URL belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoAlternateUrl.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoAlternateUrlRelations = relations(
+	seoAlternateUrl,
+	({ one }) => ({
+		// Many-to-one: Alternate URL belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoAlternateUrl.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(locale, {
+			fields: [seoAlternateUrl.localeKey],
+			references: [locale.key],
+		}),
 	}),
-	locale: one(locale, {
-		fields: [seoAlternateUrl.localeKey],
-		references: [locale.key],
-	}),
-}));
+);
 
 // -------------------------------------
 // CUSTOM META RELATIONS
