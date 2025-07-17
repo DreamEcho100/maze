@@ -3,6 +3,12 @@ import { currency } from "../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../system/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
 import {
+	orgCouponI18n,
+	orgDiscountI18n,
+	orgGiftCardI18n,
+	orgPromotionI18n,
+} from "../product/offers/schema";
+import {
 	orgProductVariantPaymentPlanI18n,
 	// orgProductVariantPaymentPlanOneTimeTypeI18n,
 	orgProductVariantPaymentPlanSubscriptionTypeI18n,
@@ -25,11 +31,15 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsTaxCategoriesI18n: many(orgRegionI18n),
 	orgsFunnelsI18n: many(orgFunnelI18n),
 	orgsTaxRatesI18n: many(orgTaxRateI18n),
-	productVariantPaymentPlanI18n: many(orgProductVariantPaymentPlanI18n),
+	orgsProductsVariantsPaymentPlansI18n: many(orgProductVariantPaymentPlanI18n),
 	// productVariantPaymentPlanOneTimeTypeI18n: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
-	productVariantPaymentPlanSubscriptionTypeI18n: many(
+	orgsProductsVariantsPaymentPlansSubscriptionTypeI18n: many(
 		orgProductVariantPaymentPlanSubscriptionTypeI18n,
 	),
+	orgsDiscountsI18n: many(orgDiscountI18n),
+	orgsCouponsI18n: many(orgCouponI18n),
+	orgsGiftCardsI18n: many(orgGiftCardI18n),
+	orgsPromotionsI18n: many(orgPromotionI18n),
 }));
 
 export const orgRegionRelations = relations(orgRegion, ({ many, one }) => ({

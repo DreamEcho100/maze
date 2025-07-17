@@ -2,9 +2,9 @@ import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
-import { discount } from "../offers/schema.js";
 import { orgProduct } from "../schema.js";
 
+const orgProductCollectionTableName = `${orgTableName}_product_collection`;
 /**
  * @domainModel Product Collection
  * @abacRole Organizational Product Grouping
@@ -21,8 +21,8 @@ import { orgProduct } from "../schema.js";
  * - `idx_collection_name`: Enables search or filtering
  * - `idx_collection_deleted_at`: Supports lifecycle filtering
  */
-export const collection = table(
-	"collection",
+export const orgProductCollection = table(
+	orgProductCollectionTableName,
 	{
 		/**
 		 * @uniqueIdentifier Internal PK for referencing this collection
@@ -71,13 +71,16 @@ export const collection = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_collection_org").on(t.orgId),
-		index("idx_collection_deleted_at").on(t.deletedAt),
-		index("idx_collection_name").on(t.name),
-		uniqueIndex("uq_collection_slug_org").on(t.orgId, t.slug),
+		index(`idx_${orgProductCollectionTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgProductCollectionTableName}_name`).on(t.name),
+		uniqueIndex(`uq_${orgProductCollectionTableName}_slug_org`).on(t.orgId, t.slug),
+		index(`idx_${orgProductCollectionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCollectionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCollectionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 
+const orgProductCollectionProductTableName = `${orgProductCollectionTableName}_product`;
 /**
  * @junctionTable Product–Collection Mapping
  * @businessLogic Enables grouping multiple products under a single collection
@@ -86,8 +89,8 @@ export const collection = table(
  * @permissionContext Inherits from both product and collection org context
  * @compensationModel Useful for applying discounts/promotions at collection level
  */
-export const productCollection = table(
-	"product_collection",
+export const orgProductCollectionProduct = table(
+	orgProductCollectionProductTableName,
 	{
 		/**
 		 * @abacLink Product being associated
@@ -101,35 +104,11 @@ export const productCollection = table(
 		 */
 		collectionId: text("collection_id")
 			.notNull()
-			.references(() => collection.id, { onDelete: "cascade" }),
+			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
+		createdAt,
 	},
-	(t) => [primaryKey({ columns: [t.productId, t.collectionId] })],
-);
-
-/**
- * @junctionTable Discount–Collection Mapping
- * @businessLogic Enables applying discount logic to entire collections
- * rather than individual products for easier promotion management.
- *
- * @permissionContext Bound to discount and collection org scopes
- * @onboardingPattern Makes it easier to bulk-apply promotions by marketing teams
- */
-export const discountCollection = table(
-	"discount_collection",
-	{
-		/**
-		 * @discountLink Discount campaign being applied
-		 */
-		discountId: text("discount_id")
-			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-
-		/**
-		 * @collectionLink Target collection receiving the discount
-		 */
-		collectionId: text("collection_id")
-			.notNull()
-			.references(() => collection.id, { onDelete: "cascade" }),
-	},
-	(t) => [primaryKey({ columns: [t.discountId, t.collectionId] })],
+	(t) => [
+		primaryKey({ columns: [t.productId, t.collectionId] }),
+		index(`idx_${orgProductCollectionProductTableName}_created_at`).on(t.createdAt),
+	],
 );

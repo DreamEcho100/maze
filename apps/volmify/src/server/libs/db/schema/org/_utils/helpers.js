@@ -39,6 +39,7 @@ export const buildOrgI18nTable =
 				deletedAt,
 			},
 			(t) => [
+				// TODO: Correct the `relations` `fields`
 				primaryKey({ columns: [t[options.fkKey], t.localeKey] }),
 				uniqueIndex(`uq_${tableName}_default`)
 					.on(t[options.fkKey], t.isDefault)

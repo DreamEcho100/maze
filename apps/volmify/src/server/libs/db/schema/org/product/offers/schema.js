@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -12,30 +11,21 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	fk,
-	getLocaleKey,
-	id,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
-import {
-	currency,
-	locale,
-} from "../../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
-import { user } from "../../../user/schema.js";
-import { orgTableName } from "../../_utils/helpers.js";
+import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { currency } from "../../../system/locale-currency-market/schema.js";
+import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
+import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";
+import { orgProductCollection } from "../collection/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
 
+const orgDiscountTableName = `${orgTableName}_discount`;
 /**
  * @enumModel DiscountType
  * @businessLogic Distinguishes discount computation logic
  * @auditTrail Determines financial impact calculation method
  */
-export const discountTypeEnum = pgEnum("discount_type", [
+export const orgDiscountTypeEnum = pgEnum(`${orgDiscountTableName}_type`, [
 	"percentage", // percentage-based reduction
 	"fixed", // fixed currency amount
 	"free_shipping", // removes shipping cost
@@ -47,7 +37,7 @@ export const discountTypeEnum = pgEnum("discount_type", [
  * @permissionContext Defines scoping logic for discount applicability
  * @abacRole Affects who can redeem based on resource association
  */
-export const discountAppliesToEnum = pgEnum("discount_applies_to", [
+export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`, [
 	"product",
 	"variant",
 	"collection",
@@ -60,15 +50,15 @@ export const discountAppliesToEnum = pgEnum("discount_applies_to", [
  * @auditTrail Traceable financial benefit allocation
  * @multiTenantPattern Scoped to org
  */
-export const discount = table(
-	"discount",
+export const orgDiscount = table(
+	orgDiscountTableName,
 	{
 		id: id.notNull(),
 		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
-		type: discountTypeEnum("type").notNull(),
+		type: orgDiscountTypeEnum("type").notNull(),
 		value: decimal("value", { precision: 10, scale: 2 }).notNull(),
 
 		currencyCode: text("currency_code").references(() => currency.code),
@@ -80,54 +70,50 @@ export const discount = table(
 
 		startsAt: timestamp("starts_at"),
 		endsAt: timestamp("ends_at"),
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 
 		createdAt,
 		updatedAt,
 	},
 	(t) => [
-		index("idx_discount_org").on(t.orgId),
-		index("idx_discount_type").on(t.type),
-		index("idx_discount_active").on(t.isActive),
-		index("idx_discount_applies_to").on(t.appliesTo),
-		index("idx_discount_dates").on(t.startsAt, t.endsAt),
-		index("idx_discount_active_dates").on(t.isActive, t.startsAt, t.endsAt),
-		index("idx_discount_currency").on(t.currencyCode),
+		index(`idx_${orgDiscountTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgDiscountTableName}_type`).on(t.type),
+		index(`idx_${orgDiscountTableName}_active`).on(t.isActive),
+		index(`idx_${orgDiscountTableName}_applies_to`).on(t.appliesTo),
+		index(`idx_${orgDiscountTableName}_dates`).on(t.startsAt, t.endsAt),
+		index(`idx_${orgDiscountTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgDiscountTableName}_currency_code`).on(t.currencyCode),
 	],
 );
 
+const orgDiscountI18nTableName = `${orgDiscountTableName}_i18n`;
 /**
  * @table discount_translation
  * @i18nSupport Provides localized display for discounts
  * @seoSupport Optional SEO metadata integration
  */
-export const discountTranslation = table(
-	"discount_translation",
+export const orgDiscountI18n = buildOrgI18nTable(orgDiscountI18nTableName)(
 	{
-		id: id.notNull(),
-		discountId: text("discount_id")
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 		title: text("title"),
 		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
+
+		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
+		// 	onDelete: "set null",
+		// }),
 	},
-	(t) => [
-		uniqueIndex("uq_discount_translation").on(t.discountId, t.localeKey),
-		uniqueIndex("uq_discount_translation_default")
-			.on(t.discountId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_discount_translation_locale_key").on(t.localeKey),
-		index("idx_discount_translation_default").on(t.isDefault),
-	],
+	{
+		fkKey: "discountId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_discount_id`).on(t.discountId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
+	},
 );
 
+const orgDiscountProductTableName = `${orgDiscountTableName}_product`;
 /**
  * Discount Product - Product-Level Discount Application
  *
@@ -140,25 +126,24 @@ export const discountTranslation = table(
  * campaigns while maintaining compatibility with payment plan pricing and variant-based
  * commerce workflows for comprehensive promotional campaign management.
  */
-export const discountProduct = table(
-	"discount_product",
+export const orgDiscountProduct = table(
+	orgDiscountProductTableName,
 	{
-		discountId: text("discount_id")
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-		productId: text("product_id")
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		productId: fk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		createdAt,
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.productId] }),
-
-		// Performance Indexes
-		index("idx_discount_product_discount").on(t.discountId),
-		index("idx_discount_product_product").on(t.productId),
+		index(`idx_${orgDiscountProductTableName}_createdAt`).on(t.createdAt),
 	],
 );
 
+const orgDiscountProductVariantTableName = `${orgDiscountTableName}_product_variant`;
 /**
  * Discount Variant - Variant-Level Discount Application
  *
@@ -171,65 +156,103 @@ export const discountProduct = table(
  * for precise revenue optimization and customer conversion strategies while maintaining
  * compatibility with payment plan pricing and promotional campaign workflows.
  */
-export const discountVariant = table(
-	"discount_variant",
+export const orgDiscountProductVariant = table(
+	orgDiscountProductVariantTableName,
 	{
-		discountId: text("discount_id")
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
-		variantId: text("variant_id")
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		variantId: fk("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
+		createdAt,
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.variantId] }),
-
-		// Performance Indexes
-		index("idx_discount_variant_discount").on(t.discountId),
-		index("idx_discount_variant_variant").on(t.variantId),
+		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(t.createdAt),
 	],
 );
 
+const orgDiscountCollectionTableName = `${orgDiscountTableName}_product_collection`;
+/**
+ * @junctionTable Discount–Collection Mapping
+ * @businessLogic Enables applying discount logic to entire collections
+ * rather than individual products for easier promotion management.
+ *
+ * @permissionContext Bound to discount and collection org scopes
+ * @onboardingPattern Makes it easier to bulk-apply promotions by marketing teams
+ */
+export const orgDiscountProductCollection = table(
+	orgDiscountCollectionTableName,
+	{
+		/**
+		 * @discountLink Discount campaign being applied
+		 */
+		discountId: fk("discount_id")
+			.notNull()
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+
+		/**
+		 * @collectionLink Target collection receiving the discount
+		 */
+		collectionId: fk("collection_id")
+			.notNull()
+			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
+		createdAt,
+	},
+	(t) => [
+		primaryKey({ columns: [t.discountId, t.collectionId] }),
+		index(`idx_${orgDiscountCollectionTableName}_createdAt`).on(t.createdAt),
+	],
+);
+
+const orgDiscountUsageTableName = `${orgTableName}_member_discount_usage`;
 /**
  * @table discount_usage
  * @auditTrail Tracks who used a discount and when
  * @businessLogic Enables enforcing usage limits and personalization
  */
-export const discountUsage = table(
-	"discount_usage",
+export const orgMemberOrderDiscountUsage = table(
+	orgDiscountUsageTableName,
 	{
 		id: id.notNull(),
-		userId: text("user_id")
+		memberId: fk("member_id")
 			.notNull()
-			.references(() => user.id),
-		discountId: text("discount_id")
+			.references(() => orgMember.id),
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id),
+			.references(() => orgDiscount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: text("order_id"),
+		orderId: fk("order_id").references(() => orgMemberOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
+		createdAt,
+		updatedAt,
 	},
 	(t) => [
-		index("idx_discount_usage_user_discount").on(t.userId, t.discountId),
-		index("idx_discount_usage_date").on(t.usedAt),
+		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
+		index(`idx_${orgDiscountUsageTableName}_used_at`).on(t.usedAt),
+		index(`idx_${orgDiscountUsageTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgDiscountUsageTableName}_updated_at`).on(t.updatedAt),
 	],
 );
+
+const orgCouponTableName = `${orgTableName}_coupon`;
 
 /**
  * @table coupon
  * @compensationModel Code-based wrapper for discount logic
  * @permissionContext Can be scoped and assigned per user or campaign
  */
-export const coupon = table(
-	"coupon",
+export const orgCoupon = table(
+	orgCouponTableName,
 	{
 		id: id.notNull(),
 		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
-		discountId: text("discount_id")
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 
 		code: text("code").notNull(),
 		usageLimit: integer("usage_limit"),
@@ -240,55 +263,56 @@ export const coupon = table(
 		metadata: jsonb("metadata"),
 		createdAt,
 		updatedAt,
+		deletedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_coupon_code_org").on(t.orgId, t.code),
-		index("idx_coupon_org").on(t.orgId),
-		index("idx_coupon_discount").on(t.discountId),
-		index("idx_coupon_active").on(t.isActive),
-		index("idx_coupon_dates").on(t.startsAt, t.endsAt),
-		index("idx_coupon_active_dates").on(t.isActive, t.startsAt, t.endsAt),
+		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(t.orgId, t.code),
+		index(`idx_${orgCouponTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgCouponTableName}_discount_id`).on(t.discountId),
+		index(`idx_${orgCouponTableName}_active`).on(t.isActive),
+		index(`idx_${orgCouponTableName}_dates`).on(t.startsAt, t.endsAt),
+		index(`idx_${orgCouponTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgCouponTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgCouponTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgCouponTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 
+const orgCouponI18nTableName = `${orgCouponTableName}_i18n`;
 /**
  * @table coupon_translation
  * @i18nSupport Localized titles and descriptions for coupons
  */
-export const couponTranslation = table(
-	"coupon_translation",
+export const orgCouponI18n = buildOrgI18nTable(orgCouponI18nTableName)(
 	{
-		id: id.notNull(),
-		couponId: text("coupon_id")
+		couponId: fk("coupon_id")
 			.notNull()
-			.references(() => coupon.id, { onDelete: "cascade" }),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgCoupon.id, { onDelete: "cascade" }),
 		title: text("title"),
 		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
+
+		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
+		// 	onDelete: "set null",
+		// }),
 	},
-	(t) => [
-		uniqueIndex("uq_coupon_translation").on(t.couponId, t.localeKey),
-		uniqueIndex("uq_coupon_translation_default")
-			.on(t.couponId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_coupon_translation_locale_key").on(t.localeKey),
-		index("idx_coupon_translation_default").on(t.isDefault),
-	],
+	{
+		fkKey: "couponId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_coupon_id`).on(t.couponId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
+	},
 );
+
+const orgGiftCardTableName = `${orgTableName}_gift_card`;
 
 /**
  * @table gift_card
  * @compensationModel Prepaid value cards used as alternative payment method
  * @auditTrail Tracks balance and issuance info for reconciliation
  */
-export const giftCard = table(
-	"gift_card",
+export const orgGiftCard = table(
+	orgGiftCardTableName,
 	{
 		id: id.notNull(),
 		orgId: fk(`${orgTableName}_id`)
@@ -306,91 +330,95 @@ export const giftCard = table(
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
-		issuedToUserId: text("issued_to_user_id").references(() => user.id),
+		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
+		issuedToMemberId: fk("issued_to_member_id").references(() => orgMember.id),
 		issuedToEmail: text("issued_to_email"),
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
 		expiresAt: timestamp("expires_at"),
 		isActive: boolean("is_active").default(true),
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 		createdAt,
 		updatedAt,
+		deletedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_gift_card_code_org").on(t.orgId, t.code),
-		index("idx_gift_card_org").on(t.orgId),
-		index("idx_gift_card_currency").on(t.currencyCode),
-		index("idx_gift_card_user").on(t.issuedToUserId),
-		index("idx_gift_card_email").on(t.issuedToEmail),
-		index("idx_gift_card_active").on(t.isActive),
-		index("idx_gift_card_expires").on(t.expiresAt),
-		index("idx_gift_card_balance").on(t.remainingBalance),
+		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
+		index(`idx_${orgGiftCardTableName}_org`).on(t.orgId),
+		index(`idx_${orgGiftCardTableName}_currency`).on(t.currencyCode),
+		index(`idx_${orgGiftCardTableName}_member_id`).on(t.issuedToMemberId),
+		index(`idx_${orgGiftCardTableName}_email`).on(t.issuedToEmail),
+		index(`idx_${orgGiftCardTableName}_active`).on(t.isActive),
+		index(`idx_${orgGiftCardTableName}_expires`).on(t.expiresAt),
+		index(`idx_${orgGiftCardTableName}_balance`).on(t.remainingBalance),
+		index(`idx_${orgGiftCardTableName}_issued_at`).on(t.issuedAt),
+		index(`idx_${orgGiftCardTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgGiftCardTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgGiftCardTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 
+const orgGiftCardI18nTableName = `${orgGiftCardTableName}_i18n`;
 /**
  * @table gift_card_translation
  * @i18nSupport Localization support for gift cards
  * @seoSupport Enables optional SEO visibility for promotional cards
  */
-export const giftCardTranslation = table(
-	"gift_card_translation",
+export const orgGiftCardI18n = buildOrgI18nTable(orgGiftCardI18nTableName)(
 	{
-		id: id.notNull(),
-		giftCardId: text("gift_card_id")
+		giftCardId: fk("gift_card_id")
 			.notNull()
-			.references(() => giftCard.id, { onDelete: "cascade" }),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgGiftCard.id, { onDelete: "cascade" }),
 		title: text("title"),
 		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
 	},
-	(t) => [
-		uniqueIndex("uq_gift_card_translation").on(t.giftCardId, t.localeKey),
-		uniqueIndex("uq_gift_card_translation_default")
-			.on(t.giftCardId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_gift_card_translation_locale_key").on(t.localeKey),
-		index("idx_gift_card_translation_default").on(t.isDefault),
-	],
+	{
+		fkKey: "giftCardId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_gift_card_id`).on(t.giftCardId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
+	},
 );
 
+const orgMemberGiftCardUsageTableName = `${orgTableName}_member_gift_card_usage`;
 /**
  * @table gift_card_usage
  * @auditTrail Tracks user redemptions and value depletion
  */
-export const giftCardUsage = table(
-	"gift_card_usage",
+export const orgMemberGiftCardUsage = table(
+	orgMemberGiftCardUsageTableName,
 	{
 		id: id.notNull(),
-		userId: text("user_id")
+		memberId: fk("member_id")
 			.notNull()
-			.references(() => user.id),
-		giftCardId: text("gift_card_id")
+			.references(() => orgMember.id),
+		giftCardId: fk("gift_card_id")
 			.notNull()
-			.references(() => giftCard.id),
+			.references(() => orgGiftCard.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
-		orderId: text("order_id"),
+		orderId: fk("order_id"),
+		createdAt,
+		updatedAt,
 	},
 	(t) => [
-		index("idx_gift_card_usage_user").on(t.userId),
-		index("idx_gift_card_usage_gift_card").on(t.giftCardId),
-		index("idx_gift_card_usage_date").on(t.usedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(t.giftCardId),
+		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
+const orgPromotionTableName = `${orgTableName}_promotion`;
 /**
  * @table promotion
  * @marketingStrategy Logical grouping for campaigns
  * @auditTrail Tracks validity and engagement timing
  */
-export const promotion = table(
-	"promotion",
+export const orgPromotion = table(
+	orgPromotionTableName,
 	{
 		id: id.notNull(),
 		orgId: fk(`${orgTableName}_id`)
@@ -404,63 +432,61 @@ export const promotion = table(
 		metadata: jsonb("metadata"),
 		createdAt,
 		updatedAt,
+		deletedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_promotion_slug_org").on(t.orgId, t.slug),
-		index("idx_promotion_org").on(t.orgId),
-		index("idx_promotion_active").on(t.isActive),
-		index("idx_promotion_dates").on(t.startsAt, t.endsAt),
-		index("idx_promotion_active_dates").on(t.isActive, t.startsAt, t.endsAt),
+		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(t.orgId, t.slug),
+		index(`idx_${orgPromotionTableName}n_org`).on(t.orgId),
+		index(`idx_${orgPromotionTableName}n_active`).on(t.isActive),
+		index(`idx_${orgPromotionTableName}n_dates`).on(t.startsAt, t.endsAt),
+		index(`idx_${orgPromotionTableName}n_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgPromotionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgPromotionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgPromotionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 
+const orgPromotionI18nTableName = `${orgPromotionTableName}_i18n`;
 /**
  * @table promotion_translation
  * @i18nSupport Localized messaging and SEO for promotions
  */
-export const promotionTranslation = table(
-	"promotion_translation",
+export const orgPromotionI18n = buildOrgI18nTable(orgPromotionI18nTableName)(
 	{
-		id: id.notNull(),
-		promotionId: text("promotion_id")
+		promotionId: fk("promotion_id")
 			.notNull()
-			.references(() => promotion.id, { onDelete: "cascade" }),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgPromotion.id, { onDelete: "cascade" }),
 		title: text("title"),
 		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
 	},
-	(t) => [
-		uniqueIndex("uq_promotion_translation").on(t.promotionId, t.localeKey),
-		uniqueIndex("uq_promotion_translation_default")
-			.on(t.promotionId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_promotion_translation_locale_key").on(t.localeKey),
-		index("idx_promotion_translation_default").on(t.isDefault),
-	],
+	{
+		fkKey: "promotionId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_promotion_id`).on(t.promotionId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
+	},
 );
 
+const orgPromotionDiscountTableName = `${orgPromotionTableName}_discount`;
 /**
  * @table promotion_discount
  * @businessLogic Relational link between campaigns and discounts
  * @auditTrail Ensures traceability of discount origin
  */
-export const promotionDiscount = table(
-	"promotion_discount",
+export const orgPromotionDiscount = table(
+	orgPromotionDiscountTableName,
 	{
-		id: id.notNull(),
-		promotionId: text("promotion_id")
+		promotionId: fk("promotion_id")
 			.notNull()
-			.references(() => promotion.id, { onDelete: "cascade" }),
-		discountId: text("discount_id")
+			.references(() => orgPromotion.id, { onDelete: "cascade" }),
+		discountId: fk("discount_id")
 			.notNull()
-			.references(() => discount.id, { onDelete: "cascade" }),
+			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 		createdAt,
 	},
-	(t) => [uniqueIndex("uq_promotion_discount").on(t.promotionId, t.discountId)],
+	(t) => [
+		primaryKey({ columns: [t.promotionId, t.discountId] }),
+		index(`idx_${orgPromotionDiscountTableName}_createdAt`).on(t.createdAt),
+	],
 );

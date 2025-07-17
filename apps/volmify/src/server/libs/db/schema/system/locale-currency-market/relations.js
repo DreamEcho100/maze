@@ -9,19 +9,19 @@ import {
 	skillTranslation,
 } from "../../org/product/by-type/course/schema.js";
 import {
-	couponTranslation,
-	discount,
-	discountTranslation,
-	giftCard,
-	giftCardTranslation,
-	promotionTranslation,
+	orgCouponI18n,
+	orgDiscount,
+	orgDiscountI18n,
+	orgGiftCard,
+	orgGiftCardI18n,
+	orgPromotionI18n,
 } from "../../org/product/offers/schema.js";
 import {
 	orgProductVariantPaymentPlan,
 	// orgUsageBasedPaymentPlanI18n,
 	orgProductVariantPaymentPlanI18n,
 	orgProductVariantPaymentPlanOneTimeType,
-	orgProductVariantPaymentPlanOneTimeTypeI18n,
+	// orgProductVariantPaymentPlanOneTimeTypeI18n,
 	orgProductVariantPaymentPlanSubscriptionType,
 	orgProductVariantPaymentPlanSubscriptionTypeI18n,
 } from "../../org/product/payment/schema.js";
@@ -67,20 +67,20 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	exchangeRatesTarget: many(exchangeRate, {
 		relationName: "target_currency_rates",
 	}),
-	orgSettings: many(orgCurrencySettings),
-	productVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
-	discounts: many(discount),
-	giftCards: many(giftCard),
 	// pricingZones: many(orgPricingZone),
 
 	//
-	orgTaxRates: many(orgTaxRate),
-	orgsRegions: many(orgRegion),
 
+	orgsTaxRates: many(orgTaxRate),
+	orgsRegions: many(orgRegion),
+	orgsCurrenciesSettings: many(orgCurrencySettings),
+	orgsProductsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
 	orgsProductsVariantsPaymentPlansOneTimeType: many(orgProductVariantPaymentPlanOneTimeType),
 	orgsProductsVariantsPaymentPlansSubscriptionType: many(
 		orgProductVariantPaymentPlanSubscriptionType,
 	),
+	orgDiscounts: many(orgDiscount),
+	orgGiftCards: many(orgGiftCard),
 }));
 
 export const countryRelations = relations(country, ({ one, many }) => ({
@@ -146,7 +146,7 @@ export const marketTemplateTranslationRelations = relations(
 	}),
 );
 
-export const _localeRelations = relations(locale, ({ many }) => ({
+export const localeRelations = relations(locale, ({ many }) => ({
 	marketsTemplatesTranslations: many(marketTemplateTranslation),
 
 	productsCoursesTranslations: many(productCourseTranslation),
@@ -163,14 +163,14 @@ export const _localeRelations = relations(locale, ({ many }) => ({
 	productsVariantsTranslations: many(orgProductVariantI18n),
 
 	usersInstructorProfilesTranslations: many(userInstructorProfileTranslation),
-	discountsTranslation: many(discountTranslation),
-	couponsTranslation: many(couponTranslation),
-	giftCardsTranslation: many(giftCardTranslation),
-	promotionsTranslation: many(promotionTranslation),
+	discountsTranslation: many(orgDiscountI18n),
+	couponsTranslation: many(orgCouponI18n),
+	giftCardsTranslation: many(orgGiftCardI18n),
+	promotionsTranslation: many(orgPromotionI18n),
 	productsVariantsPaymentPlansTranslations: many(orgProductVariantPaymentPlanI18n),
 
 	// The following is not shared with the SEO table
-	oneTimePaymentPlansTranslations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
+	// oneTimePaymentPlansTranslations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
 	subscriptionPaymentPlansTranslations: many(orgProductVariantPaymentPlanSubscriptionTypeI18n),
 	// usageBasedPaymentPlansTranslations: many(orgUsageBasedPaymentPlanI18n),
 	seoAlternateUrls: many(seoAlternateUrl),

@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm";
 
 import { org } from "../../schema.js";
-import { discount } from "../offers/schema.js";
+import { orgDiscountProductCollection } from "../offers/schema.js";
 import { orgProduct } from "../schema.js";
-import { collection, discountCollection, productCollection } from "./schema.js";
+import { orgProductCollection, orgProductCollectionProduct } from "./schema.js";
 
 /**
  * @relationModel Collection Relations
@@ -17,13 +17,13 @@ import { collection, discountCollection, productCollection } from "./schema.js";
  * - Discounts (bulk promotional logic)
  * - Owning Org (access boundaries)
  */
-export const collectionRelations = relations(collection, ({ one, many }) => ({
+export const collectionRelations = relations(orgProductCollection, ({ one, many }) => ({
 	/**
 	 * @abacScope Org providing collection boundary
 	 * @permissionContext Determines who can manage this collection
 	 */
 	org: one(org, {
-		fields: [collection.orgId],
+		fields: [orgProductCollection.orgId],
 		references: [org.id],
 	}),
 
@@ -32,13 +32,13 @@ export const collectionRelations = relations(collection, ({ one, many }) => ({
 	 * @businessLogic Defines which products are curated under this collection
 	 * @contentStrategy Enables thematic or seasonal grouping
 	 */
-	products: many(productCollection),
+	products: many(orgProductCollectionProduct),
 
 	/**
 	 * @relationType Many-to-many with Discounts
 	 * @monetizationModel Used to apply bulk discount logic to all products in collection
 	 */
-	discounts: many(discountCollection),
+	discounts: many(orgDiscountProductCollection),
 }));
 
 /**
@@ -49,46 +49,20 @@ export const collectionRelations = relations(collection, ({ one, many }) => ({
  * @permissionContext Relies on both product and collection org context
  * @abacLink Joins curated content with presentation structure
  */
-export const productCollectionRelations = relations(productCollection, ({ one }) => ({
+export const productCollectionRelations = relations(orgProductCollectionProduct, ({ one }) => ({
 	/**
 	 * @abacSubject Product being assigned to a collection
 	 */
 	product: one(orgProduct, {
-		fields: [productCollection.productId],
+		fields: [orgProductCollectionProduct.productId],
 		references: [orgProduct.id],
 	}),
 
 	/**
 	 * @abacContext Collection that hosts this product
 	 */
-	collection: one(collection, {
-		fields: [productCollection.collectionId],
-		references: [collection.id],
-	}),
-}));
-
-/**
- * @junctionModel Discount–Collection Relations
- * @businessLogic Connects discount rules with curated product collections.
- * Used to simplify promotional logic and automate discount application.
- *
- * @abacRole Promotion Assignment Mapping
- * @permissionContext Scope governed by discount and collection org IDs
- */
-export const discountCollectionRelations = relations(discountCollection, ({ one }) => ({
-	/**
-	 * @monetizationRule Discount entity being applied to the collection
-	 */
-	discount: one(discount, {
-		fields: [discountCollection.discountId],
-		references: [discount.id],
-	}),
-
-	/**
-	 * @abacTarget Target collection to which discount is applied
-	 */
-	collection: one(collection, {
-		fields: [discountCollection.collectionId],
-		references: [collection.id],
+	collection: one(orgProductCollection, {
+		fields: [orgProductCollectionProduct.collectionId],
+		references: [orgProductCollection.id],
 	}),
 }));

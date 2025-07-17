@@ -10,10 +10,10 @@ import {
 	skillTranslation,
 } from "../../org/product/by-type/course/schema.js";
 import {
-	couponTranslation,
-	discountTranslation,
-	giftCardTranslation,
-	promotionTranslation,
+	orgCouponI18n,
+	orgDiscountI18n,
+	orgGiftCardI18n,
+	orgPromotionI18n,
 } from "../../org/product/offers/schema.js";
 import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
 import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
@@ -108,21 +108,21 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [userInstructorProfileTranslation.seoMetadataId],
 	}),
 
-	discountsTranslation: one(discountTranslation, {
+	discountsTranslation: one(orgDiscountI18n, {
 		fields: [seoMetadata.id],
-		references: [discountTranslation.seoMetadataId],
+		references: [orgDiscountI18n.seoMetadataId],
 	}),
-	couponsTranslation: one(couponTranslation, {
+	couponsTranslation: one(orgCouponI18n, {
 		fields: [seoMetadata.id],
-		references: [couponTranslation.seoMetadataId],
+		references: [orgCouponI18n.seoMetadataId],
 	}),
-	giftCardsTranslation: one(giftCardTranslation, {
+	giftCardsTranslation: one(orgGiftCardI18n, {
 		fields: [seoMetadata.id],
-		references: [giftCardTranslation.seoMetadataId],
+		references: [orgGiftCardI18n.seoMetadataId],
 	}),
-	promotionsTranslation: one(promotionTranslation, {
+	promotionsTranslation: one(orgPromotionI18n, {
 		fields: [seoMetadata.id],
-		references: [promotionTranslation.seoMetadataId],
+		references: [orgPromotionI18n.seoMetadataId],
 	}),
 
 	productsVariantsPaymentPlansTranslations: one(orgProductVariantPaymentPlanI18n, {

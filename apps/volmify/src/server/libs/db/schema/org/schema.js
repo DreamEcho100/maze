@@ -28,6 +28,7 @@ import { seoMetadata } from "../system/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgTableName } from "./_utils/helpers.js";
+import { orgMember } from "./member/schema.js";
 
 const orgMetadataJsonb = jsonb("metadata");
 

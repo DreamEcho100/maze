@@ -31,8 +31,8 @@ import { seoMetadata } from "../../system/seo/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { org, orgBrand } from "../schema.js";
 import { productCourse } from "./by-type/course/schema.js";
-import { productCollection } from "./collection/schema.js";
-import { discountProduct, discountVariant } from "./offers/schema.js";
+import { orgProductCollectionProduct } from "./collection/schema.js";
+import { orgDiscountProduct, orgDiscountProductVariant } from "./offers/schema.js";
 import { orgProductVariantPaymentPlan } from "./payment/schema.js";
 import {
 	// discountProduct,
@@ -97,14 +97,14 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	 * @businessContext Enables product categorization and promotional bundling strategies
 	 * @marketingStrategy Supports product discovery and cross-selling workflows
 	 */
-	collections: many(productCollection),
+	collections: many(orgProductCollectionProduct),
 
 	/**
 	 * @promotionalStrategy Product-specific discount campaign integration
 	 * @businessContext Enables targeted promotional strategies and revenue optimization
 	 * @paymentCompatibility Promotional campaigns integrate with payment plan pricing
 	 */
-	discountProducts: many(discountProduct),
+	discountProducts: many(orgDiscountProduct),
 
 	/**
 	 * @brandAttribution Brand identity attributions for this product
@@ -124,6 +124,8 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 		fields: [orgProduct.id],
 		references: [productCourse.productId],
 	}),
+
+	discounts: many(orgDiscountProduct),
 }));
 
 /**
@@ -201,7 +203,7 @@ export const productVariantRelations = relations(orgProductVariant, ({ one, many
 	 * @businessContext Enables granular promotional strategies for different access levels
 	 * @revenueOptimization Supports targeted promotional campaigns for conversion optimization
 	 */
-	discountVariants: many(discountVariant),
+	discounts: many(orgDiscountProductVariant),
 }));
 
 export const productVariantTranslationRelations = relations(orgProductVariantI18n, ({ one }) => ({

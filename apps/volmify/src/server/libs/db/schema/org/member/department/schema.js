@@ -8,15 +8,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	id,
-	name,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
+import { createdAt, deletedAt, fk, id, name, table, updatedAt } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { orgTeam } from "../team/schema.js";
@@ -76,11 +68,14 @@ export const orgDepartment = table(
 	],
 );
 
-const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
-export const orgDepartmentMembershipStatusEnum = pgEnum(
-	`${orgDepartmentMembershipTableName}_status`,
-	["active", "inactive", "pending", "removed"],
-);
+// Q: Is the following needed?
+// Is the department membership table necessary?
+// I mean does the department contains teams, members, or both?
+// const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
+// export const orgDepartmentMembershipStatusEnum = pgEnum(
+// 	`${orgDepartmentMembershipTableName}_status`,
+// 	["active", "inactive", "pending", "removed"],
+// );
 
 // NOTE: is the following needed?
 // /**
