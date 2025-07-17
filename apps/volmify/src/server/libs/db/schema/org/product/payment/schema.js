@@ -60,7 +60,7 @@ export const orgProductVariantPaymentTypeEnum = pgEnum(
  */
 export const orgProductVariantPaymentBillingIntervalEnum = pgEnum(
 	`${orgTableName}_billing_interval`,
-	["daily", "weekly", "monthly", "quarterly", "yearly"],
+	["daily", "weekly", "monthly", "quarterly", "yearly", "custom"],
 );
 
 /**
@@ -208,6 +208,12 @@ export const orgProductVariantPaymentPlan = table(
 		 */
 		sortOrder: integer("sort_order").default(0),
 
+		/**
+		 * @accessControl Whether product access can be transferred between accounts
+		 * @businessFlexibility Useful for corporate training accounts and family sharing scenarios
+		 */
+		isTransferable: boolean("is_transferable").default(false),
+
 		// /**
 		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		//  * @businessFlexibility Enables complex regional pricing strategies
@@ -260,6 +266,13 @@ export const orgProductVariantPaymentPlan = table(
 		 * @monetizationStrategy Enables content-based pricing differentiation
 		 */
 		accessTier: integer("access_tier").default(1).notNull(),
+
+		/**
+		 * @ecommerceFeature Allows customers to purchase products for other recipients
+		 * @marketExpansion Enables gift economy and viral growth through gift purchases
+		 * @giftingEnabled Determines whether users can purchase for others
+		 */
+		allowGifting: boolean("allow_gifting").default(false),
 
 		// /**
 		//  * @contentAccess JSON defining course content access rules for this variant
@@ -314,6 +327,12 @@ export const orgProductVariantPaymentPlan = table(
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
 		// 	t.compareAtPrice,
 		// ),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_is_transferable`).on(
+			t.isTransferable,
+		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_allow_gifting`).on(
+			t.allowGifting,
+		),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(
 			t.accessTier,
 		),
@@ -370,6 +389,24 @@ export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
 
 		name: text("name").notNull(),
 		description: text("description"),
+
+		/**
+		 * @localizedContent Description of access duration
+		 * @onboardingClarity Helps buyers understand ownership terms
+		 */
+		accessDescription: text("access_description"),
+
+		/**
+		 * @localizedContent Text shown to gift recipients
+		 * @conversionStrategy Personalizes gifting experience
+		 */
+		giftMessage: text("gift_message"),
+
+		/**
+		 * @localizedContent Description of transfer eligibility
+		 * @complianceContext Helps avoid support misunderstandings
+		 */
+		transferPolicy: text("transfer_policy"),
 	},
 	{
 		fkKey: "planId",
@@ -440,31 +477,18 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 			scale: 2,
 		}),
 
-		/**
-		 * @accessControl Days of access after purchase (null = lifetime access)
-		 * @businessFlexibility Enables time-limited access models for rental or subscription-like experiences
-		 * @entitlementScope Number of days user may access after purchase
-		 */
-		accessDurationDays: integer("access_duration_days"),
+		// /**
+		//  * @accessControl Days of access after purchase (null = lifetime access)
+		//  * @businessFlexibility Enables time-limited access models for rental or subscription-like experiences
+		//  * @entitlementScope Number of days user may access after purchase
+		//  */
+		// accessDurationDays: integer("access_duration_days"),
 
-		/**
-		 * @accessControl Simplified boolean for lifetime access marketing and logic
-		 * @marketingClarity Clear messaging distinction between lifetime and time-limited plans
-		 */
-		isLifetimeAccess: boolean("is_lifetime_access").default(true),
-
-		/**
-		 * @ecommerceFeature Allows customers to purchase products for other recipients
-		 * @marketExpansion Enables gift economy and viral growth through gift purchases
-		 * @giftingEnabled Determines whether users can purchase for others
-		 */
-		allowGifting: boolean("allow_gifting").default(false),
-
-		/**
-		 * @accessControl Whether product access can be transferred between accounts
-		 * @businessFlexibility Useful for corporate training accounts and family sharing scenarios
-		 */
-		isTransferable: boolean("is_transferable").default(false),
+		// /**
+		//  * @accessControl Simplified boolean for lifetime access marketing and logic
+		//  * @marketingClarity Clear messaging distinction between lifetime and time-limited plans
+		//  */
+		// isLifetimeAccess: boolean("is_lifetime_access").default(true),
 
 		/**
 		 * @abuseProtection Maximum purchases per user to prevent system gaming
@@ -477,18 +501,12 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 	},
 	(t) => [
 		// Performance indexes for one-time payment management
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_lifetime_access`,
-		).on(t.isLifetimeAccess),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_access_duration_days`,
-		).on(t.accessDurationDays),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_allow_gifting`,
-		).on(t.allowGifting),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_is_transferable`,
-		).on(t.isTransferable),
+		// index(
+		// 	`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_lifetime_access`,
+		// ).on(t.isLifetimeAccess),
+		// index(
+		// 	`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_access_duration_days`,
+		// ).on(t.accessDurationDays),
 		index(
 			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_max_purchases`,
 		).on(t.maxPurchasesPerUser),
@@ -501,59 +519,17 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 	],
 );
 
-const orgProductVariantPaymentPlanOneTimeTypeI18nTableName = `${orgProductVariantPaymentPlanOneTimeTypeTableName}_i18n`;
-/**
- * One-Time Payment Plan Translation - Localized Purchase Content
- *
- * @businessLogic Multi-language support for one-time payment plan specific content
- * including gift messaging, access policies, and transfer terms for different markets
- * and regional legal requirements.
- *
- * @translationPattern Consistent with established schema translation architecture
- * for predictable internationalization workflows.
- *
- * @abacRole Write access limited to org admins and pricing managers
- */
-export const orgProductVariantPaymentPlanOneTimeTypeI18n = buildOrgI18nTable(
-	orgProductVariantPaymentPlanOneTimeTypeI18nTableName,
-)(
-	{
-		/**
-		 * @translationTarget Parent one-time plan for this localized version
-		 */
-		planId: text("plan_id")
-			.notNull()
-			.references(() => orgProductVariantPaymentPlanOneTimeType.planId, {
-				onDelete: "cascade",
-			}),
-
-		/**
-		 * @localizedContent Text shown to gift recipients
-		 * @conversionStrategy Personalizes gifting experience
-		 */
-		giftMessage: text("gift_message"),
-
-		/**
-		 * @localizedContent Description of access duration
-		 * @onboardingClarity Helps buyers understand ownership terms
-		 */
-		accessDescription: text("access_description"),
-
-		/**
-		 * @localizedContent Description of transfer eligibility
-		 * @complianceContext Helps avoid support misunderstandings
-		 */
-		transferPolicy: text("transfer_policy"),
-	},
-	{
-		fkKey: "planId",
-		extraConfig: (t, tableName) => [
-			index(`idx_${tableName}_plan_id`).on(t.planId),
-		],
-	},
-);
-
 const orgProductVariantPaymentPlanSubscriptionTypeTableName = `${orgProductVariantPaymentPlanTableName}_subscription_type`;
+export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum =
+	pgEnum(`${orgTableName}_subscription_interval_count_unit`, [
+		"hours",
+		"days",
+		"weeks",
+		"months",
+		"quarters",
+		"years",
+	]);
+
 /**
  * Subscription Payment Plan - Recurring Billing Model
  *
@@ -608,18 +584,29 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 			scale: 2,
 		}),
 
+		// Q: is the following needed even with the existing of the custom billing count and unit
 		/**
 		 * @billingCycle How frequently org charges subscribers
 		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
 		billingInterval:
 			orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
-
 		/**
 		 * @billingCycle Multiplier for billing interval enabling custom periods
 		 * @businessFlexibility intervalCount=3 with monthly = quarterly billing
 		 */
-		intervalCount: integer("interval_count").default(1),
+		customBillingIntervalCount: integer(
+			"custom_billing_interval_count",
+		).default(1),
+		/**
+		 * Define the interval count measurement/unit
+		 */
+		customBillingIntervalUnit:
+			orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum(
+				"custom_billing_interval_unit",
+			)
+				.notNull()
+				.default("months"),
 
 		/**
 		 * @customerAcquisition Free trial period before first billing cycle
@@ -639,11 +626,14 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 	(t) => [
 		// Performance indexes for subscription management
 		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_interval`,
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_billing_interval`,
 		).on(t.billingInterval),
 		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_count`,
-		).on(t.intervalCount),
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_count`,
+		).on(t.customBillingIntervalCount),
+		index(
+			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_unit`,
+		).on(t.customBillingIntervalUnit),
 		index(
 			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_trial`,
 		).on(t.trialPeriodDays),
@@ -687,8 +677,6 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
 					onDelete: "cascade",
 				}),
 
-			isDefault: boolean("is_default").default(false),
-
 			/**
 			 * @localizedContent Localized recurring cycle description
 			 * @onboardingContent Improves understanding for end customers
@@ -714,6 +702,185 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
 			],
 		},
 	);
+
+// -------------------------------------
+// USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
+// -------------------------------------
+
+const orgProductVariantPaymentPlanMemberSubscriptionTableName = `${orgTableName}_product_variant_payment_member_subscription`;
+/**
+ * User Subscription - Customer Payment Instance and Access Management
+ *
+ * @businessLogic Customer subscription instances tracking how users purchase and access
+ * orgal payment plans. Manages subscription lifecycle, access control, and
+ * revenue tracking completely separate from how orgs create pricing strategies.
+ *
+ * @accessControl Links customer payment status to product content access enabling
+ * dynamic content availability based on subscription status, payment plan features,
+ * and orgal access policies for comprehensive customer experience management.
+ *
+ * @subscriptionLifecycle Tracks complete customer journey from purchase through active
+ * usage to cancellation providing comprehensive subscription management capabilities
+ * for customer service, retention workflows, and orgal analytics.
+ *
+ * @paymentGatewayIntegration External subscription IDs link internal subscription
+ * management to payment processors enabling automated subscription state synchronization
+ * and billing cycle management through webhook integration.
+ *
+ * @orgalRevenue Revenue tracking supports creator economy workflows with
+ * instructor attribution calculations and orgal financial reporting for
+ * comprehensive creator compensation and business analytics.
+ *
+ * @memberContextSupport Supports both org members and external customers
+ * enabling internal team subscriptions alongside external customer sales workflows
+ * for comprehensive orgal subscription management.
+ *
+ * @abacScope tenant: orgId, subject: userId || orgMemberId
+ * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
+ * @ctiBinding Concrete customer-side realization of a payment plan, enabling separation
+ * of billing strategy from usage enforcement
+ * @billingLinkage Integrates with external providers via IDs for lifecycle automation
+ * and revenue capture
+ * @revenueLineItem Canonical source for calculating actualized revenue, linked to
+ * accounting and analytics domains
+ * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
+ * via orgMemberId
+ */
+export const orgProductVariantPaymentPlanMemberSubscription = table(
+	orgProductVariantPaymentPlanMemberSubscriptionTableName,
+	{
+		id: id.notNull(),
+
+		// TODO: change to purchased by user
+		/**
+		 * @customerReference Customer who owns this subscription instance
+		 * @accessControl Primary relationship for content access permissions and customer service
+		 */
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id),
+
+		/**
+		 * @paymentPlanReference Org's payment plan this subscription follows
+		 * @businessRule Determines pricing, billing cycle, features, and access permissions
+		 */
+		planId: text("plan_id")
+			.notNull()
+			.references(() => orgProductVariantPaymentPlan.id),
+
+		/**
+		 * @orgScope Org context for this subscription
+		 * @multiTenant Enables org-specific subscription management and reporting
+		 */
+		orgId: fk(`${orgTableName}_id`)
+			.notNull()
+			.references(() => org.id),
+
+		/**
+		 * @memberContext Optional org member context for internal subscriptions
+		 * @businessRule When present, indicates internal orgal member subscription
+		 */
+		orgMemberId: text("org_member_id").references(() => orgMember.id),
+
+		/**
+		 * @subscriptionLifecycle Current subscription state for access control
+		 * @accessControl Determines customer's access to product content and features
+		 */
+		status:
+			orgProductVariantPaymentSubscriptionStatusEnum("status").default(
+				"active",
+			),
+
+		/**
+		 * @accessControl When customer first gained access to subscribed content
+		 * @customerService Essential for support queries about access history
+		 */
+		accessGrantedAt: timestamp("access_granted_at").defaultNow(),
+
+		/**
+		 * @accessControl When product access expires for this subscription
+		 * @businessRule null = lifetime access, date = subscription expiration
+		 */
+		accessExpiresAt: timestamp("access_expires_at"),
+
+		/**
+		 * @revenueTracking Total amount customer has paid for this subscription
+		 * @creatorEconomy Basis for instructor revenue sharing and orgal analytics
+		 */
+		totalPaid: decimal("total_paid", { precision: 12, scale: 2 }).default("0"),
+
+		/**
+		 * @currencyTracking Currency used for this subscription billing
+		 * @internationalCommerce Essential for multi-currency revenue tracking and reporting
+		 */
+		currencyCode: text("currency_code")
+			.notNull()
+			.references(() => currency.code),
+
+		/**
+		 * @extensibility Additional subscription metadata for analytics and integrations
+		 * @businessIntelligence May contain usage tracking, preferences, or integration data
+		 */
+		metadata: jsonb("metadata"),
+
+		/**
+		 * @externalIntegrationMetadata Additional metadata for external integrations
+		 * @integrationContext May include third-party platform IDs, sync states, etc.
+		 * @businessIntelligence Supports advanced analytics and reporting for external integrations
+		 */
+		externalMetadata: jsonb("external_metadata"),
+
+		// /**
+		//  * @paymentGateway External subscription ID from payment processor
+		//  * @webhookIntegration Links internal subscription management to payment processor
+		//  */
+		// externalSubscriptionId: text("external_subscription_id"),
+
+		// /**
+		//  * @paymentGateway External customer ID from payment processor
+		//  * @billingIntegration Links to payment gateway customer record for billing management
+		//  */
+		// externalCustomerId: text("external_customer_id"),
+
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		// Performance indexes for subscription management
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`,
+		).on(t.userId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`,
+		).on(t.planId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`,
+		).on(t.orgId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`,
+		).on(t.status),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`,
+		).on(t.orgMemberId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`,
+		).on(t.accessExpiresAt),
+		// index(
+		// 	`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
+		// ).on(t.externalSubscriptionId),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`,
+		).on(t.currencyCode),
+
+		// Revenue Analytics Indexes
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`,
+		).on(t.totalPaid, t.currencyCode),
+		index(
+			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`,
+		).on(t.orgId, t.totalPaid),
+	],
+);
 
 // const orgUsageBasedPaymentPlanTableName = `${orgTableName}_usage_based_payment_type`;
 // /**
@@ -864,175 +1031,3 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
 // 		],
 // 	},
 // );
-
-// -------------------------------------
-// USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
-// -------------------------------------
-
-const orgProductVariantPaymentPlanMemberSubscriptionTableName = `${orgTableName}_product_variant_payment_member_subscription`;
-/**
- * User Subscription - Customer Payment Instance and Access Management
- *
- * @businessLogic Customer subscription instances tracking how users purchase and access
- * orgal payment plans. Manages subscription lifecycle, access control, and
- * revenue tracking completely separate from how orgs create pricing strategies.
- *
- * @accessControl Links customer payment status to product content access enabling
- * dynamic content availability based on subscription status, payment plan features,
- * and orgal access policies for comprehensive customer experience management.
- *
- * @subscriptionLifecycle Tracks complete customer journey from purchase through active
- * usage to cancellation providing comprehensive subscription management capabilities
- * for customer service, retention workflows, and orgal analytics.
- *
- * @paymentGatewayIntegration External subscription IDs link internal subscription
- * management to payment processors enabling automated subscription state synchronization
- * and billing cycle management through webhook integration.
- *
- * @orgalRevenue Revenue tracking supports creator economy workflows with
- * instructor attribution calculations and orgal financial reporting for
- * comprehensive creator compensation and business analytics.
- *
- * @memberContextSupport Supports both org members and external customers
- * enabling internal team subscriptions alongside external customer sales workflows
- * for comprehensive orgal subscription management.
- *
- * @abacScope tenant: orgId, subject: userId || orgMemberId
- * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
- * @ctiBinding Concrete customer-side realization of a payment plan, enabling separation
- * of billing strategy from usage enforcement
- * @billingLinkage Integrates with external providers via IDs for lifecycle automation
- * and revenue capture
- * @revenueLineItem Canonical source for calculating actualized revenue, linked to
- * accounting and analytics domains
- * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
- * via orgMemberId
- */
-export const orgProductVariantPaymentPlanMemberSubscription = table(
-	orgProductVariantPaymentPlanMemberSubscriptionTableName,
-	{
-		id: id.notNull(),
-
-		// TODO: change to purchased by user
-		/**
-		 * @customerReference Customer who owns this subscription instance
-		 * @accessControl Primary relationship for content access permissions and customer service
-		 */
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id),
-
-		/**
-		 * @paymentPlanReference Org's payment plan this subscription follows
-		 * @businessRule Determines pricing, billing cycle, features, and access permissions
-		 */
-		planId: text("plan_id")
-			.notNull()
-			.references(() => orgProductVariantPaymentPlan.id),
-
-		/**
-		 * @orgScope Org context for this subscription
-		 * @multiTenant Enables org-specific subscription management and reporting
-		 */
-		orgId: fk(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
-
-		/**
-		 * @memberContext Optional org member context for internal subscriptions
-		 * @businessRule When present, indicates internal orgal member subscription
-		 */
-		orgMemberId: text("org_member_id").references(() => orgMember.id),
-
-		/**
-		 * @subscriptionLifecycle Current subscription state for access control
-		 * @accessControl Determines customer's access to product content and features
-		 */
-		status:
-			orgProductVariantPaymentSubscriptionStatusEnum("status").default(
-				"active",
-			),
-
-		/**
-		 * @accessControl When customer first gained access to subscribed content
-		 * @customerService Essential for support queries about access history
-		 */
-		accessGrantedAt: timestamp("access_granted_at").defaultNow(),
-
-		/**
-		 * @accessControl When product access expires for this subscription
-		 * @businessRule null = lifetime access, date = subscription expiration
-		 */
-		accessExpiresAt: timestamp("access_expires_at"),
-
-		/**
-		 * @revenueTracking Total amount customer has paid for this subscription
-		 * @creatorEconomy Basis for instructor revenue sharing and orgal analytics
-		 */
-		totalPaid: decimal("total_paid", { precision: 12, scale: 2 }).default("0"),
-
-		/**
-		 * @currencyTracking Currency used for this subscription billing
-		 * @internationalCommerce Essential for multi-currency revenue tracking and reporting
-		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
-
-		/**
-		 * @paymentGateway External subscription ID from payment processor
-		 * @webhookIntegration Links internal subscription management to payment processor
-		 */
-		externalSubscriptionId: text("external_subscription_id"),
-
-		/**
-		 * @paymentGateway External customer ID from payment processor
-		 * @billingIntegration Links to payment gateway customer record for billing management
-		 */
-		externalCustomerId: text("external_customer_id"),
-
-		/**
-		 * @extensibility Additional subscription metadata for analytics and integrations
-		 * @businessIntelligence May contain usage tracking, preferences, or integration data
-		 */
-		metadata: jsonb("metadata"),
-
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		// Performance indexes for subscription management
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`,
-		).on(t.userId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`,
-		).on(t.planId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`,
-		).on(t.orgId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`,
-		).on(t.status),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`,
-		).on(t.orgMemberId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`,
-		).on(t.accessExpiresAt),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
-		).on(t.externalSubscriptionId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`,
-		).on(t.currencyCode),
-
-		// Revenue Analytics Indexes
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`,
-		).on(t.totalPaid, t.currencyCode),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`,
-		).on(t.orgId, t.totalPaid),
-	],
-);

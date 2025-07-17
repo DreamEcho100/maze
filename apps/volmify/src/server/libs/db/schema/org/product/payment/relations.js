@@ -42,7 +42,7 @@ import {
 	orgProductVariantPaymentPlanI18n,
 	orgProductVariantPaymentPlanMemberSubscription,
 	orgProductVariantPaymentPlanOneTimeType,
-	orgProductVariantPaymentPlanOneTimeTypeI18n,
+	// orgProductVariantPaymentPlanOneTimeTypeI18n,
 	orgProductVariantPaymentPlanSubscriptionType,
 	orgProductVariantPaymentPlanSubscriptionTypeI18n,
 } from "./schema.js";
@@ -94,22 +94,22 @@ export const orgProductVariantPaymentPlanOneTimeTypeRelations = relations(
 			fields: [orgProductVariantPaymentPlanOneTimeType.currencyCode],
 			references: [currency.code],
 		}),
-		translations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
+		// translations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
 	}),
 );
-export const orgProductVariantPaymentPlanOneTimeTypeI18nRelations = relations(
-	orgProductVariantPaymentPlanOneTimeTypeI18n,
-	({ one }) => ({
-		planId: one(orgProductVariantPaymentPlan, {
-			fields: [orgProductVariantPaymentPlanOneTimeTypeI18n.planId],
-			references: [orgProductVariantPaymentPlan.id],
-		}),
-		locale: one(orgLocale, {
-			fields: [orgProductVariantPaymentPlanOneTimeTypeI18n.localeKey],
-			references: [orgLocale.localeKey],
-		}),
-	}),
-);
+// export const orgProductVariantPaymentPlanOneTimeTypeI18nRelations = relations(
+// 	orgProductVariantPaymentPlanOneTimeTypeI18n,
+// 	({ one }) => ({
+// 		planId: one(orgProductVariantPaymentPlan, {
+// 			fields: [orgProductVariantPaymentPlanOneTimeTypeI18n.planId],
+// 			references: [orgProductVariantPaymentPlan.id],
+// 		}),
+// 		locale: one(orgLocale, {
+// 			fields: [orgProductVariantPaymentPlanOneTimeTypeI18n.localeKey],
+// 			references: [orgLocale.localeKey],
+// 		}),
+// 	}),
+// );
 export const orgProductVariantPaymentPlanSubscriptionTypeRelations = relations(
 	orgProductVariantPaymentPlanSubscriptionType,
 	({ one, many }) => ({

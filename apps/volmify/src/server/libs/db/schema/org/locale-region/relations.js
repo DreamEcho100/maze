@@ -4,7 +4,7 @@ import { seoMetadata } from "../../system/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
 import {
 	orgProductVariantPaymentPlanI18n,
-	orgProductVariantPaymentPlanOneTimeTypeI18n,
+	// orgProductVariantPaymentPlanOneTimeTypeI18n,
 	orgProductVariantPaymentPlanSubscriptionTypeI18n,
 } from "../product/payment/schema";
 import { org } from "../schema";
@@ -26,7 +26,7 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsFunnelsI18n: many(orgFunnelI18n),
 	orgsTaxRatesI18n: many(orgTaxRateI18n),
 	productVariantPaymentPlanI18n: many(orgProductVariantPaymentPlanI18n),
-	productVariantPaymentPlanOneTimeTypeI18n: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
+	// productVariantPaymentPlanOneTimeTypeI18n: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
 	productVariantPaymentPlanSubscriptionTypeI18n: many(
 		orgProductVariantPaymentPlanSubscriptionTypeI18n,
 	),
