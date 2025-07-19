@@ -1,32 +1,19 @@
 import { relations } from "drizzle-orm";
 import { orgFunnelI18n } from "../../org/funnel/schema.js";
+import { orgLessonI18n } from "../../org/lesson/schema.js";
 import { orgRegionI18n } from "../../org/locale-region/schema.js";
 import {
-	orgLessonI18n,
-	orgProductCourseI18n,
 	orgProductCourseModuleI18n,
 	orgProductCourseModuleSectionI18n,
 	orgProductCourseModuleSectionLessonI18n,
-	skillI18n,
 } from "../../org/product/by-type/course/schema.js";
-import {
-	orgCouponI18n,
-	orgDiscountI18n,
-	orgGiftCardI18n,
-	orgPromotionI18n,
-} from "../../org/product/offers/schema.js";
 import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
-import {
-	orgProductI18n,
-	orgProductVariantI18n,
-} from "../../org/product/schema.js";
+import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
-import { userInstructorProfileTranslation } from "../../user/profile/instructor/schema.js";
-import {
-	locale,
-	marketTemplateTranslation,
-} from "../locale-currency-market/schema.js";
+import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
+import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
+import { skillI18n } from "../skill/schema.js";
 import {
 	seoAlternateUrl,
 	seoCustomMeta,
@@ -76,73 +63,37 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [marketTemplateTranslation.seoMetadataId],
 	}),
 
-	productsCoursesTranslations: one(orgProductCourseI18n, {
-		fields: [seoMetadata.id],
-		references: [orgProductCourseI18n.seoMetadataId],
-	}),
-	skillsTranslations: one(skillI18n, {
-		fields: [seoMetadata.id],
-		references: [skillI18n.seoMetadataId],
-	}),
-	productsCoursesModulesTranslations: one(orgProductCourseModuleI18n, {
-		fields: [seoMetadata.id],
-		references: [orgProductCourseModuleI18n.seoMetadataId],
-	}),
-	productsCoursesModulesSectionsTranslations: one(
-		orgProductCourseModuleSectionI18n,
-		{
-			fields: [seoMetadata.id],
-			references: [orgProductCourseModuleSectionI18n.seoMetadataId],
-		},
-	),
-	productsCoursesModulesSectionsLessonsTranslations: one(
-		orgProductCourseModuleSectionLessonI18n,
-		{
-			fields: [seoMetadata.id],
-			references: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
-		},
-	),
-	lessonsTranslations: one(orgLessonI18n, {
-		fields: [seoMetadata.id],
-		references: [orgLessonI18n.seoMetadataId],
-	}),
-
 	orgsBrandsTranslations: one(orgBrandTranslation, {
 		fields: [seoMetadata.id],
 		references: [orgBrandTranslation.seoMetadataId],
 	}),
 
-	usersInstructorProfilesTranslations: one(userInstructorProfileTranslation, {
+	usersInstructorProfilesTranslations: one(userInstructorProfileI18n, {
 		fields: [seoMetadata.id],
-		references: [userInstructorProfileTranslation.seoMetadataId],
+		references: [userInstructorProfileI18n.seoMetadataId],
 	}),
 
-	discountsTranslation: one(orgDiscountI18n, {
-		fields: [seoMetadata.id],
-		references: [orgDiscountI18n.seoMetadataId],
-	}),
-	couponsTranslation: one(orgCouponI18n, {
-		fields: [seoMetadata.id],
-		references: [orgCouponI18n.seoMetadataId],
-	}),
-	giftCardsTranslation: one(orgGiftCardI18n, {
-		fields: [seoMetadata.id],
-		references: [orgGiftCardI18n.seoMetadataId],
-	}),
-	promotionsTranslation: one(orgPromotionI18n, {
-		fields: [seoMetadata.id],
-		references: [orgPromotionI18n.seoMetadataId],
-	}),
+	// discountsTranslation: one(orgDiscountI18n, {
+	// 	fields: [seoMetadata.id],
+	// 	references: [orgDiscountI18n.seoMetadataId],
+	// }),
+	// couponsTranslation: one(orgCouponI18n, {
+	// 	fields: [seoMetadata.id],
+	// 	references: [orgCouponI18n.seoMetadataId],
+	// }),
+	// giftCardsTranslation: one(orgGiftCardI18n, {
+	// 	fields: [seoMetadata.id],
+	// 	references: [orgGiftCardI18n.seoMetadataId],
+	// }),
+	// promotionsTranslation: one(orgPromotionI18n, {
+	// 	fields: [seoMetadata.id],
+	// 	references: [orgPromotionI18n.seoMetadataId],
+	// }),
 
-	productsVariantsPaymentPlansTranslations: one(
-		orgProductVariantPaymentPlanI18n,
-		{
-			fields: [seoMetadata.id],
-			references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
-		},
-	),
-
-	//
+	orgProductVariantPaymentPlanI18n: one(orgProductVariantPaymentPlanI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
+	}),
 	orgFunnelI18n: one(orgFunnelI18n, {
 		fields: [seoMetadata.id],
 		references: [orgFunnelI18n.seoMetadataId],
@@ -170,6 +121,28 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	productVariantPaymentPlanI18n: one(orgProductVariantPaymentPlanI18n, {
 		fields: [seoMetadata.id],
 		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
+	}),
+	orgProductCourseModuleI18n: one(orgProductCourseModuleI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductCourseModuleI18n.seoMetadataId],
+	}),
+	orgProductCourseModuleSectionI18n: one(orgProductCourseModuleSectionI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductCourseModuleSectionI18n.seoMetadataId],
+	}),
+	orgProductCourseModuleSectionLessonI18n: one(orgProductCourseModuleSectionLessonI18n, {
+		fields: [seoMetadata.id],
+		references: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
+	}),
+
+	orgLessonI18n: one(orgLessonI18n, {
+		fields: [seoMetadata.id],
+		references: [orgLessonI18n.seoMetadataId],
+	}),
+
+	skillI18n: one(skillI18n, {
+		fields: [seoMetadata.id],
+		references: [skillI18n.seoMetadataId],
 	}),
 }));
 
@@ -206,34 +179,28 @@ export const seoTwitterCardRelations = relations(seoTwitterCard, ({ one }) => ({
 // -------------------------------------
 // STRUCTURED DATA RELATIONS
 // -------------------------------------
-export const seoStructuredDataRelations = relations(
-	seoStructuredData,
-	({ one }) => ({
-		// Many-to-one: Structured data belongs to SEO metadata
-		seoMetadata: one(seoMetadata, {
-			fields: [seoStructuredData.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
+export const seoStructuredDataRelations = relations(seoStructuredData, ({ one }) => ({
+	// Many-to-one: Structured data belongs to SEO metadata
+	seoMetadata: one(seoMetadata, {
+		fields: [seoStructuredData.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
-);
+}));
 
 // -------------------------------------
 // ALTERNATE URL RELATIONS
 // -------------------------------------
-export const seoAlternateUrlRelations = relations(
-	seoAlternateUrl,
-	({ one }) => ({
-		// Many-to-one: Alternate URL belongs to SEO metadata
-		seoMetadata: one(seoMetadata, {
-			fields: [seoAlternateUrl.seoMetadataId],
-			references: [seoMetadata.id],
-		}),
-		locale: one(locale, {
-			fields: [seoAlternateUrl.localeKey],
-			references: [locale.key],
-		}),
+export const seoAlternateUrlRelations = relations(seoAlternateUrl, ({ one }) => ({
+	// Many-to-one: Alternate URL belongs to SEO metadata
+	seoMetadata: one(seoMetadata, {
+		fields: [seoAlternateUrl.seoMetadataId],
+		references: [seoMetadata.id],
 	}),
-);
+	locale: one(locale, {
+		fields: [seoAlternateUrl.localeKey],
+		references: [locale.key],
+	}),
+}));
 
 // -------------------------------------
 // CUSTOM META RELATIONS

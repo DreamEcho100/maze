@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, integer, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
-import { currency, locale } from "../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../system/seo/schema";
+import { currency, locale } from "../../general/locale-currency-market/schema";
+import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
 

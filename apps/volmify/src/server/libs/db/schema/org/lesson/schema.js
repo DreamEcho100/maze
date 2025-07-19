@@ -1,6 +1,6 @@
 import { index, pgEnum, text } from "drizzle-orm/pg-core";
 import { createdAt, fk, id, table } from "../../_utils/helpers";
-import { seoMetadata } from "../../system/seo/schema";
+import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
 
@@ -35,10 +35,7 @@ export const orgLesson = table(
 const orgLessonI18nTableName = `${orgLessonTableName}_i18n`;
 export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
 	{
-		lessonId: fk("lesson_id")
-			.references(() => orgLesson.id)
-			.notNull(),
-		// Does a lesson even need SEO metadata? what would be the use case? pros and cons?
+		lessonId: fk("lesson_id").references(() => orgLesson.id), // Does a lesson even need SEO metadata? what would be the use case? pros and cons?
 		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
 		// .notNull(),
 		title: text("title").notNull(),

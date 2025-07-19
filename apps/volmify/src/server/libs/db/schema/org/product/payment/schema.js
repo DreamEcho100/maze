@@ -11,16 +11,9 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	fk,
-	id,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
-import { currency } from "../../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
+import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { currency } from "../../../general/locale-currency-market/schema.js";
+import { seoMetadata } from "../../../general/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
@@ -43,10 +36,11 @@ import { orgProductVariant } from "../schema.js";
  * - subscription: Recurring billing for continued access (SaaS, premium memberships)
  * - usage_based: Pay-per-consumption billing (API calls, content downloads, processing time)
  */
-export const orgProductVariantPaymentTypeEnum = pgEnum(
-	`${orgTableName}_payment_plan_type`,
-	["one_time", "subscription", "usage_based"],
-);
+export const orgProductVariantPaymentTypeEnum = pgEnum(`${orgTableName}_payment_plan_type`, [
+	"one_time",
+	"subscription",
+	"usage_based",
+]);
 
 /**
  * Billing Intervals - Recurring Payment Frequency
@@ -102,18 +96,15 @@ export const orgProductVariantPaymentSubscriptionStatusEnum = pgEnum(
  * - lesson_views: Content consumption billing for educational products
  * - processing_time: Computation time billing for service-based products
  */
-export const orgProductVariantPaymentUsageTypeEnum = pgEnum(
-	`${orgTableName}_usage_type`,
-	[
-		"api_calls",
-		"downloads",
-		"storage_usage",
-		"bandwidth_usage",
-		"course_completions",
-		"lesson_views",
-		"processing_time",
-	],
-);
+export const orgProductVariantPaymentUsageTypeEnum = pgEnum(`${orgTableName}_usage_type`, [
+	"api_calls",
+	"downloads",
+	"storage_usage",
+	"bandwidth_usage",
+	"course_completions",
+	"lesson_views",
+	"processing_time",
+]);
 
 /**
  * Usage Pricing Models - Consumption-to-Revenue Strategies
@@ -295,62 +286,34 @@ export const orgProductVariantPaymentPlan = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_slug`).on(
-			t.variantId,
-			t.slug,
-		),
+		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_slug`).on(t.variantId, t.slug),
 		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_default`)
 			.on(t.variantId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 
 		// Performance Indexes
 		index(`idx_${orgProductVariantPaymentPlanTableName}_type`).on(t.type), // CTI performance critical
-		index(`idx_${orgProductVariantPaymentPlanTableName}_variant_id`).on(
-			t.variantId,
-		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_variant_id`).on(t.variantId),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_tax_category_id`).on(
-			t.taxCategoryId,
-		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_tax_category_id`).on(t.taxCategoryId),
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_currency`).on(
 		// 	t.currencyCode,
 		// ),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_active`).on(t.isActive),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(
-			t.isFeatured,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(
-			t.startsAt,
-			t.endsAt,
-		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(t.isFeatured),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(t.startsAt, t.endsAt),
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_price`).on(t.price), // Revenue analytics
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
 		// 	t.compareAtPrice,
 		// ),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_is_transferable`).on(
-			t.isTransferable,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_allow_gifting`).on(
-			t.allowGifting,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(
-			t.accessTier,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_sort_order`).on(
-			t.sortOrder,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(
-			t.features,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(
-			t.deletedAt,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_updated_at`).on(
-			t.updatedAt,
-		),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_is_transferable`).on(t.isTransferable),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_allow_gifting`).on(t.allowGifting),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(t.accessTier),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_sort_order`).on(t.sortOrder),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(t.features),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(t.deletedAt),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
@@ -507,28 +470,19 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		// index(
 		// 	`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_access_duration_days`,
 		// ).on(t.accessDurationDays),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_max_purchases`,
-		).on(t.maxPurchasesPerUser),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_created_at`,
-		).on(t.createdAt),
-		index(
-			`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_updated_at`,
-		).on(t.updatedAt),
+		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_max_purchases`).on(
+			t.maxPurchasesPerUser,
+		),
+		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
 const orgProductVariantPaymentPlanSubscriptionTypeTableName = `${orgProductVariantPaymentPlanTableName}_subscription_type`;
-export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum =
-	pgEnum(`${orgTableName}_subscription_interval_count_unit`, [
-		"hours",
-		"days",
-		"weeks",
-		"months",
-		"quarters",
-		"years",
-	]);
+export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum = pgEnum(
+	`${orgTableName}_subscription_interval_count_unit`,
+	["hours", "days", "weeks", "months", "quarters", "years"],
+);
 
 /**
  * Subscription Payment Plan - Recurring Billing Model
@@ -589,15 +543,12 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 * @billingCycle How frequently org charges subscribers
 		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
-		billingInterval:
-			orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
+		billingInterval: orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
 		/**
 		 * @billingCycle Multiplier for billing interval enabling custom periods
 		 * @businessFlexibility intervalCount=3 with monthly = quarterly billing
 		 */
-		customBillingIntervalCount: integer(
-			"custom_billing_interval_count",
-		).default(1),
+		customBillingIntervalCount: integer("custom_billing_interval_count").default(1),
 		/**
 		 * Define the interval count measurement/unit
 		 */
@@ -625,30 +576,26 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 	},
 	(t) => [
 		// Performance indexes for subscription management
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_billing_interval`,
-		).on(t.billingInterval),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_billing_interval`).on(
+			t.billingInterval,
+		),
 		index(
 			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_count`,
 		).on(t.customBillingIntervalCount),
 		index(
 			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_unit`,
 		).on(t.customBillingIntervalUnit),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_trial`,
-		).on(t.trialPeriodDays),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_setup_fee`,
-		).on(t.setupFee),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_created_at`,
-		).on(t.createdAt),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_updated_at`,
-		).on(t.updatedAt),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_plan_id`,
-		).on(t.planId),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_trial`).on(
+			t.trialPeriodDays,
+		),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_setup_fee`).on(t.setupFee),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_updated_at`).on(
+			t.updatedAt,
+		),
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_plan_id`).on(t.planId),
 	],
 );
 
@@ -665,43 +612,42 @@ const orgProductVariantPaymentPlanSubscriptionTypeI18nTableName = `${orgProductV
  *
  * @abacRole Translations readable globally; write-scoped to org owners
  */
-export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
-	buildOrgI18nTable(orgProductVariantPaymentPlanSubscriptionTypeI18nTableName)(
-		{
-			/**
-			 * @translationTarget Target subscription plan
-			 */
-			planId: text("plan_id")
-				.notNull()
-				.references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
-					onDelete: "cascade",
-				}),
+export const orgProductVariantPaymentPlanSubscriptionTypeI18n = buildOrgI18nTable(
+	orgProductVariantPaymentPlanSubscriptionTypeI18nTableName,
+)(
+	{
+		/**
+		 * @translationTarget Target subscription plan
+		 */
+		planId: text("plan_id")
+			.notNull()
+			.references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
+				onDelete: "cascade",
+			}),
 
-			/**
-			 * @localizedContent Localized recurring cycle description
-			 * @onboardingContent Improves understanding for end customers
-			 */
-			billingDescription: text("billing_description"),
+		/**
+		 * @localizedContent Localized recurring cycle description
+		 * @onboardingContent Improves understanding for end customers
+		 */
+		billingDescription: text("billing_description"),
 
-			/**
-			 * @localizedContent Localized message for free trial info
-			 * @conversionCopy Increases conversion during signup
-			 */
-			trialMessage: text("trial_message"),
+		/**
+		 * @localizedContent Localized message for free trial info
+		 * @conversionCopy Increases conversion during signup
+		 */
+		trialMessage: text("trial_message"),
 
-			/**
-			 * @localizedContent Cancellation rules and expectations
-			 * @complianceContext Required in regulated markets (e.g., EU, CA)
-			 */
-			cancellationPolicy: text("cancellation_policy"),
-		},
-		{
-			fkKey: "planId",
-			extraConfig: (t, tableName) => [
-				index(`idx_${tableName}_plan_id`).on(t.planId),
-			],
-		},
-	);
+		/**
+		 * @localizedContent Cancellation rules and expectations
+		 * @complianceContext Required in regulated markets (e.g., EU, CA)
+		 */
+		cancellationPolicy: text("cancellation_policy"),
+	},
+	{
+		fkKey: "planId",
+		extraConfig: (t, tableName) => [index(`idx_${tableName}_plan_id`).on(t.planId)],
+	},
+);
 
 // -------------------------------------
 // USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
@@ -786,10 +732,7 @@ export const orgProductVariantPaymentPlanMemberSubscription = table(
 		 * @subscriptionLifecycle Current subscription state for access control
 		 * @accessControl Determines customer's access to product content and features
 		 */
-		status:
-			orgProductVariantPaymentSubscriptionStatusEnum("status").default(
-				"active",
-			),
+		status: orgProductVariantPaymentSubscriptionStatusEnum("status").default("active"),
 
 		/**
 		 * @accessControl When customer first gained access to subscribed content
@@ -847,38 +790,32 @@ export const orgProductVariantPaymentPlanMemberSubscription = table(
 	},
 	(t) => [
 		// Performance indexes for subscription management
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`,
-		).on(t.userId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`,
-		).on(t.planId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`,
-		).on(t.orgId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`,
-		).on(t.status),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`,
-		).on(t.orgMemberId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`,
-		).on(t.accessExpiresAt),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`).on(t.userId),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`).on(t.planId),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`).on(t.status),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`).on(
+			t.orgMemberId,
+		),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`).on(
+			t.accessExpiresAt,
+		),
 		// index(
 		// 	`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
 		// ).on(t.externalSubscriptionId),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`,
-		).on(t.currencyCode),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`).on(
+			t.currencyCode,
+		),
 
 		// Revenue Analytics Indexes
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`,
-		).on(t.totalPaid, t.currencyCode),
-		index(
-			`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`,
-		).on(t.orgId, t.totalPaid),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`).on(
+			t.totalPaid,
+			t.currencyCode,
+		),
+		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`).on(
+			t.orgId,
+			t.totalPaid,
+		),
 	],
 );
 

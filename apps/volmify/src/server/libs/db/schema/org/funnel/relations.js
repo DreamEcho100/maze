@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { seoMetadata } from "../../system/seo/schema";
+import { seoMetadata } from "../../general/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
 import { org } from "../schema";
 import { orgFunnel, orgFunnelDomain, orgFunnelI18n, orgFunnelRegion } from "./schema";

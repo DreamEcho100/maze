@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
-import { currency } from "../../../system/locale-currency-market/schema.js";
+import { currency } from "../../../general/locale-currency-market/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";

@@ -11,14 +11,16 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { createdAt, fk, getLocaleKey, id, updatedAt, userTableName } from "../../../_utils/helpers";
+import { createdAt, fk, getLocaleKey, id, updatedAt } from "../../../_utils/helpers";
+import { contactInfo } from "../../../general/contact-info/schema";
+import { locale } from "../../../general/locale-currency-market/schema";
+import { seoMetadata } from "../../../general/seo/schema";
 import { orgProduct } from "../../../org/product/schema";
 import { instructorOrgAffiliation } from "../../../org/schema";
-import { contactInfo } from "../../../system/contact-info/schema";
-import { locale } from "../../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../../system/seo/schema";
 import { user } from "../../../user/schema";
+import { userTableName } from "../../_utils/helpers";
 
+const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
 /**
  * Instructor Profile - User-based content creator identity
  *
@@ -26,7 +28,7 @@ import { user } from "../../../user/schema";
  * Can participate across multiple orgs while maintaining identity
  */
 export const userInstructorProfile = table(
-	`${userTableName}_instructor_profile`,
+	userInstructorProfileTableName,
 	{
 		id: id.notNull(),
 		userId: text(`${userTableName}_id`)
@@ -88,14 +90,15 @@ export const userInstructorProfile = table(
 	},
 	(t) => [
 		// uniqueIndex("uq_instructor_user").on(t.userId),
-		uniqueIndex("uq_instructor_profile_slug").on(t.slug),
-		index("idx_instructor_profile_user").on(t.userId),
-		index("idx_instructor_profile_verified").on(t.verifiedAt),
+		uniqueIndex(`uq_${userInstructorProfileTableName}_slug`).on(t.slug),
+		index(`idx_${userInstructorProfileTableName}_user_id`).on(t.userId),
+		index(`idx_${userInstructorProfileTableName}_verified_at`).on(t.verifiedAt),
 	],
 );
 
-export const userInstructorProfileTranslation = table(
-	`${userTableName}_instructor_profile_translation`,
+const userInstructorProfileI18nTableName = `${userTableName}_instructor_profile_i18n`;
+export const userInstructorProfileI18n = table(
+	userInstructorProfileI18nTableName,
 	{
 		id: id.notNull(),
 		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
@@ -125,18 +128,24 @@ export const userInstructorProfileTranslation = table(
 		updatedAt,
 	},
 	(t) => [
-		uniqueIndex("uq_user_instructor_profile_translation_locale_key").on(
+		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_locale_key`).on(
 			t.userInstructorProfileId,
 			t.localeKey,
 		),
-		uniqueIndex("uq_user_instructor_profile_translation_default")
+		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_default`)
 			.on(t.userInstructorProfileId, t.isDefault)
 			.where(eq(t.isDefault, true)),
+		index(`idx_${userInstructorProfileI18nTableName}_profile_id`).on(t.userInstructorProfileId),
+		index(`idx_${userInstructorProfileI18nTableName}_locale_key`).on(t.localeKey),
+		index(`idx_${userInstructorProfileI18nTableName}_seo_metadata_id`).on(t.seoMetadataId),
+		index(`idx_${userInstructorProfileI18nTableName}_created_at`).on(t.createdAt),
+		index(`idx_${userInstructorProfileI18nTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
+const userInstructorProfileContactInfoTableName = `${userTableName}_instructor_profile_contact_info`;
 export const userInstructorProfileContactInfo = table(
-	`${userTableName}_instructor_profile_contact_info`,
+	userInstructorProfileContactInfoTableName,
 	{
 		id: id.notNull(),
 		instructorProfileId: text("instructor_profile_id")
@@ -149,14 +158,18 @@ export const userInstructorProfileContactInfo = table(
 		createdAt,
 	},
 	(t) => [
-		index("idx_instructor_contact_profile").on(t.instructorProfileId),
-		index("idx_instructor_contact_info").on(t.contactInfoId),
+		index(`idx_${userInstructorProfileContactInfoTableName}_instructor_profile_id`).on(
+			t.instructorProfileId,
+		),
+		index(`idx_${userInstructorProfileContactInfoTableName}_contact_info_id`).on(t.contactInfoId),
+		index(`idx_${userInstructorProfileContactInfoTableName}_created_at`).on(t.createdAt),
 		// uniqueIndex("uq_instructor_contact_primary")
 		// 	.on(t.instructorProfileId, t.isPrimary)
 		// 	.where(eq(t.isPrimary, true)),
 	],
 );
 
+const userInstructorProfileProductTableName = `${userTableName}_instructor_profile_product`;
 /**
  * Instructor Revenue Tracking
  *
@@ -164,7 +177,7 @@ export const userInstructorProfileContactInfo = table(
  * Supports the vendorRevenue connection mentioned in course schema
  */
 export const userInstructorProfileRevenue = table(
-	`${userTableName}_instructor_profile_revenue`,
+	userInstructorProfileProductTableName,
 	{
 		id: id.notNull(),
 		instructorMembershipId: text("instructor_membership_id")
@@ -181,17 +194,20 @@ export const userInstructorProfileRevenue = table(
 		createdAt,
 	},
 	(t) => [
-		index("idx_user_instructor_profile_revenue_membership").on(t.instructorMembershipId),
-		index("idx_user_instructor_profile_revenue_product").on(t.productId),
-		index("idx_user_instructor_profile_revenue_order").on(t.orderId),
+		index(`idx_${userInstructorProfileProductTableName}_instructor_membership_id`).on(
+			t.instructorMembershipId,
+		),
+		index(`idx_${userInstructorProfileProductTableName}_product_id`).on(t.productId),
+		index(`idx_${userInstructorProfileProductTableName}_order_id`).on(t.orderId),
 	],
 );
 
-export const userInstructorProfileMetrics = table(
-	`${userTableName}_instructor_profile_metrics`,
+const userInstructorProfileSkillTableName = `${userTableName}_instructor_profile_skill`;
+export const userInstructorProfileSkill = table(
+	userInstructorProfileSkillTableName,
 	{
 		id: id.notNull(),
-		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
+		profileId: fk("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		// Engagement metrics
@@ -263,15 +279,18 @@ export const userInstructorProfileMetrics = table(
 		updatedAt,
 	},
 	(t) => [
-		index("idx_instructor_metrics_instructor").on(t.userInstructorProfileId),
-		index("idx_instructor_metrics_last_updated").on(t.lastUpdatedAt),
+		index(`idx_${userInstructorProfileSkillTableName}_profile_id`).on(t.profileId),
+		index(`idx_${userInstructorProfileSkillTableName}_last_updated`).on(t.lastUpdatedAt),
+		index(`idx_${userInstructorProfileSkillTableName}_created_at`).on(t.createdAt),
+		index(`idx_${userInstructorProfileSkillTableName}_updated_at`).on(t.updatedAt),
 	],
 );
+const userInstructorProfileSkillI18nTableName = `${userTableName}_instructor_profile_skill_i18n`;
 export const userInstructorProfileCoursesMetrics = table(
-	`${userTableName}_instructor_profile_courses_metrics`,
+	userInstructorProfileSkillI18nTableName,
 	{
 		id: id.notNull(),
-		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
+		profileId: fk("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		amount: integer("amount").default(0),
@@ -304,6 +323,12 @@ export const userInstructorProfileCoursesMetrics = table(
 		// totalWithRatings: integer("total_courses_with_ratings").default(0),
 		// totalWithFeedback: integer("total_courses_with_feedback").default(0),
 		// totalWithCertificates: integer("total_courses_with_certificates").default(0),
+		createdAt,
+		updatedAt,
 	},
-	(_t) => [],
+	(t) => [
+		index(`idx_${userInstructorProfileSkillI18nTableName}_profile_id`).on(t.profileId),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_created_at`).on(t.createdAt),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_updated_at`).on(t.updatedAt),
+	],
 );

@@ -1,12 +1,12 @@
 import { relations } from "drizzle-orm";
+import { locale } from "../../../general/locale-currency-market/schema.js";
+import { seoMetadata } from "../../../general/seo/schema.js";
 import { instructorOrgAffiliation } from "../../../org/schema.js";
-import { locale } from "../../../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../../../system/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import {
 	userInstructorProfile,
 	userInstructorProfileContactInfo,
-	userInstructorProfileTranslation,
+	userInstructorProfileI18n,
 } from "./schema.js";
 
 /**
@@ -34,18 +34,18 @@ export const userInstructorProfileRelations = relations(userInstructorProfile, (
 	 * @communicationHub Multiple contact points for instructor business
 	 */
 	contactInfo: many(userInstructorProfileContactInfo),
-	translations: many(userInstructorProfileTranslation),
+	translations: many(userInstructorProfileI18n),
 }));
 
 export const userInstructorProfileTranslationRelations = relations(
-	userInstructorProfileTranslation,
+	userInstructorProfileI18n,
 	({ one }) => ({
 		/**
 		 * @localeKey Unique locale identifier for translations
 		 * @immutable Once set, should not change to maintain translation integrity
 		 */
 		locale: one(locale, {
-			fields: [userInstructorProfileTranslation.localeKey],
+			fields: [userInstructorProfileI18n.localeKey],
 			references: [locale.key],
 		}),
 
@@ -53,7 +53,7 @@ export const userInstructorProfileTranslationRelations = relations(
 		 * @seoMetadata SEO metadata for translated instructor profiles
 		 */
 		seoMetadata: one(seoMetadata, {
-			fields: [userInstructorProfileTranslation.seoMetadataId],
+			fields: [userInstructorProfileI18n.seoMetadataId],
 			references: [seoMetadata.id],
 		}),
 
@@ -61,7 +61,7 @@ export const userInstructorProfileTranslationRelations = relations(
 		 * @instructorProfileLink Links translation to the main instructor profile
 		 */
 		instructorProfile: one(userInstructorProfile, {
-			fields: [userInstructorProfileTranslation.userInstructorProfileId],
+			fields: [userInstructorProfileI18n.userInstructorProfileId],
 			references: [userInstructorProfile.id],
 		}),
 	}),

@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
-import { currency } from "../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../system/seo/schema";
+import { currency } from "../../general/locale-currency-market/schema";
+import { seoMetadata } from "../../general/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
 import { orgProductVariantPaymentPlan } from "../product/payment/schema";
 import { orgProductVariant } from "../product/schema";

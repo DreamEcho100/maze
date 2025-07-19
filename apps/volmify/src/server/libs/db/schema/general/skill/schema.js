@@ -1,8 +1,8 @@
 import { boolean, index, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createdAt, fk, getLocaleKey, id, slug, table, updatedAt } from "../../_utils/helpers";
 import { org } from "../../org/schema";
-import { locale } from "../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../system/seo/schema";
+import { locale } from "../locale-currency-market/schema";
+import { seoMetadata } from "../seo/schema";
 
 const skillTableName = "skill";
 // Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
@@ -18,6 +18,7 @@ export const skill = table(
 		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
 		 */
 		slug: slug.notNull(), // "react", "python", "data-analysis"
+		name: text("name").notNull(),
 
 		/**
 		 * @skillHierarchy Parent skill for hierarchical skill org

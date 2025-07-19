@@ -23,8 +23,8 @@ import {
 	table,
 	updatedAt,
 } from "../_utils/helpers.js";
-import { currency, locale } from "../system/locale-currency-market/schema.js";
-import { seoMetadata } from "../system/seo/schema.js";
+import { currency, locale } from "../general/locale-currency-market/schema.js";
+import { seoMetadata } from "../general/seo/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgTableName } from "./_utils/helpers.js";

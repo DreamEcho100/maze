@@ -9,7 +9,7 @@ import {
 	table,
 	updatedAt,
 } from "../../../../_utils/helpers.js";
-import { systemPermission } from "../../../../system/schema.js";
+import { systemPermission } from "../../../../general/schema.js";
 import { user } from "../../../../user/schema.js";
 import { orgTableName } from "../../../_utils/helpers.js";
 import { org } from "../../../schema.js";

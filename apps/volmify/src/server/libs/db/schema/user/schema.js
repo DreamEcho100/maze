@@ -3,15 +3,8 @@
 import { index, jsonb, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 import { bytea } from "../_utils/bytea.js";
-import {
-	createdAt,
-	deletedAt,
-	id,
-	name,
-	table,
-	updatedAt,
-	userTableName,
-} from "../_utils/helpers.js";
+import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/helpers.js";
+import { userTableName } from "./_utils/helpers.js";
 
 export const user = table(
 	userTableName,
@@ -33,21 +26,19 @@ export const user = table(
 		recoveryCode: bytea("recovery_code"),
 		twoFactorRegisteredAt: timestamp("two_factor_registered_at", { precision: 3 }),
 	},
-	(table) => {
-		const base = userTableName;
-		return [
-			index(`idx_${base}_created_at`).on(table.createdAt),
-			index(`idx_${base}_updated_at`).on(table.updatedAt),
-			index(`idx_${base}_last_login_at`).on(table.lastLoginAt),
-			index(`idx_${base}_display_name`).on(table.displayName),
-		];
-	},
+	(table) => [
+		index(`idx_${userTableName}_created_at`).on(table.createdAt),
+		index(`idx_${userTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${userTableName}_last_login_at`).on(table.lastLoginAt),
+		index(`idx_${userTableName}_display_name`).on(table.displayName),
+	],
 );
 const sessionMetadataJsonb = jsonb("metadata");
 const userAgentJsonb = jsonb("user_agent_metadata");
 
+const userSessionTableName = `${userTableName}_session`;
 export const userSession = table(
-	`${userTableName}_session`,
+	userSessionTableName,
 	{
 		id: id.notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
@@ -71,24 +62,22 @@ export const userSession = table(
 			sessionMetadataJsonb
 		),
 	},
-	(table) => {
-		const base = `${userTableName}_session`;
-		return [
-			index(`idx_${base}_created_at`).on(table.createdAt),
-			index(`idx_${base}_updated_at`).on(table.updatedAt),
-			index(`idx_${base}_expires_at`).on(table.expiresAt),
-			index(`idx_${base}_user_id`).on(table.userId),
-			index(`idx_${base}_session_type`).on(table.authStrategy),
-			index(`idx_${base}_revoked_at`).on(table.revokedAt),
-			index(`idx_${base}_last_used_at`).on(table.lastUsedAt),
-			index(`idx_${base}_user_id_expires_at`).on(table.userId, table.expiresAt),
-			index(`idx_${base}_expires_at_created_at`).on(table.expiresAt, table.createdAt),
-			index(`idx_${base}_expires_at_revoked_at`).on(table.expiresAt, table.revokedAt),
-		];
-	},
+	(table) => [
+		index(`idx_${userSessionTableName}_created_at`).on(table.createdAt),
+		index(`idx_${userSessionTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${userSessionTableName}_expires_at`).on(table.expiresAt),
+		index(`idx_${userSessionTableName}_user_id`).on(table.userId),
+		index(`idx_${userSessionTableName}_session_type`).on(table.authStrategy),
+		index(`idx_${userSessionTableName}_revoked_at`).on(table.revokedAt),
+		index(`idx_${userSessionTableName}_last_used_at`).on(table.lastUsedAt),
+		index(`idx_${userSessionTableName}_user_id_expires_at`).on(table.userId, table.expiresAt),
+		index(`idx_${userSessionTableName}_expires_at_created_at`).on(table.expiresAt, table.createdAt),
+		index(`idx_${userSessionTableName}_expires_at_revoked_at`).on(table.expiresAt, table.revokedAt),
+	],
 );
+const userEmailVerificationTableName = `${userTableName}_email_verification`;
 export const userEmailVerificationRequest = table(
-	`${userTableName}_email_verification_request`,
+	userEmailVerificationTableName,
 	{
 		id: id.notNull(),
 		createdAt,
@@ -99,18 +88,16 @@ export const userEmailVerificationRequest = table(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 	},
-	(table) => {
-		const base = `${userTableName}_email_verification_request`;
-		return [
-			uniqueIndex(`uq_${base}_code`).on(table.code),
-			index(`idx_${base}_created_at`).on(table.createdAt),
-			index(`idx_${base}_expires_at`).on(table.expiresAt),
-			index(`idx_${base}_user_id`).on(table.userId),
-		];
-	},
+	(table) => [
+		uniqueIndex(`uq_${userEmailVerificationTableName}_code`).on(table.code),
+		index(`idx_${userEmailVerificationTableName}_created_at`).on(table.createdAt),
+		index(`idx_${userEmailVerificationTableName}_expires_at`).on(table.expiresAt),
+		index(`idx_${userEmailVerificationTableName}_user_id`).on(table.userId),
+	],
 );
+const userPasswordResetTableName = `${userTableName}_password_reset`;
 export const userPasswordResetSession = table(
-	`${userTableName}_password_reset_session`,
+	userPasswordResetTableName,
 	{
 		id: text("id").primaryKey().notNull(),
 		createdAt,

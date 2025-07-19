@@ -1,6 +1,3 @@
-// Needs to add the progress tracking for module, section, and lessons
-//
-import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -13,18 +10,16 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { skill } from "#server/libs/db/schema/system/skill/schema";
+import { skill } from "#server/libs/db/schema/general/skill/schema";
 import {
 	createdAt,
 	deletedAt,
 	fk,
-	getLocaleKey,
 	id,
 	table,
 	updatedAt,
 } from "../../../../_utils/helpers";
-import { locale } from "../../../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../../../system/seo/schema";
+import { seoMetadata } from "../../../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
 import { orgLesson } from "../../../lesson/schema";
 import { orgMember } from "../../../member/schema";
@@ -123,9 +118,6 @@ export const orgProductCourseI18n = buildOrgI18nTable(
 	{
 		courseId: fk("course_id")
 			.references(() => orgProductCourse.id)
-			.notNull(),
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
 			.notNull(),
 		/**
 		 * @localizedContent Course-specific localized metadata
@@ -344,9 +336,7 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
 	},
 	{
 		fkKey: "moduleId",
@@ -439,9 +429,7 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
 	},
 	{
 		fkKey: "sectionId",
@@ -546,57 +534,26 @@ export const orgProductCourseModuleSectionLesson = table(
 
 const orgProductCourseModuleSectionLessonI18nTableName = `${orgProductCourseModuleSectionLessonTableName}_i18n`;
 // This table can be used to override the lesson metadata for a specific module
-export const orgProductCourseModuleSectionLessonI18n = table(
+export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	orgProductCourseModuleSectionLessonI18nTableName,
+)(
 	{
-		id: id.notNull(),
 		lessonId: fk("lesson_id")
 			.references(() => orgProductCourseModuleSectionLesson.id)
-			.notNull(),
-
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-
+			.notNull(), // TODO: Since this table is for the i18n of the course module section lesson,
+		// And it reference a lesson, and the lesson already have a an optional seo metadata, maybe add a seo metadata override behavior _(merge, override, etc...)_
+		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
 		title: text("title").notNull(),
 		description: text("description"),
-		isDefault: boolean("is_default").default(false),
-
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-		createdAt,
-		updatedAt,
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonI18nTableName}`).on(
-			t.lessonId,
-			t.localeKey,
-		),
-		uniqueIndex(
-			`uq_${orgProductCourseModuleSectionLessonI18nTableName}_default`,
-		)
-			.on(t.lessonId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index(
-			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_locale_key`,
-		).on(t.localeKey),
-		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_seo`).on(
-			t.seoMetadataId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_lesson`).on(
-			t.lessonId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonI18nTableName}_title`).on(
-			t.title,
-		),
-		index(
-			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_created_at`,
-		).on(t.createdAt),
-		index(
-			`idx_${orgProductCourseModuleSectionLessonI18nTableName}_updated_at`,
-		).on(t.updatedAt),
-	],
+	{
+		fkKey: "lessonId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_lesson_id`).on(t.lessonId),
+			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
+			index(`idx_${tName}_title`).on(t.title),
+		],
+	},
 );
 
 // IMP: The lesson type related table are halted for now

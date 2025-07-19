@@ -58,7 +58,7 @@ import {
 	table,
 	updatedAt,
 } from "../../_utils/helpers.js";
-import { seoMetadata } from "../../system/seo/schema.js";
+import { seoMetadata } from "../../general/seo/schema.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { org, orgBrand } from "../schema.js";

@@ -1,7 +1,14 @@
 import { relations } from "drizzle-orm";
-import { currency } from "../../system/locale-currency-market/schema";
-import { seoMetadata } from "../../system/seo/schema";
+import { currency } from "../../general/locale-currency-market/schema";
+import { seoMetadata } from "../../general/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
+import { orgLessonI18n } from "../lesson/schema";
+import {
+	orgProductCourseI18n,
+	orgProductCourseModuleI18n,
+	orgProductCourseModuleSectionI18n,
+	orgProductCourseModuleSectionLessonI18n,
+} from "../product/by-type/course/schema";
 import {
 	orgCouponI18n,
 	orgDiscountI18n,
@@ -40,6 +47,11 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsCouponsI18n: many(orgCouponI18n),
 	orgsGiftCardsI18n: many(orgGiftCardI18n),
 	orgsPromotionsI18n: many(orgPromotionI18n),
+	orgsLessonsI18n: many(orgLessonI18n),
+	orgsProductsCoursesI18n: many(orgProductCourseI18n),
+	orgsProductsCoursesModulesI18n: many(orgProductCourseModuleI18n),
+	orgsProductsCoursesModulesSectionsI18n: many(orgProductCourseModuleSectionI18n),
+	orgsProductsCoursesModulesSectionsLessonsI18n: many(orgProductCourseModuleSectionLessonI18n),
 }));
 
 export const orgRegionRelations = relations(orgRegion, ({ many, one }) => ({

@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
-import { skill } from "#server/libs/db/schema/system/skill/schema";
-import { seoMetadata } from "../../../../system/seo/schema";
+import { skill } from "#server/libs/db/schema/general/skill/schema";
+import { seoMetadata } from "../../../../general/seo/schema";
 import { orgLesson } from "../../../lesson/schema";
 import { orgLocale } from "../../../locale-region/schema";
 import { orgMember } from "../../../member/schema";
@@ -40,7 +40,7 @@ export const orgProductCourseRelations = relations(
 );
 export const orgProductCourseI18nRelations = relations(
 	orgProductCourseI18n,
-	({ many, one }) => ({
+	({ one }) => ({
 		/**
 		 * @localizationTarget Course being translated for international markets
 		 * @businessContext Enables region-specific course marketing and positioning
@@ -48,11 +48,6 @@ export const orgProductCourseI18nRelations = relations(
 		course: one(orgProductCourse, {
 			fields: [orgProductCourseI18n.courseId],
 			references: [orgProductCourse.id],
-		}),
-
-		seoMetadata: one(seoMetadata, {
-			fields: [orgProductCourseI18n.seoMetadataId],
-			references: [seoMetadata.id],
 		}),
 		locale: one(orgLocale, {
 			fields: [orgProductCourseI18n.localeKey],
@@ -62,7 +57,7 @@ export const orgProductCourseI18nRelations = relations(
 );
 export const orgProductCourseSkillRelations = relations(
 	orgProductCourseSkill,
-	({ many, one }) => ({
+	({ one }) => ({
 		course: one(orgProductCourse, {
 			fields: [orgProductCourseSkill.courseId],
 			references: [orgProductCourse.id],
@@ -76,7 +71,7 @@ export const orgProductCourseSkillRelations = relations(
 );
 export const orgMemberProductCourseChallengeRatingRelations = relations(
 	orgMemberProductCourseChallengeRating,
-	({ many, one }) => ({
+	({ one }) => ({
 		course: one(orgProductCourse, {
 			fields: [orgMemberProductCourseChallengeRating.courseId],
 			references: [orgProductCourse.id],
@@ -100,7 +95,7 @@ export const orgProductCourseModuleRelations = relations(
 );
 export const orgProductCourseModuleI18nRelations = relations(
 	orgProductCourseModuleI18n,
-	({ many, one }) => ({
+	({ one }) => ({
 		module: one(orgProductCourseModule, {
 			fields: [orgProductCourseModuleI18n.moduleId],
 			references: [orgProductCourseModule.id],
@@ -128,7 +123,7 @@ export const orgProductCourseModuleSectionRelations = relations(
 );
 export const orgProductCourseModuleSectionI18nRelations = relations(
 	orgProductCourseModuleSectionI18n,
-	({ many, one }) => ({
+	({ one }) => ({
 		section: one(orgProductCourseModuleSection, {
 			fields: [orgProductCourseModuleSectionI18n.sectionId], // Fixed field name
 			references: [orgProductCourseModuleSection.id],
@@ -159,7 +154,7 @@ export const orgProductCourseModuleSectionLessonRelations = relations(
 );
 export const orgProductCourseModuleSectionLessonI18nRelations = relations(
 	orgProductCourseModuleSectionLessonI18n,
-	({ many, one }) => ({
+	({ one }) => ({
 		sectionLesson: one(orgProductCourseModuleSectionLesson, {
 			// Fixed field name
 			fields: [orgProductCourseModuleSectionLessonI18n.lessonId], // Fixed field
@@ -177,7 +172,7 @@ export const orgProductCourseModuleSectionLessonI18nRelations = relations(
 );
 export const orgMemberProductCourseEnrollmentRelations = relations(
 	orgMemberProductCourseEnrollment,
-	({ many, one }) => ({
+	({ one }) => ({
 		orgMember: one(orgMember, {
 			fields: [orgMemberProductCourseEnrollment.memberId],
 			references: [orgMember.id],
@@ -190,7 +185,7 @@ export const orgMemberProductCourseEnrollmentRelations = relations(
 );
 export const orgMemberLearningProfileRelations = relations(
 	orgMemberLearningProfile,
-	({ many, one }) => ({
+	({ one }) => ({
 		member: one(orgMember, {
 			fields: [orgMemberLearningProfile.memberId],
 			references: [orgMember.id],
