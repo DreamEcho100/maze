@@ -8,6 +8,7 @@ import {
 } from "../product/offers/schema.js";
 import { orgMemberProductVariantPaymentPlanSubscription } from "../product/payment/schema.js";
 import { org } from "../schema.js";
+import { orgDepartmentMembership } from "./department/schema.js";
 import { orgMember, orgMemberInvitation } from "./schema";
 import { orgTeamMembership } from "./team/schema.js";
 
@@ -21,8 +22,10 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 		references: [user.id],
 	}),
 	teamsMemberships: many(orgTeamMembership),
-	departmentMemberships: many(org),
-	productsVariantsPaymentPlansSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
+	departmentMemberships: many(orgDepartmentMembership),
+	productsVariantsPaymentPlansSubscriptions: many(
+		orgMemberProductVariantPaymentPlanSubscription,
+	),
 	ordersDiscountsUsages: many(orgMemberOrderDiscountUsage),
 	ordersDiscountsUsage: many(orgMemberOrderDiscountUsage),
 	issuedGiftCardsTo: many(orgGiftCard),
@@ -39,19 +42,22 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	// lessons: many(lesson),
 }));
 
-export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
-	org: one(org, {
-		fields: [orgMemberInvitation.orgId],
-		references: [org.id],
+export const orgMemberInvitationRelations = relations(
+	orgMemberInvitation,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgMemberInvitation.orgId],
+			references: [org.id],
+		}),
+		invitedByMember: one(orgMember, {
+			fields: [orgMemberInvitation.invitedByMemberId],
+			references: [orgMember.id],
+			relationName: "org_member_invitation_sent_by",
+		}),
+		invitedMember: one(orgMember, {
+			fields: [orgMemberInvitation.memberId],
+			references: [orgMember.id],
+			relationName: "org_member_invitation_received_by",
+		}),
 	}),
-	invitedByMember: one(orgMember, {
-		fields: [orgMemberInvitation.invitedByMemberId],
-		references: [orgMember.id],
-		relationName: "org_member_invitation_sent_by",
-	}),
-	invitedMember: one(orgMember, {
-		fields: [orgMemberInvitation.memberId],
-		references: [orgMember.id],
-		relationName: "org_member_invitation_received_by",
-	}),
-}));
+);

@@ -1,4 +1,13 @@
-import { foreignKey, index, pgEnum, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	foreignKey,
+	index,
+	pgEnum,
+	primaryKey,
+	text,
+	timestamp,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 import {
 	createdAt,
@@ -11,6 +20,7 @@ import {
 } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
+import { orgMember } from "../schema.js";
 import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
@@ -71,6 +81,14 @@ export const orgDepartment = table(
 		 * Used to define nested department structures (e.g., HR > Payroll)
 		 */
 		parentId: idFkCol("parent_id"), // .references(() => departments.id),
+
+		/**
+		 * @branchLike
+		 * Project teams with departmental support
+		 */
+		allowsCrossDepartmentMembers: boolean(
+			"allows_cross_department_members",
+		).default(false),
 
 		// /**
 		//  * @branchLike Enhanced department capabilities
@@ -189,62 +207,54 @@ const permissionPatterns = {
 	],
 );
 
-// Q: Is the following needed?
-// Is the department membership table necessary?
-// I mean does the department contains teams, members, or both?
-// const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
-// export const orgDepartmentMembershipStatusEnum = pgEnum(
-// 	`${orgDepartmentMembershipTableName}_status`,
-// 	["active", "inactive", "pending", "removed"],
-// );
+const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
+export const orgDepartmentMembershipStatusEnum = pgEnum(
+	`${orgDepartmentMembershipTableName}_status`,
+	["active", "inactive", "pending", "removed"],
+);
 
-// NOTE: is the following needed?
-// /**
-//  * Member-Department Assignment (M:M)
-//  *
-//  * @abacRole Structural Permission Grouping
-//  * Members can belong to one or more departments. This informs both permission
-//  * inheritance and UI logic (like filtering or default views).
-//  */
-// export const orgDepartmentMembership = table(
-// 	orgDepartmentMembershipTableName,
-// 	{
-// 		memberId: text("member_id")
-// 			.notNull()
-// 			.references(() => orgMember.id, { onDelete: "cascade" }),
+/**
+ * Member-Department Assignment (M:M)
+ *
+ * @abacRole Structural Permission Grouping
+ * Members can belong to one or more departments. This informs both permission
+ * inheritance and UI logic (like filtering or default views).
+ */
+export const orgDepartmentMembership = table(
+	orgDepartmentMembershipTableName,
+	{
+		memberId: text("member_id")
+			.notNull()
+			.references(() => orgMember.id, { onDelete: "cascade" }),
 
-// 		departmentId: text("department_id")
-// 			.notNull()
-// 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
+		departmentId: text("department_id")
+			.notNull()
+			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-// 		status: orgDepartmentMembershipStatusEnum("status")
-// 			.notNull()
-// 			.default("active"),
-// 		// isDefault: boolean("is_default").default(false), // Only one per member
-// 		joinedAt: timestamp("joined_at").defaultNow(),
+		status: orgDepartmentMembershipStatusEnum("status")
+			.notNull()
+			.default("active"),
+		// role: departmentMembershipRoleEnum("role"), // "manager", "member", "lead"
+		joinedAt: timestamp("joined_at").defaultNow(),
 
-// 		createdAt,
-// 		updatedAt,
-// 	},
-// 	(t) => [
-// 		primaryKey({ columns: [t.memberId, t.departmentId] }),
-// 		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
-// 		// 	t.memberId,
-// 		// 	t.departmentId,
-// 		// ),
-// 		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
-// 		// 	.on(t.memberId, t.isDefault)
-// 		// 	.where(eq(t.isDefault, true)),
-// 		index(`idx_${orgDepartmentMembershipTableName}_member_id`).on(t.memberId),
-// 		index(`idx_${orgDepartmentMembershipTableName}_department_id`).on(
-// 			t.departmentId,
-// 		),
-// 		index(`idx_${orgDepartmentMembershipTableName}_status`).on(t.status),
-// 		index(`idx_${orgDepartmentMembershipTableName}_joined_at`).on(t.joinedAt),
-// 		index(`idx_${orgDepartmentMembershipTableName}_created_at`).on(t.createdAt),
-// 		index(`idx_${orgDepartmentMembershipTableName}_updated_at`).on(t.updatedAt),
-// 	],
-// );
+		createdAt,
+		updatedAt,
+	},
+	(t) => [
+		primaryKey({ columns: [t.memberId, t.departmentId] }),
+		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
+		// 	t.memberId,
+		// 	t.departmentId,
+		// ),
+		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
+		// 	.on(t.memberId, t.isDefault)
+		// 	.where(eq(t.isDefault, true)),
+		index(`idx_${orgDepartmentMembershipTableName}_status`).on(t.status),
+		index(`idx_${orgDepartmentMembershipTableName}_joined_at`).on(t.joinedAt),
+		index(`idx_${orgDepartmentMembershipTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgDepartmentMembershipTableName}_updated_at`).on(t.updatedAt),
+	],
+);
 
 const orgTeamDepartmentTableName = `${orgDepartmentTableName}_team`;
 export const orgTeamDepartmentRelationshipTypeEnum = pgEnum(
