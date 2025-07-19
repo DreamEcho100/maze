@@ -11,7 +11,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { createdAt, fk, getLocaleKey, id, updatedAt } from "../../../_utils/helpers";
+import { createdAt, getLocaleKey, idCol, idFkCol, updatedAt } from "../../../_utils/helpers";
 import { contactInfo } from "../../../general/contact-info/schema";
 import { locale } from "../../../general/locale-currency-market/schema";
 import { seoMetadata } from "../../../general/seo/schema";
@@ -30,7 +30,7 @@ const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
 export const userInstructorProfile = table(
 	userInstructorProfileTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		userId: text(`${userTableName}_id`)
 			.notNull()
 			.references(() => user.id),
@@ -95,13 +95,24 @@ export const userInstructorProfile = table(
 		index(`idx_${userInstructorProfileTableName}_verified_at`).on(t.verifiedAt),
 	],
 );
+// TODO: Metrics
+// Instead of storing aggregates in profiles, use dedicated analytics
+// orgInstructorAnalyticsSummary: {
+//   instructorId, orgId, lastCalculatedAt,
+//   totalCourses, totalStudents, avgRating, totalRevenue
+// }
+
+// orgInstructorAnalyticsTimeSeries: {
+//   instructorId, orgId, period, periodType,
+//   activeUsers, engagements, revenue, enrollments
+// }
 
 const userInstructorProfileI18nTableName = `${userTableName}_instructor_profile_i18n`;
 export const userInstructorProfileI18n = table(
 	userInstructorProfileI18nTableName,
 	{
-		id: id.notNull(),
-		userInstructorProfileId: fk(`${userTableName}_instructor_profile_id`)
+		id: idCol.notNull(),
+		userInstructorProfileId: idFkCol(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		localeKey: getLocaleKey("locale_key")
@@ -120,7 +131,7 @@ export const userInstructorProfileI18n = table(
 		// studentMessage: text("student_message"), // Welcome message to students
 
 		// SEO metadata reference
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
 
@@ -147,7 +158,7 @@ const userInstructorProfileContactInfoTableName = `${userTableName}_instructor_p
 export const userInstructorProfileContactInfo = table(
 	userInstructorProfileContactInfoTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		instructorProfileId: text("instructor_profile_id")
 			.notNull()
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" }),
@@ -179,7 +190,7 @@ const userInstructorProfileProductTableName = `${userTableName}_instructor_profi
 export const userInstructorProfileRevenue = table(
 	userInstructorProfileProductTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		instructorMembershipId: text("instructor_membership_id")
 			.notNull()
 			.references(() => instructorOrgAffiliation.id),
@@ -206,8 +217,8 @@ const userInstructorProfileSkillTableName = `${userTableName}_instructor_profile
 export const userInstructorProfileSkill = table(
 	userInstructorProfileSkillTableName,
 	{
-		id: id.notNull(),
-		profileId: fk("profile_id")
+		id: idCol.notNull(),
+		profileId: idFkCol("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		// Engagement metrics
@@ -285,12 +296,18 @@ export const userInstructorProfileSkill = table(
 		index(`idx_${userInstructorProfileSkillTableName}_updated_at`).on(t.updatedAt),
 	],
 );
+// TODO:
+// // Don't store aggregated metrics in profile - calculate on demand
+// // Use dedicated analytics tables for time-series data
+// orgInstructorAnalytics: {
+//   instructorId, orgId, period, activeUsers, engagements, periodType: "daily|weekly|monthly"
+// }
 const userInstructorProfileSkillI18nTableName = `${userTableName}_instructor_profile_skill_i18n`;
 export const userInstructorProfileCoursesMetrics = table(
 	userInstructorProfileSkillI18nTableName,
 	{
-		id: id.notNull(),
-		profileId: fk("profile_id")
+		id: idCol.notNull(),
+		profileId: idFkCol("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		amount: integer("amount").default(0),

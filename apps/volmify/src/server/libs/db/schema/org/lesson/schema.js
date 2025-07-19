@@ -1,5 +1,5 @@
 import { index, pgEnum, text } from "drizzle-orm/pg-core";
-import { createdAt, fk, id, table } from "../../_utils/helpers";
+import { createdAt, idCol, idFkCol, table } from "../../_utils/helpers";
 import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
@@ -12,14 +12,18 @@ export const orgLessonTypeEnum = pgEnum(`${orgLessonTableName}_type`, [
 	"text",
 	"quiz",
 	"assignment",
-	// "file",
-	// What're other valid types that will help in this project and used on other LMS systems?
+	// "file",           // ✅ File downloads
+	// "interactive",    // ✅ Interactive content
+	// "live_session",   // ✅ Scheduled live sessions
+	// "discussion",     // ✅ Community discussions
+	// "project",        // ✅ Hands-on projects
+	// "assessment",     // ✅ Formal assessments
 ]);
 export const orgLesson = table(
 	orgLessonTableName,
 	{
-		id: id.notNull(),
-		orgId: fk("org_id")
+		id: idCol.notNull(),
+		orgId: idFkCol("org_id")
 			.references(() => org.id)
 			.notNull(),
 		type: orgLessonTypeEnum("type").notNull(),
@@ -35,8 +39,8 @@ export const orgLesson = table(
 const orgLessonI18nTableName = `${orgLessonTableName}_i18n`;
 export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
 	{
-		lessonId: fk("lesson_id").references(() => orgLesson.id), // Does a lesson even need SEO metadata? what would be the use case? pros and cons?
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		lessonId: idFkCol("lesson_id").references(() => orgLesson.id),
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
 		// .notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
@@ -52,3 +56,6 @@ export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
 
 // IMP: `quiz` and `assignment` results tables will be handled later after the lesson types are finalized
 // IMP: The `quiz` and `assignment` will be connected to an `assessment` table that will handle the different types of assessments in A CTI way
+// Future: Assessment CTI Architecture
+// orgAssessment (base) → orgAssessmentQuiz, orgAssessmentAssignment, orgAssessmentProject
+// orgAssessmentResult (base) → orgAssessmentQuizResult, orgAssessmentAssignmentResult

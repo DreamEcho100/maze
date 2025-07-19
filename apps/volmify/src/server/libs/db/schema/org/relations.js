@@ -84,7 +84,7 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 		references: [org.id],
 	}),
 	invitedByUser: one(user, {
-		fields: [orgMemberInvitation.invitedByUserId],
+		fields: [orgMemberInvitation.invitedByMemberId],
 		references: [user.id],
 	}),
 	member: one(orgMember, {

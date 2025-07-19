@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, jsonb, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers";
+import { createdAt, deletedAt, idCol, table, updatedAt } from "../../_utils/helpers";
 
 /**
  * @file Contact Info Schema – Universal Communication Hub
@@ -42,7 +42,7 @@ import { createdAt, deletedAt, id, table, updatedAt } from "../../_utils/helpers
 export const contactInfo = table(
 	"contact_info",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
 		/**
 		 * Type of the entity this contact belongs to (e.g., "org", "user").

@@ -11,7 +11,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../../_utils/helpers.js";
+import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../_utils/helpers.js";
 import { currency } from "../../../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { user } from "../../../user/schema.js";
@@ -150,7 +150,7 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
 export const orgProductVariantPaymentPlan = table(
 	orgProductVariantPaymentPlanTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
 		/**
 		 * @integrationContext Binds plan to specific purchasable entity
@@ -164,14 +164,14 @@ export const orgProductVariantPaymentPlan = table(
 		 * @abacRole Plan creation/update restricted to org owners/managers
 		 * @multiTenant Separates plan configuration per orgal boundary
 		 */
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 
 		/**
 		 * This is an optional tax category connection that overrides the one on the `orgProductVariant`
 		 */
-		taxCategoryId: fk("tax_category_id").references(() => orgTaxCategory.id),
+		taxCategoryId: idFkCol("tax_category_id").references(() => orgTaxCategory.id),
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
@@ -342,11 +342,11 @@ export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
 	orgProductVariantPaymentPlanI18nTableName,
 )(
 	{
-		planId: fk("plan_id")
+		planId: idFkCol("plan_id")
 			.references(() => orgProductVariantPaymentPlan.id)
 			.notNull(),
 
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
@@ -695,7 +695,7 @@ const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}
 export const orgMemberProductVariantPaymentPlanSubscription = table(
 	orgMemberProductVariantPaymentPlanSubscriptionTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
 		// TODO: change to purchased by user
 		/**
@@ -718,7 +718,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 * @orgScope Org context for this subscription
 		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 

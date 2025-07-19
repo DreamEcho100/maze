@@ -15,9 +15,9 @@ import {
 import {
 	createdAt,
 	deletedAt,
-	fk,
 	getLocaleKey,
-	id,
+	idCol,
+	idFkCol,
 	name,
 	slug,
 	table,
@@ -45,7 +45,7 @@ const orgMetadataJsonb = jsonb("metadata");
 export const org = table(
 	orgTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -101,7 +101,7 @@ export const org = table(
 export const orgCurrencySettings = table(
 	`${orgTableName}_currency_settings`,
 	{
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		currencyCode: text("currency_code")
@@ -136,8 +136,8 @@ export const orgCurrencySettings = table(
 export const orgBrand = table(
 	`${orgTableName}_brand`,
 	{
-		id: id.notNull(),
-		orgId: fk(`${orgTableName}_id`)
+		id: idCol.notNull(),
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 		name: name.notNull(),
@@ -166,8 +166,8 @@ export const orgBrand = table(
 export const orgBrandTranslation = table(
 	`${orgTableName}_brand_translation`,
 	{
-		id: id.notNull(),
-		brandId: fk("brand_id")
+		id: idCol.notNull(),
+		brandId: idFkCol("brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		localeKey: getLocaleKey("locale_key")
@@ -177,7 +177,7 @@ export const orgBrandTranslation = table(
 		name: name.notNull(),
 		description: text("description"),
 		story: text("story"),
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id, {
 			onDelete: "set null",
 		}),
 	},
@@ -197,8 +197,8 @@ export const orgBrandTranslation = table(
 export const orgBrandMetrics = table(
 	`${orgTableName}_brand_metrics`,
 	{
-		id: id.notNull(),
-		orgBrandId: fk("vendor_brand_id")
+		id: idCol.notNull(),
+		orgBrandId: idFkCol("vendor_brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
@@ -247,14 +247,14 @@ export const instructorOrgAffiliationCompensationTypeEnum = pgEnum(
 export const instructorOrgAffiliation = table(
 	`instructor_${org}_affiliation`,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		instructorId: text("instructor_id")
 			.notNull()
 			.references(() => userInstructorProfile.id),
-		memberId: fk("member_id").references(() => orgMember.id, {
+		memberId: idFkCol("member_id").references(() => orgMember.id, {
 			onDelete: "set null",
 		}),
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 		joinedAt: timestamp("joined_at").defaultNow(),
@@ -280,9 +280,9 @@ export const instructorOrgAffiliation = table(
 		endedAt: timestamp("ended_at"),
 
 		connectionMethod: text("connection_method"),
-		invitedBy: fk("invited_by").references(() => user.id),
+		invitedBy: idFkCol("invited_by").references(() => user.id),
 		applicationNotes: text("application_notes"),
-		approvedBy: fk("approved_by").references(() => orgMember.id),
+		approvedBy: idFkCol("approved_by").references(() => orgMember.id),
 		approvedAt: timestamp("approved_at"),
 	},
 	(t) => {

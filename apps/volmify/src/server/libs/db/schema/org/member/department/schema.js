@@ -1,19 +1,45 @@
-import {
-	foreignKey,
-	index,
-	jsonb,
-	pgEnum,
-	primaryKey,
-	text,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { foreignKey, index, pgEnum, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, fk, id, name, table, updatedAt } from "../../../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	idCol,
+	idFkCol,
+	name,
+	table,
+	updatedAt,
+} from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { org } from "../../schema.js";
 import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
+
+const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
+	"department",
+	"division",
+	"business_unit",
+	"office",
+	"region",
+	// "branch", // Franchise branches
+]);
+
+// // Enhanced department schema with branch capabilities
+// export const orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
+//   // Functional types
+//   "department",        // Traditional functional department
+//   "team",             // Sub-department team
+
+//   // Branch types
+//   "branch",           // Geographic or business branch
+//   "division",         // Business unit division
+//   "business_unit",    // Semi-autonomous business unit
+//   "office",           // Physical office location
+//   "region",           // Regional operation
+//   "subsidiary",       // Legal subsidiary
+//   "franchise",        // Franchise location
+// ]);
+
 /**
  * Organizational Department Structure
  *
@@ -24,9 +50,9 @@ const orgDepartmentTableName = `${orgTableName}_department`;
 export const orgDepartment = table(
 	orgDepartmentTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
@@ -44,13 +70,108 @@ export const orgDepartment = table(
 		 * @optional
 		 * Used to define nested department structures (e.g., HR > Payroll)
 		 */
-		parentId: fk("parent_id"), // .references(() => departments.id),
+		parentId: idFkCol("parent_id"), // .references(() => departments.id),
 
+		// /**
+		//  * @branchLike Enhanced department capabilities
+		//  */
+		// departmentType: orgDepartmentTypeEnum("department_type").default("department"),
+		// // "department", "division", "business_unit", "office", "region"
+
+		// isAutonomous: boolean("is_autonomous").default(false), // Semi-independent operations
+		// budgetAuthority: boolean("budget_authority").default(false), // Can manage budgets
+		// canHireMembers: boolean("can_hire_members").default(false),
+
+		// /**
+		//  * @geographic Geographic context for office-like departments
+		//  */
+		// // physicalLocation: jsonb("physical_location"), // Address, timezone, etc.
+		// regionId: fk("region_id").references(() => orgRegion.id), // Link to market region
+		// // // TODO: add contact info join connection
+
+		// /**
+		//  * @business Business unit context
+		//  */
+		// profitLossResponsibility: boolean("profit_loss_responsibility").default(false),
+		// localComplianceRequired: boolean("local_compliance_required").default(false),
+
+		// /**
+		//  * @management Local management structure
+		//  */
+		// hasLocalManagement: boolean("has_local_management").default(false),
+		// localManagerId: fk("local_manager_id").references(() => orgMember.id),
+
+		/*
+// Configuration examples for different department types:
+
+const departmentConfigurations = {
+  // Traditional functional department
+  "department": {
+    isAutonomous: false,
+    budgetAuthority: false,
+    canHireMembers: false,
+    profitLossResponsibility: false
+  },
+  
+  // Geographic branch office
+  "branch": {
+    isAutonomous: true,
+    budgetAuthority: true,
+    canHireMembers: true,
+    profitLossResponsibility: true,
+    hasLocalManagement: true
+  },
+  
+  // Business unit division
+  "division": {
+    isAutonomous: true,
+    budgetAuthority: true,
+    canHireMembers: true,
+    profitLossResponsibility: true
+  },
+  
+  // Physical office location
+  "office": {
+    isAutonomous: false,
+    budgetAuthority: false,
+    hasLocalManagement: true,
+    requiresPhysicalLocation: true
+  }
+};
+
+// Different permission patterns based on department type:
+
+const permissionPatterns = {
+  // Functional departments inherit from parent
+  "department": {
+    inheritancePattern: "hierarchical",
+    scopeType: "functional"
+  },
+  
+  // Branches have more autonomous permissions
+  "branch": {
+    inheritancePattern: "autonomous_with_oversight", 
+    scopeType: "geographic_or_business_unit",
+    additionalPermissions: [
+      "local_hiring", "budget_management", "local_compliance"
+    ]
+  },
+  
+  // Offices have location-specific permissions
+  "office": {
+    inheritancePattern: "location_scoped",
+    scopeType: "geographic",
+    additionalPermissions: [
+      "facility_management", "local_operations"
+    ]
+  }
+};
+*/
 		createdAt,
 		updatedAt,
 		deletedAt,
 
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 	},
 	(t) => [
 		foreignKey({
@@ -140,10 +261,10 @@ export const orgTeamDepartmentRelationshipTypeEnum = pgEnum(
 export const orgTeamDepartment = table(
 	`${orgTeamDepartmentTableName}`,
 	{
-		teamId: fk("team_id")
+		teamId: idFkCol("team_id")
 			.notNull()
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
-		departmentId: fk("department_id")
+		departmentId: idFkCol("department_id")
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 

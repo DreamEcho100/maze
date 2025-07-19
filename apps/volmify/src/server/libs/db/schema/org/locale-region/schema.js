@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, integer, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
+import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers";
 import { currency, locale } from "../../general/locale-currency-market/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
@@ -10,11 +10,11 @@ const orgLocaleTableName = `${orgTableName}_locale`;
 export const orgLocale = table(
 	orgLocaleTableName,
 	{
-		id: id.notNull(),
-		orgId: fk(`${orgTableName}_id`)
+		id: idCol.notNull(),
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
-		localeKey: fk("locale_key")
+		localeKey: idFkCol("locale_key")
 			.notNull()
 			.references(() => locale.key),
 
@@ -60,17 +60,25 @@ const orgRegionTableName = `${orgTableName}_region`;
 export const orgRegion = table(
 	orgRegionTableName,
 	{
-		id: fk("id").notNull(),
-		orgId: fk("org_id")
+		id: idFkCol("id").notNull(),
+		orgId: idFkCol("org_id")
 			.notNull()
 			.references(() => org.id),
-		currencyCode: fk("currency_code")
+		currencyCode: idFkCol("currency_code")
 			.references(() => currency.code)
 			.notNull(),
 		includesTax: boolean("includes_tax").default(false).notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
+
+		// /**
+		//  * @managementScope Regional management capabilities
+		//  */
+		// hasLocalManagement: boolean("has_local_management").default(false),
+		// managementDepartmentId: fk("management_department_id").references(() => orgDepartment.id),
+		// autonomyLevel: autonomyLevelEnum("autonomy_level").default("operational"),
+		// // "operational", "strategic", "full_autonomous"
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgRegionTableName}_org_currency`)
@@ -81,10 +89,10 @@ export const orgRegion = table(
 const orgRegionI18nTableName = `${orgRegionTableName}_i18n`;
 export const orgRegionI18n = buildOrgI18nTable(orgRegionI18nTableName)(
 	{
-		regionId: fk("org_region_id")
+		regionId: idFkCol("org_region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 		name: varchar("name", { length: 64 }).notNull(),

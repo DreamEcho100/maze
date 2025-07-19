@@ -51,8 +51,8 @@ import {
 import {
 	createdAt,
 	deletedAt,
-	fk,
-	id,
+	idCol,
+	idFkCol,
 	// orgTableName,
 	slug,
 	table,
@@ -131,14 +131,14 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 export const orgProduct = table(
 	orgProductTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
 		/**
 		 * @orgScope Org that owns and manages this product
 		 * @businessRule All product operations must respect to org boundaries
 		 * @multiTenant Enables independent product catalog management per org
 		 */
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 
@@ -222,7 +222,7 @@ export const orgProductI18n = buildOrgI18nTable(orgProductI18nTableName)(
 		productId: text("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
@@ -270,7 +270,7 @@ const orgProductVariantTable = `${orgProductTableName}_variant`;
 export const orgProductVariant = table(
 	orgProductVariantTable,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -356,7 +356,7 @@ export const orgProductVariant = table(
 		// }),
 
 		// Q: Should the `tax_category_id` be here or in the `orgProductVariantPaymentPlan`
-		taxCategoryId: fk("tax_category_id")
+		taxCategoryId: idFkCol("tax_category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
 
@@ -428,7 +428,7 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantI18nTabl
 		variantId: text("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
@@ -476,7 +476,7 @@ const orgProductInstructorAttributionTableName = `${orgProductTableName}_instruc
 export const orgProductInstructorAttribution = table(
 	orgProductInstructorAttributionTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
@@ -501,7 +501,7 @@ export const orgProductInstructorAttribution = table(
 		 * @businessRule Ensures attribution operates within orgal boundaries
 		 * @multiTenant Maintains orgal isolation while enabling professional attribution
 		 */
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id),
 

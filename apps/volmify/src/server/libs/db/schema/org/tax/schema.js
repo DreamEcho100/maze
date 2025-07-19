@@ -8,7 +8,7 @@ import {
 	timestamp,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, fk, id, table, updatedAt } from "../../_utils/helpers";
+import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers";
 import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
@@ -21,7 +21,7 @@ const orgTaxCategoryTableName = `${orgTableName}_tax_category`;
 export const orgTaxCategory = table(
 	orgTaxCategoryTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		code: varchar("code", { length: 64 }).notNull(),
 	},
 	(t) => [primaryKey({ columns: [t.id] })],
@@ -29,10 +29,10 @@ export const orgTaxCategory = table(
 const orgTaxCategoryI18nTableName = `${orgTaxCategoryTableName}_i18n`;
 export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)(
 	{
-		categoryId: fk("category_id")
+		categoryId: idFkCol("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
@@ -57,8 +57,8 @@ const orgTaxRateTableName = `${orgTableName}_tax_rates`;
 export const orgTaxRate = table(
 	orgTaxRateTableName,
 	{
-		id: id.notNull(),
-		regionId: fk("region_id")
+		id: idCol.notNull(),
+		regionId: idFkCol("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
 
@@ -67,7 +67,7 @@ export const orgTaxRate = table(
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
 		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
-		currencyCode: fk("currency_code").references(() => orgRegion.currencyCode),
+		currencyCode: idFkCol("currency_code").references(() => orgRegion.currencyCode),
 		// .notNull(),
 
 		/**
@@ -96,10 +96,10 @@ export const orgTaxRate = table(
 const orgTaxRateI18nTableName = `${orgTaxRateTableName}_i18n`;
 export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateI18nTableName)(
 	{
-		rateId: fk("rate_id")
+		rateId: idFkCol("rate_id")
 			.references(() => orgTaxRate.id)
 			.notNull(),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
@@ -123,10 +123,10 @@ const orgTaxRateTaxCategoryTableName = `${orgTaxRateTableName}_tax_category`;
 export const orgTaxRateTaxCategory = table(
 	orgTaxRateTaxCategoryTableName,
 	{
-		rateId: fk("rate_id")
+		rateId: idFkCol("rate_id")
 			.references(() => orgTaxRate.id)
 			.notNull(),
-		categoryId: fk("category_id")
+		categoryId: idFkCol("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
 		createdAt,

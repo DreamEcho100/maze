@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
 	boolean,
+	check,
 	decimal,
 	index,
 	integer,
@@ -14,8 +16,8 @@ import { skill } from "#server/libs/db/schema/general/skill/schema";
 import {
 	createdAt,
 	deletedAt,
-	fk,
-	id,
+	idCol,
+	idFkCol,
 	table,
 	updatedAt,
 } from "../../../../_utils/helpers";
@@ -35,11 +37,11 @@ export const orgProductCourseLevelEnum = pgEnum(
 export const orgProductCourse = table(
 	orgProductCourseTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		// Hmm, should the connection be to the `product` table or the `productVariant` table? why? pros and cons?
 		// Which make sense to this project?
 		// I mean, what is the difference between a product and a product variant, how they work together, how they are related, and help in this context?
-		productId: fk("product_id")
+		productId: idFkCol("product_id")
 			.references(() => orgProduct.id)
 			.notNull(),
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
@@ -116,7 +118,7 @@ export const orgProductCourseI18n = buildOrgI18nTable(
 	orgProductCourseI18nTableName,
 )(
 	{
-		courseId: fk("course_id")
+		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 		/**
@@ -148,10 +150,10 @@ const orgProductCourseSkillTableName = `${orgProductCourseTableName}_skill`;
 export const orgProductCourseSkill = table(
 	orgProductCourseSkillTableName,
 	{
-		courseId: fk("course_id")
+		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		skillId: fk("skill_id")
+		skillId: idFkCol("skill_id")
 			.references(() => skill.id)
 			.notNull(),
 
@@ -190,14 +192,12 @@ export const orgProductCourseSkill = table(
 		index(`idx_${orgProductCourseSkillTableName}_updated_at`).on(t.updatedAt),
 		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(t.deletedAt),
-		// TODO: a check constraint for the weight 1-10
-		// check
+		check("weight_range", sql`${t.weight} >= 1 AND ${t.weight} <= 10`),
 	],
 );
 
 // TODO: add an i18n to `orgProductCourseSkill`
 
-// Q: Should the course rater be able to update or create many courses challenge ratings?
 const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_product_course_challenge_rating`;
 /**
  * Course Rating - Community-Driven Course Assessment
@@ -209,11 +209,11 @@ const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_p
 export const orgMemberProductCourseChallengeRating = table(
 	orgMemberProductCourseChallengeRatingTableName,
 	{
-		id: id.notNull(),
-		courseId: fk("course_id")
+		id: idCol.notNull(),
+		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		memberId: fk("member_id")
+		memberId: idFkCol("member_id")
 			.references(() => orgMember.id)
 			.notNull(),
 
@@ -242,12 +242,12 @@ export const orgMemberProductCourseChallengeRating = table(
 	},
 	(t) => [
 		uniqueIndex(
-			`uq_${orgMemberProductCourseChallengeRatingTableName}_member`,
+			`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`,
 		).on(t.courseId, t.memberId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course`).on(
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(
 			t.courseId,
 		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member`).on(
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(
 			t.memberId,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level`).on(
@@ -261,19 +261,22 @@ export const orgMemberProductCourseChallengeRating = table(
 		).on(t.createdAt),
 		index(
 			`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`,
-		).on(t.createdAt),
-		// TODO: a check constraint for the `difficultyRating` and `levelRating` 1-10
-		// check
+		).on(t.updatedAt),
+		check(
+			"rating_range",
+			sql`${t.levelRating} >= 1 AND ${t.levelRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		),
 	],
 );
+// TODO: add a history track for `orgMemberProductCourseChallengeRating`
 
 const orgProductCourseModuleTableName = `${orgProductCourseTableName}_module`;
 // Naming problem: should it be `module` or `section`?
 export const orgProductCourseModule = table(
 	orgProductCourseModuleTableName,
 	{
-		id: id.notNull(),
-		courseId: fk("product_course_id")
+		id: idCol.notNull(),
+		courseId: idFkCol("product_course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 
@@ -321,8 +324,9 @@ export const orgProductCourseModule = table(
 		index(`idx_${orgProductCourseModuleTableName}_duration`).on(
 			t.estimatedDurationInMinutes,
 		),
-		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
-		// check
+		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleTableName}_updated_at`).on(t.updatedAt),
+		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
 	],
 );
 
@@ -331,12 +335,12 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(
 	orgProductCourseModuleI18nTableName,
 )(
 	{
-		moduleId: fk("moduleId")
+		moduleId: idFkCol("moduleId")
 			.references(() => orgProductCourseModule.id)
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
 	},
 	{
 		fkKey: "moduleId",
@@ -358,8 +362,8 @@ const orgProductCourseModuleSectionTableName = `${orgProductCourseTableName}_mod
 export const orgProductCourseModuleSection = table(
 	orgProductCourseModuleSectionTableName,
 	{
-		id: id.notNull(),
-		moduleId: fk("module_id")
+		id: idCol.notNull(),
+		moduleId: idFkCol("module_id")
 			.references(() => orgProductCourseModule.id)
 			.notNull(),
 
@@ -414,8 +418,7 @@ export const orgProductCourseModuleSection = table(
 		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(
 			t.updatedAt,
 		),
-		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
-		// check
+		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
 	],
 );
 
@@ -424,12 +427,12 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	orgProductCourseModuleSectionI18nTableName,
 )(
 	{
-		sectionId: fk("section_id")
+		sectionId: idFkCol("section_id")
 			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
 		title: text("title").notNull(),
 		description: text("description"),
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
 	},
 	{
 		fkKey: "sectionId",
@@ -459,12 +462,12 @@ const orgProductCourseModuleSectionLessonTableName = `${orgProductCourseTableNam
 export const orgProductCourseModuleSectionLesson = table(
 	orgProductCourseModuleSectionLessonTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 
-		sectionId: fk("section_id")
+		sectionId: idFkCol("section_id")
 			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
-		lessonId: fk("lesson_id")
+		lessonId: idFkCol("lesson_id")
 			.references(() => orgLesson.id)
 			.notNull(),
 
@@ -527,8 +530,7 @@ export const orgProductCourseModuleSectionLesson = table(
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(
 			t.updatedAt,
 		),
-		// TODO: Add check constraint for `requiredAccessTier` to not be less than 1
-		// check
+		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
 	],
 );
 
@@ -538,11 +540,11 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	orgProductCourseModuleSectionLessonI18nTableName,
 )(
 	{
-		lessonId: fk("lesson_id")
+		lessonId: idFkCol("lesson_id")
 			.references(() => orgProductCourseModuleSectionLesson.id)
 			.notNull(), // TODO: Since this table is for the i18n of the course module section lesson,
 		// And it reference a lesson, and the lesson already have a an optional seo metadata, maybe add a seo metadata override behavior _(merge, override, etc...)_
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
 		title: text("title").notNull(),
 		description: text("description"),
 	},
@@ -577,10 +579,10 @@ export const orgMemberProductCourseEnrollment = table(
 		 * @businessRule Primary progress tracking identity for orgal learning
 		 * @accessControl Enables role-based learning experiences and orgal analytics
 		 */
-		memberId: fk("member_id")
+		memberId: idFkCol("member_id")
 			.references(() => orgMember.id)
 			.notNull(),
-		courseId: fk("course_id")
+		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 		status: orgMemberProductCourseEnrollmentStatusEnum("status")
@@ -599,6 +601,7 @@ export const orgMemberProductCourseEnrollment = table(
 
 		// Scheduling
 		enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+		// Q: the payment plan of the product handles a similar cases to this so is this needed
 		//  expectedCompletionDate ???
 		//  accessExpiresAt ???
 
@@ -658,8 +661,8 @@ const orgMemberLearningProfileTableName = `${orgTableName}_member_learning_profi
 export const orgMemberLearningProfile = table(
 	orgMemberLearningProfileTableName,
 	{
-		id: id.notNull(),
-		memberId: fk("member_id")
+		id: idCol.notNull(),
+		memberId: idFkCol("member_id")
 			.references(() => orgMember.id)
 			.notNull()
 			.unique(),

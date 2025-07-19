@@ -1,5 +1,13 @@
 import { boolean, index, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, fk, getLocaleKey, id, slug, table, updatedAt } from "../../_utils/helpers";
+import {
+	createdAt,
+	getLocaleKey,
+	idCol,
+	idFkCol,
+	slug,
+	table,
+	updatedAt,
+} from "../../_utils/helpers";
 import { org } from "../../org/schema";
 import { locale } from "../locale-currency-market/schema";
 import { seoMetadata } from "../seo/schema";
@@ -12,7 +20,7 @@ const skillTableName = "skill";
 export const skill = table(
 	skillTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		/**
 		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
 		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
@@ -25,7 +33,7 @@ export const skill = table(
 		 * @marketplaceNavigation Enables nested skill browsing (Programming → JavaScript → React)
 		 */
 		// @ts-ignore
-		parentSkillId: fk("parent_skill_id"),
+		parentSkillId: idFkCol("parent_skill_id"),
 		// Note: Self reference foreign key break relational query types
 		// So it will be defined on the callback bellow
 		// .references(() => /** @type {any}*/ (skill).id),
@@ -42,9 +50,9 @@ export const skill = table(
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
-		appliedByOrgId: fk("applied_by_org_id").references(() => org.id),
+		appliedByOrgId: idFkCol("applied_by_org_id").references(() => org.id),
 
-		createdByOrganizationId: fk("created_by_org_id")
+		createdByOrganizationId: idFkCol("created_by_org_id")
 			.references(() => org.id)
 			.notNull(),
 
@@ -67,8 +75,8 @@ const skillI18nTableName = `${skillTableName}_i18n`;
 export const skillI18n = table(
 	skillI18nTableName,
 	{
-		id: id.notNull(),
-		skillId: fk("skill_id")
+		id: idCol.notNull(),
+		skillId: idFkCol("skill_id")
 			.references(() => skill.id)
 			.notNull(),
 		localeKey: getLocaleKey("locale_key")
@@ -79,7 +87,7 @@ export const skillI18n = table(
 		name: text("name").notNull(),
 		description: text("description"),
 
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 

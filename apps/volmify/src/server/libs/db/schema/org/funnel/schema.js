@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, primaryKey, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, fk, id, slug, table, updatedAt } from "../../_utils/helpers";
+import { createdAt, deletedAt, idCol, idFkCol, slug, table, updatedAt } from "../../_utils/helpers";
 import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
@@ -13,8 +13,8 @@ const orgFunnelTableName = `${orgTableName}_funnel`;
  * Funnels can be tied to multiple regions and locale, but are owned by a single tenant.
  */
 export const orgFunnel = table(orgFunnelTableName, {
-	id: id.notNull(),
-	orgId: fk(`${orgTableName}_id`)
+	id: idCol.notNull(),
+	orgId: idFkCol(`${orgTableName}_id`)
 		.references(() => org.id)
 		.notNull(),
 	slug: slug.notNull(),
@@ -33,10 +33,10 @@ const orgFunnelI18nTableName = `${orgFunnelTableName}_i18n`;
  */
 export const orgFunnelI18n = buildOrgI18nTable(orgFunnelI18nTableName)(
 	{
-		funnelId: fk("funnel_id")
+		funnelId: idFkCol("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
-		seoMetadataId: fk("seo_metadata_id")
+		seoMetadataId: idFkCol("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 		name: varchar("name", { length: 128 }).notNull(),
@@ -59,10 +59,10 @@ const orgLocaleTableName = `${orgTableName}_locale`;
 export const orgFunnelRegion = table(
 	orgLocaleTableName,
 	{
-		funnelId: fk("funnel_id")
+		funnelId: idFkCol("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
-		regionId: fk("region_id")
+		regionId: idFkCol("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
 		createdAt,
@@ -81,8 +81,8 @@ const orgFunnelDomainTableName = `${orgTableName}_funnel_domain`;
 export const orgFunnelDomain = table(
 	orgFunnelDomainTableName,
 	{
-		id: id.notNull(),
-		funnelId: fk("funnel_id")
+		id: idCol.notNull(),
+		funnelId: idFkCol("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
 
@@ -108,7 +108,7 @@ export const orgFunnelDomain = table(
 		 */
 		isManagedDns: boolean("is_managed_dns").default(true).notNull(),
 
-		regionId: fk("region_id").references(() => orgRegion.id),
+		regionId: idFkCol("region_id").references(() => orgRegion.id),
 		// getLocaleKey: getLocaleKey("locale_key").references(() => locale.key),
 
 		IsSslEnabled: boolean("ssl_enabled").default(false).notNull(),

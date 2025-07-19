@@ -3,13 +3,13 @@
 import { index, jsonb, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 import { bytea } from "../_utils/bytea.js";
-import { createdAt, deletedAt, id, name, table, updatedAt } from "../_utils/helpers.js";
+import { createdAt, deletedAt, idCol, name, table, updatedAt } from "../_utils/helpers.js";
 import { userTableName } from "./_utils/helpers.js";
 
 export const user = table(
 	userTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
@@ -40,7 +40,7 @@ const userSessionTableName = `${userTableName}_session`;
 export const userSession = table(
 	userSessionTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
 		createdAt,
 		updatedAt,
@@ -79,7 +79,7 @@ const userEmailVerificationTableName = `${userTableName}_email_verification`;
 export const userEmailVerificationRequest = table(
 	userEmailVerificationTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		createdAt,
 		code: varchar("code", { length: 256 }).notNull(),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),

@@ -8,7 +8,7 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, fk, getLocaleKey, id, table, updatedAt } from "../../_utils/helpers.js";
+import { createdAt, getLocaleKey, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers.js";
 import { orgTableName } from "../../org/_utils/helpers.js";
 import { org } from "../../org/schema.js";
 import { locale } from "../locale-currency-market/schema.js";
@@ -39,10 +39,10 @@ export const changeFreqEnum = pgEnum("change_freq", [
 export const seoMetadata = table(
 	"seo_metadata",
 	{
-		id: id.notNull(),
-		// TODO: to be moved to the org folder structure
-		orgId: fk(`${orgTableName}_id`)
-			.notNull()
+		id: idCol.notNull(),
+		// Q: Is it better to have a nullable orgId column here or a separate org_seo_metadata table?
+		orgId: idFkCol(`${orgTableName}_id`)
+			// .notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 
 		isDefault: boolean("is_default").default(false),
@@ -105,7 +105,7 @@ export const seoMetadata = table(
 export const seoOpenGraph = table(
 	"seo_open_graph",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -180,7 +180,7 @@ export const seoOpenGraph = table(
 export const seoTwitterCard = table(
 	"seo_twitter_card",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -241,7 +241,7 @@ export const seoTwitterCard = table(
 export const seoStructuredData = table(
 	"seo_structured_data",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -276,7 +276,7 @@ export const seoStructuredData = table(
 export const seoAlternateUrl = table(
 	"seo_alternate_url",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),
@@ -308,7 +308,7 @@ export const seoAlternateUrl = table(
 export const seoCustomMeta = table(
 	"seo_custom_meta",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		seoMetadataId: text("seo_metadata_id")
 			.notNull()
 			.references(() => seoMetadata.id, { onDelete: "cascade" }),

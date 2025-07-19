@@ -13,7 +13,7 @@ import {
 	createdAt,
 	deletedAt,
 	getLocaleKey,
-	id,
+	idCol,
 	name,
 	slug,
 	table,
@@ -163,7 +163,7 @@ export const currency = table(
 export const country = table(
 	"country",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		isoCode: text("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
 		isoCode3: text("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3
 		numericCode: text("numeric_code").notNull(),
@@ -216,7 +216,7 @@ export const country = table(
 export const exchangeRate = table(
 	"exchange_rate",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		baseCurrency: text("base_currency")
 			.notNull()
 			.references(() => currency.code),
@@ -262,7 +262,7 @@ export const exchangeRate = table(
 export const marketTemplate = table(
 	"market_template",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		name: name.notNull(), // e.g., "EU", "LATAM", "Global"
 		description: text("description"),
 		slug,
@@ -331,7 +331,7 @@ export const marketTemplateCountry = table(
 export const marketTemplateTranslation = table(
 	"market_template_translation",
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		marketTemplateId: text("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),

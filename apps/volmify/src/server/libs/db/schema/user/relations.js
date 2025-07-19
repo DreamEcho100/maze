@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { orgMember, orgMemberInvitation } from "../org/member/schema.js";
+import { orgMember } from "../org/member/schema.js";
 import { orgTeam } from "../org/member/team/schema.js";
 import {
 	orgMemberLearningProfile,
@@ -25,7 +25,6 @@ export const userRelations = relations(user, ({ many }) => ({
 	learningProfile: many(orgMemberLearningProfile),
 	//
 	orgMemberships: many(orgMember),
-	invitationsSent: many(orgMemberInvitation),
 	createdTeams: many(orgTeam),
 
 	orgsProductsVariantsPaymentPlansSubscription: many(

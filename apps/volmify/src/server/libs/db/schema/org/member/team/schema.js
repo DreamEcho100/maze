@@ -12,8 +12,8 @@ import {
 import {
 	createdAt,
 	deletedAt,
-	fk,
-	id,
+	idCol,
+	idFkCol,
 	name,
 	slug,
 	table,
@@ -39,11 +39,11 @@ const orgTeamTableName = `${orgTableName}_team`;
 export const orgTeam = table(
 	orgTeamTableName,
 	{
-		id: id.notNull(),
+		id: idCol.notNull(),
 		createdAt,
 		updatedAt,
 		deletedAt,
-		createdById: fk("created_by_id")
+		createdById: idFkCol("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
@@ -51,7 +51,7 @@ export const orgTeam = table(
 		slug: slug.notNull(),
 		description: text("description"),
 
-		orgId: fk(`${orgTableName}_id`)
+		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 

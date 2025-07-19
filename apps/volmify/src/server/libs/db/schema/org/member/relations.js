@@ -20,7 +20,6 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 		fields: [orgMember.userId],
 		references: [user.id],
 	}),
-	invitations: many(orgMemberInvitation),
 	teamsMemberships: many(orgTeamMembership),
 	departmentMemberships: many(org),
 	productsVariantsPaymentPlansSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
@@ -28,6 +27,12 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	ordersDiscountsUsage: many(orgMemberOrderDiscountUsage),
 	issuedGiftCardsTo: many(orgGiftCard),
 	giftCardsUsage: many(orgMemberGiftCardUsage),
+	invitationsReceived: many(orgMemberInvitation, {
+		relationName: "org_member_invitation_received",
+	}),
+	invitationsSent: many(orgMemberInvitation, {
+		relationName: "org_member_invitation_sent",
+	}),
 
 	// groups: many(orgMemberPermissionsGroup),
 	// productsCoursesEnrollments: many(productCourseEnrollment),
@@ -39,13 +44,14 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 		fields: [orgMemberInvitation.orgId],
 		references: [org.id],
 	}),
-	invitedByUser: one(user, {
-		fields: [orgMemberInvitation.invitedByUserId],
-		references: [user.id],
+	invitedByMember: one(orgMember, {
+		fields: [orgMemberInvitation.invitedByMemberId],
+		references: [orgMember.id],
+		relationName: "org_member_invitation_sent_by",
 	}),
 	invitedMember: one(orgMember, {
 		fields: [orgMemberInvitation.memberId],
 		references: [orgMember.id],
-		relationName: "member_invitation",
+		relationName: "org_member_invitation_received_by",
 	}),
 }));
