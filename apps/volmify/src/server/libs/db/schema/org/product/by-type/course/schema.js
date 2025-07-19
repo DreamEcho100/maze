@@ -13,22 +13,21 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { skill } from "#server/libs/db/schema/system/skill/schema";
 import {
 	createdAt,
 	deletedAt,
 	fk,
 	getLocaleKey,
 	id,
-	slug,
 	table,
 	updatedAt,
 } from "../../../../_utils/helpers";
 import { locale } from "../../../../system/locale-currency-market/schema";
 import { seoMetadata } from "../../../../system/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
+import { orgLesson } from "../../../lesson/schema";
 import { orgMember } from "../../../member/schema";
-// import { user } from "../../../../user/schema";
-import { org } from "../../../schema";
 import { orgProduct } from "../../schema";
 
 const orgProductCourseTableName = `${orgTableName}_product_course`;
@@ -148,103 +147,6 @@ export const orgProductCourseI18n = buildOrgI18nTable(
 			index(`idx_${tableName}_course_id`).on(self.courseId),
 		],
 	},
-);
-
-const skillTableName = "skill";
-// Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
-/**
- * SKILLS TAXONOMY - Platform-Wide Skill Management
- */
-export const skill = table(
-	skillTableName,
-	{
-		id: id.notNull(),
-		/**
-		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
-		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
-		 */
-		slug: slug.notNull(), // "react", "python", "data-analysis"
-
-		/**
-		 * @skillHierarchy Parent skill for hierarchical skill org
-		 * @marketplaceNavigation Enables nested skill browsing (Programming → JavaScript → React)
-		 */
-		// @ts-ignore
-		parentSkillId: fk("parent_skill_id"),
-		// Note: Self reference foreign key break relational query types
-		// So it will be defined on the callback bellow
-		// .references(() => /** @type {any}*/ (skill).id),
-
-		/**
-		 * @skillCategorization Skill domain for marketplace org
-		 * @platformAnalytics Enables skill trend analysis across orgs
-		 */
-		category: text("category"), // "programming", "design", "business", "data"
-
-		/**
-		 * @platformManagement Global skill approval status for marketplace quality
-		 * @qualityControl Prevents skill taxonomy fragmentation across orgs
-		 */
-		approvedAt: boolean("approved_at").default(false),
-
-		appliedByOrgId: fk("applied_by_org_id").references(() => org.id),
-
-		createdByOrganizationId: fk("created_by_org_id")
-			.references(() => org.id)
-			.notNull(),
-
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(
-			t.appliedByOrgId,
-			t.slug,
-		),
-		index(`idx_${skillTableName}_category`).on(t.category),
-		index(`idx_${skillTableName}_parent_skill_id`).on(t.parentSkillId),
-		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),
-		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
-		index(`idx_${skillTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillTableName}_updated_at`).on(t.updatedAt),
-		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrganizationId),
-	],
-);
-
-const skillI18nTableName = `${skillTableName}_i18n`;
-export const skillI18n = table(
-	skillI18nTableName,
-	{
-		id: id.notNull(),
-		skillId: fk("skill_id")
-			.references(() => skill.id)
-			.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		// isDefault: boolean("is_default").default(false),
-
-		name: text("name").notNull(),
-		description: text("description"),
-
-		seoMetadataId: fk("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-
-		createdAt,
-		updatedAt,
-	},
-	(t) => [
-		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
-		// uniqueIndex(`uq_${skillI18nTableName}_default`)
-		// 	.on(t.skillId, t.isDefault)
-		// 	.where(eq(t.isDefault, true)),
-		index(`idx_${skillI18nTableName}_skill`).on(t.skillId),
-		index(`idx_${skillI18nTableName}_name`).on(t.name),
-		index(`idx_${skillI18nTableName}_description`).on(t.description),
-		index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillI18nTableName}_updated_at`).on(t.updatedAt),
-	],
 );
 
 const orgProductCourseSkillTableName = `${orgProductCourseTableName}_skill`;
@@ -697,53 +599,6 @@ export const orgProductCourseModuleSectionLessonI18n = table(
 	],
 );
 
-const orgLessonTableName = `${orgTableName}_lesson`;
-export const orgLessonTypeEnum = pgEnum(`${orgLessonTableName}_type`, [
-	"video",
-	"text",
-	"quiz",
-	"assignment",
-	// "file",
-	// What're other valid types that will help in this project and used on other LMS systems?
-]);
-export const orgLesson = table(
-	orgLessonTableName,
-	{
-		id: id.notNull(),
-		orgId: fk("org_id")
-			.references(() => org.id)
-			.notNull(),
-		type: orgLessonTypeEnum("type").notNull(),
-		createdAt,
-	},
-	(t) => [
-		index(`idx_${orgLessonTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgLessonTableName}_type`).on(t.type),
-		index(`idx_${orgLessonTableName}_created_at`).on(t.createdAt),
-	],
-);
-
-const orgLessonI18nTableName = `${orgLessonTableName}_i18n`;
-export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
-	{
-		lessonId: fk("lesson_id")
-			.references(() => orgLesson.id)
-			.notNull(),
-		// Does a lesson even need SEO metadata? what would be the use case? pros and cons?
-		seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id),
-		// .notNull(),
-		title: text("title").notNull(),
-		description: text("description"),
-	},
-	{
-		fkKey: "lessonId",
-		extraConfig: (t, tName) => [
-			index(`idx_${tName}_lesson_id`).on(t.lessonId),
-			index(`idx_${tName}_title`).on(t.title),
-		],
-	},
-);
-
 // IMP: The lesson type related table are halted for now
 
 const orgMemberProductCourseEnrollmentTableName = `${orgTableName}_member_product_course_enrollment`;
@@ -896,9 +751,6 @@ export const orgMemberLearningProfile = table(
 		),
 	],
 );
-
-// IMP: `quiz` and `assignment` results tables will be handled later after the lesson types are finalized
-// IMP: The `quiz` and `assignment` will be connected to an `assessment` table that will handle the different types of assessments in A CTI way
 
 // IMP: The `review` table will be connected to the `product` table, and should it consider the `market` or `org`?
 // IMP: The `order` table will be connected to the `product` table, which will handled the different types of product pricing/billing/payment models
