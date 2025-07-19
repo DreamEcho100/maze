@@ -51,7 +51,7 @@ const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
 // ]);
 
 /**
- * Organizational Department Structure
+ * Org Department Structure
  *
  * @abacRole Structural Grouping
  * Traditional department construct for hierarchical orgs. Provides

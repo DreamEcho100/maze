@@ -16,12 +16,12 @@ import { createdAt, idCol, name, table } from "../_utils/helpers.js";
  *
  * @abacFlow
  * ```
- * Subject (User) + Context (Organization) + Action (Permission) + Resource → Decision
+ * Subject (User) + Context (Org) + Action (Permission) + Resource → Decision
  * ```
  *
  * @integrationPoints
  * - Authorization middleware: Real-time permission evaluation
- * - Organization onboarding: Permission group template creation
+ * - Org onboarding: Permission group template creation
  * - Admin dashboards: Permission management interfaces
  *
  * @businessValue
@@ -71,7 +71,7 @@ export const systemPermissionCategory = table(
  *
  * @abacRole Permission Attribute Definition
  * Each permission represents an atomic attribute that can be assigned to subjects
- * within orgal contexts. Forms the foundation for all access control
+ * within org contexts. Forms the foundation for all access control
  * decisions in the ABAC system.
  *
  * @immutabilityConstraint

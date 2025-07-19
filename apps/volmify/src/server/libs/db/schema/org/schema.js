@@ -130,7 +130,7 @@ export const orgCurrencySettings = table(
 /**
  * Org Brand Configuration
  *
- * @businessLogic Represents orgal branding used across
+ * @businessLogic Represents org branding used across
  * content, marketing, and course attribution.
  */
 export const orgBrand = table(
@@ -344,7 +344,7 @@ export const instructorOrgAffiliation = table(
 // // Brand-specific metrics
 // brandRecognition: decimal("brand_recognition", { precision: 5, scale: 2 }),
 // contentCertifications: integer("content_certifications").default(0),
-// partnerOrganizations: integer("partner_orgs").default(0),
+// partnerOrgs: integer("partner_orgs").default(0),
 // brandedCourses: integer("branded_courses").default(0),
 
 // The following is commented out because it should be handled in another way, not like this, needs to be well thought out

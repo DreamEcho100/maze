@@ -3,20 +3,20 @@
  *
  * @architecture Multi-Tenant Product Catalog + Professional Attribution + Payment Plan Integration
  * E-commerce product system supporting multiple product types (physical, digital, course, service)
- * with orgal boundaries, professional content attribution, and integrated payment strategies.
- * Designed for creator economy where instructors create educational content within orgal contexts
+ * with org boundaries, professional content attribution, and integrated payment strategies.
+ * Designed for creator economy where instructors create educational content within org contexts
  * while maintaining clear revenue attribution and brand identity integration.
  *
  * @designPattern CTI + Professional Attribution + Brand Attribution + Variant-Based Commerce + Payment Integration
  * - CTI Pattern: Course-specific tables extend base product for educational content specialization
  * - Professional Attribution: Instructor-product attribution for creator economy revenue sharing workflows
- * - Brand Attribution: Organizational brand identity integration for consistent marketing strategies
+ * - Brand Attribution: Org brand identity integration for consistent marketing strategies
  * - Variant-Based Commerce: Product variations (access levels, features) with independent pricing strategies
  * - Payment Integration: Direct integration with payment plans eliminating separate pricing table redundancy
  *
  * @integrationPoints
  * - Professional Attribution: Instructor revenue sharing and content creation workflows
- * - Brand Integration: Organizational brand identity and marketing attribution systems
+ * - Brand Integration: Org brand identity and marketing attribution systems
  * - Payment Integration: Product variants connect directly to sophisticated payment plan strategies
  * - Course System: Educational content creation and delivery for instructor economy
  * - Promotional Integration: Discount campaigns and promotional strategies for revenue optimization
@@ -89,7 +89,7 @@ export const productTypeEnum = pgEnum(`${orgProductTableName}_type`, [
 /**
  * Product Status - Content Lifecycle Management
  *
- * @businessLogic Controls product visibility and availability in orgal catalogs:
+ * @businessLogic Controls product visibility and availability in org catalogs:
  * - draft: Under development, not visible to customers or searchable
  * - active: Published and available for purchase through all channels
  * - archived: Discontinued but existing purchases and subscriptions remain valid
@@ -107,14 +107,14 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 /**
  * Product - Multi-Tenant E-commerce Product Foundation
  *
- * @businessLogic Core product catalog supporting diverse product types within orgal
+ * @businessLogic Core product catalog supporting diverse product types within org
  * boundaries. Every product belongs to an org and can have multiple variants for
  * different pricing strategies, access levels, or physical variations. Products serve as
  * the marketing and content foundation while variants handle pricing and commerce transactions.
  *
  * @professionalContext Course products connect to instructor profiles for creator economy
- * workflows including content attribution, revenue sharing calculations, and cross-orgal
- * professional collaboration while maintaining clear orgal boundaries.
+ * workflows including content attribution, revenue sharing calculations, and cross-org
+ * professional collaboration while maintaining clear org boundaries.
  *
  * @orgScope All products are org-scoped ensuring multi-tenant isolation
  * while enabling sophisticated product catalog management per org with brand attribution
@@ -265,7 +265,7 @@ const orgProductVariantTable = `${orgProductTableName}_variant`;
  *
  * @scalabilityPattern Variant-based commerce scales across all product types while
  * maintaining consistent pricing and payment workflows regardless of product complexity
- * or orgal business model.
+ * or org business model.
  */
 export const orgProductVariant = table(
 	orgProductVariantTable,
@@ -455,19 +455,19 @@ const orgProductInstructorAttributionTableName = `${orgProductTableName}_instruc
  * @businessLogic Links products to instructor profiles for creator economy workflows
  * including content attribution, revenue sharing calculations, and professional recognition.
  * Enables instructors to receive credit and compensation for educational content creation
- * within orgal boundaries while supporting cross-orgal collaboration.
+ * within org boundaries while supporting cross-org collaboration.
  *
  * @professionalContext Instructors maintain professional identity across orgs
- * while content attribution respects orgal boundaries. Revenue sharing enables
- * fair compensation for content creation within orgal business models.
+ * while content attribution respects org boundaries. Revenue sharing enables
+ * fair compensation for content creation within org business models.
  *
- * @orgScope Attribution operates within orgal context ensuring multi-tenant
+ * @orgScope Attribution operates within org context ensuring multi-tenant
  * isolation while enabling professional collaboration and revenue sharing workflows that
- * respect orgal business policies and creator compensation structures.
+ * respect org business policies and creator compensation structures.
  *
  * @scalabilityPattern This attribution pattern can be replicated for other professional
  * types (consultants, designers, coaches) enabling diverse creator economy scenarios within
- * multi-tenant orgal architecture while maintaining consistent attribution workflows.
+ * multi-tenant org architecture while maintaining consistent attribution workflows.
  *
  * @revenueIntegration Revenue sharing percentages integrate with payment plan revenue
  * calculations to ensure accurate creator compensation based on actual subscription and
@@ -481,7 +481,7 @@ export const orgProductInstructorAttribution = table(
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
 		 * @businessRule Links professional identity to content creation and revenue sharing
-		 * @crossOrganizational Professional identity maintained across orgal boundaries
+		 * @crossOrgal Professional identity maintained across org boundaries
 		 */
 		instructorProfileId: text("instructor_profile_id")
 			.notNull()
@@ -489,7 +489,7 @@ export const orgProductInstructorAttribution = table(
 
 		/**
 		 * @contentAttribution Product this instructor contributed to creating
-		 * @businessRule Links professional contribution to specific orgal content
+		 * @businessRule Links professional contribution to specific org content
 		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
 		 */
 		productId: text("product_id")
@@ -498,8 +498,8 @@ export const orgProductInstructorAttribution = table(
 
 		/**
 		 * @orgContext Org context for this professional attribution
-		 * @businessRule Ensures attribution operates within orgal boundaries
-		 * @multiTenant Maintains orgal isolation while enabling professional attribution
+		 * @businessRule Ensures attribution operates within org boundaries
+		 * @multiTenant Maintains org isolation while enabling professional attribution
 		 */
 		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
@@ -554,7 +554,7 @@ export const orgProductInstructorAttribution = table(
 
 const orgProductBrandTableName = `${orgProductTableName}_brand_attribution`;
 /**
- * Product Brand Attribution - Organizational Brand Identity Integration
+ * Product Brand Attribution - Org Brand Identity Integration
  *
  * @businessLogic Links products to org brand identity for consistent marketing
  * and brand presentation across product catalogs. Supports orgs with multiple
@@ -565,9 +565,9 @@ const orgProductBrandTableName = `${orgProductTableName}_brand_attribution`;
  * while maintaining clear brand attribution for marketing campaigns, customer communication,
  * and brand identity consistency across diverse product catalogs.
  *
- * @orgScope Brand attribution operates within orgal boundaries enabling
+ * @orgScope Brand attribution operates within org boundaries enabling
  * sophisticated brand management strategies while maintaining multi-tenant isolation and
- * orgal control over brand identity and product presentation.
+ * org control over brand identity and product presentation.
  *
  * @marketingIntegration Brand attribution integrates with product marketing, promotional
  * campaigns, and customer communication to ensure consistent brand presentation and
@@ -578,7 +578,7 @@ export const orgProductBrandAttribution = table(
 	{
 		/**
 		 * @brandIdentity Org brand this product is attributed to
-		 * @businessRule Links product presentation to specific orgal brand identity
+		 * @businessRule Links product presentation to specific org brand identity
 		 * @marketingStrategy Enables consistent brand presentation across product catalog
 		 */
 		brandId: text("brand_id")

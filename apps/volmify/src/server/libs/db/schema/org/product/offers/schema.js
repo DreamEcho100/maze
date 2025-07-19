@@ -118,7 +118,7 @@ const orgDiscountProductTableName = `${orgDiscountTableName}_product`;
  * Discount Product - Product-Level Discount Application
  *
  * @businessLogic Links discount campaigns to specific products enabling targeted
- * promotional strategies and marketing campaigns within orgal boundaries.
+ * promotional strategies and marketing campaigns within org boundaries.
  * Supports product-specific promotional campaigns for revenue optimization and
  * customer acquisition strategies.
  *

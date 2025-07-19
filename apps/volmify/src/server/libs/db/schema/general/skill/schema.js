@@ -38,11 +38,11 @@ export const skill = table(
 		// So it will be defined on the callback bellow
 		// .references(() => /** @type {any}*/ (skill).id),
 
-		/**
-		 * @skillCategorization Skill domain for marketplace org
-		 * @platformAnalytics Enables skill trend analysis across orgs
-		 */
-		category: text("category"), // "programming", "design", "business", "data"
+		// /**
+		//  * @skillCategorization Skill domain for marketplace org
+		//  * @platformAnalytics Enables skill trend analysis across orgs
+		//  */
+		// category: text("category"), // "programming", "design", "business", "data"
 
 		/**
 		 * @platformManagement Global skill approval status for marketplace quality
@@ -51,8 +51,7 @@ export const skill = table(
 		approvedAt: boolean("approved_at").default(false),
 
 		appliedByOrgId: idFkCol("applied_by_org_id").references(() => org.id),
-
-		createdByOrganizationId: idFkCol("created_by_org_id")
+		createdByOrgId: idFkCol("created_by_org_id")
 			.references(() => org.id)
 			.notNull(),
 
@@ -67,7 +66,7 @@ export const skill = table(
 		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
 		index(`idx_${skillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${skillTableName}_updated_at`).on(t.updatedAt),
-		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrganizationId),
+		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrgId),
 	],
 );
 

@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
 	boolean,
+	check,
 	decimal,
 	index,
 	integer,
@@ -31,7 +32,7 @@ import { orgProductVariant } from "../schema.js";
 /**
  * Payment Plan Types - E-commerce Monetization Strategies
  *
- * @businessLogic Organizations can offer different payment approaches for their product variants:
+ * @businessLogic Orgs can offer different payment approaches for their product variants:
  * - one_time: Traditional e-commerce purchase with immediate access (courses, digital products)
  * - subscription: Recurring billing for continued access (SaaS, premium memberships)
  * - usage_based: Pay-per-consumption billing (API calls, content downloads, processing time)
@@ -133,7 +134,7 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
  * in a single coherent system for simplified e-commerce management.
  *
  * @abacRole Plan creation/update restricted to org owners/managers
- * @permissionContext Variant scope for plan visibility and orgal boundaries
+ * @permissionContext Variant scope for plan visibility and org boundaries
  *
  * @variantLevelAttachment Payment plans are variant-specific because variants define WHAT
  * customers purchase (features, access levels) while payment plans define HOW they pay for it.
@@ -144,7 +145,7 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
  * Regional pricing, currency support, tax rates, and promotional pricing all integrated.
  *
  * @orgalRevenue Revenue tracking supports creator economy workflows with instructor
- * attribution and orgal analytics for comprehensive financial reporting and
+ * attribution and org analytics for comprehensive financial reporting and
  * creator compensation calculations.
  */
 export const orgProductVariantPaymentPlan = table(
@@ -162,7 +163,7 @@ export const orgProductVariantPaymentPlan = table(
 
 		/**
 		 * @abacRole Plan creation/update restricted to org owners/managers
-		 * @multiTenant Separates plan configuration per orgal boundary
+		 * @multiTenant Separates plan configuration per org boundary
 		 */
 		orgId: idFkCol(`${orgTableName}_id`)
 			.notNull()
@@ -314,6 +315,7 @@ export const orgProductVariantPaymentPlan = table(
 		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(t.deletedAt),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_updated_at`).on(t.updatedAt),
+		check("access_tier_range", sql`${t.accessTier} >= 0`),
 	],
 );
 
@@ -658,28 +660,28 @@ const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}
  * User Subscription - Customer Payment Instance and Access Management
  *
  * @businessLogic Customer subscription instances tracking how users purchase and access
- * orgal payment plans. Manages subscription lifecycle, access control, and
+ * org payment plans. Manages subscription lifecycle, access control, and
  * revenue tracking completely separate from how orgs create pricing strategies.
  *
  * @accessControl Links customer payment status to product content access enabling
  * dynamic content availability based on subscription status, payment plan features,
- * and orgal access policies for comprehensive customer experience management.
+ * and org access policies for comprehensive customer experience management.
  *
  * @subscriptionLifecycle Tracks complete customer journey from purchase through active
  * usage to cancellation providing comprehensive subscription management capabilities
- * for customer service, retention workflows, and orgal analytics.
+ * for customer service, retention workflows, and org analytics.
  *
  * @paymentGatewayIntegration External subscription IDs link internal subscription
  * management to payment processors enabling automated subscription state synchronization
  * and billing cycle management through webhook integration.
  *
  * @orgalRevenue Revenue tracking supports creator economy workflows with
- * instructor attribution calculations and orgal financial reporting for
+ * instructor attribution calculations and org financial reporting for
  * comprehensive creator compensation and business analytics.
  *
  * @memberContextSupport Supports both org members and external customers
  * enabling internal team subscriptions alongside external customer sales workflows
- * for comprehensive orgal subscription management.
+ * for comprehensive org subscription management.
  *
  * @abacScope tenant: orgId, subject: userId || orgMemberId
  * @accessPattern Resolves per-user or per-member access to plan-bound content and entitlements
@@ -724,7 +726,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 
 		/**
 		 * @memberContext Optional org member context for internal subscriptions
-		 * @businessRule When present, indicates internal orgal member subscription
+		 * @businessRule When present, indicates internal org member subscription
 		 */
 		orgMemberId: text("org_member_id").references(() => orgMember.id),
 
@@ -748,7 +750,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 
 		/**
 		 * @revenueTracking Total amount customer has paid for this subscription
-		 * @creatorEconomy Basis for instructor revenue sharing and orgal analytics
+		 * @creatorEconomy Basis for instructor revenue sharing and org analytics
 		 */
 		totalPaid: decimal("total_paid", { precision: 12, scale: 2 }).default("0"),
 

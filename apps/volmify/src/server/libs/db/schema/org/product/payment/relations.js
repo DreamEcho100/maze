@@ -2,13 +2,13 @@
  * @fileoverview Product Payment Relations - Variant-Level Payment Integration
  *
  * @integrationPattern Variant-Based Payment Relations + CTI + Creator Economy Integration
- * Enables comprehensive payment plan relationships with product variants, orgal
+ * Enables comprehensive payment plan relationships with product variants, org
  * boundaries, and customer subscriptions while maintaining optimal query performance through
  * CTI pattern and specialized relation definitions for e-commerce monetization workflows.
  *
  * @businessContext
  * Payment relations support variant-level e-commerce monetization workflows including
- * orgal pricing strategies, creator economy revenue attribution, multi-currency
+ * org pricing strategies, creator economy revenue attribution, multi-currency
  * international expansion, and customer subscription lifecycle management for sophisticated
  * product monetization and comprehensive business analytics.
  *
@@ -19,8 +19,8 @@
  *
  * @creatorEconomyIntegration
  * Payment relations integrate with instructor attribution systems enabling revenue sharing
- * calculations and creator compensation workflows within orgal boundaries while
- * supporting cross-orgal professional collaboration patterns.
+ * calculations and creator compensation workflows within org boundaries while
+ * supporting cross-org professional collaboration patterns.
  *
  * @variantIntegration
  * Deep integration with productVariant system maintains consistency with established

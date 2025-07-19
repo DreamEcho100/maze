@@ -7,13 +7,13 @@ import { orgProduct } from "../schema.js";
 const orgProductCollectionTableName = `${orgTableName}_product_collection`;
 /**
  * @domainModel Product Collection
- * @abacRole Organizational Product Grouping
+ * @abacRole Org Product Grouping
  * @businessLogic Enables merchants to organize products under shared banners,
  * promotions, or seasonal curation. Collections are per-org and serve
  * both frontend browsing and backend tagging purposes.
  *
  * @permissionContext Org-scoped access only
- * @multiTenantPattern OrganizationId is mandatory foreign key
+ * @multiTenantPattern OrgId is mandatory foreign key
  * @auditTrail Tracks soft deletions, creation, and updates
  *
  * @indexingStrategy

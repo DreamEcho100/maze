@@ -12,7 +12,14 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { createdAt, idCol, idFkCol, name, table, updatedAt } from "../../../../_utils/helpers.js";
+import {
+	createdAt,
+	idCol,
+	idFkCol,
+	name,
+	table,
+	updatedAt,
+} from "../../../../_utils/helpers.js";
 import { user } from "../../../../user/schema.js";
 import { orgTableName } from "../../../_utils/helpers.js";
 import { org } from "../../../schema.js";
@@ -32,14 +39,17 @@ import { orgTeam } from "../../team/schema.js";
  * @examples "edit_invoice", "view_reports", "manage_members", "create_courses"
  */
 const orgPermissionTableName = `${orgTableName}_permission`;
-export const orgPermissionScopeEnum = pgEnum(`${orgPermissionTableName}_scope`, [
-	"global", // Applies to all resources in the org
-	"organization", // Applies to all resources within the organization
-	"resource", // Applies to a specific resource
-	"team", // Applies to all resources within a specific team
-	"department", // Applies to all resources within a specific department
-	"member", // Applies to all resources owned by a specific member
-]);
+export const orgPermissionScopeEnum = pgEnum(
+	`${orgPermissionTableName}_scope`,
+	[
+		"global", // Applies to all resources in the org
+		"org", // Applies to all resources within the org
+		"resource", // Applies to a specific resource
+		"team", // Applies to all resources within a specific team
+		"department", // Applies to all resources within a specific department
+		"member", // Applies to all resources owned by a specific member
+	],
+);
 
 export const orgPermission = table(
 	orgPermissionTableName,
@@ -64,7 +74,7 @@ export const orgPermission = table(
 		/**
 		 * @scope Permission scope for ABAC evaluation
 		 */
-		scope: orgPermissionScopeEnum("scope").notNull().default("organization"),
+		scope: orgPermissionScopeEnum("scope").notNull().default("org"),
 
 		/**
 		 * @category Logical grouping for permission management UI
@@ -143,10 +153,13 @@ export const orgPolicy = table(
  * @description Links permissions to policies with conditional access logic
  */
 const orgPolicyRuleTableName = `${orgPolicyTableName}_rule`;
-export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyRuleTableName}_effect`, [
-	"allow", // Grants permission if conditions are met
-	"deny", // Explicitly denies permission if conditions are met
-]);
+export const orgPolicyRuleEffectEnum = pgEnum(
+	`${orgPolicyRuleTableName}_effect`,
+	[
+		"allow", // Grants permission if conditions are met
+		"deny", // Explicitly denies permission if conditions are met
+	],
+);
 
 export const orgPolicyRule = table(
 	orgPolicyRuleTableName,
@@ -194,7 +207,10 @@ export const orgPolicyRule = table(
 		updatedAt,
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
+		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(
+			t.policyId,
+			t.permissionId,
+		),
 		index(`idx_${orgPolicyRuleTableName}_effect`).on(t.effect),
 		index(`idx_${orgPolicyRuleTableName}_priority`).on(t.priority),
 		index(`idx_${orgPolicyRuleTableName}_created_at`).on(t.createdAt),
@@ -206,7 +222,7 @@ export const orgPolicyRule = table(
  *
  * @domain Role Management
  * @description Pre-defined role templates that bundle multiple policies
- * @examples "Content Creator", "Department Manager", "Organization Admin"
+ * @examples "Content Creator", "Department Manager", "Org Admin"
  */
 const orgRoleTableName = `${orgTableName}_role`;
 export const orgRole = table(
@@ -300,8 +316,12 @@ export const orgPolicyAssignment = table(
 		 * @actor Assignment target (exactly one must be set)
 		 * @constraint Enforced via check constraint - only one actor type per assignment
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, { onDelete: "cascade" }),
-		teamId: idFkCol("team_id").references(() => orgTeam.id, { onDelete: "cascade" }),
+		memberId: idFkCol("member_id").references(() => orgMember.id, {
+			onDelete: "cascade",
+		}),
+		teamId: idFkCol("team_id").references(() => orgTeam.id, {
+			onDelete: "cascade",
+		}),
 		departmentId: idFkCol("department_id").references(() => orgDepartment.id, {
 			onDelete: "cascade",
 		}),
@@ -372,8 +392,12 @@ export const orgRoleAssignment = table(
 		/**
 		 * @actor Assignment target (exactly one must be set)
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, { onDelete: "cascade" }),
-		teamId: idFkCol("team_id").references(() => orgTeam.id, { onDelete: "cascade" }),
+		memberId: idFkCol("member_id").references(() => orgMember.id, {
+			onDelete: "cascade",
+		}),
+		teamId: idFkCol("team_id").references(() => orgTeam.id, {
+			onDelete: "cascade",
+		}),
 		departmentId: idFkCol("department_id").references(() => orgDepartment.id, {
 			onDelete: "cascade",
 		}),
@@ -441,7 +465,9 @@ export const orgPermissionAuditLog = table(
 		/**
 		 * @audit Core audit information
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, { onDelete: "set null" }),
+		memberId: idFkCol("member_id").references(() => orgMember.id, {
+			onDelete: "set null",
+		}),
 		permissionKey: varchar("permission_key", { length: 128 }).notNull(),
 
 		/**
@@ -468,10 +494,17 @@ export const orgPermissionAuditLog = table(
 	},
 	(t) => [
 		index(`idx_${orgPermissionAuditLogTableName}_member`).on(t.memberId),
-		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(t.permissionKey),
+		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(
+			t.permissionKey,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_granted`).on(t.granted),
-		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(t.evaluatedAt),
-		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(t.resourceType, t.resourceId),
+		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(
+			t.evaluatedAt,
+		),
+		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(
+			t.resourceType,
+			t.resourceId,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_created_at`).on(t.createdAt),
 	],
 );

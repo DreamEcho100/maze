@@ -8,7 +8,7 @@ import { orgProductCollection, orgProductCollectionProduct } from "./schema.js";
 /**
  * @relationModel Collection Relations
  * @abacRole Product Curation Container
- * @businessLogic Represents an orgal grouping of products for
+ * @businessLogic Represents an org grouping of products for
  * merchandising, promotional campaigns, or thematic browsing experiences.
  *
  * @integrationContext

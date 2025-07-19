@@ -2,14 +2,14 @@
  * @fileoverview Product Relations - Multi-Tenant E-commerce Integration with Creator Attribution
  *
  * @integrationPattern Professional Attribution + Brand Integration + Payment Plan Integration + E-commerce Relations
- * Enables comprehensive product relationships supporting creator economy workflows, orgal
+ * Enables comprehensive product relationships supporting creator economy workflows, org
  * brand identity, sophisticated e-commerce scenarios, and integrated payment strategies. Relations
- * facilitate professional content attribution, revenue sharing, cross-orgal collaboration,
+ * facilitate professional content attribution, revenue sharing, cross-org collaboration,
  * and comprehensive promotional campaign management.
  *
  * @businessContext
  * Product relations support creator economy workflows where instructors create educational
- * content within orgal boundaries while maintaining professional attribution, enabling
+ * content within org boundaries while maintaining professional attribution, enabling
  * revenue sharing, and supporting brand identity integration. Payment plan integration eliminates
  * pricing table redundancy while maintaining sophisticated pricing and promotional strategies.
  *
@@ -50,13 +50,13 @@ import {
 /**
  * Product Relations (E-commerce Foundation)
  *
- * @integrationRole Central product relationships for orgal e-commerce
- * Connects products to orgal boundaries, professional attribution, brand identity,
+ * @integrationRole Central product relationships for org e-commerce
+ * Connects products to org boundaries, professional attribution, brand identity,
  * payment plan strategies, and e-commerce infrastructure while supporting creator economy
  * revenue workflows and comprehensive promotional campaign management.
  *
  * @businessRelationships
- * - Organizational product catalog management and multi-tenant isolation
+ * - Org product catalog management and multi-tenant isolation
  * - Professional creator attribution for educational content and revenue sharing workflows
  * - Brand identity integration for consistent marketing and customer recognition strategies
  * - Payment plan integration through variants for sophisticated pricing and promotional strategies
@@ -64,14 +64,14 @@ import {
  *
  * @scalabilityPattern
  * Attribution patterns enable adding new professional types while maintaining consistent
- * revenue sharing and professional identity workflows across orgal boundaries.
+ * revenue sharing and professional identity workflows across org boundaries.
  * Payment plan integration scales across product types while maintaining promotional compatibility.
  */
 export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	/**
 	 * @orgScope Org that owns and manages this product
-	 * @businessContext Multi-tenant product catalog within orgal boundaries
-	 * @creatorEconomy Organizational context for professional attribution and revenue workflows
+	 * @businessContext Multi-tenant product catalog within org boundaries
+	 * @creatorEconomy Org context for professional attribution and revenue workflows
 	 */
 	org: one(org, {
 		fields: [orgProduct.orgId],
@@ -93,7 +93,7 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	variants: many(orgProductVariant),
 
 	/**
-	 * @catalogManagement Product collection membership for orgal catalog structure
+	 * @catalogManagement Product collection membership for org catalog structure
 	 * @businessContext Enables product categorization and promotional bundling strategies
 	 * @marketingStrategy Supports product discovery and cross-selling workflows
 	 */
@@ -228,12 +228,12 @@ export const productVariantTranslationRelations = relations(orgProductVariantI18
  *
  * @integrationRole Professional attribution relationships for creator economy
  * Connects instructor profiles to product content attribution enabling revenue sharing,
- * professional recognition, and cross-orgal collaboration workflows within
- * orgal boundaries and business policies.
+ * professional recognition, and cross-org collaboration workflows within
+ * org boundaries and business policies.
  *
  * @professionalContext Instructors maintain professional identity across orgs
- * while content attribution operates within orgal boundaries for revenue sharing
- * and professional collaboration workflows that respect orgal business models.
+ * while content attribution operates within org boundaries for revenue sharing
+ * and professional collaboration workflows that respect org business models.
  *
  * @revenueIntegration Professional attribution integrates with payment plan revenue
  * calculations to ensure accurate creator compensation based on actual subscription and
@@ -245,7 +245,7 @@ export const productInstructorAttributionRelations = relations(
 		/**
 		 * @professionalIdentity Instructor profile for content attribution and revenue sharing
 		 * @businessContext Links professional identity to content creation and compensation workflows
-		 * @crossOrganizational Professional identity maintained across orgal boundaries
+		 * @crossOrgal Professional identity maintained across org boundaries
 		 */
 		instructorProfile: one(userInstructorProfile, {
 			fields: [orgProductInstructorAttribution.instructorProfileId],
@@ -264,8 +264,8 @@ export const productInstructorAttributionRelations = relations(
 
 		/**
 		 * @orgContext Org context for professional attribution
-		 * @businessRule Ensures attribution operates within orgal boundaries
-		 * @multiTenant Maintains orgal isolation while enabling professional collaboration
+		 * @businessRule Ensures attribution operates within org boundaries
+		 * @multiTenant Maintains org isolation while enabling professional collaboration
 		 */
 		org: one(org, {
 			fields: [orgProductInstructorAttribution.orgId],
@@ -278,7 +278,7 @@ export const productInstructorAttributionRelations = relations(
  * Product Brand Attribution Relations (Brand Identity Integration)
  *
  * @integrationRole Brand identity attribution relationships for marketing consistency
- * Connects orgal brands to product content enabling consistent brand presentation,
+ * Connects org brands to product content enabling consistent brand presentation,
  * marketing campaigns, and customer recognition across product catalogs and promotional strategies.
  *
  * @brandStrategy Enables orgs to manage multiple brands or white-label products

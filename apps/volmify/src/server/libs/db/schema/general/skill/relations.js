@@ -14,9 +14,16 @@ export const skillRelations = relations(skill, ({ many, one }) => ({
 	childSkills: many(skill, {
 		relationName: "skillHierarchy",
 	}),
-	createdByOrganization: one(org, {
-		fields: [skill.createdByOrganizationId],
+	appliedByOrg: one(org, {
+		fields: [skill.appliedByOrgId],
 		references: [org.id],
+		relationName: "skill_applied_by_org",
+	}),
+
+	createdByOrg: one(org, {
+		fields: [skill.createdByOrgId],
+		references: [org.id],
+		relationName: "skill_created_by_org",
 	}),
 	productsCourseType: many(orgProductCourseSkill),
 	translations: many(skillI18n),

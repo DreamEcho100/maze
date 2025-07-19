@@ -14,7 +14,7 @@ import {
  *
  * @instructorIdentity Global instructor identity across orgs
  * Enables instructors to maintain consistent professional identity while
- * participating in multiple orgal contexts.
+ * participating in multiple org contexts.
  */
 export const userInstructorProfileRelations = relations(userInstructorProfile, ({ one, many }) => ({
 	/**

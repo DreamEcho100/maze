@@ -8,7 +8,7 @@ import { orgLesson, orgLessonI18n } from "./schema";
 export const orgLessonRelations = relations(orgLesson, ({ many, one }) => ({
 	/**
 	 * @orgBoundary Org owning this lesson content
-	 * @contentManagement Enables orgal lesson libraries and reusability
+	 * @contentManagement Enables org lesson libraries and reusability
 	 */
 	org: one(org, {
 		fields: [orgLesson.orgId],

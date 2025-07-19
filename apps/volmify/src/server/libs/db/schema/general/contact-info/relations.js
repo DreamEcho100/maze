@@ -23,7 +23,7 @@ import { contactInfo } from "./schema";
  * @why
  * Traditional one-to-one contact models break down in multi-tenant, multi-role platforms like Volmify.
  * This polymorphic structure enables flexible contact ownership, communication orchestration, and
- * tailored contact strategies across all professional and orgal layers.
+ * tailored contact strategies across all professional and org layers.
  */
 
 /**

@@ -20,13 +20,13 @@ export const orgLocale = table(
 
 		/**
 		 * @orgalControl Org-specific locale configuration
-		 * @businessRule Organizations control their supported languages
+		 * @businessRule Orgs control their supported languages
 		 */
 		isDefault: boolean("is_default").default(false),
 		isEnabled: boolean("is_enabled").default(true),
 
 		/**
-		 * @marketStrategy Organization's market positioning for this locale
+		 * @marketStrategy Org's market positioning for this locale
 		 * @businessIntelligence Locale-specific business strategy tracking
 		 */
 		priority: integer("priority").default(100), // Lower = higher priority

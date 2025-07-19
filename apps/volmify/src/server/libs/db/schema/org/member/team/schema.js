@@ -26,7 +26,7 @@ import { orgMember } from "../schema.js";
 
 const orgTeamTableName = `${orgTableName}_team`;
 /**
- * Organizational Team Structure
+ * Org Team Structure
  *
  * @abacRole Permission Assignment Unit (Flexible)
  * Teams are non-hierarchical units used for permission scoping and collaboration.
@@ -63,7 +63,9 @@ export const orgTeam = table(
 		/**
 		 * Whether this team can include members from multiple departments.
 		 */
-		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
+		allowsCrossDepartmentMembers: boolean(
+			"allows_cross_department_members",
+		).default(true),
 
 		metadata: jsonb("metadata"),
 	},
@@ -78,16 +80,22 @@ export const orgTeam = table(
 );
 
 const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
-export const orgTeamMembershipRoleEnum = pgEnum(`${orgTeamMembershipTableName}_role`, [
-	"admin", // Full access to manage team members, settings, and permissions
-	"member", // Scoped access based on permission groups assigned within the team
-]);
-export const orgTeamMembershipStatusEnum = pgEnum(`${orgTeamMembershipTableName}_status`, [
-	"pending", // Awaiting acceptance of invitation
-	"active", // Currently active member
-	"suspended", // Temporarily suspended; cannot access team resources
-	"left", // Member has left the team
-]);
+export const orgTeamMembershipRoleEnum = pgEnum(
+	`${orgTeamMembershipTableName}_role`,
+	[
+		"admin", // Full access to manage team members, settings, and permissions
+		"member", // Scoped access based on permission groups assigned within the team
+	],
+);
+export const orgTeamMembershipStatusEnum = pgEnum(
+	`${orgTeamMembershipTableName}_status`,
+	[
+		"pending", // Awaiting acceptance of invitation
+		"active", // Currently active member
+		"suspended", // Temporarily suspended; cannot access team resources
+		"left", // Member has left the team
+	],
+);
 /**
  * Org Member ⇄ Team Assignment
  *

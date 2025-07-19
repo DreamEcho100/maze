@@ -34,7 +34,7 @@ export const systemPermissionCategoryRelations = relations(
  *
  * @crossContextIntegration
  * The `groupPermissions` relationship enables the same permission attribute
- * to be assigned across multiple orgal contexts, supporting the
+ * to be assigned across multiple org contexts, supporting the
  * multi-tenant ABAC model where permissions are contextual to orgs.
  *
  * @authorizationPath
@@ -53,7 +53,7 @@ export const systemPermissionRelations = relations(systemPermission, ({ one, man
 	}),
 	/**
 	 * @abacCrossContext Multi-tenant permission assignments
-	 * Enables same permission to be granted across different orgal contexts
+	 * Enables same permission to be granted across different org contexts
 	 * @performanceCritical High-frequency relationship during authorization checks
 	 */
 	groupPermissions: many(orgPermissionsGroupPermission),

@@ -28,7 +28,7 @@ import {
 // -------------------------------------
 export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	// Many-to-one: SEO belongs to an org
-	createdByOrganization: one(org, {
+	createdByOrg: one(org, {
 		fields: [seoMetadata.orgId],
 		references: [org.id],
 		relationName: "seo_metadata_created_by_org",

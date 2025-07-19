@@ -13,14 +13,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { skill } from "#server/libs/db/schema/general/skill/schema";
-import {
-	createdAt,
-	deletedAt,
-	idCol,
-	idFkCol,
-	table,
-	updatedAt,
-} from "../../../../_utils/helpers";
+import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../../_utils/helpers";
 import { seoMetadata } from "../../../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
 import { orgLesson } from "../../../lesson/schema";
@@ -29,10 +22,12 @@ import { orgProduct } from "../../schema";
 
 const orgProductCourseTableName = `${orgTableName}_product_course`;
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?
-export const orgProductCourseLevelEnum = pgEnum(
-	`${orgProductCourseTableName}_level`,
-	["beginner", "intermediate", "advanced", "expert"],
-);
+export const orgProductCourseLevelEnum = pgEnum(`${orgProductCourseTableName}_level`, [
+	"beginner",
+	"intermediate",
+	"advanced",
+	"expert",
+]);
 
 export const orgProductCourse = table(
 	orgProductCourseTableName,
@@ -44,9 +39,7 @@ export const orgProductCourse = table(
 		productId: idFkCol("product_id")
 			.references(() => orgProduct.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
-			.default(0)
-			.notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -101,22 +94,14 @@ export const orgProductCourse = table(
 		index(`idx_${orgProductCourseI18nTableName}_updated_at`).on(t.updatedAt),
 		index(`idx_${orgProductCourseI18nTableName}_level`).on(t.level),
 		index(`idx_${orgProductCourseI18nTableName}_difficulty`).on(t.difficulty),
-		index(`idx_${orgProductCourseI18nTableName}_duration`).on(
-			t.estimatedDurationInMinutes,
-		),
-		index(`idx_${orgProductCourseI18nTableName}_level_rating`).on(
-			t.avgUserLevelRating,
-		),
-		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating`).on(
-			t.avgUserDifficultyRating,
-		),
+		index(`idx_${orgProductCourseI18nTableName}_duration`).on(t.estimatedDurationInMinutes),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating`).on(t.avgUserLevelRating),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating`).on(t.avgUserDifficultyRating),
 	],
 );
 
 const orgProductCourseI18nTableName = `${orgProductCourseTableName}_i18n`;
-export const orgProductCourseI18n = buildOrgI18nTable(
-	orgProductCourseI18nTableName,
-)(
+export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseI18nTableName)(
 	{
 		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
@@ -137,9 +122,7 @@ export const orgProductCourseI18n = buildOrgI18nTable(
 	},
 	{
 		fkKey: "courseId",
-		extraConfig: (self, tableName) => [
-			index(`idx_${tableName}_course_id`).on(self.courseId),
-		],
+		extraConfig: (self, tableName) => [index(`idx_${tableName}_course_id`).on(self.courseId)],
 	},
 );
 
@@ -180,10 +163,7 @@ export const orgProductCourseSkill = table(
 		deletedAt,
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(
-			t.courseId,
-			t.skillId,
-		),
+		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(t.courseId, t.skillId),
 		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(t.isLearningOutcome),
 		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(t.proficiencyLevel),
 		index(`idx_${orgProductCourseSkillTableName}_weight`).on(t.weight),
@@ -241,27 +221,18 @@ export const orgMemberProductCourseChallengeRating = table(
 		updatedAt,
 	},
 	(t) => [
-		uniqueIndex(
-			`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`,
-		).on(t.courseId, t.memberId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(
+		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
 			t.courseId,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(
 			t.memberId,
 		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level`).on(
-			t.levelRating,
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level`).on(t.levelRating),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty`).on(
+			t.difficultyRating,
 		),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty`,
-		).on(t.difficultyRating),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`,
-		).on(t.createdAt),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`,
-		).on(t.updatedAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`).on(t.updatedAt),
 		check(
 			"rating_range",
 			sql`${t.levelRating} >= 1 AND ${t.levelRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
@@ -281,7 +252,7 @@ export const orgProductCourseModule = table(
 			.notNull(),
 
 		/**
-		 * @contentOrganization Module sequence within course structure
+		 * @contentOrg Module sequence within course structure
 		 * @learningProgression Enables structured course progression and module dependencies
 		 */
 		sortOrder: integer("sort_order").notNull(),
@@ -289,7 +260,7 @@ export const orgProductCourseModule = table(
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Minimum variant access tier required for module access
-		 * @businessModel Enables premium module gating for higher-tier purchases
+		 * @businessModel Enables premium module gating for higher-tier purchases, where 0 means free
 		 */
 		requiredAccessTier: integer("required_access_tier").default(1),
 
@@ -312,28 +283,19 @@ export const orgProductCourseModule = table(
 		//  settings: jsonb("settings"),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(
-			t.courseId,
-			t.sortOrder,
-		),
+		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(t.courseId, t.sortOrder),
 		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(
-			t.requiredAccessTier,
-		),
+		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(t.requiredAccessTier),
 		index(`idx_${orgProductCourseModuleTableName}_required`).on(t.isRequired),
-		index(`idx_${orgProductCourseModuleTableName}_duration`).on(
-			t.estimatedDurationInMinutes,
-		),
+		index(`idx_${orgProductCourseModuleTableName}_duration`).on(t.estimatedDurationInMinutes),
 		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseModuleTableName}_updated_at`).on(t.updatedAt),
-		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
+		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 	],
 );
 
 const orgProductCourseModuleI18nTableName = `${orgProductCourseModuleTableName}_i18n`;
-export const orgProductCourseModuleI18n = buildOrgI18nTable(
-	orgProductCourseModuleI18nTableName,
-)(
+export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModuleI18nTableName)(
 	{
 		moduleId: idFkCol("moduleId")
 			.references(() => orgProductCourseModule.id)
@@ -368,7 +330,7 @@ export const orgProductCourseModuleSection = table(
 			.notNull(),
 
 		/**
-		 * @contentOrganization Section sequence within module structure
+		 * @contentOrg Section sequence within module structure
 		 * @learningFlow Enables logical content progression within learning units
 		 */
 		sortOrder: integer("sort_order").notNull(),
@@ -376,7 +338,7 @@ export const orgProductCourseModuleSection = table(
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Optional additional access requirements for premium sections
-		 * @businessFlexibility Enables section-level access control for advanced monetization
+		 * @businessFlexibility Enables section-level access control for advanced monetization, where 0 means free
 		 */
 		requiredAccessTier: integer("required_access_tier").default(1),
 
@@ -400,25 +362,17 @@ export const orgProductCourseModuleSection = table(
 			t.moduleId,
 			t.sortOrder,
 		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(
-			t.moduleId,
+		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(t.moduleId),
+		index(`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`).on(
+			t.requiredAccessTier,
 		),
-		index(
-			`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`,
-		).on(t.requiredAccessTier),
-		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(
-			t.isRequired,
+		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(t.isRequired),
+		index(`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`).on(
+			t.estimatedDurationInMinutes,
 		),
-		index(
-			`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`,
-		).on(t.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(
-			t.updatedAt,
-		),
-		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
+		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(t.updatedAt),
+		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 	],
 );
 
@@ -480,7 +434,7 @@ export const orgProductCourseModuleSectionLesson = table(
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Lesson-level access requirements for granular content gating
-		 * @monetizationStrategy Enables individual lesson gating for premium content
+		 * @monetizationStrategy Enables individual lesson gating for premium content, where 0 means free
 		 */
 		requiredAccessTier: integer("required_access_tier").default(1),
 
@@ -511,26 +465,15 @@ export const orgProductCourseModuleSectionLesson = table(
 			t.sectionId,
 			t.sortOrder,
 		),
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(
-			t.sectionId,
-			t.lessonId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(
-			t.sectionId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(
-			t.lessonId,
-		),
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(t.sectionId, t.lessonId),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(t.sectionId),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(t.lessonId),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_access_tier`).on(
 			t.requiredAccessTier,
 		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(
-			t.updatedAt,
-		),
-		check("access_tier_range", sql`${t.requiredAccessTier} >= 1`),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(t.updatedAt),
+		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 	],
 );
 
@@ -576,8 +519,8 @@ export const orgMemberProductCourseEnrollment = table(
 	{
 		/**
 		 * @orgalIdentity Org member whose progress is tracked
-		 * @businessRule Primary progress tracking identity for orgal learning
-		 * @accessControl Enables role-based learning experiences and orgal analytics
+		 * @businessRule Primary progress tracking identity for org learning
+		 * @accessControl Enables role-based learning experiences and org analytics
 		 */
 		memberId: idFkCol("member_id")
 			.references(() => orgMember.id)
@@ -585,9 +528,7 @@ export const orgMemberProductCourseEnrollment = table(
 		courseId: idFkCol("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		status: orgMemberProductCourseEnrollmentStatusEnum("status")
-			.default("not_started")
-			.notNull(),
+		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
 		progressPercentage: decimal("progress_percentage", {
 			precision: 5,
 			scale: 2,
@@ -610,7 +551,7 @@ export const orgMemberProductCourseEnrollment = table(
 		//  enrollmentNotes
 		//  adminNotes
 		// /**
-		//  * @engagementTracking Total learning time for orgal productivity analytics
+		//  * @engagementTracking Total learning time for org productivity analytics
 		//  * @learningOptimization Helps optimize course content and delivery methods
 		//  */
 		// totalTimeSpentSeconds: integer("total_time_spent_seconds").default(0),
@@ -620,42 +561,26 @@ export const orgMemberProductCourseEnrollment = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.courseId] }),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(
-			t.memberId,
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(t.status),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`).on(
+			t.progressPercentage,
 		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(
-			t.courseId,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(
-			t.status,
-		),
-		index(
-			`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`,
-		).on(t.progressPercentage),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(
-			t.completedAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(
-			t.enrolledAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(
-			t.lastAccessedAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_updated_at`).on(
-			t.updatedAt,
-		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(t.completedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(t.enrolledAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(t.lastAccessedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
 const orgMemberLearningProfileTableName = `${orgTableName}_member_learning_profile`;
 /**
- * USER LEARNING SUMMARY - Cross-Organizational Learning Profile
+ * USER LEARNING SUMMARY - Cross-Org Learning Profile
  *
- * @businessLogic Aggregated learning summary across all orgal memberships
- * enabling user-centric learning portfolio and cross-orgal skill tracking
+ * @businessLogic Aggregated learning summary across all org memberships
+ * enabling user-centric learning portfolio and cross-org skill tracking
  * for comprehensive professional development and career progression analytics.
  */
 export const orgMemberLearningProfile = table(
@@ -693,22 +618,18 @@ export const orgMemberLearningProfile = table(
 	(t) => [
 		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),
 
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_courses_completed`,
-		).on(t.totalCoursesCompleted),
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`,
-		).on(t.totalLearningInMinutes),
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`,
-		).on(t.totalCertificatesEarned),
+		index(`idx_${orgMemberLearningProfileTableName}_total_courses_completed`).on(
+			t.totalCoursesCompleted,
+		),
+		index(`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`).on(
+			t.totalLearningInMinutes,
+		),
+		index(`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`).on(
+			t.totalCertificatesEarned,
+		),
 
-		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgMemberLearningProfileTableName}_updated_at`).on(
-			t.updatedAt,
-		),
+		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberLearningProfileTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 

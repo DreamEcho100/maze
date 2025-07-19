@@ -41,7 +41,7 @@ import {
  * @abacScope Centralized Org Context
  * @architecturePattern Hub-and-Spoke with Federated Attributes
  * @integrationContext Role propagation via departments, teams, and permission groups
- * @businessLogic Drives contextual access resolution and orgal scoping
+ * @businessLogic Drives contextual access resolution and org scoping
  * @auditTrail Relationships enable fine-grained authorization visibility
  */
 
@@ -95,7 +95,7 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 }));
 
 /**
- * @currencyContext Organization–Currency Association
+ * @currencyContext Org–Currency Association
  * @financialGovernance Tracks preferred billing and payout currencies
  */
 export const orgCurrencySettingsRelations = relations(orgCurrencySettings, ({ one }) => ({
@@ -146,7 +146,7 @@ export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ on
  * @revenueAttribution Connects instructor to org-scoped content ownership
  * @abacScope Instructor–Org–Member bridge for scoped authorization
  */
-export const instructorOrganizationAffiliationRelations = relations(
+export const instructorOrgAffiliationRelations = relations(
 	instructorOrgAffiliation,
 	({ one, many }) => ({
 		instructor: one(userInstructorProfile, {

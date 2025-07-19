@@ -1,12 +1,26 @@
-import { index, pgEnum, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import {
+	index,
+	pgEnum,
+	text,
+	timestamp,
+	uniqueIndex,
+	varchar,
+} from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers.js";
+import {
+	createdAt,
+	deletedAt,
+	idCol,
+	idFkCol,
+	table,
+	updatedAt,
+} from "../../_utils/helpers.js";
 import { user } from "../../user/schema.js";
 import { orgTableName } from "../_utils/helpers.js";
 import { org } from "../schema.js";
 
 export const orgMemberBaseRoleEnum = pgEnum("org_member_base_role", [
-	"admin", // Full orgal privileges; manage members, teams, configs
+	"admin", // Full org privileges; manage members, teams, configs
 	"member", // Standard member role; actual permissions governed by group mappings
 	"owner", // Full control over the org; can manage settings, members, and resources
 ]);
@@ -67,13 +81,16 @@ export const orgMember = table(
 	},
 );
 
-export const orgMemberInvitationStatusEnum = pgEnum(`${orgTableName}_member_invitation_status`, [
-	"pending", // Awaiting response
-	"accepted", // Member joined org
-	"declined", // Invitee declined
-	"cancelled", // Invite cancelled by sender
-	"revoked", // Revoked access before action
-]);
+export const orgMemberInvitationStatusEnum = pgEnum(
+	`${orgTableName}_member_invitation_status`,
+	[
+		"pending", // Awaiting response
+		"accepted", // Member joined org
+		"declined", // Invitee declined
+		"cancelled", // Invite cancelled by sender
+		"revoked", // Revoked access before action
+	],
+);
 
 /**
  * Member Invitation Table
@@ -95,7 +112,9 @@ export const orgMemberInvitation = table(
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
 		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
-		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
+		status: orgMemberInvitationStatusEnum("status")
+			.notNull()
+			.default("pending"),
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 		message: text("message"),
 		acceptedAt: timestamp("accepted_at", { precision: 3 }),
