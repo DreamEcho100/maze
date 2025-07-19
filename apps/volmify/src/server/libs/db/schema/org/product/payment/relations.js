@@ -38,9 +38,9 @@ import { org } from "../../schema.js";
 import { orgTaxCategory } from "../../tax/schema.js";
 import { orgProductVariant } from "../schema.js";
 import {
+	orgMemberProductVariantPaymentPlanSubscription,
 	orgProductVariantPaymentPlan,
 	orgProductVariantPaymentPlanI18n,
-	orgProductVariantPaymentPlanMemberSubscription,
 	orgProductVariantPaymentPlanOneTimeType,
 	// orgProductVariantPaymentPlanOneTimeTypeI18n,
 	orgProductVariantPaymentPlanSubscriptionType,
@@ -63,7 +63,7 @@ export const orgProductVariantPaymentPlanRelations = relations(
 			references: [orgTaxCategory.id],
 		}),
 		translations: many(orgProductVariantPaymentPlanI18n),
-		subscriptions: many(orgProductVariantPaymentPlanMemberSubscription),
+		subscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
 	}),
 );
 export const orgProductVariantPaymentPlanI18nRelations = relations(
@@ -137,27 +137,27 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18nRelations = relatio
 		}),
 	}),
 );
-export const orgProductVariantPaymentPlanMemberSubscriptionRelations = relations(
-	orgProductVariantPaymentPlanMemberSubscription,
+export const orgMemberProductVariantPaymentPlanSubscriptionRelations = relations(
+	orgMemberProductVariantPaymentPlanSubscription,
 	({ one }) => ({
 		// userId
 		user: one(user, {
-			fields: [orgProductVariantPaymentPlanMemberSubscription.userId],
+			fields: [orgMemberProductVariantPaymentPlanSubscription.userId],
 			references: [user.id],
 		}),
 		// planId
 		paymentPlan: one(orgProductVariantPaymentPlan, {
-			fields: [orgProductVariantPaymentPlanMemberSubscription.planId],
+			fields: [orgMemberProductVariantPaymentPlanSubscription.planId],
 			references: [orgProductVariantPaymentPlan.id],
 		}),
 		// orgId
 		org: one(org, {
-			fields: [orgProductVariantPaymentPlanMemberSubscription.orgId],
+			fields: [orgMemberProductVariantPaymentPlanSubscription.orgId],
 			references: [org.id],
 		}),
 		// orgMemberId
 		orgMember: one(orgMember, {
-			fields: [orgProductVariantPaymentPlanMemberSubscription.orgMemberId],
+			fields: [orgMemberProductVariantPaymentPlanSubscription.orgMemberId],
 			references: [orgMember.id],
 		}),
 	}),

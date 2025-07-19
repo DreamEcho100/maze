@@ -653,7 +653,7 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18n = buildOrgI18nTabl
 // USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
 // -------------------------------------
 
-const orgProductVariantPaymentPlanMemberSubscriptionTableName = `${orgTableName}_product_variant_payment_member_subscription`;
+const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}_member_product_variant_payment_plan_subscription`;
 /**
  * User Subscription - Customer Payment Instance and Access Management
  *
@@ -692,8 +692,8 @@ const orgProductVariantPaymentPlanMemberSubscriptionTableName = `${orgTableName}
  * @memberEntitlement Supports internal tooling: subscriptions assigned to org staff
  * via orgMemberId
  */
-export const orgProductVariantPaymentPlanMemberSubscription = table(
-	orgProductVariantPaymentPlanMemberSubscriptionTableName,
+export const orgMemberProductVariantPaymentPlanSubscription = table(
+	orgMemberProductVariantPaymentPlanSubscriptionTableName,
 	{
 		id: id.notNull(),
 
@@ -790,29 +790,29 @@ export const orgProductVariantPaymentPlanMemberSubscription = table(
 	},
 	(t) => [
 		// Performance indexes for subscription management
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_user_id`).on(t.userId),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_plan_id`).on(t.planId),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_status`).on(t.status),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_member_id`).on(
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_user_id`).on(t.userId),
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_plan_id`).on(t.planId),
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_status`).on(t.status),
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_member_id`).on(
 			t.orgMemberId,
 		),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_access`).on(
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_access`).on(
 			t.accessExpiresAt,
 		),
 		// index(
 		// 	`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
 		// ).on(t.externalSubscriptionId),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_currency`).on(
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_currency`).on(
 			t.currencyCode,
 		),
 
 		// Revenue Analytics Indexes
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_revenue`).on(
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_revenue`).on(
 			t.totalPaid,
 			t.currencyCode,
 		),
-		index(`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_org_revenue`).on(
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_org_revenue`).on(
 			t.orgId,
 			t.totalPaid,
 		),

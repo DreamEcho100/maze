@@ -13,8 +13,8 @@ import { orgTeam } from "./member/team/schema.js";
 // import { orgLesson, skill } from "./product/by-type/course/schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard, orgPromotion } from "./product/offers/schema.js";
 import {
+	orgMemberProductVariantPaymentPlanSubscription,
 	orgProductVariantPaymentPlan,
-	orgProductVariantPaymentPlanMemberSubscription,
 } from "./product/payment/schema.js";
 import { orgProductBrandAttribution, orgProductInstructorAttribution } from "./product/schema.js";
 import {
@@ -64,7 +64,7 @@ export const orgRelations = relations(org, ({ many }) => ({
 	locales: many(orgLocale),
 	regions: many(orgRegion),
 	funnels: many(orgFunnel),
-	membersSubscriptions: many(orgProductVariantPaymentPlanMemberSubscription),
+	membersSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
 	productsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
 
 	discounts: many(orgDiscount),

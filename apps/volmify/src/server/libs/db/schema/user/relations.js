@@ -5,7 +5,7 @@ import {
 	orgMemberLearningProfile,
 	orgMemberProductCourseChallengeRating,
 } from "../org/product/by-type/course/schema.js";
-import { orgProductVariantPaymentPlanMemberSubscription } from "../org/product/payment/schema.js";
+import { orgMemberProductVariantPaymentPlanSubscription } from "../org/product/payment/schema.js";
 import { instructorOrgAffiliation } from "../org/schema.js";
 import { userInstructorProfile } from "./profile/instructor/schema.js";
 import {
@@ -29,7 +29,7 @@ export const userRelations = relations(user, ({ many }) => ({
 	createdTeams: many(orgTeam),
 
 	orgsProductsVariantsPaymentPlansSubscription: many(
-		orgProductVariantPaymentPlanMemberSubscription,
+		orgMemberProductVariantPaymentPlanSubscription,
 	),
 }));
 export const userSessionRelations = relations(userSession, ({ one }) => ({
@@ -47,12 +47,9 @@ export const userEmailVerificationRequestRelations = relations(
 		}),
 	}),
 );
-export const userPasswordResetSessionRelations = relations(
-	userPasswordResetSession,
-	({ one }) => ({
-		user: one(user, {
-			fields: [userPasswordResetSession.userId],
-			references: [user.id],
-		}),
+export const userPasswordResetSessionRelations = relations(userPasswordResetSession, ({ one }) => ({
+	user: one(user, {
+		fields: [userPasswordResetSession.userId],
+		references: [user.id],
 	}),
-);
+}));
