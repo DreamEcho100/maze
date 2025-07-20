@@ -35,33 +35,12 @@
  */
 
 import { eq } from "drizzle-orm";
-import {
-	boolean,
-	decimal,
-	index,
-	integer,
-	jsonb,
-	pgEnum,
-	primaryKey,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { decimal, index, jsonb, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	idCol,
-	idFkCol,
-	// orgTableName,
-	slug,
-	table,
-	updatedAt,
-} from "../../_utils/helpers.js";
-import { seoMetadata } from "../../general/seo/schema.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
-import { org, orgBrand } from "../schema.js";
+import { orgBrand } from "../schema.js";
 import { orgTaxCategory } from "../tax/schema.js";
 import { orgProductVariantPaymentTypeEnum } from "./payment/schema.js";
 
@@ -131,23 +110,21 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 export const orgProduct = table(
 	orgProductTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		/**
 		 * @orgScope Org that owns and manages this product
 		 * @businessRule All product operations must respect to org boundaries
 		 * @multiTenant Enables independent product catalog management per org
 		 */
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @businessRule URL-safe identifier unique within org
 		 * @seoOptimization Used for product page URLs and SEO-friendly links
 		 * @marketingStrategy Enables memorable and brandable product URLs
 		 */
-		slug: slug.notNull(),
+		slug: textCols.slug().notNull(),
 
 		/**
 		 * @businessRule Controls product visibility and purchase availability
@@ -175,9 +152,9 @@ export const orgProduct = table(
 		//  */
 		// metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -187,8 +164,9 @@ export const orgProduct = table(
 		index(`idx_${orgProductTableName}_org_id`).on(t.orgId),
 		index(`idx_${orgProductTableName}_status`).on(t.status),
 		index(`idx_${orgProductTableName}_type`).on(t.type),
-		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
 		index(`idx_${orgProductTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
 
 		// Composite Indexes for Common Queries
 		index(`idx_${orgProductTableName}_status_type`).on(t.status, t.type),
@@ -219,15 +197,14 @@ const orgProductI18nTableName = `${orgProductTableName}_i18n`;
  */
 export const orgProductI18n = buildOrgI18nTable(orgProductI18nTableName)(
 	{
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "productId",
@@ -270,17 +247,18 @@ const orgProductVariantTable = `${orgProductTableName}_variant`;
 export const orgProductVariant = table(
 	orgProductVariantTable,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 
 		/**
 		 * @ecommerceIntegration Parent product this variant belongs to
 		 * @businessContext Variants provide purchasable variations of core product content
 		 * @contentSeparation Product handles content/marketing, variant handles commerce/pricing
 		 */
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -289,34 +267,34 @@ export const orgProductVariant = table(
 		 * @ecommerceStandard Standard e-commerce variant identification pattern
 		 * @customerExperience Used for variant-specific URLs and customer communication
 		 */
-		slug: slug.notNull(),
+		slug: textCols.slug().notNull(),
 
 		/**
 		 * @businessRule Controls variant availability for purchase
 		 * @commerceControl Enables independent variant lifecycle management
 		 * @inventoryManagement For physical products, controls stock availability
 		 */
-		isActive: boolean("is_active").default(true),
+		isActive: sharedCols.isActive(),
 
 		/**
 		 * @businessRule Default variant shown first in product selection
 		 * @constraint Exactly one default variant per product enforced by unique index
 		 * @customerExperience Ensures customers always have a primary purchasing option
 		 */
-		isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 
 		/**
 		 * @marketingStrategy Highlighted plan in pricing tables (typically "best value")
 		 * @conversionOptimization Draws customer attention to preferred monetization tier
 		 */
-		isFeatured: boolean("is_featured").default(false),
+		isFeatured: sharedCols.isFeatured(),
 
 		/**
 		 * @displayOrder Controls variant sequence in product selection interfaces
 		 * @customerExperience Typically ordered from basic to premium pricing tiers
 		 * @marketingStrategy Enables strategic variant presentation for conversion optimization
 		 */
-		sortOrder: integer("sort_order").default(0),
+		sortOrder: numericCols.sortOrder(),
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
@@ -329,7 +307,7 @@ export const orgProductVariant = table(
 		//  * @businessRule null = global pricing, marketId = region-specific pricing
 		//  * @multiRegionSupport Enables localized pricing overrides
 		//  */
-		// marketId: text("market_id").references(() => orgMarket.id),
+		// marketId: textCols.idFk("market_id").references(() => orgMarket.id),
 
 		// NOTE: The price for the product variant will be through the 1-m `orgProductVariantPaymentPlan`
 		// /**
@@ -356,7 +334,8 @@ export const orgProductVariant = table(
 		// }),
 
 		// Q: Should the `tax_category_id` be here or in the `orgProductVariantPaymentPlan`
-		taxCategoryId: idFkCol("tax_category_id")
+		taxCategoryId: textCols
+			.idFk("tax_category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
 
@@ -370,7 +349,7 @@ export const orgProductVariant = table(
 		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		//  * @businessFlexibility Enables complex regional pricing strategies
 		//  */
-		// pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
+		// pricingZoneId: textCols.idFk("pricing_zone_id").references(() => orgPricingZone.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -383,13 +362,13 @@ export const orgProductVariant = table(
 		 * @campaignManagement When this pricing becomes effective
 		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
 		 */
-		startsAt: timestamp("starts_at").defaultNow(),
+		startsAt: temporalCols.startsAt(),
 
 		/**
 		 * @campaignManagement When this pricing expires (null = permanent)
 		 * @promotionalStrategy Supports time-limited promotional pricing
 		 */
-		endsAt: timestamp("ends_at"),
+		endsAt: temporalCols.endsAt(),
 
 		// /**
 		//  * @extensibility Variant-specific configuration and feature definitions
@@ -425,15 +404,14 @@ export const orgProductVariant = table(
 const orgProductVariantI18nTableName = `${orgProductVariantTable}_i18n`;
 export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantI18nTableName)(
 	{
-		variantId: text("variant_id")
+		variantId: textCols
+			.idFk("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		name: text("name"),
-		description: text("description"),
+		name: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "variantId",
@@ -476,14 +454,15 @@ const orgProductInstructorAttributionTableName = `${orgProductTableName}_instruc
 export const orgProductInstructorAttribution = table(
 	orgProductInstructorAttributionTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		/**
 		 * @professionalIdentity Instructor's professional profile for content attribution
 		 * @businessRule Links professional identity to content creation and revenue sharing
 		 * @crossOrgal Professional identity maintained across org boundaries
 		 */
-		instructorProfileId: text("instructor_profile_id")
+		instructorProfileId: textCols
+			.idFk("instructor_profile_id")
 			.notNull()
 			.references(() => userInstructorProfile.id),
 
@@ -492,7 +471,8 @@ export const orgProductInstructorAttribution = table(
 		 * @businessRule Links professional contribution to specific org content
 		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
 		 */
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -501,9 +481,7 @@ export const orgProductInstructorAttribution = table(
 		 * @businessRule Ensures attribution operates within org boundaries
 		 * @multiTenant Maintains org isolation while enabling professional attribution
 		 */
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @revenueSharing Percentage of product revenue attributed to this instructor
@@ -522,9 +500,9 @@ export const orgProductInstructorAttribution = table(
 		//  */
 		// isPrimary: boolean("is_primary").default(false),
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -581,7 +559,8 @@ export const orgProductBrandAttribution = table(
 		 * @businessRule Links product presentation to specific org brand identity
 		 * @marketingStrategy Enables consistent brand presentation across product catalog
 		 */
-		brandId: text("brand_id")
+		brandId: textCols
+			.idFk("brand_id")
 			.notNull()
 			.references(() => orgBrand.id),
 
@@ -590,7 +569,8 @@ export const orgProductBrandAttribution = table(
 		 * @businessRule Links brand identity to specific product for marketing consistency
 		 * @customerExperience Ensures consistent brand presentation in product discovery
 		 */
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
@@ -601,7 +581,7 @@ export const orgProductBrandAttribution = table(
 		//  */
 		// isPrimary: boolean("is_primary").default(true),
 
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		// Business Constraints

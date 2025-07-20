@@ -1,6 +1,13 @@
 import { eq } from "drizzle-orm";
-import { boolean, index, jsonb, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, idCol, table, updatedAt } from "../../_utils/helpers";
+import {
+	boolean,
+	index,
+	jsonb,
+	text,
+	timestamp,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { table, temporalCols, textCols } from "../../_utils/helpers";
 
 /**
  * @file Contact Info Schema – Universal Communication Hub
@@ -42,7 +49,7 @@ import { createdAt, deletedAt, idCol, table, updatedAt } from "../../_utils/help
 export const contactInfo = table(
 	"contact_info",
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		/**
 		 * Type of the entity this contact belongs to (e.g., "org", "user").
@@ -62,7 +69,7 @@ export const contactInfo = table(
 		entityId: text("entity_id").notNull(),
 
 		// Core contact fields
-		name: text("name").notNull(),
+		name: textCols.name().notNull(),
 		email: text("email").notNull(),
 		phone: text("phone"),
 		address: text("address"),
@@ -120,9 +127,9 @@ export const contactInfo = table(
 		 */
 		verifiedAt: timestamp("verified_at"),
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 
 	(t) => [
@@ -157,6 +164,15 @@ export const contactInfo = table(
 		 * @dataQuality
 		 * Helps maintain clean contact datasets for reliable outreach.
 		 */
-		uniqueIndex("uq_contact_info_email_entity").on(t.entityType, t.entityId, t.email),
+		uniqueIndex("uq_contact_info_email_entity").on(
+			t.entityType,
+			t.entityId,
+			t.email,
+		),
+
+		index("idx_contact_info_verified").on(t.verifiedAt),
+		index("idx_contact_info_created_at").on(t.createdAt),
+		index("idx_contact_info_updated_at").on(t.updatedAt),
+		index("idx_contact_info_deleted_at").on(t.deletedAt),
 	],
 );

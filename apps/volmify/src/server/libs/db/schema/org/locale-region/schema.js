@@ -1,8 +1,7 @@
 import { eq } from "drizzle-orm";
-import { boolean, index, integer, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers";
-import { currency, locale } from "../../general/locale-currency-market/schema";
-import { seoMetadata } from "../../general/seo/schema";
+import { boolean, index, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
+import { currency } from "../../general/locale-currency-market/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
 
@@ -10,27 +9,23 @@ const orgLocaleTableName = `${orgTableName}_locale`;
 export const orgLocale = table(
 	orgLocaleTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
-		localeKey: idFkCol("locale_key")
-			.notNull()
-			.references(() => locale.key),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
+		localeKey: sharedCols.localeKeyFk("locale_key").notNull(),
 
 		/**
 		 * @orgalControl Org-specific locale configuration
 		 * @businessRule Orgs control their supported languages
 		 */
-		isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 		isEnabled: boolean("is_enabled").default(true),
 
-		/**
-		 * @marketStrategy Org's market positioning for this locale
-		 * @businessIntelligence Locale-specific business strategy tracking
-		 */
-		priority: integer("priority").default(100), // Lower = higher priority
-		marketStatus: text("market_status"), // "primary", "expansion", "test"
+		// /**
+		//  * @marketStrategy Org's market positioning for this locale
+		//  * @businessIntelligence Locale-specific business strategy tracking
+		//  */
+		// priority: integer("priority").default(100), // Lower = higher priority
+		// marketStatus: text("market_status"), // "primary", "expansion", "test"
 
 		/**
 		 * @localizationStrategy Content localization preferences
@@ -38,8 +33,8 @@ export const orgLocale = table(
 		 */
 		contentStrategy: text("content_strategy"), // "full_translation", "partial", "auto_translate"
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgLocaleTableName}`).on(t.orgId, t.localeKey),
@@ -47,7 +42,7 @@ export const orgLocale = table(
 			.on(t.orgId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 		index(`idx_${orgLocaleTableName}_enabled`).on(t.isEnabled),
-		index(`idx_${orgLocaleTableName}_priority`).on(t.priority),
+		// index(`idx_${orgLocaleTableName}_priority`).on(t.priority),
 	],
 );
 
@@ -60,17 +55,19 @@ const orgRegionTableName = `${orgTableName}_region`;
 export const orgRegion = table(
 	orgRegionTableName,
 	{
-		id: idFkCol("id").notNull(),
-		orgId: idFkCol("org_id")
+		id: textCols.idFk("id").notNull(),
+		orgId: textCols
+			.idFk("org_id")
 			.notNull()
 			.references(() => org.id),
-		currencyCode: idFkCol("currency_code")
+		currencyCode: textCols
+			.idFk("currency_code")
 			.references(() => currency.code)
 			.notNull(),
 		includesTax: boolean("includes_tax").default(false).notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 
 		// /**
 		//  * @managementScope Regional management capabilities
@@ -84,19 +81,23 @@ export const orgRegion = table(
 		uniqueIndex(`uq_${orgRegionTableName}_org_currency`)
 			.on(t.orgId, t.currencyCode)
 			.where(eq(t.deletedAt, null)),
+		index(`idx_${orgRegionTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgRegionTableName}_currency_code`).on(t.currencyCode),
+		index(`idx_${orgRegionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgRegionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgRegionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
 const orgRegionI18nTableName = `${orgRegionTableName}_i18n`;
 export const orgRegionI18n = buildOrgI18nTable(orgRegionI18nTableName)(
 	{
-		regionId: idFkCol("org_region_id")
+		regionId: textCols
+			.idFk("org_region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-		name: varchar("name", { length: 64 }).notNull(),
-		description: varchar("description", { length: 256 }),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "regionId",

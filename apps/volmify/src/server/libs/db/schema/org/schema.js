@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import {
-	boolean,
 	decimal,
 	index,
 	jsonb,
@@ -11,20 +10,9 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
+import { sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
 
-import {
-	createdAt,
-	deletedAt,
-	getLocaleKey,
-	idCol,
-	idFkCol,
-	name,
-	slug,
-	table,
-	updatedAt,
-} from "../_utils/helpers.js";
-import { currency, locale } from "../general/locale-currency-market/schema.js";
-import { seoMetadata } from "../general/seo/schema.js";
+import { currency } from "../general/locale-currency-market/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgTableName } from "./_utils/helpers.js";
@@ -45,15 +33,16 @@ const orgMetadataJsonb = jsonb("metadata");
 export const org = table(
 	orgTableName,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 		/**
 		 * Creator becomes the first `admin` and is granted full permissions.
 		 * Enables automatic role provisioning during onboarding.
 		 */
-		createdById: text("created_by_id")
+		createdById: textCols
+			.idFk("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
@@ -63,13 +52,13 @@ export const org = table(
 		 * Unique human-readable identifier (e.g., "Acme Inc.")
 		 * Used in dashboards, invitations, and billing.
 		 */
-		name: name.notNull(),
+		name: textCols.name().notNull(),
 
 		/**
 		 * Unique slug used in URLs and subdomain routing.
 		 * E.g., `acme` → acme.yourdomain.com or /org/acme
 		 */
-		slug: slug.notNull(),
+		slug: textCols.slug().notNull(),
 
 		logo: varchar("logo", { length: 2096 }),
 
@@ -85,6 +74,7 @@ export const org = table(
 			uniqueIndex(`uq_${base}_name`).on(table.name),
 			index(`idx_${base}_created_at`).on(table.createdAt),
 			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_deleted_at`).on(table.deletedAt),
 			index(`idx_${base}_name`).on(table.name),
 			index(`idx_${base}_slug`).on(table.slug),
 			index(`idx_${base}_created_by_id`).on(table.createdById),
@@ -101,22 +91,23 @@ export const org = table(
 export const orgCurrencySettings = table(
 	`${orgTableName}_currency_settings`,
 	{
-		orgId: idFkCol(`${orgTableName}_id`)
+		orgId: textCols
+			.idFk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
-		isDefault: boolean("is_default").default(false), // Used as default for invoices, display
+		isDefault: sharedCols.isDefault(), // Used as default for invoices, display
 		displayFormat: text("display_format"), // "$1,234.56", "1.234,56 €", etc.
 		roundingMode: text("rounding_mode").default("round"), // 'round' | 'floor' | 'ceil'
 		roundingIncrement: decimal("rounding_increment", {
 			precision: 10,
 			scale: 6,
 		}),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_currency_settings`;
@@ -136,19 +127,17 @@ export const orgCurrencySettings = table(
 export const orgBrand = table(
 	`${orgTableName}_brand`,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
-		name: name.notNull(),
-		slug: slug.notNull(),
-		description: text("description"),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
+		name: textCols.name().notNull(),
+		slug: textCols.slug().notNull(),
+		description: textCols.description(),
 		logo: text("logo"),
 		brandCategory: text("brand_category"),
 		metadata: jsonb("metadata"),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand`;
@@ -166,20 +155,17 @@ export const orgBrand = table(
 export const orgBrandTranslation = table(
 	`${orgTableName}_brand_translation`,
 	{
-		id: idCol.notNull(),
-		brandId: idFkCol("brand_id")
+		id: textCols.id().notNull(),
+		brandId: textCols
+			.idFk("brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		name: name.notNull(),
-		description: text("description"),
-		story: text("story"),
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
+		localeKey: sharedCols.orgLocaleKeyFk("locale_key").notNull(),
+		isDefault: sharedCols.isDefault(),
+		name: textCols.name().notNull(),
+		description: textCols.description(),
+		story: textCols.story(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand_translation`;
@@ -197,20 +183,21 @@ export const orgBrandTranslation = table(
 export const orgBrandMetrics = table(
 	`${orgTableName}_brand_metrics`,
 	{
-		id: idCol.notNull(),
-		orgBrandId: idFkCol("vendor_brand_id")
+		id: textCols.id().notNull(),
+		orgBrandId: textCols
+			.idFk("vendor_brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
-		lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand_metrics`;
 		return [
-			index(`idx_${base}_last_updated`).on(t.lastUpdatedAt),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			uniqueIndex(`uq_${base}_org_brand`).on(t.orgBrandId),
+			index(`idx_${base}_org_brand_id`).on(t.orgBrandId),
+			index(`idx_${base}_updated_at`).on(t.updatedAt),
 		];
 	},
 );
@@ -247,22 +234,19 @@ export const instructorOrgAffiliationCompensationTypeEnum = pgEnum(
 export const instructorOrgAffiliation = table(
 	`instructor_${org}_affiliation`,
 	{
-		id: idCol.notNull(),
-		instructorId: text("instructor_id")
+		id: textCols.id().notNull(),
+		instructorId: textCols
+			.idFk("instructor_id")
 			.notNull()
 			.references(() => userInstructorProfile.id),
-		memberId: idFkCol("member_id").references(() => orgMember.id, {
-			onDelete: "set null",
-		}),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
+		memberId: sharedCols.orgMemberIdFk().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 		joinedAt: timestamp("joined_at").defaultNow(),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 
 		affiliationType: instructorOrgAffiliationTypeEnum("affiliation_type").notNull(),
 		role: text("role"),
-		title: text("title"),
+		title: textCols.title(),
 
 		compensationType:
 			instructorOrgAffiliationCompensationTypeEnum("compensation_type").default("revenue_share"),
@@ -280,9 +264,9 @@ export const instructorOrgAffiliation = table(
 		endedAt: timestamp("ended_at"),
 
 		connectionMethod: text("connection_method"),
-		invitedBy: idFkCol("invited_by").references(() => user.id),
+		invitedById: textCols.idFk("invited_by_id").references(() => user.id),
 		applicationNotes: text("application_notes"),
-		approvedBy: idFkCol("approved_by").references(() => orgMember.id),
+		approvedBy: textCols.idFk("approved_by").references(() => orgMember.id),
 		approvedAt: timestamp("approved_at"),
 	},
 	(t) => {
@@ -295,6 +279,7 @@ export const instructorOrgAffiliation = table(
 			index(`idx_${base}_status`).on(t.status),
 			index(`idx_${base}_affiliation_type`).on(t.affiliationType),
 			index(`idx_${base}_compensation_type`).on(t.compensationType),
+			index(`idx_${base}_invited_by`).on(t.invitedById),
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_joined_at`).on(t.joinedAt),
 			index(`idx_${base}_started_at`).on(t.startedAt),
@@ -310,11 +295,11 @@ export const instructorOrgAffiliation = table(
 // export const orgLocale = table(
 // 	`${orgTableName}_locale`,
 // 	{
-// 		orgId: text(`org_id`)
+// 		orgId: textCols.idFK(`org_id`)
 // 			.notNull()
 // 			.references(() => org.id, { onDelete: "cascade" }),
 // 		locale: text("locale").notNull(), // e.g. "en-US", "ar-EG"
-// 		isDefault: boolean("is_default").default(false),
+// 		isDefault: sharedCols.isDefault(),
 // 		isActive: boolean("is_active").default(true),
 
 // 		// Locale-specific settings
@@ -323,7 +308,7 @@ export const instructorOrgAffiliation = table(
 // 		dateFormat: text("date_format").default("MM/DD/YYYY"),
 // 		timeFormat: text("time_format").default("12h"),
 // 		weekStart: integer("week_start").default(0), // 0 = Sunday
-// 		createdAt,
+// 		createdAt: temporalCols.createdAt(),,
 // 	},
 // 	(t) => [
 // 		primaryKey({ columns: [t.orgId, t.locale] }),

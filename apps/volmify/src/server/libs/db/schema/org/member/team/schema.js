@@ -1,7 +1,6 @@
 import {
 	boolean,
 	index,
-	jsonb,
 	pgEnum,
 	primaryKey,
 	text,
@@ -9,20 +8,9 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	idCol,
-	idFkCol,
-	name,
-	slug,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { user } from "../../../user/schema.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
-import { orgMember } from "../schema.js";
 
 const orgTeamTableName = `${orgTableName}_team`;
 /**
@@ -39,22 +27,22 @@ const orgTeamTableName = `${orgTableName}_team`;
 export const orgTeam = table(
 	orgTeamTableName,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
-		createdById: idFkCol("created_by_id")
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
+		createdById: textCols
+			.idFk("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
-		name: name.notNull(),
-		slug: slug.notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		slug: textCols.slug().notNull(),
+		description: textCols.shortDescription("description"),
 
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		orgId: sharedCols.orgIdFk().notNull(),
 
+		// TODO: convert to enum
 		/**
 		 * Indicates structural intent of the team for UI and policy logic.
 		 */
@@ -63,11 +51,9 @@ export const orgTeam = table(
 		/**
 		 * Whether this team can include members from multiple departments.
 		 */
-		allowsCrossDepartmentMembers: boolean(
-			"allows_cross_department_members",
-		).default(true),
+		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(true),
 
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 	},
 	(table) => [
 		uniqueIndex(`uq_${orgTeamTableName}_name_org`).on(table.name, table.orgId),
@@ -80,22 +66,16 @@ export const orgTeam = table(
 );
 
 const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
-export const orgTeamMembershipRoleEnum = pgEnum(
-	`${orgTeamMembershipTableName}_role`,
-	[
-		"admin", // Full access to manage team members, settings, and permissions
-		"member", // Scoped access based on permission groups assigned within the team
-	],
-);
-export const orgTeamMembershipStatusEnum = pgEnum(
-	`${orgTeamMembershipTableName}_status`,
-	[
-		"pending", // Awaiting acceptance of invitation
-		"active", // Currently active member
-		"suspended", // Temporarily suspended; cannot access team resources
-		"left", // Member has left the team
-	],
-);
+export const orgTeamMembershipRoleEnum = pgEnum(`${orgTeamMembershipTableName}_role`, [
+	"admin", // Full access to manage team members, settings, and permissions
+	"member", // Scoped access based on permission groups assigned within the team
+]);
+export const orgTeamMembershipStatusEnum = pgEnum(`${orgTeamMembershipTableName}_status`, [
+	"pending", // Awaiting acceptance of invitation
+	"active", // Currently active member
+	"suspended", // Temporarily suspended; cannot access team resources
+	"left", // Member has left the team
+]);
 /**
  * Org Member ⇄ Team Assignment
  *
@@ -111,17 +91,16 @@ export const orgTeamMembershipStatusEnum = pgEnum(
 export const orgTeamMembership = table(
 	orgTeamMembershipTableName,
 	{
-		memberId: text("member_id")
-			.notNull()
-			.references(() => orgMember.id, { onDelete: "cascade" }),
-		teamId: text("team_id")
+		memberId: sharedCols.orgMemberIdFk().notNull(),
+		teamId: textCols
+			.idFk("team_id")
 			.notNull()
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
 		status: orgTeamMembershipStatusEnum("status").notNull().default("pending"),
 		role: orgTeamMembershipRoleEnum("role").notNull().default("member"),
 		joinedAt: timestamp("joined_at", { precision: 3 }),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgTeamMembershipTableName}_created_at`).on(t.createdAt),

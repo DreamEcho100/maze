@@ -13,11 +13,16 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { skill } from "#server/libs/db/schema/general/skill/schema";
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../../_utils/helpers";
-import { seoMetadata } from "../../../../general/seo/schema";
+import {
+	lmsCols,
+	numericCols,
+	sharedCols,
+	table,
+	temporalCols,
+	textCols,
+} from "../../../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
 import { orgLesson } from "../../../lesson/schema";
-import { orgMember } from "../../../member/schema";
 import { orgProduct } from "../../schema";
 
 const orgProductCourseTableName = `${orgTableName}_product_course`;
@@ -32,11 +37,12 @@ export const orgProductCourseLevelEnum = pgEnum(`${orgProductCourseTableName}_le
 export const orgProductCourse = table(
 	orgProductCourseTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		// Hmm, should the connection be to the `product` table or the `productVariant` table? why? pros and cons?
 		// Which make sense to this project?
 		// I mean, what is the difference between a product and a product variant, how they work together, how they are related, and help in this context?
-		productId: idFkCol("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.references(() => orgProduct.id)
 			.notNull(),
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
@@ -78,11 +84,11 @@ export const orgProductCourse = table(
 			precision: 3,
 			scale: 2,
 		}),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 
 		// The following fields and joins can be inferred from the `product` table as the `course` table is a specialization/type of the `product` table in a CTI way
-		// thumbnail, vendors, status, deletedAt, title, description, seoMetadata, slug
+		// thumbnail, vendors, status, deletedAt: temporalCols.deletedAt(), title, description, seoMetadata, slug
 
 		// The pricing model will be handled by the `product` table
 		// And the pricing model will be in a CTI many-to-many relationship with the `product` table
@@ -103,7 +109,8 @@ export const orgProductCourse = table(
 const orgProductCourseI18nTableName = `${orgProductCourseTableName}_i18n`;
 export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseI18nTableName)(
 	{
-		courseId: idFkCol("course_id")
+		courseId: textCols
+			.idFk("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 		/**
@@ -133,10 +140,12 @@ const orgProductCourseSkillTableName = `${orgProductCourseTableName}_skill`;
 export const orgProductCourseSkill = table(
 	orgProductCourseSkillTableName,
 	{
-		courseId: idFkCol("course_id")
+		courseId: textCols
+			.idFk("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		skillId: idFkCol("skill_id")
+		skillId: textCols
+			.idFk("skill_id")
 			.references(() => skill.id)
 			.notNull(),
 
@@ -158,9 +167,9 @@ export const orgProductCourseSkill = table(
 		 */
 		weight: integer("weight").default(5),
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(t.courseId, t.skillId),
@@ -189,13 +198,12 @@ const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_p
 export const orgMemberProductCourseChallengeRating = table(
 	orgMemberProductCourseChallengeRatingTableName,
 	{
-		id: idCol.notNull(),
-		courseId: idFkCol("course_id")
+		id: textCols.id().notNull(),
+		courseId: textCols
+			.idFk("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		memberId: idFkCol("member_id")
-			.references(() => orgMember.id)
-			.notNull(),
+		memberId: sharedCols.orgMemberIdFk().notNull(),
 
 		/**
 		 * @qualityFeedback User assessment of course level accuracy (1-5 stars)
@@ -217,8 +225,8 @@ export const orgMemberProductCourseChallengeRating = table(
 
 		metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
@@ -234,8 +242,12 @@ export const orgMemberProductCourseChallengeRating = table(
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`).on(t.updatedAt),
 		check(
-			"rating_range",
+			"level_rating_range",
 			sql`${t.levelRating} >= 1 AND ${t.levelRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		),
+		check(
+			"difficulty_rating_range",
+			sql`${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
 		),
 	],
 );
@@ -246,8 +258,9 @@ const orgProductCourseModuleTableName = `${orgProductCourseTableName}_module`;
 export const orgProductCourseModule = table(
 	orgProductCourseModuleTableName,
 	{
-		id: idCol.notNull(),
-		courseId: idFkCol("product_course_id")
+		id: textCols.id().notNull(),
+		courseId: textCols
+			.idFk("product_course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 
@@ -255,14 +268,14 @@ export const orgProductCourseModule = table(
 		 * @contentOrg Module sequence within course structure
 		 * @learningProgression Enables structured course progression and module dependencies
 		 */
-		sortOrder: integer("sort_order").notNull(),
+		sortOrder: numericCols.sortOrder().notNull(),
 
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Minimum variant access tier required for module access
 		 * @businessModel Enables premium module gating for higher-tier purchases, where 0 means free
 		 */
-		requiredAccessTier: integer("required_access_tier").default(1),
+		requiredAccessTier: numericCols.accessTier("required_access_tier"),
 
 		/**
 		 * @learningRequirements Module completion requirements for course progression
@@ -276,8 +289,8 @@ export const orgProductCourseModule = table(
 		 */
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 		// ???
 		//  // Section settings
 		//  settings: jsonb("settings"),
@@ -291,18 +304,20 @@ export const orgProductCourseModule = table(
 		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseModuleTableName}_updated_at`).on(t.updatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
+		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
 );
 
 const orgProductCourseModuleI18nTableName = `${orgProductCourseModuleTableName}_i18n`;
 export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModuleI18nTableName)(
 	{
-		moduleId: idFkCol("moduleId")
+		moduleId: textCols
+			.idFk("moduleId")
 			.references(() => orgProductCourseModule.id)
 			.notNull(),
-		title: text("title").notNull(),
-		description: text("description"),
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 	},
 	{
 		fkKey: "moduleId",
@@ -324,8 +339,9 @@ const orgProductCourseModuleSectionTableName = `${orgProductCourseTableName}_mod
 export const orgProductCourseModuleSection = table(
 	orgProductCourseModuleSectionTableName,
 	{
-		id: idCol.notNull(),
-		moduleId: idFkCol("module_id")
+		id: textCols.id().notNull(),
+		moduleId: textCols
+			.idFk("module_id")
 			.references(() => orgProductCourseModule.id)
 			.notNull(),
 
@@ -333,14 +349,14 @@ export const orgProductCourseModuleSection = table(
 		 * @contentOrg Section sequence within module structure
 		 * @learningFlow Enables logical content progression within learning units
 		 */
-		sortOrder: integer("sort_order").notNull(),
+		sortOrder: numericCols.sortOrder().notNull(),
 
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Optional additional access requirements for premium sections
 		 * @businessFlexibility Enables section-level access control for advanced monetization, where 0 means free
 		 */
-		requiredAccessTier: integer("required_access_tier").default(1),
+		requiredAccessTier: numericCols.accessTier("required_access_tier"),
 
 		/**
 		 * @learningProgression Section completion requirements for module progression
@@ -354,8 +370,8 @@ export const orgProductCourseModuleSection = table(
 		 */
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
@@ -373,6 +389,7 @@ export const orgProductCourseModuleSection = table(
 		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(t.updatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
+		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
 );
 
@@ -381,12 +398,13 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	orgProductCourseModuleSectionI18nTableName,
 )(
 	{
-		sectionId: idFkCol("section_id")
+		sectionId: textCols
+			.idFk("section_id")
 			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
-		title: text("title").notNull(),
-		description: text("description"),
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 	},
 	{
 		fkKey: "sectionId",
@@ -416,12 +434,14 @@ const orgProductCourseModuleSectionLessonTableName = `${orgProductCourseTableNam
 export const orgProductCourseModuleSectionLesson = table(
 	orgProductCourseModuleSectionLessonTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
-		sectionId: idFkCol("section_id")
+		sectionId: textCols
+			.idFk("section_id")
 			.references(() => orgProductCourseModuleSection.id)
 			.notNull(),
-		lessonId: idFkCol("lesson_id")
+		lessonId: textCols
+			.idFk("lesson_id")
 			.references(() => orgLesson.id)
 			.notNull(),
 
@@ -429,14 +449,14 @@ export const orgProductCourseModuleSectionLesson = table(
 		 * @contentSequence Lesson order within section for structured learning flow
 		 * @educationalDesign Enables logical lesson progression and dependency management
 		 */
-		sortOrder: integer("sort_order").notNull(),
+		sortOrder: numericCols.sortOrder().notNull(),
 
 		// Q: Could the access be 0 and what does that mean?
 		/**
 		 * @accessControl Lesson-level access requirements for granular content gating
 		 * @monetizationStrategy Enables individual lesson gating for premium content, where 0 means free
 		 */
-		requiredAccessTier: integer("required_access_tier").default(1),
+		requiredAccessTier: numericCols.accessTier("required_access_tier"),
 
 		/**
 		 * @learningRequirements Complex prerequisite logic for advanced learning paths
@@ -444,8 +464,8 @@ export const orgProductCourseModuleSectionLesson = table(
 		 */
 		prerequisites: jsonb("prerequisites"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 		// Example: {
 		//   "required_lessons": ["lesson-123", "lesson-456"],
 		//   "required_quiz_score": 80,
@@ -474,6 +494,7 @@ export const orgProductCourseModuleSectionLesson = table(
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(t.updatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
+		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
 );
 
@@ -483,13 +504,14 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	orgProductCourseModuleSectionLessonI18nTableName,
 )(
 	{
-		lessonId: idFkCol("lesson_id")
+		lessonId: textCols
+			.idFk("lesson_id")
 			.references(() => orgProductCourseModuleSectionLesson.id)
 			.notNull(), // TODO: Since this table is for the i18n of the course module section lesson,
 		// And it reference a lesson, and the lesson already have a an optional seo metadata, maybe add a seo metadata override behavior _(merge, override, etc...)_
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
-		title: text("title").notNull(),
-		description: text("description"),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "lessonId",
@@ -522,22 +544,18 @@ export const orgMemberProductCourseEnrollment = table(
 		 * @businessRule Primary progress tracking identity for org learning
 		 * @accessControl Enables role-based learning experiences and org analytics
 		 */
-		memberId: idFkCol("member_id")
-			.references(() => orgMember.id)
-			.notNull(),
-		courseId: idFkCol("course_id")
+		memberId: sharedCols.orgMemberIdFk().notNull(),
+		courseId: textCols
+			.idFk("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
 		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
-		progressPercentage: decimal("progress_percentage", {
-			precision: 5,
-			scale: 2,
-		}).default("0.00"),
-		completedAt: timestamp("completed_at"),
+		progressPercentage: lmsCols.progressPercentage(),
+		completedAt: temporalCols.completedAt(),
 
 		// Access tracking
 		firstAccessAt: timestamp("first_access_at"),
-		lastAccessedAt: timestamp("last_accessed_at"),
+		lastAccessedAt: temporalCols.lastAccessedAt(),
 		totalTimeSpent: integer("total_time_spent_seconds").default(0),
 
 		// Scheduling
@@ -556,8 +574,8 @@ export const orgMemberProductCourseEnrollment = table(
 		//  */
 		// totalTimeSpentSeconds: integer("total_time_spent_seconds").default(0),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.courseId] }),
@@ -586,11 +604,8 @@ const orgMemberLearningProfileTableName = `${orgTableName}_member_learning_profi
 export const orgMemberLearningProfile = table(
 	orgMemberLearningProfileTableName,
 	{
-		id: idCol.notNull(),
-		memberId: idFkCol("member_id")
-			.references(() => orgMember.id)
-			.notNull()
-			.unique(),
+		id: textCols.id().notNull(),
+		memberId: sharedCols.orgMemberIdFk().notNull().unique(),
 
 		/**
 		 * @learningPortfolio Aggregated learning statistics across orgs
@@ -612,8 +627,8 @@ export const orgMemberLearningProfile = table(
 		 */
 		learningMetadata: jsonb("learning_metadata"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),

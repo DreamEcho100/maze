@@ -4,23 +4,12 @@ import {
 	index,
 	pgEnum,
 	primaryKey,
-	text,
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	createdAt,
-	deletedAt,
-	idCol,
-	idFkCol,
-	name,
-	table,
-	updatedAt,
-} from "../../../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
-import { orgMember } from "../schema.js";
 import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
@@ -60,18 +49,16 @@ const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
 export const orgDepartment = table(
 	orgDepartmentTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @domain
 		 * Departmental units used for org charts and structured ABAC.
 		 */
-		name: name.notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		description: textCols.description(),
 
 		// isDefault: boolean("is_default").default(false), // Only one per org
 		// isActive: boolean("is_active").default(true),
@@ -80,15 +67,13 @@ export const orgDepartment = table(
 		 * @optional
 		 * Used to define nested department structures (e.g., HR > Payroll)
 		 */
-		parentId: idFkCol("parent_id"), // .references(() => departments.id),
+		parentId: textCols.idFk("parent_id"), // .references(() => departments.id),
 
 		/**
 		 * @branchLike
 		 * Project teams with departmental support
 		 */
-		allowsCrossDepartmentMembers: boolean(
-			"allows_cross_department_members",
-		).default(false),
+		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(false),
 
 		// /**
 		//  * @branchLike Enhanced department capabilities
@@ -185,9 +170,9 @@ const permissionPatterns = {
   }
 };
 */
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 
 		// metadata: jsonb("metadata"),
 	},
@@ -223,22 +208,19 @@ export const orgDepartmentMembershipStatusEnum = pgEnum(
 export const orgDepartmentMembership = table(
 	orgDepartmentMembershipTableName,
 	{
-		memberId: text("member_id")
-			.notNull()
-			.references(() => orgMember.id, { onDelete: "cascade" }),
+		memberId: sharedCols.orgMemberIdFk().notNull(),
 
-		departmentId: text("department_id")
+		departmentId: textCols
+			.idFk("department_id")
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		status: orgDepartmentMembershipStatusEnum("status")
-			.notNull()
-			.default("active"),
+		status: orgDepartmentMembershipStatusEnum("status").notNull().default("active"),
 		// role: departmentMembershipRoleEnum("role"), // "manager", "member", "lead"
 		joinedAt: timestamp("joined_at").defaultNow(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.departmentId] }),
@@ -271,10 +253,12 @@ export const orgTeamDepartmentRelationshipTypeEnum = pgEnum(
 export const orgTeamDepartment = table(
 	`${orgTeamDepartmentTableName}`,
 	{
-		teamId: idFkCol("team_id")
+		teamId: textCols
+			.idFk("team_id")
 			.notNull()
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
-		departmentId: idFkCol("department_id")
+		departmentId: textCols
+			.idFk("department_id")
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
@@ -283,7 +267,7 @@ export const orgTeamDepartment = table(
 			.notNull()
 			.default("collaboration"),
 
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_team_department`;

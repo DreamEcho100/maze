@@ -1,5 +1,5 @@
-import { index, text, varchar } from "drizzle-orm/pg-core";
-import { createdAt, idCol, name, table } from "../_utils/helpers.js";
+import { index } from "drizzle-orm/pg-core";
+import { table, temporalCols, textCols } from "../_utils/helpers";
 
 /**
  * @fileoverview System Permission Registry - ABAC Foundation
@@ -49,15 +49,15 @@ import { createdAt, idCol, name, table } from "../_utils/helpers.js";
 export const systemPermissionCategory = table(
 	"system_permission_category",
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		/**
 		 * Namespace identifier for permission grouping
 		 * @businessRule snake_case, represents functional domain
 		 * @abacContext Used for attribute namespace org
 		 */
-		name: name.notNull().unique("uq_system_permission_category_name"),
-		description: varchar("description", { length: 256 }),
-		createdAt,
+		name: textCols.name().notNull().unique("uq_system_permission_category_name"),
+		description: textCols.shortDescription(),
+		createdAt: temporalCols.createdAt(),
 	},
 	(table) => [
 		index("idx_system_permission_category_created_at").on(table.createdAt),
@@ -89,24 +89,25 @@ export const systemPermissionCategory = table(
 export const systemPermission = table(
 	"system_permission",
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		/**
 		 * Unique permission attribute identifier
 		 * @abacAttribute Core attribute for access control decisions
 		 * @namingPattern action_resource (e.g., "create_course", "delete_user")
 		 * @immutable Once referenced by orgs, should not change
 		 */
-		name: name.notNull().unique("uq_system_permission_name"),
-		description: varchar("description", { length: 256 }),
+		name: textCols.name().notNull().unique("uq_system_permission_name"),
+		description: textCols.shortDescription(),
 		/**
 		 * Category namespace assignment
 		 * @abacContext Groups related permissions for policy management
 		 * @cascadePolicy Removing category cleans up all contained permissions
 		 */
-		categoryId: text("category_id")
+		categoryId: textCols
+			.idFk("category_id")
 			.notNull()
 			.references(() => systemPermissionCategory.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(table) => [
 		index("idx_system_permission_created_at").on(table.createdAt),
@@ -146,7 +147,7 @@ export const systemPermission = table(
 // 	"locale",
 // 	{
 // 		// id: id.notNull(),
-// 		createdAt,
+// 		createdAt: temporalCols.createdAt(),
 // 		updatedAt,
 // 		deletedAt,
 

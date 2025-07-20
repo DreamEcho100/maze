@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, getLocaleKey, table, updatedAt } from "../../_utils/helpers";
-import { orgLocale } from "../locale-region/schema";
+import { sharedCols, table, temporalCols } from "../../_utils/helpers";
 
 export const orgTableName = "org";
 
@@ -30,13 +29,11 @@ export const buildOrgI18nTable =
 				// orgId: fk(`${orgTableName}_id`)
 				// 	.references(() => org.id)
 				// 	.notNull(),
-				localeKey: getLocaleKey("org_locale_key")
-					.notNull()
-					.references(() => orgLocale.localeKey),
+				localeKey: sharedCols.localeKey().notNull(),
 				isDefault: boolean("is_default").default(false),
-				createdAt,
-				updatedAt,
-				deletedAt,
+				createdAt: temporalCols.createdAt(),
+				updatedAt: temporalCols.updatedAt(),
+				deletedAt: temporalCols.deletedAt(),
 			},
 			(t) => [
 				// TODO: Correct the `relations` `fields`

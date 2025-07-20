@@ -1,10 +1,8 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, primaryKey, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, idCol, idFkCol, slug, table, updatedAt } from "../../_utils/helpers";
-import { seoMetadata } from "../../general/seo/schema";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
-import { org } from "../schema";
 
 const orgFunnelTableName = `${orgTableName}_funnel`;
 /**
@@ -12,19 +10,27 @@ const orgFunnelTableName = `${orgTableName}_funnel`;
  * @description A funnel represents a storefront, landing site, or market-specific experience.
  * Funnels can be tied to multiple regions and locale, but are owned by a single tenant.
  */
-export const orgFunnel = table(orgFunnelTableName, {
-	id: idCol.notNull(),
-	orgId: idFkCol(`${orgTableName}_id`)
-		.references(() => org.id)
-		.notNull(),
-	slug: slug.notNull(),
-	// defaultLocaleKey: getLocaleKey("default_locale_key")
-	// 	.references(() => locale.key)
-	// 	.notNull(),
-	createdAt,
-	updatedAt,
-	deletedAt,
-});
+export const orgFunnel = table(
+	orgFunnelTableName,
+	{
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
+		slug: textCols.slug().notNull(),
+		// defaultLocaleKey: getLocaleKey("default_locale_key")
+		// 	.references(() => locale.key)
+		// 	.notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
+	},
+	(t) => [
+		uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
+		index(`idx_${orgFunnelTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgFunnelTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
+	],
+);
 
 const orgFunnelI18nTableName = `${orgFunnelTableName}_i18n`;
 /**
@@ -33,14 +39,13 @@ const orgFunnelI18nTableName = `${orgFunnelTableName}_i18n`;
  */
 export const orgFunnelI18n = buildOrgI18nTable(orgFunnelI18nTableName)(
 	{
-		funnelId: idFkCol("funnel_id")
+		funnelId: textCols
+			.idFk("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
-		name: varchar("name", { length: 128 }).notNull(),
-		description: varchar("description", { length: 256 }),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
+		name: textCols.name().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "funnelId",
@@ -59,13 +64,15 @@ const orgLocaleTableName = `${orgTableName}_locale`;
 export const orgFunnelRegion = table(
 	orgLocaleTableName,
 	{
-		funnelId: idFkCol("funnel_id")
+		funnelId: textCols
+			.idFk("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
-		regionId: idFkCol("region_id")
+		regionId: textCols
+			.idFk("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.funnelId, t.regionId] }),
@@ -81,8 +88,9 @@ const orgFunnelDomainTableName = `${orgTableName}_funnel_domain`;
 export const orgFunnelDomain = table(
 	orgFunnelDomainTableName,
 	{
-		id: idCol.notNull(),
-		funnelId: idFkCol("funnel_id")
+		id: textCols.id().notNull(),
+		funnelId: textCols
+			.idFk("funnel_id")
 			.references(() => orgFunnel.id)
 			.notNull(),
 
@@ -108,7 +116,7 @@ export const orgFunnelDomain = table(
 		 */
 		isManagedDns: boolean("is_managed_dns").default(true).notNull(),
 
-		regionId: idFkCol("region_id").references(() => orgRegion.id),
+		regionId: textCols.idFk("region_id").references(() => orgRegion.id),
 		// getLocaleKey: getLocaleKey("locale_key").references(() => locale.key),
 
 		IsSslEnabled: boolean("ssl_enabled").default(false).notNull(),
@@ -130,9 +138,9 @@ export const orgFunnelDomain = table(
 		 */
 		hasCustom404: boolean("has_custom_404").default(false).notNull(),
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.funnelId, t.regionId] }),

@@ -9,17 +9,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	deletedAt,
-	getLocaleKey,
-	idCol,
-	name,
-	slug,
-	table,
-	updatedAt,
-} from "../../_utils/helpers.js";
-import { seoMetadata } from "../seo/schema.js";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 
 /**
  * @fileoverview 🌍 Currency & Market Schema — Global Commerce Backbone
@@ -69,31 +59,31 @@ export const locale = table(
 	"locale",
 	{
 		// id: id.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 
 		// locale: text("locale").notNull(),
 		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
 		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
 		// code
 		// label
-		key: getLocaleKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
+		key: sharedCols.localeKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
 
 		/**
 		 * @displayInfo Human-readable locale information
 		 * @platformUI Locale display in admin interfaces
 		 */
-		name: text("name").notNull(), // "English (United States)"
-		nativeName: text("native_name").notNull(), // "English (United States)"
-		languageCode: text("language_code").notNull(), // "en"
-		countryCode: text("country_code"), // "US"
+		name: textCols.name().notNull(), // "English (United States)"
+		nativeName: textCols.name("native_name").notNull(), // "English (United States)"
+		languageCode: textCols.code("language_code").notNull(), // "en"
+		countryCode: textCols.code("country_code"), // "US"
 
 		/**
 		 * @platformManagement Locale availability and configuration
 		 * @businessRule Controls locale availability across platform
 		 */
-		isActive: boolean("is_active").default(true),
+		isActive: sharedCols.isActive().default(true),
 		isRTL: boolean("is_rtl").default(false),
 
 		// /**
@@ -127,14 +117,14 @@ export const currency = table(
 	"currency",
 	{
 		code: text("code").primaryKey().notNull(), // ISO 4217 code (e.g., "USD")
-		name: name.notNull(),
-		symbol: text("symbol").notNull(),
-		numericCode: text("numeric_code"),
+		name: textCols.name().notNull(),
+		symbol: textCols.code("symbol").notNull(),
+		numericCode: textCols.code("numeric_code"),
 		minorUnit: integer("minor_unit").notNull().default(2),
 		isActive: boolean("is_active").default(true),
-		deletedAt,
-		createdAt,
-		updatedAt,
+		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => {
 		const base = "currency";
@@ -163,17 +153,18 @@ export const currency = table(
 export const country = table(
 	"country",
 	{
-		id: idCol.notNull(),
-		isoCode: text("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
-		isoCode3: text("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3
-		numericCode: text("numeric_code").notNull(),
-		name: name.notNull(),
-		nativeName: text("native_name"),
-		currencyCode: text("currency_code")
+		id: textCols.id().notNull(),
+		isoCode: textCols.code("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
+		isoCode3: textCols.code("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3
+		numericCode: textCols.code("numeric_code").notNull(),
+		name: textCols.name().notNull(),
+		nativeName: textCols.name("native_name"),
+		currencyCode: textCols
+			.code("currency_code")
 			.notNull()
 			.references(() => currency.code),
-		defaultLocale: text("default_locale").notNull(),
-		flagEmoji: text("flag_emoji"),
+		defaultLocale: textCols.code("default_locale").notNull(),
+		flagEmoji: textCols.code("flag_emoji"),
 		phoneCode: text("phone_code"),
 		continent: text("continent"),
 		region: text("region"),
@@ -181,10 +172,10 @@ export const country = table(
 		capital: text("capital"),
 		languages: text("languages").array(),
 		timezones: text("timezones").array(),
-		isActive: boolean("is_active").default(true),
+		isActive: sharedCols.isActive().default(true),
 		vatRate: decimal("vat_rate", { precision: 5, scale: 4 }),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => {
 		const base = "country";
@@ -195,6 +186,9 @@ export const country = table(
 			index(`idx_${base}_active`).on(t.isActive),
 			index(`idx_${base}_continent`).on(t.continent),
 			index(`idx_${base}_region`).on(t.region),
+			index(`idx_${base}_subregion`).on(t.subregion),
+			index(`idx_${base}_created_at`).on(t.createdAt),
+			index(`idx_${base}_updated_at`).on(t.updatedAt),
 		];
 	},
 );
@@ -216,7 +210,7 @@ export const country = table(
 export const exchangeRate = table(
 	"exchange_rate",
 	{
-		id: idCol.notNull(),
+		id: textCols.id(),
 		baseCurrency: text("base_currency")
 			.notNull()
 			.references(() => currency.code),
@@ -227,8 +221,9 @@ export const exchangeRate = table(
 		source: text("source"), // e.g., "ECB", "manual"
 		validFrom: timestamp("valid_from").notNull(),
 		validTo: timestamp("valid_to"),
-		deletedAt,
-		createdAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 		precision: integer("precision").default(2),
 		rateType: text("rate_type"), // "mid-market", "retail", etc
 	},
@@ -241,11 +236,14 @@ export const exchangeRate = table(
 			index(`idx_${base}_active_date`).on(t.validFrom, t.validTo, t.deletedAt),
 			index(`idx_${base}_source`).on(t.source),
 			index(`idx_${base}_type`).on(t.rateType),
+			index(`idx_${base}_created_at`).on(t.createdAt),
+			index(`idx_${base}_updated_at`).on(t.updatedAt),
 			index(`idx_${base}_deleted_at`).on(t.deletedAt),
 		];
 	},
 );
 
+// TODO: remove the market concept since it's been refactored to funnel instead of market templates
 /**
  * 🧩 Market Templates
  *
@@ -262,22 +260,24 @@ export const exchangeRate = table(
 export const marketTemplate = table(
 	"market_template",
 	{
-		id: idCol.notNull(),
-		name: name.notNull(), // e.g., "EU", "LATAM", "Global"
-		description: text("description"),
-		slug,
+		id: textCols.id(),
+		name: textCols.name().notNull(), // e.g., "EU", "LATAM", "Global"
+		description: textCols.description(),
+		slug: textCols.slug().notNull(),
 		currencyCode: text("currency_code")
 			.notNull()
 			.references(() => currency.code),
 		defaultLocale: text("default_locale").notNull(),
-		deletedAt,
-		createdAt,
-		updatedAt,
+		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index("idx_market_template_slug").on(t.slug),
 		index("idx_market_template_currency").on(t.currencyCode),
 		index("idx_market_template_locale").on(t.defaultLocale),
+		index("idx_market_template_created_at").on(t.createdAt),
+		index("idx_market_template_updated_at").on(t.updatedAt),
 		index("idx_market_template_deleted_at").on(t.deletedAt),
 	],
 );
@@ -298,20 +298,26 @@ export const marketTemplate = table(
 export const marketTemplateCountry = table(
 	"market_template_country",
 	{
-		marketTemplateId: text("market_template_id")
+		marketTemplateId: textCols
+			.idFk("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		countryId: text("country_id")
+		countryId: textCols
+			.idFk("country_id")
 			.notNull()
 			.references(() => country.id, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		createdAt,
+		isDefault: sharedCols.isDefault().default(false),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.marketTemplateId, t.countryId] }),
 		uniqueIndex("uq_market_template_country_default")
 			.on(t.marketTemplateId, t.isDefault)
 			.where(eq(t.isDefault, true)),
+		index("idx_market_template_country_isu_default").on(t.isDefault),
+		index("idx_market_template_country_created_at").on(t.createdAt),
+		index("idx_market_template_country_updated_at").on(t.updatedAt),
 	],
 );
 
@@ -331,19 +337,17 @@ export const marketTemplateCountry = table(
 export const marketTemplateTranslation = table(
 	"market_template_translation",
 	{
-		id: idCol.notNull(),
+		id: textCols.id(),
 		marketTemplateId: text("market_template_id")
 			.notNull()
 			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
-		name: name.notNull(),
-		description: text("description"),
-		seoMetadataId: text("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
+		localeKey: sharedCols.localeKeyFk("locale_key").notNull(),
+		isDefault: sharedCols.isDefault().default(false),
+		name: textCols.name().notNull(),
+		description: textCols.description(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_market_template_translation_unique").on(t.marketTemplateId, t.localeKey),
@@ -351,5 +355,7 @@ export const marketTemplateTranslation = table(
 			.on(t.marketTemplateId, t.isDefault)
 			.where(eq(t.isDefault, true)),
 		index("idx_market_template_translation_locale_key").on(t.localeKey),
+		index("idx_market_template_translation_created_at").on(t.createdAt),
+		index("idx_market_template_translation_updated_at").on(t.updatedAt),
 	],
 );

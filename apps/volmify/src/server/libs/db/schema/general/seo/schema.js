@@ -8,10 +8,9 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { createdAt, getLocaleKey, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers.js";
-import { orgTableName } from "../../org/_utils/helpers.js";
-import { org } from "../../org/schema.js";
-import { locale } from "../locale-currency-market/schema.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
+
+// TODO: revise the the `extraConfig` args
 
 // SEO status for content workflow
 export const seoStatusEnum = pgEnum("seo_status", [
@@ -39,21 +38,19 @@ export const changeFreqEnum = pgEnum("change_freq", [
 export const seoMetadata = table(
 	"seo_metadata",
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		// Q: Is it better to have a nullable orgId column here or a separate org_seo_metadata table?
-		orgId: idFkCol(`${orgTableName}_id`)
-			// .notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		orgId: sharedCols.orgIdFk(),
 
-		isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 
 		// SEO workflow status
 		status: seoStatusEnum("status").default("draft"),
 
 		// Basic meta tags
 		// Core SEO fields (most commonly used)
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title(),
+		description: textCols.shortDescription("description"),
 		keywords: text("keywords").array(),
 		image: text("image"),
 		imageAlt: text("image_alt"),
@@ -85,14 +82,16 @@ export const seoMetadata = table(
 		// lastReviewedAt: timestamp("last_reviewed_at"),
 		// reviewedBy: text("reviewed_by"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index("idx_seo_org").on(t.orgId),
 		index("idx_seo_canonical").on(t.canonicalUrl),
 		index("idx_seo_status").on(t.status),
 		index("idx_seo_focus_keyword").on(t.focusKeyword),
+		index("idx_seo_created_at").on(t.createdAt),
+		index("idx_seo_updated_at").on(t.updatedAt),
 		// index("idx_seo_locale").on(t.locale),
 		// index("idx_seo_performance").on(t.clickThroughRate, t.averagePosition),
 		// index("idx_seo_score").on(t.seoScore),
@@ -105,20 +104,19 @@ export const seoMetadata = table(
 export const seoOpenGraph = table(
 	"seo_open_graph",
 	{
-		id: idCol.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Core Open Graph fields
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title(),
+		description: textCols.shortDescription("description"),
 		image: text("image"),
 		imageAlt: text("image_alt"),
 		imageWidth: integer("image_width"),
 		imageHeight: integer("image_height"),
+		// TODO: convert to enum
 		type: text("type").default("website"), // "website", "article", "video", "product"
-		siteName: text("site_name"),
+		siteName: textCols.title("site_name"),
 		url: text("url"),
 
 		// Type-specific data in JSONB
@@ -162,12 +160,15 @@ export const seoOpenGraph = table(
         }
         */
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_og_metadata").on(t.seoMetadataId),
 		index("idx_seo_og_type").on(t.type),
+
+		index("idx_seo_og_created_at").on(t.createdAt),
+		index("idx_seo_og_updated_at").on(t.updatedAt),
 
 		// GIN index for searching type-specific data
 		index("idx_seo_og_type_data").using("gin", t.typeSpecificData),
@@ -180,19 +181,17 @@ export const seoOpenGraph = table(
 export const seoTwitterCard = table(
 	"seo_twitter_card",
 	{
-		id: idCol.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Core Twitter Card fields
-		card: text("card").default("summary_large_image"), // "summary", "summary_large_image", "app", "player"
-		title: text("title"),
-		description: text("description"),
+		card: textCols.title("card").default("summary_large_image"), // "summary", "summary_large_image", "app", "player"
+		title: textCols.title(),
+		description: textCols.shortDescription("description"),
 		image: text("image"),
 		imageAlt: text("image_alt"),
 		site: text("site"), // @username
-		creator: text("creator"), // @username
+		creator: textCols.title("creator"), // @username
 
 		// Card-specific data in JSONB
 		cardSpecificData: jsonb("card_specific_data"),
@@ -222,8 +221,8 @@ export const seoTwitterCard = table(
         }
         */
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_twitter_metadata").on(t.seoMetadataId),
@@ -241,23 +240,22 @@ export const seoTwitterCard = table(
 export const seoStructuredData = table(
 	"seo_structured_data",
 	{
-		id: idCol.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Schema.org type
+		// TODO: Convert to enum if we have a fixed set of types
 		schemaType: text("schema_type").notNull(), // "Course", "Product", "Org", "FAQ", "Review"
 
 		// The actual structured data
 		data: jsonb("data").notNull(),
 
 		// Metadata about the structured data
-		isActive: boolean("is_active").default(true),
-		priority: integer("priority").default(1), // For ordering multiple schemas
+		isActive: sharedCols.isActive(),
+		priority: numericCols.priority({ default: 1 }), // For ordering multiple schemas
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index("idx_seo_structured_metadata").on(t.seoMetadataId),
@@ -267,6 +265,9 @@ export const seoStructuredData = table(
 
 		// GIN index for searching within JSON data
 		index("idx_seo_structured_data").using("gin", t.data),
+
+		// TODO: Add a check constraint for priority to not be less than 1
+		// check()
 	],
 );
 
@@ -276,29 +277,29 @@ export const seoStructuredData = table(
 export const seoAlternateUrl = table(
 	"seo_alternate_url",
 	{
-		id: idCol.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Alternate URL details
-		localeKey: getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
+		localeKey: sharedCols.localeKey(),
 		hreflang: text("hreflang").notNull(), // "en-US", "es-MX", "x-default"
 		url: text("url").notNull(),
 
 		// Is this the default/canonical for this locale?
-		isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index("idx_seo_alternate_metadata").on(t.seoMetadataId),
 		index("idx_seo_alternate_locale_key").on(t.localeKey),
 		index("idx_seo_alternate_hreflang").on(t.hreflang),
 		uniqueIndex("uq_seo_alternate_metadata_locale_key").on(t.seoMetadataId, t.localeKey),
+		uniqueIndex("uq_seo_alternate_hreflang").on(t.seoMetadataId, t.hreflang),
+		index("idx_seo_alternate_is_default").on(t.isDefault),
+		index("idx_seo_alternate_created_at").on(t.createdAt),
+		index("idx_seo_alternate_updated_at").on(t.updatedAt),
 	],
 );
 
@@ -308,10 +309,8 @@ export const seoAlternateUrl = table(
 export const seoCustomMeta = table(
 	"seo_custom_meta",
 	{
-		id: idCol.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Meta tag details
 		tagType: text("tag_type").notNull(), // "name", "property", "http-equiv"
@@ -325,16 +324,18 @@ export const seoCustomMeta = table(
 		// Is this tag active?
 		isActive: boolean("is_active").default(true),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
-		index("idx_seo_meta_metadata").on(t.seoMetadataId),
+		index("idx_seo_meta_metadata_id").on(t.seoMetadataId),
 		index("idx_seo_meta_type").on(t.tagType),
 		index("idx_seo_meta_category").on(t.category),
 		index("idx_seo_meta_active").on(t.isActive),
 		index("idx_seo_meta_order").on(t.sortOrder),
 		uniqueIndex("uq_seo_meta_tag").on(t.seoMetadataId, t.tagType, t.tagKey),
+		index("idx_seo_meta_created_at").on(t.createdAt),
+		index("idx_seo_meta_updated_at").on(t.updatedAt),
 	],
 );
 
@@ -347,9 +348,7 @@ export const seoIssue = table(
 	"seo_issue",
 	{
 		id: id.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
 		// Issue details
 		severity: text("severity").notNull(), // "error", "warning", "info"
@@ -372,8 +371,8 @@ export const seoIssue = table(
 		detectedAt: timestamp("detected_at").defaultNow(),
 		lastCheckedAt: timestamp("last_checked_at").defaultNow(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index("idx_seo_issue_metadata").on(t.seoMetadataId),
@@ -392,9 +391,7 @@ export const seoAuditLog = table(
 	"seo_audit_log",
 	{
 		id: id.notNull(),
-		seoMetadataId: text("seo_metadata_id")
-			.notNull()
-			.references(() => seoMetadata.id, { onDelete: "cascade" }),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 		orgId: fk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
@@ -415,7 +412,7 @@ export const seoAuditLog = table(
 		changedBy: text("changed_by"),
 		changeReason: text("change_reason"),
 
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		index("idx_seo_audit_metadata").on(t.seoMetadataId),

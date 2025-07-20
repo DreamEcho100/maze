@@ -1,30 +1,43 @@
-import { decimal } from "drizzle-orm/mysql-core";
-import { boolean, integer, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	decimal,
+	integer,
+	jsonb,
+	pgTable,
+	text,
+	timestamp,
+	varchar,
+} from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
 import { currency, locale } from "../general/locale-currency-market/schema";
 import { seoMetadata } from "../general/seo/schema";
+import { orgLocale } from "../org/locale-region/schema";
+import { orgMember } from "../org/member/schema";
 import { org } from "../org/schema";
 import { user } from "../user/schema";
 
 const createId = ulid;
 
-export const idCol = text("id").primaryKey().notNull().$default(createId);
-export const idFkCol = text;
-export const name = varchar("name", { length: 128 });
-export const slug = varchar("slug", { length: 128 });
-export const createdAt = timestamp("created_at", { precision: 3 }).notNull().defaultNow();
-export const updatedAt = timestamp("updated_at", { precision: 3 });
-export const deletedAt = timestamp("deleted_at", { precision: 3 });
-export const getLocaleKey =
-	/** @param {string} name */
-	(name) => varchar(name, { length: 10 }); // .notNull().default("en-US");
+// export const idCol = text("id").primaryKey().notNull().$default(createId);
+// export const idFkCol = text;
+// export const name = varchar("name", { length: 128 });
+// export const slug = varchar("slug", { length: 128 });
+// export const createdAt = timestamp("created_at", { precision: 3 }).notNull().defaultNow();
+// export const updatedAt = timestamp("updated_at", { precision: 3 });
+// export const deletedAt = timestamp("deleted_at", { precision: 3 });
+// export const getLocaleKey =
+// 	/** @param {string} name */
+// 	(name) => varchar(name, { length: 10 }); // .notNull().default("en-US");
 export const table = pgTable;
 
 export const textCols = {
+	id: () => text("id").primaryKey().$default(createId),
+	idFk: text,
 	// Identifiers & URLs (ASCII-optimized)
 	slug: () => varchar("slug", { length: 128 }), // URL-safe, indexed frequently
 	key: () => varchar("key", { length: 128 }), // Permission keys, API keys
-	code: () => varchar("code", { length: 32 }), // Currency codes, locale codes
+	/** @param {string} [name] */
+	code: (name) => varchar(name ?? "code", { length: 32 }), // Currency codes, locale codes
 
 	// Names & Titles (UTF-8 optimized for international)
 	/**
@@ -41,7 +54,8 @@ export const textCols = {
 	 *
 	 * Org, product, user names
 	 */
-	name: () => varchar("name", { length: 256 }),
+	/** @param {string} [name] */
+	name: (name) => varchar(name ?? "name", { length: 256 }),
 	displayName: () => varchar("display_name", { length: 256 }), // User display names
 	/**
 	 * DISPLAY (medium, searchable, customer-facing)
@@ -55,12 +69,15 @@ export const textCols = {
 	 * ```
 	 *
 	 * Course titles, lesson titles
+	 *
+	 * @param {string} [name]
 	 */
-	title: () => varchar("title", { length: 768 }),
+	title: (name) => varchar(name ?? "title", { length: 768 }),
 
 	// Short descriptions (indexed searchable)
 	// Q: Should it be called excerpt or summary?
-	shortDescription: () => varchar("description", { length: 1536 }), // Product descriptions
+	/** @param {string} name */
+	shortDescription: (name) => varchar(name, { length: 1536 }), // Product descriptions
 	tagline: () => varchar("tagline", { length: 384 }), // Marketing taglines
 
 	// Long content (not indexed)
@@ -104,8 +121,8 @@ export const textCols = {
 
 export const numericCols = {
 	// IDs and Counters
-	id: () => text("id").notNull(), // UUID strings for multi-tenant
-	sortOrder: () => integer("sort_order"), // Course module ordering
+	// id: () => text("id").notNull(), // UUID strings for multi-tenant
+	sortOrder: () => integer("sort_order").default(0), // Course module ordering
 	version: () => integer("version").default(1), // Content versioning
 
 	// Financial (precision-critical)
@@ -119,43 +136,61 @@ export const numericCols = {
 	duration: () => integer("duration_minutes"), // Time in minutes
 
 	// Access Control
-	accessTier: () => integer("access_tier").default(1), // 1-10 tier levels
-	priority: () => integer("priority").default(0), // Rule priority
+	/** @param {string} [name] */
+	accessTier: (name) => integer(name ?? "access_tier").default(1), // 1-10 tier levels
+	priority: ({ name = "priority", default: defaultVal = 0 }) =>
+		integer(name).default(defaultVal), // Rule priority
 };
 
 export const temporalCols = {
 	// Standard lifecycle (millisecond precision for audit)
-	createdAt: () => timestamp("created_at", { precision: 3, withTimezone: true }).defaultNow(),
-	updatedAt: () => timestamp("updated_at", { precision: 3, withTimezone: true }).defaultNow(),
-	deletedAt: () => timestamp("deleted_at", { precision: 3, withTimezone: true }),
+	createdAt: () =>
+		timestamp("created_at", { precision: 3, withTimezone: true }).defaultNow(),
+	updatedAt: () =>
+		timestamp("updated_at", { precision: 3, withTimezone: true }).defaultNow(),
+	deletedAt: () =>
+		timestamp("deleted_at", { precision: 3, withTimezone: true }),
 
 	// Business events (second precision sufficient)
-	startsAt: () => timestamp("starts_at", { precision: 0, withTimezone: true }),
+	startsAt: () =>
+		timestamp("starts_at", { precision: 0, withTimezone: true }).defaultNow(),
 	endsAt: () => timestamp("ends_at", { precision: 0, withTimezone: true }),
-	expiresAt: () => timestamp("expires_at", { precision: 0, withTimezone: true }),
+	expiresAt: () =>
+		timestamp("expires_at", { precision: 0, withTimezone: true }),
 
 	// User activity (minute precision for analytics)
-	lastAccessedAt: () => timestamp("last_accessed_at", { precision: 0, withTimezone: true }),
-	completedAt: () => timestamp("completed_at", { precision: 0, withTimezone: true }),
+	lastAccessedAt: () =>
+		timestamp("last_accessed_at", { precision: 0, withTimezone: true }),
+	completedAt: () =>
+		timestamp("completed_at", { precision: 0, withTimezone: true }),
 };
 
 export const sharedCols = {
 	// Multi-tenant foundations
-	orgId: (tableName = "org") =>
-		idFkCol(`${tableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+	orgIdFk: () =>
+		textCols.idFk("org_id").references(() => org.id, { onDelete: "cascade" }),
+	orgMemberIdFk: () =>
+		textCols
+			.idFk("member_id")
+			.references(() => orgMember.id, { onDelete: "cascade" }),
 
-	userId: () =>
-		idFkCol("user_id")
-			.references(() => user.id, { onDelete: "cascade" })
-			.notNull(),
+	userIdFk: () =>
+		textCols.idFk("user_id").references(() => user.id, { onDelete: "cascade" }),
 
 	// Localization columns
-	localeKey: () =>
-		getLocaleKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
+	/** @param {string} [name] */
+	localeKey: (name = "locale_key") => varchar(name, { length: 10 }),
+
+	/** @param {string} name */
+	localeKeyFk: (name) =>
+		sharedCols.localeKey(name).references(() => locale.key, {
+			onDelete: "cascade",
+		}),
+	/** @param {string} [name] */
+	orgLocaleKeyFk: (name = "local_key") =>
+		sharedCols.localeKey(name).references(() => orgLocale.localeKey, {
+			onDelete: "cascade",
+		}),
 
 	isDefault: () => boolean("is_default").default(false),
 
@@ -165,15 +200,18 @@ export const sharedCols = {
 	isFeatured: () => boolean("is_featured").default(false), // Marketing prominence
 
 	// E-commerce columns
-	currencyCode: () => varchar("currency_code", { length: 3 }).references(() => currency.code),
+	currencyCode: () =>
+		varchar("currency_code", { length: 3 }).references(() => currency.code),
 
 	// Creator economy columns
 	attribution: () => jsonb("attribution"), // Creator/brand attribution
 	compensation: () => jsonb("compensation"), // Revenue sharing config
 
 	// SEO & Marketing
-	seoMetadataId: () =>
-		idFkCol("seo_metadata_id").references(() => seoMetadata.id, { onDelete: "set null" }),
+	seoMetadataIdFk: () =>
+		textCols
+			.idFk("seo_metadata_id")
+			.references(() => seoMetadata.id, { onDelete: "set null" }),
 };
 
 export const ecommerceCols = {
@@ -198,7 +236,8 @@ export const ecommerceCols = {
 
 export const lmsCols = {
 	// Progress tracking (frequent updates)
-	progressPercentage: () => decimal("progress_percentage", { precision: 5, scale: 2 }),
+	progressPercentage: () =>
+		decimal("progress_percentage", { precision: 5, scale: 2 }).default("0.00"),
 	completionRate: () => decimal("completion_rate", { precision: 5, scale: 2 }),
 
 	// Time tracking (minutes for analytics)

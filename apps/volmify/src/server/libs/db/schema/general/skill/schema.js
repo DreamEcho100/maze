@@ -1,16 +1,8 @@
-import { boolean, index, text, uniqueIndex } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	getLocaleKey,
-	idCol,
-	idFkCol,
-	slug,
-	table,
-	updatedAt,
-} from "../../_utils/helpers";
+import { boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
+
 import { org } from "../../org/schema";
 import { locale } from "../locale-currency-market/schema";
-import { seoMetadata } from "../seo/schema";
 
 const skillTableName = "skill";
 // Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
@@ -20,20 +12,20 @@ const skillTableName = "skill";
 export const skill = table(
 	skillTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		/**
 		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
 		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
 		 */
-		slug: slug.notNull(), // "react", "python", "data-analysis"
-		name: text("name").notNull(),
+		slug: textCols.slug().notNull(), // "react", "python", "data-analysis"
+		name: textCols.name().notNull(),
 
 		/**
 		 * @skillHierarchy Parent skill for hierarchical skill org
 		 * @marketplaceNavigation Enables nested skill browsing (Programming → JavaScript → React)
 		 */
 		// @ts-ignore
-		parentSkillId: idFkCol("parent_skill_id"),
+		parentSkillId: textCols.idFk("parent_skill_id"),
 		// Note: Self reference foreign key break relational query types
 		// So it will be defined on the callback bellow
 		// .references(() => /** @type {any}*/ (skill).id),
@@ -50,17 +42,18 @@ export const skill = table(
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
-		appliedByOrgId: idFkCol("applied_by_org_id").references(() => org.id),
-		createdByOrgId: idFkCol("created_by_org_id")
+		appliedByOrgId: textCols.idFk("applied_by_org_id").references(() => org.id),
+		createdByOrgId: textCols
+			.idFk("created_by_org_id")
 			.references(() => org.id)
 			.notNull(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(t.appliedByOrgId, t.slug),
-		index(`idx_${skillTableName}_category`).on(t.category),
+		// index(`idx_${skillTableName}_category`).on(t.category),
 		index(`idx_${skillTableName}_parent_skill_id`).on(t.parentSkillId),
 		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),
 		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
@@ -74,24 +67,24 @@ const skillI18nTableName = `${skillTableName}_i18n`;
 export const skillI18n = table(
 	skillI18nTableName,
 	{
-		id: idCol.notNull(),
-		skillId: idFkCol("skill_id")
+		id: textCols.id().notNull(),
+		skillId: textCols
+			.idFk("skill_id")
 			.references(() => skill.id)
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
+		localeKey: sharedCols
+			.localeKey("locale_key")
 			.notNull()
 			.references(() => locale.key, { onDelete: "cascade" }),
-		// isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 
-		name: text("name").notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		description: textCols.description(),
 
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),

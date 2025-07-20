@@ -1,23 +1,8 @@
-import {
-	index,
-	pgEnum,
-	text,
-	timestamp,
-	uniqueIndex,
-	varchar,
-} from "drizzle-orm/pg-core";
+import { index, pgEnum, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 
-import {
-	createdAt,
-	deletedAt,
-	idCol,
-	idFkCol,
-	table,
-	updatedAt,
-} from "../../_utils/helpers.js";
 import { user } from "../../user/schema.js";
 import { orgTableName } from "../_utils/helpers.js";
-import { org } from "../schema.js";
 
 export const orgMemberBaseRoleEnum = pgEnum("org_member_base_role", [
 	"admin", // Full org privileges; manage members, teams, configs
@@ -43,18 +28,14 @@ export const orgMemberStatusEnum = pgEnum("org_member_status", [
 export const orgMember = table(
 	`${orgTableName}_member`,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		orgId: sharedCols.orgIdFk().notNull(),
 
-		userId: idFkCol("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
+		userId: sharedCols.userIdFk().notNull(),
 
 		/**
 		 * Determines baseline org access. Most logic uses permission groups for actual decisions.
@@ -66,7 +47,7 @@ export const orgMember = table(
 		 */
 		status: orgMemberStatusEnum("status").notNull().default("invited"),
 
-		displayName: varchar("display_name", { length: 128 }),
+		displayName: textCols.displayName().notNull(),
 
 		invitedAt: timestamp("invited_at", { precision: 3 }),
 		invitedBy: text("invited_by").references(() => user.id),
@@ -81,16 +62,13 @@ export const orgMember = table(
 	},
 );
 
-export const orgMemberInvitationStatusEnum = pgEnum(
-	`${orgTableName}_member_invitation_status`,
-	[
-		"pending", // Awaiting response
-		"accepted", // Member joined org
-		"declined", // Invitee declined
-		"cancelled", // Invite cancelled by sender
-		"revoked", // Revoked access before action
-	],
-);
+export const orgMemberInvitationStatusEnum = pgEnum(`${orgTableName}_member_invitation_status`, [
+	"pending", // Awaiting response
+	"accepted", // Member joined org
+	"declined", // Invitee declined
+	"cancelled", // Invite cancelled by sender
+	"revoked", // Revoked access before action
+]);
 
 /**
  * Member Invitation Table
@@ -101,25 +79,22 @@ export const orgMemberInvitationStatusEnum = pgEnum(
 export const orgMemberInvitation = table(
 	`${orgTableName}_member_invitation`,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		orgId: sharedCols.orgIdFk().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
-		invitedByMemberId: idFkCol("invited_by_member_id")
+		invitedByMemberId: textCols
+			.idFk("invited_by_member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
-		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
-		status: orgMemberInvitationStatusEnum("status")
-			.notNull()
-			.default("pending"),
+		expiresAt: temporalCols.expiresAt().notNull(),
+		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 		message: text("message"),
 		acceptedAt: timestamp("accepted_at", { precision: 3 }),
 		declinedAt: timestamp("declined_at", { precision: 3 }),
-		memberId: idFkCol("member_id").references(() => orgMember.id),
+		memberId: textCols.idFk("member_id").references(() => orgMember.id),
 	},
 	(t) => {
 		const base = `${orgTableName}_member_invitation`;

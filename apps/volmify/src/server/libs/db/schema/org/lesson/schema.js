@@ -1,8 +1,7 @@
-import { index, pgEnum, text } from "drizzle-orm/pg-core";
-import { createdAt, idCol, idFkCol, table } from "../../_utils/helpers";
+import { index, pgEnum } from "drizzle-orm/pg-core";
+import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
 import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
-import { org } from "../schema";
 
 // import { user } from "../.
 
@@ -22,12 +21,10 @@ export const orgLessonTypeEnum = pgEnum(`${orgLessonTableName}_type`, [
 export const orgLesson = table(
 	orgLessonTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol("org_id")
-			.references(() => org.id)
-			.notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 		type: orgLessonTypeEnum("type").notNull(),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		index(`idx_${orgLessonTableName}_org_id`).on(t.orgId),
@@ -39,11 +36,11 @@ export const orgLesson = table(
 const orgLessonI18nTableName = `${orgLessonTableName}_i18n`;
 export const orgLessonI18n = buildOrgI18nTable(orgLessonI18nTableName)(
 	{
-		lessonId: idFkCol("lesson_id").references(() => orgLesson.id),
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id),
+		lessonId: textCols.idFk("lesson_id").references(() => orgLesson.id),
+		seoMetadataId: textCols.idFk("seo_metadata_id").references(() => seoMetadata.id),
 		// .notNull(),
-		title: text("title").notNull(),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "lessonId",

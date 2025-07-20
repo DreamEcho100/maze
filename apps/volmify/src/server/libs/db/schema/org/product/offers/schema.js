@@ -1,9 +1,7 @@
 import {
-	boolean,
 	decimal,
 	index,
 	integer,
-	jsonb,
 	pgEnum,
 	primaryKey,
 	text,
@@ -11,13 +9,12 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { currency } from "../../../general/locale-currency-market/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";
-import { orgProductCollection } from "../collection/schema.js";
-import { orgProduct, orgProductVariant } from "../schema.js";
+import { orgProductCollection } from "../collection } from "../schema.js";
 
 const orgDiscountTableName = `${orgTableName}_discount`;
 /**
@@ -53,10 +50,8 @@ export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`
 export const orgDiscount = table(
 	orgDiscountTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		type: orgDiscountTypeEnum("type").notNull(),
 		value: decimal("value", { precision: 10, scale: 2 }).notNull(),
@@ -64,16 +59,16 @@ export const orgDiscount = table(
 		currencyCode: text("currency_code").references(() => currency.code),
 
 		appliesTo: discountAppliesToEnum("applies_to").notNull().default("all"),
-		isActive: boolean("is_active").default(true),
+		isActive: sharedCols.isActive(),
 		usageLimit: integer("usage_limit"),
 		usedCount: integer("used_count").default(0),
 
-		startsAt: timestamp("starts_at"),
-		endsAt: timestamp("ends_at"),
+		startsAt: temporalCols.startsAt(),
+		endsAt: temporalCols.endsAt(),
 		// metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgDiscountTableName}_org_id`).on(t.orgId),
@@ -94,11 +89,12 @@ const orgDiscountI18nTableName = `${orgDiscountTableName}_i18n`;
  */
 export const orgDiscountI18n = buildOrgI18nTable(orgDiscountI18nTableName)(
 	{
-		discountId: idFkCol("discount_id")
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 
 		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
 		// 	onDelete: "set null",
@@ -129,13 +125,15 @@ const orgDiscountProductTableName = `${orgDiscountTableName}_product`;
 export const orgDiscountProduct = table(
 	orgDiscountProductTableName,
 	{
-		discountId: idFkCol("discount_id")
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		productId: idFkCol("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.productId] }),
@@ -159,13 +157,15 @@ const orgDiscountProductVariantTableName = `${orgDiscountTableName}_product_vari
 export const orgDiscountProductVariant = table(
 	orgDiscountProductVariantTableName,
 	{
-		discountId: idFkCol("discount_id")
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		variantId: idFkCol("variant_id")
+		variantId: textCols
+			.idFk("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.variantId] }),
@@ -188,17 +188,19 @@ export const orgDiscountProductCollection = table(
 		/**
 		 * @discountLink Discount campaign being applied
 		 */
-		discountId: idFkCol("discount_id")
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 
 		/**
 		 * @collectionLink Target collection receiving the discount
 		 */
-		collectionId: idFkCol("collection_id")
+		collectionId: textCols
+			.idFk("collection_id")
 			.notNull()
 			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.collectionId] }),
@@ -215,18 +217,17 @@ const orgDiscountUsageTableName = `${orgTableName}_member_discount_usage`;
 export const orgMemberOrderDiscountUsage = table(
 	orgDiscountUsageTableName,
 	{
-		id: idCol.notNull(),
-		memberId: idFkCol("member_id")
-			.notNull()
-			.references(() => orgMember.id),
-		discountId: idFkCol("discount_id")
+		id: textCols.id().notNull(),
+		memberId: sharedCols.orgMemberIdFk().notNull(),
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: idFkCol("order_id").references(() => orgMemberOrder.id),
+		orderId: textCols.idFk("order_id").references(() => orgMemberProductOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
@@ -246,24 +247,23 @@ const orgCouponTableName = `${orgTableName}_coupon`;
 export const orgCoupon = table(
 	orgCouponTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
-		discountId: idFkCol("discount_id")
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 
-		code: text("code").notNull(),
+		code: textCols.code().notNull(),
 		usageLimit: integer("usage_limit"),
 		usedCount: integer("used_count").default(0),
-		isActive: boolean("is_active").default(true),
-		startsAt: timestamp("starts_at"),
-		endsAt: timestamp("ends_at"),
-		metadata: jsonb("metadata"),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		isActive: sharedCols.isActive(),
+		startsAt: temporalCols.startsAt(),
+		endsAt: temporalCols.endsAt(),
+		// metadata: jsonb("metadata"),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(), 
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(t.orgId, t.code),
@@ -285,11 +285,12 @@ const orgCouponI18nTableName = `${orgCouponTableName}_i18n`;
  */
 export const orgCouponI18n = buildOrgI18nTable(orgCouponI18nTableName)(
 	{
-		couponId: idFkCol("coupon_id")
+		couponId: textCols
+			.idFk("coupon_id")
 			.notNull()
 			.references(() => orgCoupon.id, { onDelete: "cascade" }),
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 
 		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
 		// 	onDelete: "set null",
@@ -314,11 +315,9 @@ const orgGiftCardTableName = `${orgTableName}_gift_card`;
 export const orgGiftCard = table(
 	orgGiftCardTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
-		code: text("code").notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
+		code: textCols.code().notNull(),
 		initialBalance: decimal("initial_balance", {
 			precision: 10,
 			scale: 2,
@@ -331,15 +330,15 @@ export const orgGiftCard = table(
 			.notNull()
 			.references(() => currency.code),
 		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
-		issuedToMemberId: idFkCol("issued_to_member_id").references(() => orgMember.id),
+		issuedToMemberId: textCols.idFk("issued_to_member_id").references(() => orgMember.id),
 		issuedToEmail: text("issued_to_email"),
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
-		expiresAt: timestamp("expires_at"),
-		isActive: boolean("is_active").default(true),
+		expiresAt: temporalCols.expiresAt(),
+		isActive: sharedCols.isActive(),
 		// metadata: jsonb("metadata"),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(), 
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
@@ -365,11 +364,12 @@ const orgGiftCardI18nTableName = `${orgGiftCardTableName}_i18n`;
  */
 export const orgGiftCardI18n = buildOrgI18nTable(orgGiftCardI18nTableName)(
 	{
-		giftCardId: idFkCol("gift_card_id")
+		giftCardId: textCols
+			.idFk("gift_card_id")
 			.notNull()
 			.references(() => orgGiftCard.id, { onDelete: "cascade" }),
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "giftCardId",
@@ -388,18 +388,17 @@ const orgMemberGiftCardUsageTableName = `${orgTableName}_member_gift_card_usage`
 export const orgMemberGiftCardUsage = table(
 	orgMemberGiftCardUsageTableName,
 	{
-		id: idCol.notNull(),
-		memberId: idFkCol("member_id")
-			.notNull()
-			.references(() => orgMember.id),
-		giftCardId: idFkCol("gift_card_id")
+		id: textCols.id().notNull(),
+		memberId: sharedCols.orgMemberIdFk().notNull(),
+		giftCardId: textCols
+			.idFk("gift_card_id")
 			.notNull()
 			.references(() => orgGiftCard.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
-		orderId: idFkCol("order_id"),
-		createdAt,
-		updatedAt,
+		orderId: textCols.idFk("order_id"),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
@@ -420,19 +419,17 @@ const orgPromotionTableName = `${orgTableName}_promotion`;
 export const orgPromotion = table(
 	orgPromotionTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 		slug: text("slug").notNull(),
 		bannerImage: text("banner_image"),
-		startsAt: timestamp("starts_at"),
-		endsAt: timestamp("ends_at"),
-		isActive: boolean("is_active").default(true),
-		metadata: jsonb("metadata"),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		startsAt: temporalCols.startsAt(),
+		endsAt: temporalCols.endsAt(),
+		isActive: sharedCols.isActive(),
+		// metadata: jsonb("metadata"),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(), 
 	},
 	(t) => [
 		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(t.orgId, t.slug),
@@ -453,11 +450,12 @@ const orgPromotionI18nTableName = `${orgPromotionTableName}_i18n`;
  */
 export const orgPromotionI18n = buildOrgI18nTable(orgPromotionI18nTableName)(
 	{
-		promotionId: idFkCol("promotion_id")
+		promotionId: textCols
+			.idFk("promotion_id")
 			.notNull()
 			.references(() => orgPromotion.id, { onDelete: "cascade" }),
-		title: text("title"),
-		description: text("description"),
+		title: textCols.title().notNull(),
+		description: textCols.description(),
 	},
 	{
 		fkKey: "promotionId",
@@ -477,13 +475,15 @@ const orgPromotionDiscountTableName = `${orgPromotionTableName}_discount`;
 export const orgPromotionDiscount = table(
 	orgPromotionDiscountTableName,
 	{
-		promotionId: idFkCol("promotion_id")
+		promotionId: textCols
+			.idFk("promotion_id")
 			.notNull()
 			.references(() => orgPromotion.id, { onDelete: "cascade" }),
-		discountId: idFkCol("discount_id")
+		discountId: textCols
+			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.promotionId, t.discountId] }),

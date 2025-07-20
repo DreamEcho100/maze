@@ -12,17 +12,9 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import {
-	createdAt,
-	idCol,
-	idFkCol,
-	name,
-	table,
-	updatedAt,
-} from "../../../../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../../../../_utils/helpers.js";
 import { user } from "../../../../user/schema.js";
 import { orgTableName } from "../../../_utils/helpers.js";
-import { org } from "../../../schema.js";
 import { orgDepartment } from "../../department/schema.js";
 import { orgMember } from "../../schema.js";
 import { orgTeam } from "../../team/schema.js";
@@ -39,37 +31,32 @@ import { orgTeam } from "../../team/schema.js";
  * @examples "edit_invoice", "view_reports", "manage_members", "create_courses"
  */
 const orgPermissionTableName = `${orgTableName}_permission`;
-export const orgPermissionScopeEnum = pgEnum(
-	`${orgPermissionTableName}_scope`,
-	[
-		"global", // Applies to all resources in the org
-		"org", // Applies to all resources within the org
-		"resource", // Applies to a specific resource
-		"team", // Applies to all resources within a specific team
-		"department", // Applies to all resources within a specific department
-		"member", // Applies to all resources owned by a specific member
-	],
-);
+export const orgPermissionScopeEnum = pgEnum(`${orgPermissionTableName}_scope`, [
+	"global", // Applies to all resources in the org
+	"org", // Applies to all resources within the org
+	"resource", // Applies to a specific resource
+	"team", // Applies to all resources within a specific team
+	"department", // Applies to all resources within a specific department
+	"member", // Applies to all resources owned by a specific member
+]);
 
 export const orgPermission = table(
 	orgPermissionTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @key Unique identifier used in code and policies
 		 * @examples "courses.create", "members.invite", "reports.view", "invoices.edit"
 		 */
-		key: varchar("key", { length: 128 }).notNull(),
+		key: textCols.key().notNull(),
 
 		/**
 		 * @display Human-readable permission name for UI
 		 */
-		name: varchar("name", { length: 256 }).notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 
 		/**
 		 * @scope Permission scope for ABAC evaluation
@@ -85,12 +72,12 @@ export const orgPermission = table(
 		/**
 		 * @system System permissions cannot be deleted, only disabled
 		 */
-		isSystem: boolean("is_system").default(false),
-		isActive: boolean("is_active").default(true),
+		isSystem: sharedCols.isSystem(),
+		isActive: sharedCols.isActive(),
 
-		createdAt,
-		updatedAt,
-		createdBy: idFkCol("created_by").references(() => user.id),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgPermissionTableName}_key_org`).on(t.key, t.orgId),
@@ -112,37 +99,36 @@ const orgPolicyTableName = `${orgTableName}_policy`;
 export const orgPolicy = table(
 	orgPolicyTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @policy Policy identification and management
 		 */
-		name: name.notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 
 		/**
 		 * @system System policies are built-in and cannot be deleted
 		 */
-		isSystem: boolean("is_system").default(false),
-		isActive: boolean("is_active").default(true),
+		isSystem: sharedCols.isSystem(),
+		isActive: sharedCols.isActive(),
 
 		/**
 		 * @metadata Additional policy configuration and context
 		 */
 		metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
-		createdBy: idFkCol("created_by").references(() => user.id),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgPolicyTableName}_name_org`).on(t.name, t.orgId),
 		index(`idx_${orgPolicyTableName}_active`).on(t.isActive),
 		index(`idx_${orgPolicyTableName}_system`).on(t.isSystem),
 		index(`idx_${orgPolicyTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgPolicyTableName}_updated_at`).on(t.updatedAt),
 	],
 );
 
@@ -153,22 +139,21 @@ export const orgPolicy = table(
  * @description Links permissions to policies with conditional access logic
  */
 const orgPolicyRuleTableName = `${orgPolicyTableName}_rule`;
-export const orgPolicyRuleEffectEnum = pgEnum(
-	`${orgPolicyRuleTableName}_effect`,
-	[
-		"allow", // Grants permission if conditions are met
-		"deny", // Explicitly denies permission if conditions are met
-	],
-);
+export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyRuleTableName}_effect`, [
+	"allow", // Grants permission if conditions are met
+	"deny", // Explicitly denies permission if conditions are met
+]);
 
 export const orgPolicyRule = table(
 	orgPolicyRuleTableName,
 	{
-		id: idCol.notNull(),
-		policyId: idFkCol("policy_id")
+		id: textCols.id().notNull(),
+		policyId: textCols
+			.idFk("policy_id")
 			.references(() => orgPolicy.id, { onDelete: "cascade" })
 			.notNull(),
-		permissionId: idFkCol("permission_id")
+		permissionId: textCols
+			.idFk("permission_id")
 			.references(() => orgPermission.id, { onDelete: "cascade" })
 			.notNull(),
 
@@ -203,14 +188,11 @@ export const orgPolicyRule = table(
 		// departmentScope: fk("department_scope").references(() => orgDepartment.id),
 		// // Permissions can be scoped to specific departments (branch-like isolation)
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(
-			t.policyId,
-			t.permissionId,
-		),
+		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
 		index(`idx_${orgPolicyRuleTableName}_effect`).on(t.effect),
 		index(`idx_${orgPolicyRuleTableName}_priority`).on(t.priority),
 		index(`idx_${orgPolicyRuleTableName}_created_at`).on(t.createdAt),
@@ -228,31 +210,29 @@ const orgRoleTableName = `${orgTableName}_role`;
 export const orgRole = table(
 	orgRoleTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @role Role identification and display
 		 */
-		name: varchar("name", { length: 128 }).notNull(),
-		description: text("description"),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 
 		/**
 		 * @system System roles are built-in templates
 		 */
-		isSystem: boolean("is_system").default(false),
-		isActive: boolean("is_active").default(true),
+		isSystem: sharedCols.isSystem(),
+		isActive: sharedCols.isActive(),
 
 		/**
 		 * @metadata Role configuration and UI customization
 		 */
 		metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
-		createdBy: idFkCol("created_by").references(() => user.id),
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
+		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgRoleTableName}_name_org`).on(t.name, t.orgId),
@@ -272,10 +252,12 @@ const orgRolePolicyTableName = `${orgRoleTableName}_policy`;
 export const orgRolePolicy = table(
 	orgRolePolicyTableName,
 	{
-		roleId: idFkCol("role_id")
+		roleId: textCols
+			.idFk("role_id")
 			.references(() => orgRole.id, { onDelete: "cascade" })
 			.notNull(),
-		policyId: idFkCol("policy_id")
+		policyId: textCols
+			.idFk("policy_id")
 			.references(() => orgPolicy.id, { onDelete: "cascade" })
 			.notNull(),
 
@@ -283,9 +265,9 @@ export const orgRolePolicy = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: idFkCol("assigned_by").references(() => user.id),
+		assignedBy: textCols.idFk("assigned_by").references(() => user.id),
 
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.roleId, t.policyId] }),
@@ -304,25 +286,22 @@ const orgPolicyAssignmentTableName = `${orgPolicyTableName}_assignment`;
 export const orgPolicyAssignment = table(
 	orgPolicyAssignmentTableName,
 	{
-		id: idCol.notNull(),
-		policyId: idFkCol("policy_id")
+		id: textCols.id().notNull(),
+		policyId: textCols
+			.idFk("policy_id")
 			.references(() => orgPolicy.id, { onDelete: "cascade" })
 			.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @actor Assignment target (exactly one must be set)
 		 * @constraint Enforced via check constraint - only one actor type per assignment
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, {
+		memberId: sharedCols.orgMemberIdFk(),
+		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		teamId: idFkCol("team_id").references(() => orgTeam.id, {
-			onDelete: "cascade",
-		}),
-		departmentId: idFkCol("department_id").references(() => orgDepartment.id, {
+		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
 			onDelete: "cascade",
 		}),
 
@@ -330,16 +309,16 @@ export const orgPolicyAssignment = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: idFkCol("assigned_by").references(() => orgMember.id),
-		expiresAt: timestamp("expires_at"), // Optional policy expiration
+		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
+		expiresAt: temporalCols.expiresAt(), // Optional policy expiration
 
 		/**
 		 * @metadata Additional assignment context
 		 */
 		metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment
@@ -381,24 +360,21 @@ const orgRoleAssignmentTableName = `${orgRoleTableName}_assignment`;
 export const orgRoleAssignment = table(
 	orgRoleAssignmentTableName,
 	{
-		id: idCol.notNull(),
-		roleId: idFkCol("role_id")
+		id: textCols.id().notNull(),
+		roleId: textCols
+			.idFk("role_id")
 			.references(() => orgRole.id, { onDelete: "cascade" })
 			.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @actor Assignment target (exactly one must be set)
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, {
+		memberId: sharedCols.orgMemberIdFk(),
+		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		teamId: idFkCol("team_id").references(() => orgTeam.id, {
-			onDelete: "cascade",
-		}),
-		departmentId: idFkCol("department_id").references(() => orgDepartment.id, {
+		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
 			onDelete: "cascade",
 		}),
 
@@ -406,7 +382,7 @@ export const orgRoleAssignment = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: idFkCol("assigned_by").references(() => orgMember.id),
+		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
 		expiresAt: timestamp("expires_at"), // Optional role expiration
 
 		/**
@@ -414,8 +390,8 @@ export const orgRoleAssignment = table(
 		 */
 		metadata: jsonb("metadata"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment
@@ -457,17 +433,13 @@ const orgPermissionAuditLogTableName = `${orgTableName}_permission_audit_log`;
 export const orgPermissionAuditLog = table(
 	orgPermissionAuditLogTableName,
 	{
-		id: idCol.notNull(),
-		orgId: idFkCol(`${orgTableName}_id`)
-			.references(() => org.id, { onDelete: "cascade" })
-			.notNull(),
+		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @audit Core audit information
 		 */
-		memberId: idFkCol("member_id").references(() => orgMember.id, {
-			onDelete: "set null",
-		}),
+		memberId: sharedCols.orgMemberIdFk(),
 		permissionKey: varchar("permission_key", { length: 128 }).notNull(),
 
 		/**
@@ -490,21 +462,14 @@ export const orgPermissionAuditLog = table(
 		ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
 
 		evaluatedAt: timestamp("evaluated_at").defaultNow(),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		index(`idx_${orgPermissionAuditLogTableName}_member`).on(t.memberId),
-		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(
-			t.permissionKey,
-		),
+		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(t.permissionKey),
 		index(`idx_${orgPermissionAuditLogTableName}_granted`).on(t.granted),
-		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(
-			t.evaluatedAt,
-		),
-		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(
-			t.resourceType,
-			t.resourceId,
-		),
+		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(t.evaluatedAt),
+		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(t.resourceType, t.resourceId),
 		index(`idx_${orgPermissionAuditLogTableName}_created_at`).on(t.createdAt),
 	],
 );

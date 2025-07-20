@@ -12,16 +12,10 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../_utils/helpers.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { currency } from "../../../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
-import { user } from "../../../user/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
-import { orgMember } from "../../member/schema.js";
-import {
-	org,
-	// , orgMarket, orgMember, orgPricingZone
-} from "../../schema.js";
 import { orgTaxCategory } from "../../tax/schema.js";
 import { orgProductVariant } from "../schema.js";
 
@@ -151,13 +145,14 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
 export const orgProductVariantPaymentPlan = table(
 	orgProductVariantPaymentPlanTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		/**
 		 * @integrationContext Binds plan to specific purchasable entity
 		 * @businessRule Multiple payment strategies per variant enable pricing tier flexibility
 		 */
-		variantId: text("variant_id")
+		variantId: textCols
+			.idFk("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id),
 
@@ -165,14 +160,12 @@ export const orgProductVariantPaymentPlan = table(
 		 * @abacRole Plan creation/update restricted to org owners/managers
 		 * @multiTenant Separates plan configuration per org boundary
 		 */
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * This is an optional tax category connection that overrides the one on the `orgProductVariant`
 		 */
-		taxCategoryId: idFkCol("tax_category_id").references(() => orgTaxCategory.id),
+		taxCategoryId: textCols.idFk("tax_category_id").references(() => orgTaxCategory.id),
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
@@ -180,25 +173,25 @@ export const orgProductVariantPaymentPlan = table(
 		 */
 		type: orgProductVariantPaymentTypeEnum("type").notNull(),
 
-		name: text("name").notNull(),
-		slug: text("slug").notNull(),
+		name: textCols.title().notNull(),
+		slug: textCols.slug().notNull(),
 
 		/**
 		 * @businessRule Default plan shown first in pricing displays and checkout flows
 		 * @onboardingPattern Ensures a single visible option per variant
 		 */
-		isDefault: boolean("is_default").default(false),
+		isDefault: sharedCols.isDefault(),
 
 		/**
 		 * @marketingStrategy Highlighted plan in pricing tables (typically "best value")
 		 * @conversionOptimization Draws customer attention to preferred monetization tier
 		 */
-		isFeatured: boolean("is_featured").default(false),
+		isFeatured: sharedCols.isFeatured(),
 
 		/**
 		 * @uiControl Controls pricing table sequence for optimal conversion flow
 		 */
-		sortOrder: integer("sort_order").default(0),
+		sortOrder: numericCols.sortOrder(),
 
 		/**
 		 * @accessControl Whether product access can be transferred between accounts
@@ -210,14 +203,14 @@ export const orgProductVariantPaymentPlan = table(
 		//  * @pricingZoneOverride Optional pricing zone override for specialized regional pricing
 		//  * @businessFlexibility Enables complex regional pricing strategies
 		//  */
-		// pricingZoneId: text("pricing_zone_id").references(() => orgPricingZone.id),
+		// pricingZoneId: textCols.idFk("pricing_zone_id").references(() => orgPricingZone.id),
 
 		// /**
 		//  * @regionalPricing Optional market for regional pricing strategies
 		//  * @businessRule null = global pricing, marketId = region-specific pricing
 		//  * @multiRegionSupport Enables localized pricing overrides
 		//  */
-		// marketId: text("market_id").references(() => orgMarket.id),
+		// marketId: textCols.idFk("market_id").references(() => orgMarket.id),
 
 		/**
 		 * @featureControl JSON defining payment plan specific capabilities and limitations
@@ -231,19 +224,19 @@ export const orgProductVariantPaymentPlan = table(
 		 * @businessRule Controls plan availability for new purchases
 		 * @workflowControl Allows plan disabling without deletion for lifecycle management
 		 */
-		isActive: boolean("is_active").default(true),
+		isActive: sharedCols.isActive(),
 
 		/**
 		 * @campaignManagement When this pricing becomes effective
 		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
 		 */
-		startsAt: timestamp("starts_at").defaultNow(),
+		startsAt: temporalCols.startsAt().defaultNow(),
 
 		/**
 		 * @campaignManagement When this pricing expires (null = permanent)
 		 * @promotionalStrategy Supports time-limited promotional pricing
 		 */
-		endsAt: timestamp("ends_at"),
+		endsAt: temporalCols.endsAt(),
 
 		// /**
 		//  * @extensibility Additional payment plan metadata for integrations and analytics
@@ -281,9 +274,9 @@ export const orgProductVariantPaymentPlan = table(
 		// //   "certificate_eligible": true
 		// // }
 
-		createdAt,
-		updatedAt,
-		deletedAt,
+		createdAt: temporalCols.completedAt(),
+		updatedAt: temporalCols.updatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -344,15 +337,17 @@ export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
 	orgProductVariantPaymentPlanI18nTableName,
 )(
 	{
-		planId: idFkCol("plan_id")
+		planId: textCols
+			.idFk("plan_id")
 			.references(() => orgProductVariantPaymentPlan.id)
 			.notNull(),
 
-		seoMetadataId: idFkCol("seo_metadata_id")
+		seoMetadataId: textCols
+			.idFk("seo_metadata_id")
 			.references(() => seoMetadata.id)
 			.notNull(),
 
-		name: text("name").notNull(),
+		name: textCols.title().notNull(),
 		description: text("description"),
 
 		/**
@@ -415,7 +410,8 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
-		planId: text("plan_id")
+		planId: textCols
+			.idFk("plan_id")
 			.primaryKey()
 			.references(() => orgProductVariantPaymentPlan.id),
 
@@ -431,7 +427,7 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		 * @pricing Main price customers pay for this payment plan
 		 * @revenueFoundation Core pricing amount for revenue calculations and billing
 		 */
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+		price: numericCols.price().notNull(),
 
 		/**
 		 * @promotionalPricing Original price for "save X%" marketing displays
@@ -461,8 +457,8 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		 */
 		maxPurchasesPerUser: integer("max_purchases_per_user"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.completedAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		// Performance indexes for one-time payment management
@@ -513,7 +509,8 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
-		planId: text("plan_id")
+		planId: textCols
+			.idFk("plan_id")
 			.primaryKey()
 			.references(() => orgProductVariantPaymentPlan.id),
 
@@ -529,7 +526,7 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 * @pricing Main price customers pay for this payment plan
 		 * @revenueFoundation Core pricing amount for revenue calculations and billing
 		 */
-		price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+		price: numericCols.price().notNull(),
 
 		/**
 		 * @promotionalPricing Original price for "save X%" marketing displays
@@ -573,8 +570,8 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 */
 		setupFee: decimal("setup_fee", { precision: 10, scale: 2 }).default("0"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.completedAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -621,7 +618,8 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18n = buildOrgI18nTabl
 		/**
 		 * @translationTarget Target subscription plan
 		 */
-		planId: text("plan_id")
+		planId: textCols
+			.idFk("plan_id")
 			.notNull()
 			.references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
 				onDelete: "cascade",
@@ -697,22 +695,21 @@ const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}
 export const orgMemberProductVariantPaymentPlanSubscription = table(
 	orgMemberProductVariantPaymentPlanSubscriptionTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		// TODO: change to purchased by user
 		/**
 		 * @customerReference Customer who owns this subscription instance
 		 * @accessControl Primary relationship for content access permissions and customer service
 		 */
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id),
+		userId: sharedCols.userIdFk().notNull(),
 
 		/**
 		 * @paymentPlanReference Org's payment plan this subscription follows
 		 * @businessRule Determines pricing, billing cycle, features, and access permissions
 		 */
-		planId: text("plan_id")
+		planId: textCols
+			.idFk("plan_id")
 			.notNull()
 			.references(() => orgProductVariantPaymentPlan.id),
 
@@ -720,15 +717,13 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 * @orgScope Org context for this subscription
 		 * @multiTenant Enables org-specific subscription management and reporting
 		 */
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @memberContext Optional org member context for internal subscriptions
 		 * @businessRule When present, indicates internal org member subscription
 		 */
-		orgMemberId: text("org_member_id").references(() => orgMember.id),
+		orgMemberId: sharedCols.orgMemberIdFk(),
 
 		/**
 		 * @subscriptionLifecycle Current subscription state for access control
@@ -762,11 +757,11 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 			.notNull()
 			.references(() => currency.code),
 
-		/**
-		 * @extensibility Additional subscription metadata for analytics and integrations
-		 * @businessIntelligence May contain usage tracking, preferences, or integration data
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @extensibility Additional subscription metadata for analytics and integrations
+		//  * @businessIntelligence May contain usage tracking, preferences, or integration data
+		//  */
+		// metadata: jsonb("metadata"),
 
 		/**
 		 * @externalIntegrationMetadata Additional metadata for external integrations
@@ -779,16 +774,16 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		//  * @paymentGateway External subscription ID from payment processor
 		//  * @webhookIntegration Links internal subscription management to payment processor
 		//  */
-		// externalSubscriptionId: text("external_subscription_id"),
+		// externalSubscriptionId: textCols.idFk("external_subscription_id"),
 
 		// /**
 		//  * @paymentGateway External customer ID from payment processor
 		//  * @billingIntegration Links to payment gateway customer record for billing management
 		//  */
-		// externalCustomerId: text("external_customer_id"),
+		// externalCustomerId: textCols.idFk("external_customer_id"),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.completedAt(),
+		updatedAt: temporalCols.updatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -850,7 +845,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		/**
 // 		 * @ctiReference Links to base payment plan for common attributes and pricing
 // 		 */
-// 		planId: text("plan_id")
+// 		planId: textCols.idFk("plan_id")
 // 			.primaryKey()
 // 			.references(() => orgProductVariantPaymentPlan.id),
 
@@ -894,8 +889,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		 */
 // 		includedUsage: integer("included_usage").default(0),
 
-// 		createdAt,
-// 		updatedAt,
+// 		createdAt: temporalCols.completedAt(),
+// 		updatedAt: temporalCols.updatedAt(),
 // 	},
 // 	(t) => [
 // 		// Performance indexes for usage-based billing management
@@ -911,10 +906,10 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 			t.includedUsage,
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_created_at`).on(
-// 			t.createdAt,
+// 			t.createdAt: temporalCols.completedAt(),
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_updated_at`).on(
-// 			t.updatedAt,
+// 			t.updatedAt: temporalCols.updatedAt(),
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_plan_id`).on(t.planId),
 // 	],
@@ -943,7 +938,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		/**
 // 		 * @translationTarget Parent usage-based plan
 // 		 */
-// 		planId: text("plan_id")
+// 		planId: textCols.idFk("plan_id")
 // 			.notNull()
 // 			.references(() => orgUsageBasedPaymentPlan.planId, {
 // 				onDelete: "cascade",
