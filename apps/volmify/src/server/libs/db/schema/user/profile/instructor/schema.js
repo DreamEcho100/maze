@@ -4,20 +4,16 @@ import {
 	decimal,
 	index,
 	integer,
-	jsonb,
-	pgTable as table,
 	text,
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { createdAt, getLocaleKey, idCol, idFkCol, updatedAt } from "../../../_utils/helpers";
+import { lmsCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers";
 import { contactInfo } from "../../../general/contact-info/schema";
-import { locale } from "../../../general/locale-currency-market/schema";
-import { seoMetadata } from "../../../general/seo/schema";
+import { orgLocale } from "../../../org/locale-region/schema";
 import { orgProduct } from "../../../org/product/schema";
 import { instructorOrgAffiliation } from "../../../org/schema";
-import { user } from "../../../user/schema";
 import { userTableName } from "../../_utils/helpers";
 
 const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
@@ -30,15 +26,13 @@ const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
 export const userInstructorProfile = table(
 	userInstructorProfileTableName,
 	{
-		id: idCol.notNull(),
-		userId: text(`${userTableName}_id`)
-			.notNull()
-			.references(() => user.id),
-		slug: text("slug").notNull(),
+		id: textCols.id().notNull(),
+		userId: sharedCols.userIdFk().notNull(),
+		slug: textCols.slug().notNull(),
 		verifiedAt: boolean("verified_at").default(false),
-		metadata: jsonb("metadata"),
-		createdAt,
-		updatedAt,
+		// metadata: jsonb("metadata"),
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 
 		// The following is commented out because it should be handled in it's own related tables, maybe in the same way as LinkedIn Learning or Udemy, with as many tables as needed
 		// // Professional identity
@@ -93,6 +87,8 @@ export const userInstructorProfile = table(
 		uniqueIndex(`uq_${userInstructorProfileTableName}_slug`).on(t.slug),
 		index(`idx_${userInstructorProfileTableName}_user_id`).on(t.userId),
 		index(`idx_${userInstructorProfileTableName}_verified_at`).on(t.verifiedAt),
+		index(`idx_${userInstructorProfileTableName}_created_at`).on(t.createdAt),
+		index(`idx_${userInstructorProfileTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 // TODO: Metrics
@@ -111,14 +107,16 @@ const userInstructorProfileI18nTableName = `${userTableName}_instructor_profile_
 export const userInstructorProfileI18n = table(
 	userInstructorProfileI18nTableName,
 	{
-		id: idCol.notNull(),
-		userInstructorProfileId: idFkCol(`${userTableName}_instructor_profile_id`)
+		id: textCols.id().notNull(),
+		userInstructorProfileId: textCols
+			.idFk(`${userTableName}_instructor_profile_id`)
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
-		localeKey: getLocaleKey("locale_key")
+		localeKey: sharedCols
+			.orgLocaleKeyFk("locale_key")
 			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
-		isDefault: boolean("is_default").default(false),
+			.references(() => orgLocale.localeKey, { onDelete: "cascade" }),
+		isDefault: sharedCols.isDefault(),
 
 		// // Professional identity
 		// // Translatable instructor fields
@@ -131,12 +129,10 @@ export const userInstructorProfileI18n = table(
 		// studentMessage: text("student_message"), // Welcome message to students
 
 		// SEO metadata reference
-		seoMetadataId: idFkCol("seo_metadata_id").references(() => seoMetadata.id, {
-			onDelete: "set null",
-		}),
+		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_locale_key`).on(
@@ -150,7 +146,7 @@ export const userInstructorProfileI18n = table(
 		index(`idx_${userInstructorProfileI18nTableName}_locale_key`).on(t.localeKey),
 		index(`idx_${userInstructorProfileI18nTableName}_seo_metadata_id`).on(t.seoMetadataId),
 		index(`idx_${userInstructorProfileI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${userInstructorProfileI18nTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${userInstructorProfileI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -158,15 +154,17 @@ const userInstructorProfileContactInfoTableName = `${userTableName}_instructor_p
 export const userInstructorProfileContactInfo = table(
 	userInstructorProfileContactInfoTableName,
 	{
-		id: idCol.notNull(),
-		instructorProfileId: text("instructor_profile_id")
+		id: textCols.id().notNull(),
+		instructorProfileId: textCols
+			.idFk("instructor_profile_id")
 			.notNull()
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" }),
-		contactInfoId: text("contact_info_id")
+		contactInfoId: textCols
+			.idFk("contact_info_id")
 			.notNull()
 			.references(() => contactInfo.id, { onDelete: "cascade" }),
 		// isPrimary: boolean("is_primary").default(false),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileContactInfoTableName}_instructor_profile_id`).on(
@@ -190,19 +188,21 @@ const userInstructorProfileProductTableName = `${userTableName}_instructor_profi
 export const userInstructorProfileRevenue = table(
 	userInstructorProfileProductTableName,
 	{
-		id: idCol.notNull(),
-		instructorMembershipId: text("instructor_membership_id")
+		id: textCols.id().notNull(),
+		instructorMembershipId: textCols
+			.idFk("instructor_membership_id")
 			.notNull()
 			.references(() => instructorOrgAffiliation.id),
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id),
 		// Connect to order/transaction tables when implemented
-		orderId: text("order_id"), // Will reference order table
+		orderId: textCols.idFk("order_id"), // Will reference order table
 		revenueAmount: decimal("revenue_amount", { precision: 12, scale: 2 }),
 		sharePercentage: decimal("share_percentage", { precision: 5, scale: 2 }),
 		paidAt: timestamp("paid_at"),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileProductTableName}_instructor_membership_id`).on(
@@ -217,8 +217,9 @@ const userInstructorProfileSkillTableName = `${userTableName}_instructor_profile
 export const userInstructorProfileSkill = table(
 	userInstructorProfileSkillTableName,
 	{
-		id: idCol.notNull(),
-		profileId: idFkCol("profile_id")
+		id: textCols.id().notNull(),
+		profileId: textCols
+			.idFk("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		// Engagement metrics
@@ -226,6 +227,7 @@ export const userInstructorProfileSkill = table(
 
 		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
 		totalReviews: integer("total_reviews").default(0),
+		createdAt: temporalCols.createdAt(),
 
 		// totalCourses: integer("total_courses").default(0),
 		// totalCoursesCompleted: integer("total_courses_completed").default(0),
@@ -285,15 +287,14 @@ export const userInstructorProfileSkill = table(
 		// ),
 		// lastTrustScoreUpdate: timestamp("last_trust_score_update").defaultNow(),
 		// Last updated
-		lastUpdatedAt: timestamp("last_updated_at").defaultNow(),
-		createdAt,
-		updatedAt,
+
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileSkillTableName}_profile_id`).on(t.profileId),
 		index(`idx_${userInstructorProfileSkillTableName}_last_updated`).on(t.lastUpdatedAt),
 		index(`idx_${userInstructorProfileSkillTableName}_created_at`).on(t.createdAt),
-		index(`idx_${userInstructorProfileSkillTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${userInstructorProfileSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 // TODO:
@@ -306,8 +307,9 @@ const userInstructorProfileSkillI18nTableName = `${userTableName}_instructor_pro
 export const userInstructorProfileCoursesMetrics = table(
 	userInstructorProfileSkillI18nTableName,
 	{
-		id: idCol.notNull(),
-		profileId: idFkCol("profile_id")
+		id: textCols.id().notNull(),
+		profileId: textCols
+			.idFk("profile_id")
 			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
 			.notNull(),
 		amount: integer("amount").default(0),
@@ -321,7 +323,7 @@ export const userInstructorProfileCoursesMetrics = table(
 		totalCompletedByStudents: integer("total_completed_by_students").default(0),
 		totalInProgressByStudents: integer("total_in_progress_by_students").default(0),
 
-		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
+		avgRating: lmsCols.avgRating(),
 		totalReviews: integer("total_reviews").default(0),
 		// totalActive: integer("total_courses_active").default(0),
 		// totalArchived: integer("total_courses_archived").default(0),
@@ -340,12 +342,12 @@ export const userInstructorProfileCoursesMetrics = table(
 		// totalWithRatings: integer("total_courses_with_ratings").default(0),
 		// totalWithFeedback: integer("total_courses_with_feedback").default(0),
 		// totalWithCertificates: integer("total_courses_with_certificates").default(0),
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileSkillI18nTableName}_profile_id`).on(t.profileId),
 		index(`idx_${userInstructorProfileSkillI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );

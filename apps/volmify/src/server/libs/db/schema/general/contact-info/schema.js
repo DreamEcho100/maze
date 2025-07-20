@@ -66,7 +66,7 @@ export const contactInfo = table(
 		 * @relationContext
 		 * Must correspond to a valid entity of the specified `entityType`.
 		 */
-		entityId: text("entity_id").notNull(),
+		entityId: textCols.idFk("entity_id").notNull(),
 
 		// Core contact fields
 		name: textCols.name().notNull(),
@@ -128,7 +128,7 @@ export const contactInfo = table(
 		verifiedAt: timestamp("verified_at"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 
@@ -172,7 +172,7 @@ export const contactInfo = table(
 
 		index("idx_contact_info_verified").on(t.verifiedAt),
 		index("idx_contact_info_created_at").on(t.createdAt),
-		index("idx_contact_info_updated_at").on(t.updatedAt),
+		index("idx_contact_info_last_updated_at").on(t.lastUpdatedAt),
 		index("idx_contact_info_deleted_at").on(t.deletedAt),
 	],
 );

@@ -29,7 +29,7 @@ export const orgTeam = table(
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 		createdById: textCols
 			.idFk("created_by_id")
@@ -58,7 +58,7 @@ export const orgTeam = table(
 	(table) => [
 		uniqueIndex(`uq_${orgTeamTableName}_name_org`).on(table.name, table.orgId),
 		index(`idx_${orgTeamTableName}_created_at`).on(table.createdAt),
-		index(`idx_${orgTeamTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${orgTeamTableName}_last_updated_at`).on(table.lastUpdatedAt),
 		index(`idx_${orgTeamTableName}_name`).on(table.name),
 		index(`idx_${orgTeamTableName}_org`).on(table.orgId),
 		index(`idx_${orgTeamTableName}_created_by_id`).on(table.createdById),
@@ -100,7 +100,7 @@ export const orgTeamMembership = table(
 		role: orgTeamMembershipRoleEnum("role").notNull().default("member"),
 		joinedAt: timestamp("joined_at", { precision: 3 }),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgTeamMembershipTableName}_created_at`).on(t.createdAt),

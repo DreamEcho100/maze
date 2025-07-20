@@ -1,21 +1,21 @@
 /** @import { UserAgent } from "@de100/auth/types" */
 
-import { index, jsonb, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { index, jsonb, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 import { bytea } from "../_utils/bytea.js";
-import { createdAt, deletedAt, idCol, name, table, updatedAt } from "../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
 import { userTableName } from "./_utils/helpers.js";
 
 export const user = table(
 	userTableName,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 		lastLoginAt: timestamp("last_login_at", { precision: 3 }),
-		name: name.notNull().unique("uq_user_name"),
-		displayName: varchar("display_name", { length: 100 }),
+		name: textCols.name().notNull().unique("uq_user_name"),
+		displayName: textCols.displayName().notNull(),
 		email: varchar("email", { length: 256 }).notNull().unique("uq_user_email"),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
 		image: varchar("image", { length: 2096 }),
@@ -28,43 +28,41 @@ export const user = table(
 	},
 	(table) => [
 		index(`idx_${userTableName}_created_at`).on(table.createdAt),
-		index(`idx_${userTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${userTableName}_last_updated_at`).on(table.lastUpdatedAt),
 		index(`idx_${userTableName}_last_login_at`).on(table.lastLoginAt),
 		index(`idx_${userTableName}_display_name`).on(table.displayName),
 	],
 );
-const sessionMetadataJsonb = jsonb("metadata");
+const _sessionMetadataJsonb = jsonb("metadata");
 const userAgentJsonb = jsonb("user_agent_metadata");
 
 const userSessionTableName = `${userTableName}_session`;
 export const userSession = table(
 	userSessionTableName,
 	{
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
-		createdAt,
-		updatedAt,
-		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		expiresAt: temporalCols.expiresAt().notNull(),
 		lastVerifiedAt: timestamp("last_verified_at", { precision: 3 }).notNull(),
 		lastExtendedAt: timestamp("last_extended_at", { precision: 3 }),
 		ipAddress: varchar("ip_address", { length: 45 }),
 		userAgent: /** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (userAgentJsonb),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
+		userId: sharedCols.userIdFk().notNull(),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 
 		//
 		authStrategy: varchar("auth_strategy", { length: 50 }).notNull().default("jwt"), // 'session' | 'refresh_token'
 		revokedAt: timestamp("revoked_at", { withTimezone: true }), // For token revocation
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }), // For refresh token tracking
-		metadata: /** @type {ReturnType<typeof sessionMetadataJsonb.$type<Record<string, any>>>} */ (
-			sessionMetadataJsonb
-		),
+		// metadata: /** @type {ReturnType<typeof sessionMetadataJsonb.$type<Record<string, any>>>} */ (
+		// 	sessionMetadataJsonb
+		// ),
 	},
 	(table) => [
 		index(`idx_${userSessionTableName}_created_at`).on(table.createdAt),
-		index(`idx_${userSessionTableName}_updated_at`).on(table.updatedAt),
+		index(`idx_${userSessionTableName}_last_updated_at`).on(table.lastUpdatedAt),
 		index(`idx_${userSessionTableName}_expires_at`).on(table.expiresAt),
 		index(`idx_${userSessionTableName}_user_id`).on(table.userId),
 		index(`idx_${userSessionTableName}_session_type`).on(table.authStrategy),
@@ -79,14 +77,12 @@ const userEmailVerificationTableName = `${userTableName}_email_verification`;
 export const userEmailVerificationRequest = table(
 	userEmailVerificationTableName,
 	{
-		id: idCol.notNull(),
-		createdAt,
-		code: varchar("code", { length: 256 }).notNull(),
-		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		code: textCols.longCode("code").notNull(),
+		expiresAt: temporalCols.expiresAt().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
+		userId: sharedCols.userIdFk().notNull(),
 	},
 	(table) => [
 		uniqueIndex(`uq_${userEmailVerificationTableName}_code`).on(table.code),
@@ -99,14 +95,12 @@ const userPasswordResetTableName = `${userTableName}_password_reset`;
 export const userPasswordResetSession = table(
 	userPasswordResetTableName,
 	{
-		id: text("id").primaryKey().notNull(),
-		createdAt,
-		code: varchar("code", { length: 256 }).notNull(),
-		expiresAt: timestamp("expires_at", { precision: 3 }).notNull(),
+		id: textCols.id().notNull(),
+		createdAt: temporalCols.createdAt(),
+		code: textCols.longCode("code").notNull(),
+		expiresAt: temporalCols.expiresAt().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
+		userId: sharedCols.userIdFk().notNull(),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 	},

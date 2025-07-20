@@ -83,7 +83,7 @@ export const seoMetadata = table(
 		// reviewedBy: text("reviewed_by"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_org").on(t.orgId),
@@ -91,7 +91,7 @@ export const seoMetadata = table(
 		index("idx_seo_status").on(t.status),
 		index("idx_seo_focus_keyword").on(t.focusKeyword),
 		index("idx_seo_created_at").on(t.createdAt),
-		index("idx_seo_updated_at").on(t.updatedAt),
+		index("idx_seo_last_updated_at").on(t.lastUpdatedAt),
 		// index("idx_seo_locale").on(t.locale),
 		// index("idx_seo_performance").on(t.clickThroughRate, t.averagePosition),
 		// index("idx_seo_score").on(t.seoScore),
@@ -161,14 +161,14 @@ export const seoOpenGraph = table(
         */
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_og_metadata").on(t.seoMetadataId),
 		index("idx_seo_og_type").on(t.type),
 
 		index("idx_seo_og_created_at").on(t.createdAt),
-		index("idx_seo_og_updated_at").on(t.updatedAt),
+		index("idx_seo_og_last_updated_at").on(t.lastUpdatedAt),
 
 		// GIN index for searching type-specific data
 		index("idx_seo_og_type_data").using("gin", t.typeSpecificData),
@@ -222,7 +222,7 @@ export const seoTwitterCard = table(
         */
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_twitter_metadata").on(t.seoMetadataId),
@@ -255,7 +255,7 @@ export const seoStructuredData = table(
 		priority: numericCols.priority({ default: 1 }), // For ordering multiple schemas
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_structured_metadata").on(t.seoMetadataId),
@@ -289,7 +289,7 @@ export const seoAlternateUrl = table(
 		isDefault: sharedCols.isDefault(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_alternate_metadata").on(t.seoMetadataId),
@@ -299,7 +299,7 @@ export const seoAlternateUrl = table(
 		uniqueIndex("uq_seo_alternate_hreflang").on(t.seoMetadataId, t.hreflang),
 		index("idx_seo_alternate_is_default").on(t.isDefault),
 		index("idx_seo_alternate_created_at").on(t.createdAt),
-		index("idx_seo_alternate_updated_at").on(t.updatedAt),
+		index("idx_seo_alternate_last_updated_at").on(t.lastUpdatedAt),
 	],
 );
 
@@ -325,7 +325,7 @@ export const seoCustomMeta = table(
 		isActive: boolean("is_active").default(true),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_meta_metadata_id").on(t.seoMetadataId),
@@ -335,7 +335,7 @@ export const seoCustomMeta = table(
 		index("idx_seo_meta_order").on(t.sortOrder),
 		uniqueIndex("uq_seo_meta_tag").on(t.seoMetadataId, t.tagType, t.tagKey),
 		index("idx_seo_meta_created_at").on(t.createdAt),
-		index("idx_seo_meta_updated_at").on(t.updatedAt),
+		index("idx_seo_meta_last_updated_at").on(t.lastUpdatedAt),
 	],
 );
 
@@ -372,7 +372,7 @@ export const seoIssue = table(
 		lastCheckedAt: timestamp("last_checked_at").defaultNow(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_issue_metadata").on(t.seoMetadataId),

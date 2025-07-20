@@ -76,7 +76,7 @@ export const orgPermission = table(
 		isActive: sharedCols.isActive(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -120,7 +120,7 @@ export const orgPolicy = table(
 		metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -128,7 +128,7 @@ export const orgPolicy = table(
 		index(`idx_${orgPolicyTableName}_active`).on(t.isActive),
 		index(`idx_${orgPolicyTableName}_system`).on(t.isSystem),
 		index(`idx_${orgPolicyTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgPolicyTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgPolicyTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -177,10 +177,10 @@ export const orgPolicyRule = table(
 		 */
 		priority: integer("priority").default(0),
 
-		/**
-		 * @metadata Additional rule context and configuration
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @metadata Additional rule context and configuration
+		//  */
+		// metadata: jsonb("metadata"),
 
 		// /**
 		//  * @departmentScoped Department-level permission boundaries
@@ -189,7 +189,7 @@ export const orgPolicyRule = table(
 		// // Permissions can be scoped to specific departments (branch-like isolation)
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
@@ -225,13 +225,13 @@ export const orgRole = table(
 		isSystem: sharedCols.isSystem(),
 		isActive: sharedCols.isActive(),
 
-		/**
-		 * @metadata Role configuration and UI customization
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @metadata Role configuration and UI customization
+		//  */
+		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -312,13 +312,13 @@ export const orgPolicyAssignment = table(
 		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
 		expiresAt: temporalCols.expiresAt(), // Optional policy expiration
 
-		/**
-		 * @metadata Additional assignment context
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @metadata Additional assignment context
+		//  */
+		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment
@@ -385,13 +385,13 @@ export const orgRoleAssignment = table(
 		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
 		expiresAt: timestamp("expires_at"), // Optional role expiration
 
-		/**
-		 * @metadata Additional assignment context
-		 */
-		metadata: jsonb("metadata"),
+		// /**
+		//  * @metadata Additional assignment context
+		//  */
+		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment

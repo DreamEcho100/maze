@@ -30,7 +30,7 @@ export const orgMember = table(
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 
 		orgId: sharedCols.orgIdFk().notNull(),
@@ -81,7 +81,7 @@ export const orgMemberInvitation = table(
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		orgId: sharedCols.orgIdFk().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		invitedByMemberId: textCols
@@ -100,7 +100,7 @@ export const orgMemberInvitation = table(
 		const base = `${orgTableName}_member_invitation`;
 		return [
 			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 			index(`idx_${base}_status`).on(t.status),
 			index(`idx_${base}_expires_at`).on(t.expiresAt),
 			index(`idx_${base}_email`).on(t.email),

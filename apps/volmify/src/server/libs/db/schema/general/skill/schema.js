@@ -49,7 +49,7 @@ export const skill = table(
 			.notNull(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(t.appliedByOrgId, t.slug),
@@ -58,7 +58,7 @@ export const skill = table(
 		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),
 		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
 		index(`idx_${skillTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${skillTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrgId),
 	],
 );
@@ -84,7 +84,7 @@ export const skillI18n = table(
 		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
@@ -95,6 +95,6 @@ export const skillI18n = table(
 		index(`idx_${skillI18nTableName}_name`).on(t.name),
 		index(`idx_${skillI18nTableName}_description`).on(t.description),
 		index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillI18nTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${skillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );

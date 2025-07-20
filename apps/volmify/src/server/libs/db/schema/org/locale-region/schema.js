@@ -34,7 +34,7 @@ export const orgLocale = table(
 		contentStrategy: text("content_strategy"), // "full_translation", "partial", "auto_translate"
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgLocaleTableName}`).on(t.orgId, t.localeKey),
@@ -66,7 +66,7 @@ export const orgRegion = table(
 			.notNull(),
 		includesTax: boolean("includes_tax").default(false).notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 
 		// /**
@@ -84,7 +84,7 @@ export const orgRegion = table(
 		index(`idx_${orgRegionTableName}_org_id`).on(t.orgId),
 		index(`idx_${orgRegionTableName}_currency_code`).on(t.currencyCode),
 		index(`idx_${orgRegionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgRegionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgRegionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgRegionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );

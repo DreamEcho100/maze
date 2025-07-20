@@ -23,7 +23,7 @@ const createId = ulid;
 // export const name = varchar("name", { length: 128 });
 // export const slug = varchar("slug", { length: 128 });
 // export const createdAt = timestamp("created_at", { precision: 3 }).notNull().defaultNow();
-// export const updatedAt = timestamp("updated_at", { precision: 3 });
+// export const lastUpdatedAt = timestamp("last_updated_at", { precision: 3 });
 // export const deletedAt = timestamp("deleted_at", { precision: 3 });
 // export const getLocaleKey =
 // 	/** @param {string} name */
@@ -38,6 +38,8 @@ export const textCols = {
 	key: () => varchar("key", { length: 128 }), // Permission keys, API keys
 	/** @param {string} [name] */
 	code: (name) => varchar(name ?? "code", { length: 32 }), // Currency codes, locale codes
+	/** @param {string} name */
+	longCode: (name) => varchar(name, { length: 32 }),
 
 	// Names & Titles (UTF-8 optimized for international)
 	/**
@@ -146,8 +148,11 @@ export const temporalCols = {
 	// Standard lifecycle (millisecond precision for audit)
 	createdAt: () =>
 		timestamp("created_at", { precision: 3, withTimezone: true }).defaultNow(),
-	updatedAt: () =>
-		timestamp("updated_at", { precision: 3, withTimezone: true }).defaultNow(),
+	lastUpdatedAt: () =>
+		timestamp("last_updated_at", {
+			precision: 3,
+			withTimezone: true,
+		}).defaultNow(),
 	deletedAt: () =>
 		timestamp("deleted_at", { precision: 3, withTimezone: true }),
 
@@ -248,7 +253,8 @@ export const lmsCols = {
 	// Ratings and feedback (community quality)
 	levelRating: () => integer("level_rating"), // 1-10 prerequisite level
 	difficultyRating: () => integer("difficulty_rating"), // 1-10 complexity
-	avgRating: () => decimal("avg_rating", { precision: 3, scale: 2 }), // 0.00-10.00
+	avgRating: () =>
+		decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"), // 0.00-10.00
 
 	// Access control
 	requiredAccessTier: () => integer("required_access_tier").default(1),
@@ -271,7 +277,7 @@ export const lmsCols = {
 // // Audit trail
 // auditTrail: () => ({
 //   createdAt: timestamp("created_at", { precision: 3 }).defaultNow(),
-//   updatedAt: timestamp("updated_at", { precision: 3 }).defaultNow(),
+//   lastUpdatedAt: timestamp("last_updated_at", { precision: 3 }).defaultNow(),
 //   createdBy: fk("created_by").references(() => user.id),
 //   updatedBy: fk("updated_by").references(() => user.id),
 // }),

@@ -32,7 +32,7 @@ export const buildOrgI18nTable =
 				localeKey: sharedCols.localeKey().notNull(),
 				isDefault: boolean("is_default").default(false),
 				createdAt: temporalCols.createdAt(),
-				updatedAt: temporalCols.updatedAt(),
+				lastUpdatedAt: temporalCols.lastUpdatedAt(),
 				deletedAt: temporalCols.deletedAt(),
 			},
 			(t) => [
@@ -45,7 +45,7 @@ export const buildOrgI18nTable =
 				index(`idx_${tableName}_org_locale_key`).on(t.localeKey),
 				index(`idx_${tableName}_default`).on(t.isDefault),
 				index(`idx_${tableName}_created_at`).on(t.createdAt),
-				index(`idx_${tableName}_updated_at`).on(t.updatedAt),
+				index(`idx_${tableName}_last_updated_at`).on(t.lastUpdatedAt),
 				index(`idx_${tableName}_deleted_at`).on(t.deletedAt),
 				...(options.extraConfig ? options.extraConfig(t, tableName) : []),
 			],

@@ -1,7 +1,6 @@
 import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../../_utils/helpers.js";
+import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
 import { orgProduct } from "../schema.js";
 
 const orgProductCollectionTableName = `${orgTableName}_product_collection`;
@@ -27,31 +26,29 @@ export const orgProductCollection = table(
 		/**
 		 * @uniqueIdentifier Internal PK for referencing this collection
 		 */
-		id: idCol.notNull(),
+		id: textCols.id().notNull(),
 
 		/**
 		 * @abacScope FK to the owning org
 		 * @integrationContext Determines access scope and permission context
 		 */
-		orgId: idFkCol(`${orgTableName}_id`)
-			.notNull()
-			.references(() => org.id, { onDelete: "cascade" }),
+		orgId: sharedCols.orgIdFk().notNull(),
 
 		/**
 		 * @displayLabel Human-readable collection name
 		 */
-		name: text("name").notNull(),
+		title: textCols.title().notNull(),
 
 		/**
 		 * @slugField Unique slug within org for clean URLs and internal routing
 		 * @seoOptimization Used for storefront routing and canonical links
 		 */
-		slug: text("slug").notNull(),
+		slug: textCols.slug().notNull(),
 
 		/**
 		 * @contentDescription Optional description shown in storefront or CMS
 		 */
-		description: text("description"),
+		description: textCols.description(),
 
 		/**
 		 * @mediaAsset Optional image used for visual branding of collection
@@ -62,20 +59,20 @@ export const orgProductCollection = table(
 		 * @softDelete Supports archival/deactivation without full deletion
 		 * @lifecycleStage Marks item as logically deleted
 		 */
-		deletedAt,
+		deletedAt: temporalCols.deletedAt(),
 
 		/**
 		 * @auditTrail Timestamps for record creation and modification
 		 */
-		createdAt,
-		updatedAt,
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgProductCollectionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductCollectionTableName}_name`).on(t.name),
+		index(`idx_${orgProductCollectionTableName}_name`).on(t.title),
 		uniqueIndex(`uq_${orgProductCollectionTableName}_slug_org`).on(t.orgId, t.slug),
 		index(`idx_${orgProductCollectionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCollectionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCollectionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductCollectionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
@@ -95,17 +92,19 @@ export const orgProductCollectionProduct = table(
 		/**
 		 * @abacLink Product being associated
 		 */
-		productId: text("product_id")
+		productId: textCols
+			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @abacLink Collection it is part of
 		 */
-		collectionId: text("collection_id")
+		collectionId: textCols
+			.idFk("collection_id")
 			.notNull()
 			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.productId, t.collectionId] }),

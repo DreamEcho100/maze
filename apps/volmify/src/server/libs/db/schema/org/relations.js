@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { currency, locale } from "../general/locale-currency-market/schema.js";
+import { currency } from "../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../general/seo/schema.js";
 import { skill } from "../general/skill/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
@@ -135,9 +135,9 @@ export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ on
 		fields: [orgBrandTranslation.seoMetadataId],
 		references: [seoMetadata.id],
 	}),
-	locale: one(locale, {
+	locale: one(orgLocale, {
 		fields: [orgBrandTranslation.localeKey],
-		references: [locale.key],
+		references: [orgLocale.localeKey],
 	}),
 }));
 

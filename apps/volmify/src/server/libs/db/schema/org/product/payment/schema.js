@@ -275,7 +275,7 @@ export const orgProductVariantPaymentPlan = table(
 		// // }
 
 		createdAt: temporalCols.completedAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
@@ -307,7 +307,7 @@ export const orgProductVariantPaymentPlan = table(
 		index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(t.features),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(t.deletedAt),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		check("access_tier_range", sql`${t.accessTier} >= 0`),
 	],
 );
@@ -458,7 +458,7 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		maxPurchasesPerUser: integer("max_purchases_per_user"),
 
 		createdAt: temporalCols.completedAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for one-time payment management
@@ -472,7 +472,9 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 			t.maxPurchasesPerUser,
 		),
 		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 	],
 );
 
@@ -571,7 +573,7 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		setupFee: decimal("setup_fee", { precision: 10, scale: 2 }).default("0"),
 
 		createdAt: temporalCols.completedAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -591,8 +593,8 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_created_at`).on(
 			t.createdAt,
 		),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_updated_at`).on(
-			t.updatedAt,
+		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
 		),
 		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_plan_id`).on(t.planId),
 	],
@@ -783,7 +785,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		// externalCustomerId: textCols.idFk("external_customer_id"),
 
 		createdAt: temporalCols.completedAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -890,7 +892,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		includedUsage: integer("included_usage").default(0),
 
 // 		createdAt: temporalCols.completedAt(),
-// 		updatedAt: temporalCols.updatedAt(),
+// 		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 // 	},
 // 	(t) => [
 // 		// Performance indexes for usage-based billing management
@@ -908,8 +910,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_created_at`).on(
 // 			t.createdAt: temporalCols.completedAt(),
 // 		),
-// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_updated_at`).on(
-// 			t.updatedAt: temporalCols.updatedAt(),
+// 		index(`idx_${orgUsageBasedPaymentPlanTableName}_last_updated_at`).on(
+// 			t.lastUpdatedAt: temporalCols.lastUpdatedAt(),
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_plan_id`).on(t.planId),
 // 	],

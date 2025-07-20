@@ -153,7 +153,7 @@ export const orgProduct = table(
 		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
@@ -165,7 +165,7 @@ export const orgProduct = table(
 		index(`idx_${orgProductTableName}_status`).on(t.status),
 		index(`idx_${orgProductTableName}_type`).on(t.type),
 		index(`idx_${orgProductTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
 
 		// Composite Indexes for Common Queries
@@ -249,7 +249,7 @@ export const orgProductVariant = table(
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 
 		/**
@@ -395,7 +395,7 @@ export const orgProductVariant = table(
 		index(`idx_${orgProductVariantTable}_starts_at`).on(t.startsAt),
 		index(`idx_${orgProductVariantTable}_ends_at`).on(t.endsAt),
 		index(`idx_${orgProductVariantTable}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductVariantTable}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductVariantTable}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductVariantTable}_deleted_at`).on(t.deletedAt),
 		index(`idx_${orgProductVariantTable}_tax_category_id`).on(t.taxCategoryId),
 	],
@@ -501,7 +501,7 @@ export const orgProductInstructorAttribution = table(
 		// isPrimary: boolean("is_primary").default(false),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
@@ -525,7 +525,7 @@ export const orgProductInstructorAttribution = table(
 		),
 
 		index(`idx_${orgProductInstructorAttributionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductInstructorAttributionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductInstructorAttributionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductInstructorAttributionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );

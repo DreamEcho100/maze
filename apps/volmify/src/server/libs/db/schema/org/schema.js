@@ -15,7 +15,7 @@ import { sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js"
 import { currency } from "../general/locale-currency-market/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
-import { orgTableName } from "./_utils/helpers.js";
+import { buildOrgI18nTable, orgTableName } from "./_utils/helpers.js";
 import { orgMember } from "./member/schema.js";
 
 const orgMetadataJsonb = jsonb("metadata");
@@ -35,7 +35,7 @@ export const org = table(
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 		/**
 		 * Creator becomes the first `admin` and is granted full permissions.
@@ -73,7 +73,7 @@ export const org = table(
 			uniqueIndex(`uq_${base}_slug`).on(table.slug),
 			uniqueIndex(`uq_${base}_name`).on(table.name),
 			index(`idx_${base}_created_at`).on(table.createdAt),
-			index(`idx_${base}_updated_at`).on(table.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(table.lastUpdatedAt),
 			index(`idx_${base}_deleted_at`).on(table.deletedAt),
 			index(`idx_${base}_name`).on(table.name),
 			index(`idx_${base}_slug`).on(table.slug),
@@ -106,7 +106,7 @@ export const orgCurrencySettings = table(
 			scale: 6,
 		}),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => {
@@ -134,9 +134,9 @@ export const orgBrand = table(
 		description: textCols.description(),
 		logo: text("logo"),
 		brandCategory: text("brand_category"),
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => {
@@ -147,34 +147,34 @@ export const orgBrand = table(
 		];
 	},
 );
+
+const orgBrandI18nTableName = `${orgTableName}_brand_i18n`;
 /**
  * Org Brand Localization
  *
  * @businessLogic Localized branding content for internationalization.
  */
-export const orgBrandTranslation = table(
-	`${orgTableName}_brand_translation`,
+export const orgBrandTranslation = buildOrgI18nTable(orgBrandI18nTableName)(
 	{
-		id: textCols.id().notNull(),
 		brandId: textCols
 			.idFk("brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
-		localeKey: sharedCols.orgLocaleKeyFk("locale_key").notNull(),
-		isDefault: sharedCols.isDefault(),
 		name: textCols.name().notNull(),
 		description: textCols.description(),
 		story: textCols.story(),
 		seoMetadataId: sharedCols.seoMetadataIdFk(),
 	},
-	(t) => {
-		const base = `${orgTableName}_brand_translation`;
-		return [
-			uniqueIndex(`uq_${base}_locale`).on(t.brandId, t.localeKey),
-			uniqueIndex(`uq_${base}_default`).on(t.brandId, t.isDefault).where(eq(t.isDefault, true)),
-		];
+	{
+		fkKey: "brandId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
+			index(`idx_${tName}_brand_id`).on(t.brandId),
+			index(`idx_${tName}_name`).on(t.name),
+		],
 	},
 );
+
 /**
  * Brand Metrics and Performance Data
  *
@@ -189,7 +189,7 @@ export const orgBrandMetrics = table(
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand_metrics`;
@@ -197,7 +197,7 @@ export const orgBrandMetrics = table(
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			uniqueIndex(`uq_${base}_org_brand`).on(t.orgBrandId),
 			index(`idx_${base}_org_brand_id`).on(t.orgBrandId),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 		];
 	},
 );

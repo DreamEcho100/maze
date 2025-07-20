@@ -20,14 +20,14 @@ export const orgFunnel = table(
 		// 	.references(() => locale.key)
 		// 	.notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
 		index(`idx_${orgFunnelTableName}_org_id`).on(t.orgId),
 		index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgFunnelTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgFunnelTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
@@ -139,7 +139,7 @@ export const orgFunnelDomain = table(
 		hasCustom404: boolean("has_custom_404").default(false).notNull(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
@@ -157,7 +157,7 @@ export const orgFunnelDomain = table(
 		index(`idx_${orgFunnelDomainTableName}_is_preview`).on(t.isPreview),
 		index(`idx_${orgFunnelDomainTableName}_has_custom_404`).on(t.hasCustom404),
 		index(`idx_${orgFunnelDomainTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgFunnelDomainTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgFunnelDomainTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgFunnelDomainTableName}_deleted_at`).on(t.deletedAt),
 	],
 );

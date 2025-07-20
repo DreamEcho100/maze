@@ -56,7 +56,7 @@ export const systemPermissionCategory = table(
 		 * @abacContext Used for attribute namespace org
 		 */
 		name: textCols.name().notNull().unique("uq_system_permission_category_name"),
-		description: textCols.shortDescription(),
+		description: textCols.shortDescription("description"),
 		createdAt: temporalCols.createdAt(),
 	},
 	(table) => [
@@ -97,7 +97,7 @@ export const systemPermission = table(
 		 * @immutable Once referenced by orgs, should not change
 		 */
 		name: textCols.name().notNull().unique("uq_system_permission_name"),
-		description: textCols.shortDescription(),
+		description: textCols.shortDescription("description"),
 		/**
 		 * Category namespace assignment
 		 * @abacContext Groups related permissions for policy management
@@ -148,7 +148,7 @@ export const systemPermission = table(
 // 	{
 // 		// id: id.notNull(),
 // 		createdAt: temporalCols.createdAt(),
-// 		updatedAt,
+// 		lastUpdatedAt,
 // 		deletedAt,
 
 // 		// locale: text("locale").notNull(),
@@ -160,7 +160,7 @@ export const systemPermission = table(
 // 		const _base = "locale";
 // 		return [
 // 			index(`idx_${_base}_created_at`).on(t.createdAt),
-// 			index(`idx_${_base}_updated_at`).on(t.updatedAt),
+// 			index(`idx_${_base}_last_updated_at`).on(t.lastUpdatedAt),
 // 		];
 // 	},
 // );

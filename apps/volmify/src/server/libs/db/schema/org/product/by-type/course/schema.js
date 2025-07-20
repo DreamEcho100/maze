@@ -85,7 +85,7 @@ export const orgProductCourse = table(
 			scale: 2,
 		}),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 
 		// The following fields and joins can be inferred from the `product` table as the `course` table is a specialization/type of the `product` table in a CTI way
 		// thumbnail, vendors, status, deletedAt: temporalCols.deletedAt(), title, description, seoMetadata, slug
@@ -97,7 +97,7 @@ export const orgProductCourse = table(
 	(t) => [
 		index(`idx_${orgProductCourseI18nTableName}_product`).on(t.productId),
 		index(`idx_${orgProductCourseI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseI18nTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductCourseI18nTableName}_level`).on(t.level),
 		index(`idx_${orgProductCourseI18nTableName}_difficulty`).on(t.difficulty),
 		index(`idx_${orgProductCourseI18nTableName}_duration`).on(t.estimatedDurationInMinutes),
@@ -168,7 +168,7 @@ export const orgProductCourseSkill = table(
 		weight: integer("weight").default(5),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
@@ -178,7 +178,7 @@ export const orgProductCourseSkill = table(
 		index(`idx_${orgProductCourseSkillTableName}_weight`).on(t.weight),
 		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(t.courseId),
 		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(t.skillId),
-		index(`idx_${orgProductCourseSkillTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(t.deletedAt),
 		check("weight_range", sql`${t.weight} >= 1 AND ${t.weight} <= 10`),
@@ -223,10 +223,10 @@ export const orgMemberProductCourseChallengeRating = table(
 		 */
 		feedback: text("feedback"),
 
-		metadata: jsonb("metadata"),
+		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
@@ -240,7 +240,9 @@ export const orgMemberProductCourseChallengeRating = table(
 			t.difficultyRating,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 		check(
 			"level_rating_range",
 			sql`${t.levelRating} >= 1 AND ${t.levelRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
@@ -290,7 +292,7 @@ export const orgProductCourseModule = table(
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		// ???
 		//  // Section settings
 		//  settings: jsonb("settings"),
@@ -302,7 +304,7 @@ export const orgProductCourseModule = table(
 		index(`idx_${orgProductCourseModuleTableName}_required`).on(t.isRequired),
 		index(`idx_${orgProductCourseModuleTableName}_duration`).on(t.estimatedDurationInMinutes),
 		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
@@ -371,7 +373,7 @@ export const orgProductCourseModuleSection = table(
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
@@ -387,7 +389,7 @@ export const orgProductCourseModuleSection = table(
 			t.estimatedDurationInMinutes,
 		),
 		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleSectionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
@@ -465,7 +467,7 @@ export const orgProductCourseModuleSectionLesson = table(
 		prerequisites: jsonb("prerequisites"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		// Example: {
 		//   "required_lessons": ["lesson-123", "lesson-456"],
 		//   "required_quiz_score": 80,
@@ -492,7 +494,9 @@ export const orgProductCourseModuleSectionLesson = table(
 			t.requiredAccessTier,
 		),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
@@ -575,7 +579,7 @@ export const orgMemberProductCourseEnrollment = table(
 		// totalTimeSpentSeconds: integer("total_time_spent_seconds").default(0),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.courseId] }),
@@ -589,7 +593,7 @@ export const orgMemberProductCourseEnrollment = table(
 		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(t.enrolledAt),
 		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(t.lastAccessedAt),
 		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -628,7 +632,7 @@ export const orgMemberLearningProfile = table(
 		learningMetadata: jsonb("learning_metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),
@@ -644,7 +648,7 @@ export const orgMemberLearningProfile = table(
 		),
 
 		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberLearningProfileTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 

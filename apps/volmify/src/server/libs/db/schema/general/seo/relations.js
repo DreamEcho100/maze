@@ -12,7 +12,7 @@ import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
 import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
-import { locale, marketTemplateTranslation } from "../locale-currency-market/schema.js";
+import { locale } from "../locale-currency-market/schema.js";
 import { skillI18n } from "../skill/schema.js";
 import {
 	seoAlternateUrl,
@@ -57,11 +57,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	alternateUrls: many(seoAlternateUrl),
 	// One-to-many: SEO can have multiple custom meta tags
 	customMeta: many(seoCustomMeta),
-
-	marketsTemplatesTranslations: one(marketTemplateTranslation, {
-		fields: [seoMetadata.id],
-		references: [marketTemplateTranslation.seoMetadataId],
-	}),
 
 	orgsBrandsTranslations: one(orgBrandTranslation, {
 		fields: [seoMetadata.id],

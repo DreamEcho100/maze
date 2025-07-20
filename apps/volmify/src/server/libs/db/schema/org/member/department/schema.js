@@ -171,7 +171,7 @@ const permissionPatterns = {
 };
 */
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 
 		// metadata: jsonb("metadata"),
@@ -220,7 +220,7 @@ export const orgDepartmentMembership = table(
 		joinedAt: timestamp("joined_at").defaultNow(),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.departmentId] }),
@@ -234,7 +234,7 @@ export const orgDepartmentMembership = table(
 		index(`idx_${orgDepartmentMembershipTableName}_status`).on(t.status),
 		index(`idx_${orgDepartmentMembershipTableName}_joined_at`).on(t.joinedAt),
 		index(`idx_${orgDepartmentMembershipTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDepartmentMembershipTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgDepartmentMembershipTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 

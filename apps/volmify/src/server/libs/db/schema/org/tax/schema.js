@@ -1,15 +1,5 @@
-import {
-	boolean,
-	index,
-	integer,
-	numeric,
-	pgEnum,
-	primaryKey,
-	timestamp,
-	varchar,
-} from "drizzle-orm/pg-core";
-import { createdAt, deletedAt, idCol, idFkCol, table, updatedAt } from "../../_utils/helpers";
-import { seoMetadata } from "../../general/seo/schema";
+import { boolean, index, numeric, pgEnum, primaryKey } from "drizzle-orm/pg-core";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
 
@@ -21,23 +11,22 @@ const orgTaxCategoryTableName = `${orgTableName}_tax_category`;
 export const orgTaxCategory = table(
 	orgTaxCategoryTableName,
 	{
-		id: idCol.notNull(),
-		code: varchar("code", { length: 64 }).notNull(),
+		id: textCols.id().notNull(),
+		code: textCols.code().notNull(),
 	},
 	(t) => [primaryKey({ columns: [t.id] })],
 );
 const orgTaxCategoryI18nTableName = `${orgTaxCategoryTableName}_i18n`;
 export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)(
 	{
-		categoryId: idFkCol("category_id")
+		categoryId: textCols
+			.idFk("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		name: varchar("name", { length: 64 }).notNull(),
-		description: varchar("description", { length: 256 }),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "categoryId",
@@ -57,17 +46,18 @@ const orgTaxRateTableName = `${orgTableName}_tax_rates`;
 export const orgTaxRate = table(
 	orgTaxRateTableName,
 	{
-		id: idCol.notNull(),
-		regionId: idFkCol("region_id")
+		id: textCols.id().notNull(),
+		regionId: textCols
+			.idFk("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
 
-		// name: varchar("name", { length: 128 }).notNull(),
-		code: varchar("code", { length: 64 }).notNull(),
+		// name: textCols.name().notNull(),
+		code: textCols.code().notNull(),
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
 		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
-		currencyCode: idFkCol("currency_code").references(() => orgRegion.currencyCode),
+		currencyCode: textCols.idFk("currency_code").references(() => orgRegion.currencyCode),
 		// .notNull(),
 
 		/**
@@ -75,13 +65,13 @@ export const orgTaxRate = table(
 		 */
 		isCompound: boolean("is_compound").default(false).notNull(),
 
-		priority: integer("priority").default(0).notNull(),
+		priority: numericCols.priority().notNull(),
 
-		startsAt: timestamp("starts_at"),
-		endsAt: timestamp("ends_at"),
-		createdAt,
-		updatedAt,
-		deletedAt,
+		startsAt: temporalCols.startsAt(),
+		endsAt: temporalCols.endsAt(),
+		createdAt: temporalCols.createdAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		index(`idx_${orgTaxRateTableName}_region`).on(t.regionId),
@@ -96,15 +86,14 @@ export const orgTaxRate = table(
 const orgTaxRateI18nTableName = `${orgTaxRateTableName}_i18n`;
 export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateI18nTableName)(
 	{
-		rateId: idFkCol("rate_id")
+		rateId: textCols
+			.idFk("rate_id")
 			.references(() => orgTaxRate.id)
 			.notNull(),
-		seoMetadataId: idFkCol("seo_metadata_id")
-			.references(() => seoMetadata.id)
-			.notNull(),
+		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		name: varchar("name", { length: 128 }).notNull(),
-		description: varchar("description", { length: 256 }),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "rateId",
@@ -123,13 +112,15 @@ const orgTaxRateTaxCategoryTableName = `${orgTaxRateTableName}_tax_category`;
 export const orgTaxRateTaxCategory = table(
 	orgTaxRateTaxCategoryTableName,
 	{
-		rateId: idFkCol("rate_id")
+		rateId: textCols
+			.idFk("rate_id")
 			.references(() => orgTaxRate.id)
 			.notNull(),
-		categoryId: idFkCol("category_id")
+		categoryId: textCols
+			.idFk("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
-		createdAt,
+		createdAt: temporalCols.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.rateId, t.categoryId] }),

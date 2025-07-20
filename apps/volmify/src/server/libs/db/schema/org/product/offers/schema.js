@@ -13,8 +13,8 @@ import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpe
 import { currency } from "../../../general/locale-currency-market/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
-import { org } from "../../schema.js";
-import { orgProductCollection } from "../collection } from "../schema.js";
+import { orgProductCollection } from "../collection/schema.js";
+import { orgProduct, orgProductVariant } from "../schema.js";
 
 const orgDiscountTableName = `${orgTableName}_discount`;
 /**
@@ -68,7 +68,7 @@ export const orgDiscount = table(
 		// metadata: jsonb("metadata"),
 
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgDiscountTableName}_org_id`).on(t.orgId),
@@ -227,13 +227,13 @@ export const orgMemberOrderDiscountUsage = table(
 		orderId: textCols.idFk("order_id").references(() => orgMemberProductOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
 		index(`idx_${orgDiscountUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgDiscountUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDiscountUsageTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -262,8 +262,8 @@ export const orgCoupon = table(
 		endsAt: temporalCols.endsAt(),
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-		deletedAt: temporalCols.deletedAt(), 
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(t.orgId, t.code),
@@ -273,7 +273,7 @@ export const orgCoupon = table(
 		index(`idx_${orgCouponTableName}_dates`).on(t.startsAt, t.endsAt),
 		index(`idx_${orgCouponTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
 		index(`idx_${orgCouponTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgCouponTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgCouponTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgCouponTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
@@ -337,8 +337,8 @@ export const orgGiftCard = table(
 		isActive: sharedCols.isActive(),
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-		deletedAt: temporalCols.deletedAt(), 
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
@@ -351,7 +351,7 @@ export const orgGiftCard = table(
 		index(`idx_${orgGiftCardTableName}_balance`).on(t.remainingBalance),
 		index(`idx_${orgGiftCardTableName}_issued_at`).on(t.issuedAt),
 		index(`idx_${orgGiftCardTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgGiftCardTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgGiftCardTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgGiftCardTableName}_deleted_at`).on(t.deletedAt),
 	],
 );
@@ -398,7 +398,7 @@ export const orgMemberGiftCardUsage = table(
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
 		orderId: textCols.idFk("order_id"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
@@ -406,7 +406,7 @@ export const orgMemberGiftCardUsage = table(
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -428,8 +428,8 @@ export const orgPromotion = table(
 		isActive: sharedCols.isActive(),
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-		deletedAt: temporalCols.deletedAt(), 
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(t.orgId, t.slug),
@@ -438,7 +438,7 @@ export const orgPromotion = table(
 		index(`idx_${orgPromotionTableName}n_dates`).on(t.startsAt, t.endsAt),
 		index(`idx_${orgPromotionTableName}n_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
 		index(`idx_${orgPromotionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgPromotionTableName}_updated_at`).on(t.updatedAt),
+		index(`idx_${orgPromotionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgPromotionTableName}_deleted_at`).on(t.deletedAt),
 	],
 );

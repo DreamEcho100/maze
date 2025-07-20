@@ -1,10 +1,8 @@
-import { eq } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
 	index,
 	integer,
-	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -60,7 +58,7 @@ export const locale = table(
 	{
 		// id: id.notNull(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 
 		// locale: text("locale").notNull(),
@@ -96,7 +94,7 @@ export const locale = table(
 		const base = "locale";
 		return [
 			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 		];
 	},
 );
@@ -124,7 +122,7 @@ export const currency = table(
 		isActive: boolean("is_active").default(true),
 		deletedAt: temporalCols.deletedAt(),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = "currency";
@@ -134,7 +132,7 @@ export const currency = table(
 			index(`idx_${base}_active`).on(t.isActive),
 			index(`idx_${base}_deleted_at`).on(t.deletedAt),
 			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 		];
 	},
 );
@@ -175,7 +173,7 @@ export const country = table(
 		isActive: sharedCols.isActive().default(true),
 		vatRate: decimal("vat_rate", { precision: 5, scale: 4 }),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = "country";
@@ -188,7 +186,7 @@ export const country = table(
 			index(`idx_${base}_region`).on(t.region),
 			index(`idx_${base}_subregion`).on(t.subregion),
 			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 		];
 	},
 );
@@ -222,7 +220,7 @@ export const exchangeRate = table(
 		validFrom: timestamp("valid_from").notNull(),
 		validTo: timestamp("valid_to"),
 		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
+		lastUpdatedAt: temporalCols.lastUpdatedAt(),
 		deletedAt: temporalCols.deletedAt(),
 		precision: integer("precision").default(2),
 		rateType: text("rate_type"), // "mid-market", "retail", etc
@@ -237,125 +235,8 @@ export const exchangeRate = table(
 			index(`idx_${base}_source`).on(t.source),
 			index(`idx_${base}_type`).on(t.rateType),
 			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_updated_at`).on(t.updatedAt),
+			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 			index(`idx_${base}_deleted_at`).on(t.deletedAt),
 		];
 	},
-);
-
-// TODO: remove the market concept since it's been refactored to funnel instead of market templates
-/**
- * 🧩 Market Templates
- *
- * @context
- * Pre-configured market setups combining currency, locale, and tax defaults.
- * Streamlines international org onboarding and expansion.
- *
- * @behavior
- * Acts as a base configuration. Orgs can override but inherit sensible defaults.
- *
- * @integrations
- * Used in org setup, regional pricing, and storefront routing.
- */
-export const marketTemplate = table(
-	"market_template",
-	{
-		id: textCols.id(),
-		name: textCols.name().notNull(), // e.g., "EU", "LATAM", "Global"
-		description: textCols.description(),
-		slug: textCols.slug().notNull(),
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
-		defaultLocale: text("default_locale").notNull(),
-		deletedAt: temporalCols.deletedAt(),
-		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-	},
-	(t) => [
-		index("idx_market_template_slug").on(t.slug),
-		index("idx_market_template_currency").on(t.currencyCode),
-		index("idx_market_template_locale").on(t.defaultLocale),
-		index("idx_market_template_created_at").on(t.createdAt),
-		index("idx_market_template_updated_at").on(t.updatedAt),
-		index("idx_market_template_deleted_at").on(t.deletedAt),
-	],
-);
-
-/**
- * 🌍 Market Template Countries
- *
- * @context
- * Links market templates to the countries they include.
- * Each market can cover multiple countries and define one primary.
- *
- * @behavior
- * Enables flexible grouping (e.g., EU = DE, FR, IT...) with one default fallback.
- *
- * @integrations
- * Used in tax logic, localized pricing, and regional campaign targeting.
- */
-export const marketTemplateCountry = table(
-	"market_template_country",
-	{
-		marketTemplateId: textCols
-			.idFk("market_template_id")
-			.notNull()
-			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		countryId: textCols
-			.idFk("country_id")
-			.notNull()
-			.references(() => country.id, { onDelete: "cascade" }),
-		isDefault: sharedCols.isDefault().default(false),
-		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-	},
-	(t) => [
-		primaryKey({ columns: [t.marketTemplateId, t.countryId] }),
-		uniqueIndex("uq_market_template_country_default")
-			.on(t.marketTemplateId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_market_template_country_isu_default").on(t.isDefault),
-		index("idx_market_template_country_created_at").on(t.createdAt),
-		index("idx_market_template_country_updated_at").on(t.updatedAt),
-	],
-);
-
-/**
- * 🌐 Market Template Translations
- *
- * @context
- * Localized names and descriptions for market templates.
- * Optional SEO metadata supports region-specific marketing pages.
- *
- * @behavior
- * One translation per locale, with one marked as default for fallback.
- *
- * @integrations
- * Used in UI, localized routing, SEO, and marketing automation.
- */
-export const marketTemplateTranslation = table(
-	"market_template_translation",
-	{
-		id: textCols.id(),
-		marketTemplateId: text("market_template_id")
-			.notNull()
-			.references(() => marketTemplate.id, { onDelete: "cascade" }),
-		localeKey: sharedCols.localeKeyFk("locale_key").notNull(),
-		isDefault: sharedCols.isDefault().default(false),
-		name: textCols.name().notNull(),
-		description: textCols.description(),
-		seoMetadataId: sharedCols.seoMetadataIdFk(),
-		createdAt: temporalCols.createdAt(),
-		updatedAt: temporalCols.updatedAt(),
-	},
-	(t) => [
-		uniqueIndex("uq_market_template_translation_unique").on(t.marketTemplateId, t.localeKey),
-		uniqueIndex("uq_market_template_translation_default")
-			.on(t.marketTemplateId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index("idx_market_template_translation_locale_key").on(t.localeKey),
-		index("idx_market_template_translation_created_at").on(t.createdAt),
-		index("idx_market_template_translation_updated_at").on(t.updatedAt),
-	],
 );
