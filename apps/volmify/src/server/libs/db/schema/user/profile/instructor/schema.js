@@ -9,7 +9,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
-import { lmsCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers";
 import { contactInfo } from "../../../general/contact-info/schema";
 import { orgLocale } from "../../../org/locale-region/schema";
 import { orgProduct } from "../../../org/product/schema";
@@ -225,7 +225,10 @@ export const userInstructorProfileSkill = table(
 		// Engagement metrics
 		totalStudents: integer("total_students").default(0),
 
-		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
+		ratingTotal: numericCols.ratingTotal("rating_total").default(0),
+		ratingCount: numericCols.ratingCount("rating_count").default(0),
+		ratingAvg: numericCols.ratingAgg("rating_avg").default("0.00"),
+
 		totalReviews: integer("total_reviews").default(0),
 		createdAt: temporalCols.audit.createdAt(),
 
@@ -295,6 +298,10 @@ export const userInstructorProfileSkill = table(
 		index(`idx_${userInstructorProfileSkillTableName}_last_updated`).on(t.lastUpdatedAt),
 		index(`idx_${userInstructorProfileSkillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${userInstructorProfileSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${userInstructorProfileSkillTableName}_rating_total`).on(t.ratingTotal),
+		index(`idx_${userInstructorProfileSkillTableName}_rating_count`).on(t.ratingCount),
+		index(`idx_${userInstructorProfileSkillTableName}_rating_avg`).on(t.ratingAvg),
+		index(`idx_${userInstructorProfileSkillTableName}_total_reviews`).on(t.totalReviews),
 	],
 );
 // TODO:
@@ -323,7 +330,9 @@ export const userInstructorProfileCoursesMetrics = table(
 		totalCompletedByStudents: integer("total_completed_by_students").default(0),
 		totalInProgressByStudents: integer("total_in_progress_by_students").default(0),
 
-		avgRating: lmsCols.avgRating(),
+		ratingTotal: numericCols.ratingTotal("rating_total").default(0),
+		ratingCount: numericCols.ratingCount("rating_count").default(0),
+		ratingAvg: numericCols.ratingAgg("rating_avg").default("0.00"),
 		totalReviews: integer("total_reviews").default(0),
 		// totalActive: integer("total_courses_active").default(0),
 		// totalArchived: integer("total_courses_archived").default(0),
@@ -349,5 +358,9 @@ export const userInstructorProfileCoursesMetrics = table(
 		index(`idx_${userInstructorProfileSkillI18nTableName}_profile_id`).on(t.profileId),
 		index(`idx_${userInstructorProfileSkillI18nTableName}_created_at`).on(t.createdAt),
 		index(`idx_${userInstructorProfileSkillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_total`).on(t.ratingTotal),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_count`).on(t.ratingCount),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_avg`).on(t.ratingAvg),
+		index(`idx_${userInstructorProfileSkillI18nTableName}_total_reviews`).on(t.totalReviews),
 	],
 );

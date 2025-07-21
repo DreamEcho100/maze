@@ -2,7 +2,6 @@ import { sql } from "drizzle-orm";
 import {
 	boolean,
 	check,
-	decimal,
 	index,
 	integer,
 	jsonb,
@@ -65,25 +64,24 @@ export const orgProductCourse = table(
 		 */
 		difficulty: integer("difficulty").default(5), // 1-10 scale
 
+		userLevelRatingTotal: numericCols.ratingTotal("user_level_rating_total").default(0),
+		userLevelRatingCount: numericCols.ratingCount("user_level_rating_count").default(0),
 		/**
 		 * @userFeedback Average user rating for course level appropriateness
 		 * @qualityAssurance Community-validated level accuracy for creator credibility
 		 * @recommendationEngine Data for improving course discovery algorithms
 		 */
-		avgUserLevelRating: decimal("avg_user_level_rating", {
-			precision: 3,
-			scale: 2,
-		}),
+		userLevelRatingAvg: numericCols.ratingAgg("user_level_rating_avg").default("0.00"),
 
+		userDifficultyRatingTotal: numericCols.ratingTotal("user_difficulty_rating_total").default(0),
+		userDifficultyRatingCount: numericCols.ratingCount("user_difficulty_rating_count").default(0),
 		/**
 		 * @userFeedback Average user rating for course difficulty assessment
 		 * @learningOptimization Community feedback for course improvement and positioning
 		 * @platformIntelligence Aggregate data for marketplace recommendation systems
 		 */
-		avgUserDifficultyRating: decimal("avg_user_difficulty_rating", {
-			precision: 3,
-			scale: 2,
-		}),
+		userDifficultyRatingAvg: numericCols.ratingAgg("user_difficulty_rating_avg").default("0.00"),
+
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 
@@ -101,8 +99,18 @@ export const orgProductCourse = table(
 		index(`idx_${orgProductCourseI18nTableName}_level`).on(t.level),
 		index(`idx_${orgProductCourseI18nTableName}_difficulty`).on(t.difficulty),
 		index(`idx_${orgProductCourseI18nTableName}_duration`).on(t.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseI18nTableName}_level_rating`).on(t.avgUserLevelRating),
-		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating`).on(t.avgUserDifficultyRating),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_total`).on(t.userLevelRatingTotal),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_count`).on(t.userLevelRatingCount),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_avg`).on(t.userLevelRatingAvg),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating_total`).on(
+			t.userDifficultyRatingTotal,
+		),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating_count`).on(
+			t.userDifficultyRatingCount,
+		),
+		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating_avg`).on(
+			t.userDifficultyRatingAvg,
+		),
 	],
 );
 
@@ -206,16 +214,20 @@ export const orgMemberProductCourseChallengeRating = table(
 		memberId: sharedCols.orgMemberIdFk().notNull(),
 
 		/**
-		 * @qualityFeedback User assessment of course level accuracy (1-5 stars)
+		 * @qualityFeedback User assessment of course level accuracy
 		 * @creatorFeedback Helps instructors understand if course matches advertised level
 		 */
-		levelRating: integer("level_rating"), // 1-10 scale
+		levelRatingTotal: numericCols.ratingTotal("level_rating_total").default(0),
+		levelRatingCount: numericCols.ratingCount("level_rating_count").default(0),
+		levelRatingAvg: numericCols.ratingAgg("level_rating_avg").default("0.00"),
 
 		/**
-		 * @complexityFeedback User assessment of course difficulty accuracy (1-5 stars)
+		 * @complexityFeedback User assessment of course difficulty accuracy
 		 * @courseImprovement Enables instructors to adjust content complexity based on feedback
 		 */
-		difficultyRating: integer("difficulty_rating"), // 1-10 scale
+		difficultyRatingTotal: integer("difficulty_rating_total").default(0),
+		difficultyRatingCount: integer("difficulty_rating_count").default(0),
+		difficultyRatingAvg: numericCols.ratingAgg("difficulty_rating_avg").default("0.00"),
 
 		/**
 		 * @qualitativeFeedback Optional explanation for ratings
@@ -235,22 +247,36 @@ export const orgMemberProductCourseChallengeRating = table(
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(t.courseId),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(t.memberId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level`).on(t.levelRating),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty`).on(
-			t.difficultyRating,
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_total`).on(
+			t.levelRatingTotal,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_count`).on(
+			t.levelRatingCount,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_avg`).on(
+			t.levelRatingAvg,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_total`).on(
+			t.difficultyRatingTotal,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_count`).on(
+			t.difficultyRatingCount,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_avg`).on(
+			t.difficultyRatingAvg,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`).on(
 			t.lastUpdatedAt,
 		),
-		check(
-			"level_rating_range",
-			sql`${t.levelRating} >= 1 AND ${t.levelRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
-		),
-		check(
-			"difficulty_rating_range",
-			sql`${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
-		),
+		// check(
+		// 	"level_rating_range",
+		// 	sql`${t.levelRatingTotal} >= 1 AND ${t.levelRatingTotal} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		// ),
+		// check(
+		// 	"difficulty_rating_range",
+		// 	sql`${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		// ),
 	],
 );
 // TODO: add a history track for `orgMemberProductCourseChallengeRating`

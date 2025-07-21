@@ -196,13 +196,12 @@ export const numericCols = {
 	},
 
 	// ✅ RATINGS & METRICS: User-facing metrics
-	rating: {
-		// Course/content ratings (0.00-10.00)
-		courseRating: (name = "rating") => decimal(name, { precision: 3, scale: 2 }),
-		avgRating: (name = "avg_rating") => decimal(name, { precision: 3, scale: 2 }),
-		difficultyRating: (name = "difficulty_rating") => decimal(name, { precision: 3, scale: 2 }),
-	},
-	// rating_: (name = "rating") => integer(name),
+	/** @param {string} name */
+	ratingTotal: (name) => integer(name),
+	/** @param {string} name */
+	ratingAgg: (name) => decimal(name, { precision: 3, scale: 2 }), // 0.00-10.00,
+	/** @param {string} name */
+	ratingCount: (name) => integer(name).default(0),
 
 	// ✅ ANALYTICS: Performance metrics
 	analytics: {
