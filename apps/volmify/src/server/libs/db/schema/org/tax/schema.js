@@ -57,8 +57,7 @@ export const orgTaxRate = table(
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
 		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
-		currencyCode: textCols.idFk("currency_code").references(() => orgRegion.currencyCode),
-		// .notNull(),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
 		/**
 		 * @compound When true, this tax is applied after previous ones.
@@ -67,11 +66,11 @@ export const orgTaxRate = table(
 
 		priority: numericCols.priority().notNull(),
 
-		startsAt: temporalCols.startsAt(),
-		endsAt: temporalCols.endsAt(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		startsAt: temporalCols.business.startsAt(),
+		endsAt: temporalCols.business.endsAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		index(`idx_${orgTaxRateTableName}_region`).on(t.regionId),
@@ -120,7 +119,7 @@ export const orgTaxRateTaxCategory = table(
 			.idFk("category_id")
 			.references(() => orgTaxCategory.id)
 			.notNull(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.rateId, t.categoryId] }),

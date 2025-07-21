@@ -19,9 +19,9 @@ export const orgFunnel = table(
 		// defaultLocaleKey: getLocaleKey("default_locale_key")
 		// 	.references(() => locale.key)
 		// 	.notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
@@ -45,7 +45,7 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelI18nTableName)(
 			.notNull(),
 		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 		name: textCols.name().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "funnelId",
@@ -72,7 +72,7 @@ export const orgFunnelRegion = table(
 			.idFk("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.funnelId, t.regionId] }),
@@ -138,9 +138,9 @@ export const orgFunnelDomain = table(
 		 */
 		hasCustom404: boolean("has_custom_404").default(false).notNull(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.funnelId, t.regionId] }),

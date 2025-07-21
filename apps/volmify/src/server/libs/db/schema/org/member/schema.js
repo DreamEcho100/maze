@@ -1,4 +1,4 @@
-import { index, pgEnum, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { index, pgEnum, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 
 import { user } from "../../user/schema.js";
@@ -29,9 +29,9 @@ export const orgMember = table(
 	`${orgTableName}_member`,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
 		orgId: sharedCols.orgIdFk().notNull(),
 
@@ -49,9 +49,9 @@ export const orgMember = table(
 
 		displayName: textCols.displayName().notNull(),
 
-		invitedAt: timestamp("invited_at", { precision: 3 }),
-		invitedBy: text("invited_by").references(() => user.id),
-		joinedAt: timestamp("joined_at", { precision: 3 }),
+		invitedAt: temporalCols.activity.invitedAt().defaultNow(),
+		invitedById: textCols.idFk("invited_by_id").references(() => user.id),
+		joinedAt: temporalCols.activity.joinedAt(),
 	},
 	(table) => {
 		const base = `${orgTableName}_member`;
@@ -80,20 +80,20 @@ export const orgMemberInvitation = table(
 	`${orgTableName}_member_invitation`,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		orgId: sharedCols.orgIdFk().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		invitedByMemberId: textCols
 			.idFk("invited_by_member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
-		expiresAt: temporalCols.expiresAt().notNull(),
+		expiresAt: temporalCols.business.expiresAt().notNull(),
 		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 		message: text("message"),
-		acceptedAt: timestamp("accepted_at", { precision: 3 }),
-		declinedAt: timestamp("declined_at", { precision: 3 }),
+		acceptedAt: temporalCols.activity.acceptedAt(),
+		declinedAt: temporalCols.activity.declinedAt(),
 		memberId: textCols.idFk("member_id").references(() => orgMember.id),
 	},
 	(t) => {

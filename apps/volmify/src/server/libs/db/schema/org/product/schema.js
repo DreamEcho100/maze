@@ -152,9 +152,9 @@ export const orgProduct = table(
 		//  */
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -248,9 +248,9 @@ export const orgProductVariant = table(
 	orgProductVariantTable,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
 		/**
 		 * @ecommerceIntegration Parent product this variant belongs to
@@ -362,13 +362,13 @@ export const orgProductVariant = table(
 		 * @campaignManagement When this pricing becomes effective
 		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
 		 */
-		startsAt: temporalCols.startsAt(),
+		startsAt: temporalCols.business.startsAt(),
 
 		/**
 		 * @campaignManagement When this pricing expires (null = permanent)
 		 * @promotionalStrategy Supports time-limited promotional pricing
 		 */
-		endsAt: temporalCols.endsAt(),
+		endsAt: temporalCols.business.endsAt(),
 
 		// /**
 		//  * @extensibility Variant-specific configuration and feature definitions
@@ -410,13 +410,13 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantI18nTabl
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
 		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		name: textCols.title().notNull(),
+		title: textCols.title().notNull(),
 		description: textCols.description(),
 	},
 	{
 		fkKey: "variantId",
 		extraConfig: (t, tableName) => [
-			index(`idx_${tableName}_name`).on(t.name),
+			index(`idx_${tableName}_title`).on(t.title),
 			index(`idx_${tableName}_variant_id`).on(t.variantId),
 		],
 	},
@@ -500,9 +500,9 @@ export const orgProductInstructorAttribution = table(
 		//  */
 		// isPrimary: boolean("is_primary").default(false),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -581,7 +581,7 @@ export const orgProductBrandAttribution = table(
 		//  */
 		// isPrimary: boolean("is_primary").default(true),
 
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		// Business Constraints

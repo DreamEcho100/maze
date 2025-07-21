@@ -10,9 +10,8 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
 
-import { currency } from "../general/locale-currency-market/schema.js";
 import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { buildOrgI18nTable, orgTableName } from "./_utils/helpers.js";
@@ -34,9 +33,9 @@ export const org = table(
 	orgTableName,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 		/**
 		 * Creator becomes the first `admin` and is granted full permissions.
 		 * Enables automatic role provisioning during onboarding.
@@ -95,19 +94,15 @@ export const orgCurrencySettings = table(
 			.idFk(`${orgTableName}_id`)
 			.notNull()
 			.references(() => org.id, { onDelete: "cascade" }),
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 		isDefault: sharedCols.isDefault(), // Used as default for invoices, display
-		displayFormat: text("display_format"), // "$1,234.56", "1.234,56 €", etc.
+		displayFormat: textCols.displayFormat(), // "$1,234.56", "1.234,56 €", etc.
+		// TODO: convert to enum
 		roundingMode: text("rounding_mode").default("round"), // 'round' | 'floor' | 'ceil'
-		roundingIncrement: decimal("rounding_increment", {
-			precision: 10,
-			scale: 6,
-		}),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		roundingIncrement: numericCols.exchangeRate.roundingIncrement(), // e.g. 0.01 for cents, 0.1 for tenths
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_currency_settings`;
@@ -129,15 +124,13 @@ export const orgBrand = table(
 	{
 		id: textCols.id().notNull(),
 		orgId: sharedCols.orgIdFk().notNull(),
-		name: textCols.name().notNull(),
 		slug: textCols.slug().notNull(),
-		description: textCols.description(),
-		logo: text("logo"),
-		brandCategory: text("brand_category"),
+		logoUrl: textCols.url("logo_url"),
+		brandCategory: textCols.category("brand_category"), // e.g., "education", "technology", "healthcare"
 		// metadata: jsonb("metadata"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand`;
@@ -188,8 +181,8 @@ export const orgBrandMetrics = table(
 			.idFk("vendor_brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_brand_metrics`;
@@ -241,10 +234,11 @@ export const instructorOrgAffiliation = table(
 			.references(() => userInstructorProfile.id),
 		memberId: sharedCols.orgMemberIdFk().notNull(),
 		orgId: sharedCols.orgIdFk().notNull(),
-		joinedAt: timestamp("joined_at").defaultNow(),
-		createdAt: temporalCols.createdAt(),
+		joinedAt: temporalCols.activity.joinedAt().defaultNow(),
+		createdAt: temporalCols.audit.createdAt(),
 
 		affiliationType: instructorOrgAffiliationTypeEnum("affiliation_type").notNull(),
+		// TODO: convert to enum, ex: "owner", "employee", "contractor", "guest", "partner", "volunteer"
 		role: text("role"),
 		title: textCols.title(),
 
@@ -263,6 +257,7 @@ export const instructorOrgAffiliation = table(
 		startedAt: timestamp("started_at").defaultNow(),
 		endedAt: timestamp("ended_at"),
 
+		// TODO: convert to enum, ex: "email", "phone", "in-person", other
 		connectionMethod: text("connection_method"),
 		invitedById: textCols.idFk("invited_by_id").references(() => user.id),
 		applicationNotes: text("application_notes"),
@@ -308,7 +303,7 @@ export const instructorOrgAffiliation = table(
 // 		dateFormat: text("date_format").default("MM/DD/YYYY"),
 // 		timeFormat: text("time_format").default("12h"),
 // 		weekStart: integer("week_start").default(0), // 0 = Sunday
-// 		createdAt: temporalCols.createdAt(),,
+// 		createdAt: temporalCols.audit.createdAt(),,
 // 	},
 // 	(t) => [
 // 		primaryKey({ columns: [t.orgId, t.locale] }),

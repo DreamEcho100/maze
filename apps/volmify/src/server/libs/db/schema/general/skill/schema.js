@@ -48,8 +48,8 @@ export const skill = table(
 			.references(() => org.id)
 			.notNull(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(t.appliedByOrgId, t.slug),
@@ -79,12 +79,12 @@ export const skillI18n = table(
 		isDefault: sharedCols.isDefault(),
 
 		name: textCols.name().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 
 		seoMetadataId: sharedCols.seoMetadataIdFk().notNull(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),

@@ -31,9 +31,9 @@ export const buildOrgI18nTable =
 				// 	.notNull(),
 				localeKey: sharedCols.localeKey().notNull(),
 				isDefault: boolean("is_default").default(false),
-				createdAt: temporalCols.createdAt(),
-				lastUpdatedAt: temporalCols.lastUpdatedAt(),
-				deletedAt: temporalCols.deletedAt(),
+				createdAt: temporalCols.audit.createdAt(),
+				lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+				deletedAt: temporalCols.audit.deletedAt(),
 			},
 			(t) => [
 				// TODO: Correct the `relations` `fields`

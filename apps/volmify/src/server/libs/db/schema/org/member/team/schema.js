@@ -1,16 +1,8 @@
-import {
-	boolean,
-	index,
-	pgEnum,
-	primaryKey,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { boolean, index, pgEnum, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { user } from "../../../user/schema.js";
-import { orgTableName } from "../../_utils/helpers.js";
+import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 
 const orgTeamTableName = `${orgTableName}_team`;
 /**
@@ -28,17 +20,15 @@ export const orgTeam = table(
 	orgTeamTableName,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 		createdById: textCols
 			.idFk("created_by_id")
 			.references(() => user.id)
 			.notNull(),
 
-		name: textCols.name().notNull(),
 		slug: textCols.slug().notNull(),
-		description: textCols.shortDescription("description"),
 
 		orgId: sharedCols.orgIdFk().notNull(),
 
@@ -56,13 +46,32 @@ export const orgTeam = table(
 		// metadata: jsonb("metadata"),
 	},
 	(table) => [
-		uniqueIndex(`uq_${orgTeamTableName}_name_org`).on(table.name, table.orgId),
+		uniqueIndex(`uq_${orgTeamTableName}_slug_org`).on(table.slug, table.orgId),
 		index(`idx_${orgTeamTableName}_created_at`).on(table.createdAt),
 		index(`idx_${orgTeamTableName}_last_updated_at`).on(table.lastUpdatedAt),
-		index(`idx_${orgTeamTableName}_name`).on(table.name),
+		index(`idx_${orgTeamTableName}_slug`).on(table.slug),
 		index(`idx_${orgTeamTableName}_org`).on(table.orgId),
 		index(`idx_${orgTeamTableName}_created_by_id`).on(table.createdById),
 	],
+);
+
+const orgTeamI18nTableName = `${orgTeamTableName}_i18n`;
+export const orgTeamI18n = buildOrgI18nTable(orgTeamI18nTableName)(
+	{
+		teamId: textCols
+			.idFk("team_id")
+			.references(() => orgTeam.id)
+			.notNull(),
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
+	},
+	{
+		fkKey: "teamId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_name`).on(t.name),
+			index(`idx_${tableName}_team_id`).on(t.teamId),
+		],
+	},
 );
 
 const orgTeamMembershipTableName = `${orgTeamTableName}_membership`;
@@ -98,9 +107,9 @@ export const orgTeamMembership = table(
 			.references(() => orgTeam.id, { onDelete: "cascade" }),
 		status: orgTeamMembershipStatusEnum("status").notNull().default("pending"),
 		role: orgTeamMembershipRoleEnum("role").notNull().default("member"),
-		joinedAt: timestamp("joined_at", { precision: 3 }),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		joinedAt: temporalCols.activity.joinedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgTeamMembershipTableName}_created_at`).on(t.createdAt),

@@ -2,7 +2,6 @@ import { eq, sql } from "drizzle-orm";
 import {
 	boolean,
 	check,
-	decimal,
 	index,
 	integer,
 	jsonb,
@@ -13,7 +12,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
-import { currency } from "../../../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgTaxCategory } from "../../tax/schema.js";
@@ -230,13 +228,13 @@ export const orgProductVariantPaymentPlan = table(
 		 * @campaignManagement When this pricing becomes effective
 		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
 		 */
-		startsAt: temporalCols.startsAt().defaultNow(),
+		startsAt: temporalCols.business.startsAt().defaultNow(),
 
 		/**
 		 * @campaignManagement When this pricing expires (null = permanent)
 		 * @promotionalStrategy Supports time-limited promotional pricing
 		 */
-		endsAt: temporalCols.endsAt(),
+		endsAt: temporalCols.business.endsAt(),
 
 		// /**
 		//  * @extensibility Additional payment plan metadata for integrations and analytics
@@ -274,9 +272,9 @@ export const orgProductVariantPaymentPlan = table(
 		// //   "certificate_eligible": true
 		// // }
 
-		createdAt: temporalCols.completedAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.activity.completedAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		// Business Constraints
@@ -419,24 +417,19 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		 * @currencySupport Currency for this payment plan instance
 		 * @internationalCommerce Required for all payment plans to support global expansion
 		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
 		/**
 		 * @pricing Main price customers pay for this payment plan
 		 * @revenueFoundation Core pricing amount for revenue calculations and billing
 		 */
-		price: numericCols.price().notNull(),
+		price: numericCols.currency.price().notNull(),
 
 		/**
 		 * @promotionalPricing Original price for "save X%" marketing displays
 		 * @marketingStrategy Shows discount value to increase conversion rates
 		 */
-		compareAtPrice: decimal("compare_at_price", {
-			precision: 10,
-			scale: 2,
-		}),
+		compareAtPrice: numericCols.currency.price(),
 
 		// /**
 		//  * @accessControl Days of access after purchase (null = lifetime access)
@@ -457,8 +450,8 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		 */
 		maxPurchasesPerUser: integer("max_purchases_per_user"),
 
-		createdAt: temporalCols.completedAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.activity.completedAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for one-time payment management
@@ -520,24 +513,19 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 * @currencySupport Currency for this payment plan instance
 		 * @internationalCommerce Required for all payment plans to support global expansion
 		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
 		/**
 		 * @pricing Main price customers pay for this payment plan
 		 * @revenueFoundation Core pricing amount for revenue calculations and billing
 		 */
-		price: numericCols.price().notNull(),
+		price: numericCols.currency.price().notNull(),
 
 		/**
 		 * @promotionalPricing Original price for "save X%" marketing displays
 		 * @marketingStrategy Shows discount value to increase conversion rates
 		 */
-		compareAtPrice: decimal("compare_at_price", {
-			precision: 10,
-			scale: 2,
-		}),
+		compareAtPrice: numericCols.currency.price(),
 
 		// Q: is the following needed even with the existing of the custom billing count and unit
 		/**
@@ -570,10 +558,10 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 * @revenueStrategy One-time fee charged at subscription start
 		 * @additionalRevenue Setup fees provide additional revenue beyond recurring charges
 		 */
-		setupFee: decimal("setup_fee", { precision: 10, scale: 2 }).default("0"),
+		setupFee: numericCols.currency.price().default("0"),
 
-		createdAt: temporalCols.completedAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.activity.completedAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -749,15 +737,13 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 * @revenueTracking Total amount customer has paid for this subscription
 		 * @creatorEconomy Basis for instructor revenue sharing and org analytics
 		 */
-		totalPaid: decimal("total_paid", { precision: 12, scale: 2 }).default("0"),
+		totalPaid: numericCols.currency.price().default("0"),
 
 		/**
 		 * @currencyTracking Currency used for this subscription billing
 		 * @internationalCommerce Essential for multi-currency revenue tracking and reporting
 		 */
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
 		// /**
 		//  * @extensibility Additional subscription metadata for analytics and integrations
@@ -784,8 +770,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		//  */
 		// externalCustomerId: textCols.idFk("external_customer_id"),
 
-		createdAt: temporalCols.completedAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.activity.completedAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		// Performance indexes for subscription management
@@ -891,8 +877,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 		 */
 // 		includedUsage: integer("included_usage").default(0),
 
-// 		createdAt: temporalCols.completedAt(),
-// 		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+// 		createdAt: temporalCols.activity.completedAt(),
+// 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 // 	},
 // 	(t) => [
 // 		// Performance indexes for usage-based billing management
@@ -908,10 +894,10 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 			t.includedUsage,
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_created_at`).on(
-// 			t.createdAt: temporalCols.completedAt(),
+// 			t.createdAt: temporalCols.activity.completedAt(),
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_last_updated_at`).on(
-// 			t.lastUpdatedAt: temporalCols.lastUpdatedAt(),
+// 			t.lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 // 		),
 // 		index(`idx_${orgUsageBasedPaymentPlanTableName}_plan_id`).on(t.planId),
 // 	],

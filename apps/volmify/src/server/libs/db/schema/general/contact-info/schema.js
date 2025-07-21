@@ -1,12 +1,5 @@
 import { eq } from "drizzle-orm";
-import {
-	boolean,
-	index,
-	jsonb,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { table, temporalCols, textCols } from "../../_utils/helpers";
 
 /**
@@ -58,6 +51,7 @@ export const contactInfo = table(
 		 * Used together with `entityId` to uniquely associate contact with any supported entity.
 		 * Enables shared contact architecture across diverse models.
 		 */
+		// TODO: Convert to enum
 		entityType: text("entity_type").notNull(),
 
 		/**
@@ -70,10 +64,10 @@ export const contactInfo = table(
 
 		// Core contact fields
 		name: textCols.name().notNull(),
-		email: text("email").notNull(),
-		phone: text("phone"),
+		email: textCols.emailAddress("email").notNull(),
+		phone: textCols.phoneNumber("phone"),
 		address: text("address"),
-		website: text("website"),
+		website: textCols.url("website"),
 
 		/**
 		 * Structured social media/contact handles (e.g., Twitter, LinkedIn).
@@ -90,6 +84,7 @@ export const contactInfo = table(
 		 * @routing
 		 * Guides communication routing and fallback logic when no specific type is requested.
 		 */
+		// TODO: Convert to enum, example values: "primary", "billing", "support", "technical"
 		contactType: text("contact_type").default("primary"),
 
 		/**
@@ -127,9 +122,9 @@ export const contactInfo = table(
 		 */
 		verifiedAt: timestamp("verified_at"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 
 	(t) => [
@@ -164,11 +159,7 @@ export const contactInfo = table(
 		 * @dataQuality
 		 * Helps maintain clean contact datasets for reliable outreach.
 		 */
-		uniqueIndex("uq_contact_info_email_entity").on(
-			t.entityType,
-			t.entityId,
-			t.email,
-		),
+		uniqueIndex("uq_contact_info_email_entity").on(t.entityType, t.entityId, t.email),
 
 		index("idx_contact_info_verified").on(t.verifiedAt),
 		index("idx_contact_info_created_at").on(t.createdAt),

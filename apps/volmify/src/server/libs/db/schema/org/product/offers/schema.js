@@ -9,8 +9,13 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
-import { currency } from "../../../general/locale-currency-market/schema.js";
+import {
+	numericCols,
+	sharedCols,
+	table,
+	temporalCols,
+	textCols,
+} from "../../../_utils/helpers.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
 import { orgProductCollection } from "../collection/schema.js";
@@ -34,12 +39,10 @@ export const orgDiscountTypeEnum = pgEnum(`${orgDiscountTableName}_type`, [
  * @permissionContext Defines scoping logic for discount applicability
  * @abacRole Affects who can redeem based on resource association
  */
-export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`, [
-	"product",
-	"variant",
-	"collection",
-	"all",
-]);
+export const discountAppliesToEnum = pgEnum(
+	`${orgDiscountTableName}_applies_to`,
+	["product", "variant", "collection", "all"],
+);
 
 /**
  * @table discount
@@ -56,19 +59,19 @@ export const orgDiscount = table(
 		type: orgDiscountTypeEnum("type").notNull(),
 		value: decimal("value", { precision: 10, scale: 2 }).notNull(),
 
-		currencyCode: text("currency_code").references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk(),
 
 		appliesTo: discountAppliesToEnum("applies_to").notNull().default("all"),
 		isActive: sharedCols.isActive(),
 		usageLimit: integer("usage_limit"),
 		usedCount: integer("used_count").default(0),
 
-		startsAt: temporalCols.startsAt(),
-		endsAt: temporalCols.endsAt(),
+		startsAt: temporalCols.business.startsAt(),
+		endsAt: temporalCols.business.endsAt(),
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgDiscountTableName}_org_id`).on(t.orgId),
@@ -76,7 +79,11 @@ export const orgDiscount = table(
 		index(`idx_${orgDiscountTableName}_active`).on(t.isActive),
 		index(`idx_${orgDiscountTableName}_applies_to`).on(t.appliesTo),
 		index(`idx_${orgDiscountTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgDiscountTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgDiscountTableName}_active_dates`).on(
+			t.isActive,
+			t.startsAt,
+			t.endsAt,
+		),
 		index(`idx_${orgDiscountTableName}_currency_code`).on(t.currencyCode),
 	],
 );
@@ -94,7 +101,7 @@ export const orgDiscountI18n = buildOrgI18nTable(orgDiscountI18nTableName)(
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 
 		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
 		// 	onDelete: "set null",
@@ -133,7 +140,7 @@ export const orgDiscountProduct = table(
 			.idFk("product_id")
 			.notNull()
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.productId] }),
@@ -165,11 +172,13 @@ export const orgDiscountProductVariant = table(
 			.idFk("variant_id")
 			.notNull()
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.variantId] }),
-		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(t.createdAt),
+		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(
+			t.createdAt,
+		),
 	],
 );
 
@@ -200,7 +209,7 @@ export const orgDiscountProductCollection = table(
 			.idFk("collection_id")
 			.notNull()
 			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.collectionId] }),
@@ -224,16 +233,23 @@ export const orgMemberOrderDiscountUsage = table(
 			.notNull()
 			.references(() => orgDiscount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: textCols.idFk("order_id").references(() => orgMemberProductOrder.id),
+		orderId: textCols
+			.idFk("order_id")
+			.references(() => orgMemberProductOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
+		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(
+			t.memberId,
+			t.discountId,
+		),
 		index(`idx_${orgDiscountUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgDiscountUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 	],
 );
 
@@ -258,12 +274,12 @@ export const orgCoupon = table(
 		usageLimit: integer("usage_limit"),
 		usedCount: integer("used_count").default(0),
 		isActive: sharedCols.isActive(),
-		startsAt: temporalCols.startsAt(),
-		endsAt: temporalCols.endsAt(),
+		startsAt: temporalCols.business.startsAt(),
+		endsAt: temporalCols.business.endsAt(),
 		// metadata: jsonb("metadata"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(t.orgId, t.code),
@@ -271,7 +287,11 @@ export const orgCoupon = table(
 		index(`idx_${orgCouponTableName}_discount_id`).on(t.discountId),
 		index(`idx_${orgCouponTableName}_active`).on(t.isActive),
 		index(`idx_${orgCouponTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgCouponTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgCouponTableName}_active_dates`).on(
+			t.isActive,
+			t.startsAt,
+			t.endsAt,
+		),
 		index(`idx_${orgCouponTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgCouponTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgCouponTableName}_deleted_at`).on(t.deletedAt),
@@ -290,7 +310,7 @@ export const orgCouponI18n = buildOrgI18nTable(orgCouponI18nTableName)(
 			.notNull()
 			.references(() => orgCoupon.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 
 		// seoMetadataId: fk("seo_metadata_id").references(() => seoMetadata.id, {
 		// 	onDelete: "set null",
@@ -318,27 +338,21 @@ export const orgGiftCard = table(
 		id: textCols.id().notNull(),
 		orgId: sharedCols.orgIdFk().notNull(),
 		code: textCols.code().notNull(),
-		initialBalance: decimal("initial_balance", {
-			precision: 10,
-			scale: 2,
-		}).notNull(),
-		remainingBalance: decimal("remaining_balance", {
-			precision: 10,
-			scale: 2,
-		}).notNull(),
-		currencyCode: text("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		initialBalance: numericCols.currency.balance().notNull(),
+		remainingBalance: numericCols.currency.balance().notNull(),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
-		issuedToMemberId: textCols.idFk("issued_to_member_id").references(() => orgMember.id),
+		issuedToMemberId: textCols
+			.idFk("issued_to_member_id")
+			.references(() => orgMember.id),
 		issuedToEmail: text("issued_to_email"),
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
-		expiresAt: temporalCols.expiresAt(),
+		expiresAt: temporalCols.business.expiresAt(),
 		isActive: sharedCols.isActive(),
 		// metadata: jsonb("metadata"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
@@ -369,7 +383,7 @@ export const orgGiftCardI18n = buildOrgI18nTable(orgGiftCardI18nTableName)(
 			.notNull()
 			.references(() => orgGiftCard.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "giftCardId",
@@ -397,16 +411,20 @@ export const orgMemberGiftCardUsage = table(
 		usedAt: timestamp("used_at").defaultNow().notNull(),
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
 		orderId: textCols.idFk("order_id"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(t.giftCardId),
+		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(
+			t.giftCardId,
+		),
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 	],
 );
 
@@ -423,20 +441,24 @@ export const orgPromotion = table(
 		orgId: sharedCols.orgIdFk().notNull(),
 		slug: text("slug").notNull(),
 		bannerImage: text("banner_image"),
-		startsAt: temporalCols.startsAt(),
-		endsAt: temporalCols.endsAt(),
+		startsAt: temporalCols.business.startsAt(),
+		endsAt: temporalCols.business.endsAt(),
 		isActive: sharedCols.isActive(),
 		// metadata: jsonb("metadata"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(t.orgId, t.slug),
 		index(`idx_${orgPromotionTableName}n_org`).on(t.orgId),
 		index(`idx_${orgPromotionTableName}n_active`).on(t.isActive),
 		index(`idx_${orgPromotionTableName}n_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgPromotionTableName}n_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
+		index(`idx_${orgPromotionTableName}n_active_dates`).on(
+			t.isActive,
+			t.startsAt,
+			t.endsAt,
+		),
 		index(`idx_${orgPromotionTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgPromotionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgPromotionTableName}_deleted_at`).on(t.deletedAt),
@@ -455,7 +477,7 @@ export const orgPromotionI18n = buildOrgI18nTable(orgPromotionI18nTableName)(
 			.notNull()
 			.references(() => orgPromotion.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
-		description: textCols.description(),
+		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "promotionId",
@@ -483,7 +505,7 @@ export const orgPromotionDiscount = table(
 			.idFk("discount_id")
 			.notNull()
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.promotionId, t.discountId] }),

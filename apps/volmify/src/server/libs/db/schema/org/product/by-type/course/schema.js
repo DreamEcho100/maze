@@ -84,11 +84,11 @@ export const orgProductCourse = table(
 			precision: 3,
 			scale: 2,
 		}),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 
 		// The following fields and joins can be inferred from the `product` table as the `course` table is a specialization/type of the `product` table in a CTI way
-		// thumbnail, vendors, status, deletedAt: temporalCols.deletedAt(), title, description, seoMetadata, slug
+		// thumbnail, vendors, status, deletedAt: temporalCols.audit.deletedAt(), title, description, seoMetadata, slug
 
 		// The pricing model will be handled by the `product` table
 		// And the pricing model will be in a CTI many-to-many relationship with the `product` table
@@ -167,9 +167,9 @@ export const orgProductCourseSkill = table(
 		 */
 		weight: integer("weight").default(5),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(t.courseId, t.skillId),
@@ -225,8 +225,8 @@ export const orgMemberProductCourseChallengeRating = table(
 
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
@@ -291,8 +291,8 @@ export const orgProductCourseModule = table(
 		 */
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		// ???
 		//  // Section settings
 		//  settings: jsonb("settings"),
@@ -372,8 +372,8 @@ export const orgProductCourseModuleSection = table(
 		 */
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
@@ -466,8 +466,8 @@ export const orgProductCourseModuleSectionLesson = table(
 		 */
 		prerequisites: jsonb("prerequisites"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		// Example: {
 		//   "required_lessons": ["lesson-123", "lesson-456"],
 		//   "required_quiz_score": 80,
@@ -555,11 +555,11 @@ export const orgMemberProductCourseEnrollment = table(
 			.notNull(),
 		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
 		progressPercentage: lmsCols.progressPercentage(),
-		completedAt: temporalCols.completedAt(),
+		completedAt: temporalCols.activity.completedAt(),
 
 		// Access tracking
 		firstAccessAt: timestamp("first_access_at"),
-		lastAccessedAt: temporalCols.lastAccessedAt(),
+		lastAccessedAt: temporalCols.activity.lastAccessedAt(),
 		totalTimeSpent: integer("total_time_spent_seconds").default(0),
 
 		// Scheduling
@@ -578,8 +578,8 @@ export const orgMemberProductCourseEnrollment = table(
 		//  */
 		// totalTimeSpentSeconds: integer("total_time_spent_seconds").default(0),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.courseId] }),
@@ -631,8 +631,8 @@ export const orgMemberLearningProfile = table(
 		 */
 		learningMetadata: jsonb("learning_metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),

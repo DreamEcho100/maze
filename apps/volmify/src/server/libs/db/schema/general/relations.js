@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { orgPermissionsGroupPermission } from "../org/schema.js";
+// import { orgPermissionsGroupPermission } from "../org/schema.js";
 import { systemPermission, systemPermissionCategory } from "./schema.js";
 
 /**
@@ -51,10 +51,4 @@ export const systemPermissionRelations = relations(systemPermission, ({ one, man
 		fields: [systemPermission.categoryId],
 		references: [systemPermissionCategory.id],
 	}),
-	/**
-	 * @abacCrossContext Multi-tenant permission assignments
-	 * Enables same permission to be granted across different org contexts
-	 * @performanceCritical High-frequency relationship during authorization checks
-	 */
-	groupPermissions: many(orgPermissionsGroupPermission),
 }));

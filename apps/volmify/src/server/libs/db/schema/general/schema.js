@@ -57,7 +57,7 @@ export const systemPermissionCategory = table(
 		 */
 		name: textCols.name().notNull().unique("uq_system_permission_category_name"),
 		description: textCols.shortDescription("description"),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(table) => [
 		index("idx_system_permission_category_created_at").on(table.createdAt),
@@ -107,7 +107,7 @@ export const systemPermission = table(
 			.idFk("category_id")
 			.notNull()
 			.references(() => systemPermissionCategory.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(table) => [
 		index("idx_system_permission_created_at").on(table.createdAt),
@@ -147,7 +147,7 @@ export const systemPermission = table(
 // 	"locale",
 // 	{
 // 		// id: id.notNull(),
-// 		createdAt: temporalCols.createdAt(),
+// 		createdAt: temporalCols.audit.createdAt(),
 // 		lastUpdatedAt,
 // 		deletedAt,
 

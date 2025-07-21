@@ -3,6 +3,8 @@ import { currency } from "../../general/locale-currency-market/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
 import { orgLessonI18n } from "../lesson/schema";
+import { orgDepartmentI18n } from "../member/department/schema";
+import { orgTeamI18n } from "../member/team/schema";
 import {
 	orgProductCourseI18n,
 	orgProductCourseModuleI18n,
@@ -52,6 +54,8 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsProductsCoursesModulesI18n: many(orgProductCourseModuleI18n),
 	orgsProductsCoursesModulesSectionsI18n: many(orgProductCourseModuleSectionI18n),
 	orgsProductsCoursesModulesSectionsLessonsI18n: many(orgProductCourseModuleSectionLessonI18n),
+	orgsDepartmentsI18n: many(orgDepartmentI18n),
+	orgsTeamsI18n: many(orgTeamI18n),
 }));
 
 export const orgRegionRelations = relations(orgRegion, ({ many, one }) => ({

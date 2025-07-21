@@ -31,8 +31,8 @@ export const userInstructorProfile = table(
 		slug: textCols.slug().notNull(),
 		verifiedAt: boolean("verified_at").default(false),
 		// metadata: jsonb("metadata"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 
 		// The following is commented out because it should be handled in it's own related tables, maybe in the same way as LinkedIn Learning or Udemy, with as many tables as needed
 		// // Professional identity
@@ -131,8 +131,8 @@ export const userInstructorProfileI18n = table(
 		// SEO metadata reference
 		seoMetadataId: sharedCols.seoMetadataIdFk(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_locale_key`).on(
@@ -164,7 +164,7 @@ export const userInstructorProfileContactInfo = table(
 			.notNull()
 			.references(() => contactInfo.id, { onDelete: "cascade" }),
 		// isPrimary: boolean("is_primary").default(false),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileContactInfoTableName}_instructor_profile_id`).on(
@@ -202,7 +202,7 @@ export const userInstructorProfileRevenue = table(
 		revenueAmount: decimal("revenue_amount", { precision: 12, scale: 2 }),
 		sharePercentage: decimal("share_percentage", { precision: 5, scale: 2 }),
 		paidAt: timestamp("paid_at"),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileProductTableName}_instructor_membership_id`).on(
@@ -227,7 +227,7 @@ export const userInstructorProfileSkill = table(
 
 		avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"),
 		totalReviews: integer("total_reviews").default(0),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 
 		// totalCourses: integer("total_courses").default(0),
 		// totalCoursesCompleted: integer("total_courses_completed").default(0),
@@ -288,7 +288,7 @@ export const userInstructorProfileSkill = table(
 		// lastTrustScoreUpdate: timestamp("last_trust_score_update").defaultNow(),
 		// Last updated
 
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileSkillTableName}_profile_id`).on(t.profileId),
@@ -342,8 +342,8 @@ export const userInstructorProfileCoursesMetrics = table(
 		// totalWithRatings: integer("total_courses_with_ratings").default(0),
 		// totalWithFeedback: integer("total_courses_with_feedback").default(0),
 		// totalWithCertificates: integer("total_courses_with_certificates").default(0),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${userInstructorProfileSkillI18nTableName}_profile_id`).on(t.profileId),

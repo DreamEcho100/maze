@@ -1,13 +1,5 @@
-import {
-	boolean,
-	decimal,
-	index,
-	integer,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
+import { boolean, index, integer, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 
 /**
  * @fileoverview 🌍 Currency & Market Schema — Global Commerce Backbone
@@ -57,15 +49,10 @@ export const locale = table(
 	"locale",
 	{
 		// id: id.notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
-		// locale: text("locale").notNull(),
-		// languageCode: text("language_code").notNull(), // e.g. "en", "fr", "es"
-		// regionCode: text("region_code").notNull(), // e.g. "US", "GB", "CA"
-		// code
-		// label
 		key: sharedCols.localeKey("key").notNull().primaryKey(), // e.g. "en-US", "fr-FR"
 
 		/**
@@ -75,7 +62,7 @@ export const locale = table(
 		name: textCols.name().notNull(), // "English (United States)"
 		nativeName: textCols.name("native_name").notNull(), // "English (United States)"
 		languageCode: textCols.code("language_code").notNull(), // "en"
-		countryCode: textCols.code("country_code"), // "US"
+		countryCode: textCols.countryCode(), // "US"
 
 		/**
 		 * @platformManagement Locale availability and configuration
@@ -114,15 +101,15 @@ export const locale = table(
 export const currency = table(
 	"currency",
 	{
-		code: text("code").primaryKey().notNull(), // ISO 4217 code (e.g., "USD")
+		code: textCols.code().primaryKey().notNull(), // ISO 4217 code (e.g., "USD")
 		name: textCols.name().notNull(),
-		symbol: textCols.code("symbol").notNull(),
+		symbol: textCols.symbol("symbol").notNull(),
 		numericCode: textCols.code("numeric_code"),
 		minorUnit: integer("minor_unit").notNull().default(2),
 		isActive: boolean("is_active").default(true),
-		deletedAt: temporalCols.deletedAt(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = "currency";
@@ -157,13 +144,10 @@ export const country = table(
 		numericCode: textCols.code("numeric_code").notNull(),
 		name: textCols.name().notNull(),
 		nativeName: textCols.name("native_name"),
-		currencyCode: textCols
-			.code("currency_code")
-			.notNull()
-			.references(() => currency.code),
+		currencyCode: sharedCols.currencyCodeFk("currency_code").notNull(),
 		defaultLocale: textCols.code("default_locale").notNull(),
 		flagEmoji: textCols.code("flag_emoji"),
-		phoneCode: text("phone_code"),
+		phoneCode: textCols.code("phone_code").notNull(), // e.g., "+1" for US
 		continent: text("continent"),
 		region: text("region"),
 		subregion: text("subregion"),
@@ -171,9 +155,9 @@ export const country = table(
 		languages: text("languages").array(),
 		timezones: text("timezones").array(),
 		isActive: sharedCols.isActive().default(true),
-		vatRate: decimal("vat_rate", { precision: 5, scale: 4 }),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		vatRate: numericCols.percentage.vatRate(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => {
 		const base = "country";
@@ -209,19 +193,15 @@ export const exchangeRate = table(
 	"exchange_rate",
 	{
 		id: textCols.id(),
-		baseCurrency: text("base_currency")
-			.notNull()
-			.references(() => currency.code),
-		targetCurrency: text("target_currency")
-			.notNull()
-			.references(() => currency.code),
-		rate: decimal("rate", { precision: 16, scale: 8 }).notNull(),
-		source: text("source"), // e.g., "ECB", "manual"
-		validFrom: timestamp("valid_from").notNull(),
-		validTo: timestamp("valid_to"),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		baseCurrency: sharedCols.currencyCodeFk("base_currency").notNull(),
+		targetCurrency: sharedCols.currencyCodeFk("target_currency").notNull(),
+		rate: numericCols.exchangeRate.rate().notNull(),
+		source: textCols.source(), // e.g., "ECB", "manual"
+		validFrom: temporalCols.financial.validFrom().notNull(),
+		validTo: temporalCols.financial.validTo(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 		precision: integer("precision").default(2),
 		rateType: text("rate_type"), // "mid-market", "retail", etc
 	},

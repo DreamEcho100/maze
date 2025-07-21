@@ -54,7 +54,7 @@ export const seoMetadata = table(
 		keywords: text("keywords").array(),
 		image: text("image"),
 		imageAlt: text("image_alt"),
-		canonicalUrl: text("canonical_url"),
+		canonicalUrl: textCols.url("canonical_url"),
 		focusKeyword: text("focus_keyword"),
 
 		// Advanced SEO
@@ -82,8 +82,8 @@ export const seoMetadata = table(
 		// lastReviewedAt: timestamp("last_reviewed_at"),
 		// reviewedBy: text("reviewed_by"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_org").on(t.orgId),
@@ -117,7 +117,7 @@ export const seoOpenGraph = table(
 		// TODO: convert to enum
 		type: text("type").default("website"), // "website", "article", "video", "product"
 		siteName: textCols.title("site_name"),
-		url: text("url"),
+		url: textCols.url(),
 
 		// Type-specific data in JSONB
 		typeSpecificData: jsonb("type_specific_data"),
@@ -160,8 +160,8 @@ export const seoOpenGraph = table(
         }
         */
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_og_metadata").on(t.seoMetadataId),
@@ -221,8 +221,8 @@ export const seoTwitterCard = table(
         }
         */
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex("uq_seo_twitter_metadata").on(t.seoMetadataId),
@@ -254,8 +254,8 @@ export const seoStructuredData = table(
 		isActive: sharedCols.isActive(),
 		priority: numericCols.priority({ default: 1 }), // For ordering multiple schemas
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_structured_metadata").on(t.seoMetadataId),
@@ -283,13 +283,13 @@ export const seoAlternateUrl = table(
 		// Alternate URL details
 		localeKey: sharedCols.localeKey(),
 		hreflang: text("hreflang").notNull(), // "en-US", "es-MX", "x-default"
-		url: text("url").notNull(),
+		url: textCols.url().notNull(),
 
 		// Is this the default/canonical for this locale?
 		isDefault: sharedCols.isDefault(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_alternate_metadata").on(t.seoMetadataId),
@@ -318,14 +318,14 @@ export const seoCustomMeta = table(
 		tagValue: text("tag_value").notNull(),
 
 		// Grouping and ordering
-		category: text("category"), // "mobile", "pwa", "apple", "microsoft"
+		category: textCols.category(), // "mobile", "pwa", "apple", "microsoft"
 		sortOrder: integer("sort_order").default(0),
 
 		// Is this tag active?
 		isActive: boolean("is_active").default(true),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_meta_metadata_id").on(t.seoMetadataId),
@@ -371,8 +371,8 @@ export const seoIssue = table(
 		detectedAt: timestamp("detected_at").defaultNow(),
 		lastCheckedAt: timestamp("last_checked_at").defaultNow(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index("idx_seo_issue_metadata").on(t.seoMetadataId),
@@ -412,7 +412,7 @@ export const seoAuditLog = table(
 		changedBy: text("changed_by"),
 		changeReason: text("change_reason"),
 
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index("idx_seo_audit_metadata").on(t.seoMetadataId),

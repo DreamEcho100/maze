@@ -1,15 +1,7 @@
-import {
-	boolean,
-	foreignKey,
-	index,
-	pgEnum,
-	primaryKey,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { boolean, foreignKey, index, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
-import { orgTableName } from "../../_utils/helpers.js";
+import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
@@ -52,13 +44,7 @@ export const orgDepartment = table(
 		id: textCols.id().notNull(),
 
 		orgId: sharedCols.orgIdFk().notNull(),
-
-		/**
-		 * @domain
-		 * Departmental units used for org charts and structured ABAC.
-		 */
-		name: textCols.name().notNull(),
-		description: textCols.description(),
+		slug: textCols.slug().notNull(),
 
 		// isDefault: boolean("is_default").default(false), // Only one per org
 		// isActive: boolean("is_active").default(true),
@@ -170,9 +156,9 @@ const permissionPatterns = {
   }
 };
 */
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
 		// metadata: jsonb("metadata"),
 	},
@@ -182,14 +168,38 @@ const permissionPatterns = {
 			foreignColumns: [t.id],
 			name: `fk_${orgDepartmentTableName}_parent`,
 		}),
-		uniqueIndex(`uq_${orgDepartmentTableName}_name`).on(t.orgId, t.name),
+		uniqueIndex(`uq_${orgDepartmentTableName}_slug`).on(t.orgId, t.slug),
 		// uniqueIndex(`uq_${orgDepartmentTableName}_default`)
 		// 	.on(t.orgId, t.isDefault)
 		// 	.where(eq(t.isDefault, true)),
 		// index(`idx_${orgDepartmentTableName}_active`).on(t.isActive),
 		index(`idx_${orgDepartmentTableName}_org_id`).on(t.orgId),
+		index(`idx_${orgDepartmentTableName}_slug`).on(t.slug),
 		index(`idx_${orgDepartmentTableName}_parent_id`).on(t.parentId),
 	],
+);
+
+const orgDepartmentI18nTableName = `${orgDepartmentTableName}_i18n`;
+export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentI18nTableName)(
+	{
+		departmentId: textCols
+			.idFk("department_id")
+			.references(() => orgDepartment.id)
+			.notNull(),
+		/**
+		 * @domain
+		 * Departmental units used for org charts and structured ABAC.
+		 */
+		name: textCols.name().notNull(),
+		description: textCols.shortDescription("description"),
+	},
+	{
+		fkKey: "departmentId",
+		extraConfig: (t, tableName) => [
+			index(`idx_${tableName}_name`).on(t.name),
+			index(`idx_${tableName}_department_id`).on(t.departmentId),
+		],
+	},
 );
 
 const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
@@ -217,10 +227,10 @@ export const orgDepartmentMembership = table(
 
 		status: orgDepartmentMembershipStatusEnum("status").notNull().default("active"),
 		// role: departmentMembershipRoleEnum("role"), // "manager", "member", "lead"
-		joinedAt: timestamp("joined_at").defaultNow(),
+		joinedAt: temporalCols.activity.joinedAt().defaultNow(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.departmentId] }),
@@ -267,7 +277,7 @@ export const orgTeamDepartment = table(
 			.notNull()
 			.default("collaboration"),
 
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => {
 		const base = `${orgTableName}_team_department`;

@@ -2,7 +2,7 @@
 
 import { index, jsonb, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
-import { bytea } from "../_utils/bytea.js";
+import { bytea } from "../_utils/custom-fields.js";
 import { sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
 import { userTableName } from "./_utils/helpers.js";
 
@@ -10,9 +10,9 @@ export const user = table(
 	userTableName,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 		lastLoginAt: timestamp("last_login_at", { precision: 3 }),
 		name: textCols.name().notNull().unique("uq_user_name"),
 		displayName: textCols.displayName().notNull(),
@@ -42,9 +42,9 @@ export const userSession = table(
 	{
 		id: textCols.id().notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		expiresAt: temporalCols.expiresAt().notNull(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		expiresAt: temporalCols.business.expiresAt().notNull(),
 		lastVerifiedAt: timestamp("last_verified_at", { precision: 3 }).notNull(),
 		lastExtendedAt: timestamp("last_extended_at", { precision: 3 }),
 		ipAddress: varchar("ip_address", { length: 45 }),
@@ -78,9 +78,9 @@ export const userEmailVerificationRequest = table(
 	userEmailVerificationTableName,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 		code: textCols.longCode("code").notNull(),
-		expiresAt: temporalCols.expiresAt().notNull(),
+		expiresAt: temporalCols.business.expiresAt().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: sharedCols.userIdFk().notNull(),
 	},
@@ -96,9 +96,9 @@ export const userPasswordResetSession = table(
 	userPasswordResetTableName,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 		code: textCols.longCode("code").notNull(),
-		expiresAt: temporalCols.expiresAt().notNull(),
+		expiresAt: temporalCols.business.expiresAt().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 		userId: sharedCols.userIdFk().notNull(),
 		emailVerifiedAt: timestamp("email_verified_at", { precision: 3 }),

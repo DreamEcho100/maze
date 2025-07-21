@@ -67,7 +67,7 @@ export const orgPermission = table(
 		 * @category Logical grouping for permission management UI
 		 * @examples "course_management", "member_management", "financial", "reporting"
 		 */
-		category: varchar("category", { length: 64 }),
+		category: textCols.category(),
 
 		/**
 		 * @system System permissions cannot be deleted, only disabled
@@ -75,8 +75,8 @@ export const orgPermission = table(
 		isSystem: sharedCols.isSystem(),
 		isActive: sharedCols.isActive(),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -119,8 +119,8 @@ export const orgPolicy = table(
 		 */
 		metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -188,8 +188,8 @@ export const orgPolicyRule = table(
 		// departmentScope: fk("department_scope").references(() => orgDepartment.id),
 		// // Permissions can be scoped to specific departments (branch-like isolation)
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
@@ -230,8 +230,8 @@ export const orgRole = table(
 		//  */
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		createdBy: textCols.idFk("created_by").references(() => user.id),
 	},
 	(t) => [
@@ -265,9 +265,9 @@ export const orgRolePolicy = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: textCols.idFk("assigned_by").references(() => user.id),
+		assignedById: textCols.idFk("assigned_by").references(() => user.id),
 
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.roleId, t.policyId] }),
@@ -309,16 +309,16 @@ export const orgPolicyAssignment = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
-		expiresAt: temporalCols.expiresAt(), // Optional policy expiration
+		assignedById: textCols.idFk("assigned_by").references(() => orgMember.id),
+		expiresAt: temporalCols.business.expiresAt(), // Optional policy expiration
 
 		// /**
 		//  * @metadata Additional assignment context
 		//  */
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment
@@ -382,16 +382,16 @@ export const orgRoleAssignment = table(
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedBy: textCols.idFk("assigned_by").references(() => orgMember.id),
-		expiresAt: timestamp("expires_at"), // Optional role expiration
+		assignedById: textCols.idFk("assigned_by").references(() => orgMember.id),
+		expiresAt: temporalCols.business.expiresAt(), // Optional role expiration
 
 		// /**
 		//  * @metadata Additional assignment context
 		//  */
 		// metadata: jsonb("metadata"),
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		// Ensure only one actor type is set per assignment
@@ -462,7 +462,7 @@ export const orgPermissionAuditLog = table(
 		ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
 
 		evaluatedAt: timestamp("evaluated_at").defaultNow(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index(`idx_${orgPermissionAuditLogTableName}_member`).on(t.memberId),

@@ -59,13 +59,13 @@ export const orgProductCollection = table(
 		 * @softDelete Supports archival/deactivation without full deletion
 		 * @lifecycleStage Marks item as logically deleted
 		 */
-		deletedAt: temporalCols.deletedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
 		/**
 		 * @auditTrail Timestamps for record creation and modification
 		 */
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		index(`idx_${orgProductCollectionTableName}_org_id`).on(t.orgId),
@@ -104,7 +104,7 @@ export const orgProductCollectionProduct = table(
 			.idFk("collection_id")
 			.notNull()
 			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.productId, t.collectionId] }),

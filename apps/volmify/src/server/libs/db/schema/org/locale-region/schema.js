@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { boolean, index, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
-import { currency } from "../../general/locale-currency-market/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { org } from "../schema";
 
@@ -18,7 +17,7 @@ export const orgLocale = table(
 		 * @businessRule Orgs control their supported languages
 		 */
 		isDefault: sharedCols.isDefault(),
-		isEnabled: boolean("is_enabled").default(true),
+		isActive: sharedCols.isActive(),
 
 		// /**
 		//  * @marketStrategy Org's market positioning for this locale
@@ -31,17 +30,18 @@ export const orgLocale = table(
 		 * @localizationStrategy Content localization preferences
 		 * @businessRule How org handles content in this locale
 		 */
+		// TODO: convert to enum, ex: "full_translation", "partial", "auto_translate", other
 		contentStrategy: text("content_strategy"), // "full_translation", "partial", "auto_translate"
 
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
 		uniqueIndex(`uq_${orgLocaleTableName}`).on(t.orgId, t.localeKey),
 		uniqueIndex(`uq_${orgLocaleTableName}_default`)
 			.on(t.orgId, t.isDefault)
 			.where(eq(t.isDefault, true)),
-		index(`idx_${orgLocaleTableName}_enabled`).on(t.isEnabled),
+		index(`idx_${orgLocaleTableName}_is_active`).on(t.isActive),
 		// index(`idx_${orgLocaleTableName}_priority`).on(t.priority),
 	],
 );
@@ -60,14 +60,11 @@ export const orgRegion = table(
 			.idFk("org_id")
 			.notNull()
 			.references(() => org.id),
-		currencyCode: textCols
-			.idFk("currency_code")
-			.references(() => currency.code)
-			.notNull(),
+		currencyCode: sharedCols.currencyCodeFk().notNull(),
 		includesTax: boolean("includes_tax").default(false).notNull(),
-		createdAt: temporalCols.createdAt(),
-		lastUpdatedAt: temporalCols.lastUpdatedAt(),
-		deletedAt: temporalCols.deletedAt(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+		deletedAt: temporalCols.audit.deletedAt(),
 
 		// /**
 		//  * @managementScope Regional management capabilities

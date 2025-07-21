@@ -24,7 +24,7 @@ export const orgLesson = table(
 		id: textCols.id().notNull(),
 		orgId: sharedCols.orgIdFk().notNull(),
 		type: orgLessonTypeEnum("type").notNull(),
-		createdAt: temporalCols.createdAt(),
+		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index(`idx_${orgLessonTableName}_org_id`).on(t.orgId),
