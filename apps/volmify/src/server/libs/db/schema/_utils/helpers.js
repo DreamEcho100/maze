@@ -41,6 +41,7 @@ export const textCols = {
 	code: (name) => varchar(name ?? "code", { length: 32 }), // Currency codes, locale codes
 	/** @param {string} name */
 	longCode: (name) => varchar(name, { length: 32 }),
+	symbol: (name = "symbol") => varchar(name, { length: 16 }), // Currency symbols, short codes
 
 	// Names & Titles (UTF-8 optimized for international)
 	/**

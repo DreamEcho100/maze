@@ -53,5 +53,5 @@ export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	 * - Payment and revenue sharing communication
 	 * - Professional collaboration setup
 	 */
-	usersInstructorProfilesContactInfo: many(userInstructorProfileContactInfo),
+	usersInstructorProfiles: many(userInstructorProfileContactInfo),
 }));

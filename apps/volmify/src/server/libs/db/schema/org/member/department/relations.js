@@ -8,7 +8,7 @@ import {
 	orgDepartmentI18n,
 	orgDepartmentMembership,
 	// orgDepartmentMembership,
-	orgTeamDepartment,
+	orgDepartmentTeam,
 } from "./schema";
 
 export const orgDepartmentRelations = relations(orgDepartment, ({ many, one }) => ({
@@ -25,7 +25,7 @@ export const orgDepartmentRelations = relations(orgDepartment, ({ many, one }) =
 		relationName: "children_departments",
 	}),
 	memberships: many(orgDepartmentMembership),
-	teams: many(orgTeamDepartment),
+	teams: many(orgDepartmentTeam),
 	translations: many(orgDepartmentI18n),
 }));
 export const orgDepartmentI18nRelations = relations(orgDepartmentI18n, ({ one }) => ({
@@ -49,13 +49,13 @@ export const orgDepartmentMembershipRelations = relations(orgDepartmentMembershi
 		references: [orgDepartment.id],
 	}),
 }));
-export const orgDepartmentTeamRelations = relations(orgTeamDepartment, ({ one }) => ({
+export const orgDepartmentTeamRelations = relations(orgDepartmentTeam, ({ one }) => ({
 	department: one(orgDepartment, {
-		fields: [orgTeamDepartment.departmentId],
+		fields: [orgDepartmentTeam.departmentId],
 		references: [orgDepartment.id],
 	}),
 	team: one(orgTeam, {
-		fields: [orgTeamDepartment.teamId],
+		fields: [orgDepartmentTeam.teamId],
 		references: [orgTeam.id],
 	}),
 	// memberships: many(orgDepartmentMembership),

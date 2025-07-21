@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { contactInfo } from "../../../general/contact-info/schema.js";
 import { locale } from "../../../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { instructorOrgAffiliation } from "../../../org/schema.js";
@@ -36,6 +37,20 @@ export const userInstructorProfileRelations = relations(userInstructorProfile, (
 	contactInfo: many(userInstructorProfileContactInfo),
 	translations: many(userInstructorProfileI18n),
 }));
+
+export const userInstructorProfileContactInfoRelations = relations(
+	userInstructorProfileContactInfo,
+	({ one }) => ({
+		instructorProfile: one(userInstructorProfile, {
+			fields: [userInstructorProfileContactInfo.instructorProfileId],
+			references: [userInstructorProfile.id],
+		}),
+		contactInfo: one(contactInfo, {
+			fields: [userInstructorProfileContactInfo.contactInfoId],
+			references: [contactInfo.id],
+		}),
+	}),
+);
 
 export const userInstructorProfileTranslationRelations = relations(
 	userInstructorProfileI18n,

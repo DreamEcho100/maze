@@ -16,6 +16,7 @@ import {
 	// orgPricingZoneCountry,
 } from "../../org/schema.js";
 import { orgTaxRate } from "../../org/tax/schema.js";
+import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
 import { seoAlternateUrl } from "../seo/schema.js";
 import { skillI18n } from "../skill/schema.js";
 import { country, currency, exchangeRate, locale } from "./schema.js";
@@ -111,4 +112,5 @@ export const localeRelations = relations(locale, ({ many }) => ({
 	// usageBasedPaymentPlansTranslations: many(orgUsageBasedPaymentPlanI18n),
 	seoAlternateUrls: many(seoAlternateUrl),
 	skillsI18n: many(skillI18n),
+	usersInstructorsProfilesI18n: many(userInstructorProfileI18n),
 }));

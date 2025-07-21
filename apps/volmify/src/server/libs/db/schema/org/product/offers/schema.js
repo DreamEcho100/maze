@@ -19,6 +19,7 @@ import {
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgMember } from "../../member/schema.js";
 import { orgProductCollection } from "../collection/schema.js";
+import { orgMemberProductOrder } from "../orders/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
 
 const orgDiscountTableName = `${orgTableName}_discount`;

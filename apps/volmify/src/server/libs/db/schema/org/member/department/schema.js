@@ -248,32 +248,32 @@ export const orgDepartmentMembership = table(
 	],
 );
 
-const orgTeamDepartmentTableName = `${orgDepartmentTableName}_team`;
-export const orgTeamDepartmentRelationshipTypeEnum = pgEnum(
-	`${orgTeamDepartmentTableName}_relationship_type`,
+const orgDepartmentTeamTableName = `${orgDepartmentTableName}_team`;
+export const orgDepartmentTeamRelationshipTypeEnum = pgEnum(
+	`${orgDepartmentTeamTableName}_relationship_type`,
 	["lead", "collaboration", "support"],
 );
 /**
- * Team ⇄ Department Mapping
+ * Department ⇄ Team Mapping
  *
  * @abacRole Cross-Domain Access Bridge
  * Connects teams with departments to support matrix-style org charts and
  * permission inheritance across domains.
  */
-export const orgTeamDepartment = table(
-	`${orgTeamDepartmentTableName}`,
+export const orgDepartmentTeam = table(
+	orgDepartmentTeamTableName,
 	{
-		teamId: textCols
-			.idFk("team_id")
-			.notNull()
-			.references(() => orgTeam.id, { onDelete: "cascade" }),
 		departmentId: textCols
 			.idFk("department_id")
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
+		teamId: textCols
+			.idFk("team_id")
+			.notNull()
+			.references(() => orgTeam.id, { onDelete: "cascade" }),
 
 		// isPrimary: boolean("is_primary").default(false), // Single primary department per team
-		relationshipType: orgTeamDepartmentRelationshipTypeEnum("relationship_type")
+		relationshipType: orgDepartmentTeamRelationshipTypeEnum("relationship_type")
 			.notNull()
 			.default("collaboration"),
 

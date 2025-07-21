@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { user } from "../../../user/schema";
 import { orgLocale } from "../../locale-region/schema";
 import { org } from "../../schema";
-import { orgTeamDepartment } from "../department/schema";
+import { orgDepartmentTeam } from "../department/schema";
 import { orgMember } from "../schema";
 import { orgTeam, orgTeamI18n, orgTeamMembership } from "./schema";
 
@@ -16,7 +16,7 @@ export const orgTeamRelations = relations(orgTeam, ({ one, many }) => ({
 		references: [org.id],
 	}),
 	memberships: many(orgTeamMembership),
-	departments: many(orgTeamDepartment),
+	departments: many(orgDepartmentTeam),
 }));
 export const orgTeamI18nRelations = relations(orgTeamI18n, ({ one }) => ({
 	team: one(orgTeam, {

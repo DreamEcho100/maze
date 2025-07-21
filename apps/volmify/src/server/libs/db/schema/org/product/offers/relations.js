@@ -4,6 +4,7 @@ import { orgLocale } from "../../locale-region/schema.js";
 import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";
 import { orgProductCollection } from "../collection/schema.js";
+import { orgMemberProductOrder } from "../orders/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
 import {
 	orgCoupon,
@@ -36,6 +37,7 @@ export const orgDiscountRelations = relations(orgDiscount, ({ one, many }) => ({
 	productsCollections: many(orgDiscountProductCollection),
 	memberOrderDiscountUsage: many(orgMemberOrderDiscountUsage),
 	coupons: many(orgCoupon),
+	orders: many(orgMemberProductOrder),
 }));
 export const orgDiscountI18nRelations = relations(orgDiscountI18n, ({ one, many }) => ({
 	discount: one(orgDiscount, {
@@ -94,9 +96,9 @@ export const orgMemberDiscountUsageRelations = relations(
 			fields: [orgMemberOrderDiscountUsage.discountId],
 			references: [orgDiscount.id],
 		}),
-		order: one(orgMemberOrder, {
+		order: one(orgMemberProductOrder, {
 			fields: [orgMemberOrderDiscountUsage.orderId],
-			references: [orgMemberOrder.id],
+			references: [orgMemberProductOrder.id],
 		}),
 	}),
 );

@@ -34,6 +34,7 @@ import { org, orgBrand } from "../schema.js";
 import { orgProductCourse } from "./by-type/course/schema.js";
 import { orgProductCollectionProduct } from "./collection/schema.js";
 import { orgDiscountProduct, orgDiscountProductVariant } from "./offers/schema.js";
+import { orgMemberProductOrder } from "./orders/schema.js";
 import { orgProductVariantPaymentPlan } from "./payment/schema.js";
 import {
 	// discountProduct,
@@ -127,6 +128,7 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	}),
 
 	discounts: many(orgDiscountProduct),
+	orders: many(orgMemberProductOrder),
 }));
 
 /**
