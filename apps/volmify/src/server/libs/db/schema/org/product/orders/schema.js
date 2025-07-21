@@ -1,21 +1,7 @@
 import { sql } from "drizzle-orm";
-import {
-	boolean,
-	check,
-	index,
-	integer,
-	jsonb,
-	pgEnum,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
 
-import {
-	numericCols,
-	sharedCols,
-	table,
-	temporalCols,
-	textCols,
-} from "../../../_utils/helpers.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
 import { orgTaxRate } from "../../tax/schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard } from "../offers/schema.js";
@@ -25,19 +11,16 @@ import { orgProduct, orgProductVariant } from "../schema.js";
 const orgMemberProductOrderTableName = `${orgTableName}_member_product_order`;
 
 // ✅ ORDER STATUS: Complete e-commerce lifecycle
-export const orgMemberProductOrderStatusEnum = pgEnum(
-	`${orgMemberProductOrderTableName}_status`,
-	[
-		"pending", // Order created, awaiting payment
-		"processing", // Payment received, processing order
-		"confirmed", // Order confirmed, access granted
-		"fulfilled", // Digital delivery completed
-		"cancelled", // Order cancelled before payment
-		"refunded", // Order refunded after payment
-		"failed", // Payment or processing failed
-		"expired", // Order expired without payment
-	],
-);
+export const orgMemberProductOrderStatusEnum = pgEnum(`${orgMemberProductOrderTableName}_status`, [
+	"pending", // Order created, awaiting payment
+	"processing", // Payment received, processing order
+	"confirmed", // Order confirmed, access granted
+	"fulfilled", // Digital delivery completed
+	"cancelled", // Order cancelled before payment
+	"refunded", // Order refunded after payment
+	"failed", // Payment or processing failed
+	"expired", // Order expired without payment
+]);
 
 // ✅ PAYMENT STATUS: Financial transaction tracking
 export const orgMemberProductOrderPaymentStatusEnum = pgEnum(
@@ -105,9 +88,7 @@ export const orgMemberProductOrder = table(
 		 * @businessRule Determines order workflow and customer communication
 		 * @accessControl Status affects content access permissions
 		 */
-		status: orgMemberProductOrderStatusEnum("status")
-			.notNull()
-			.default("pending"),
+		status: orgMemberProductOrderStatusEnum("status").notNull().default("pending"),
 
 		/**
 		 * @paymentTracking Financial transaction status for revenue management
@@ -130,18 +111,14 @@ export const orgMemberProductOrder = table(
 		 * @businessRule Sum of all applied discounts (coupons, promotions, gift cards)
 		 * @revenueImpact Reduces final order amount and affects revenue attribution
 		 */
-		totalDiscountAmount: numericCols.currency
-			.amount("discount_amount")
-			.default("0.00"),
+		totalDiscountAmount: numericCols.currency.amount("discount_amount").default("0.00"),
 
 		/**
 		 * @taxCompliance Tax amount calculated based on org tax policies
 		 * @businessRule Tax calculation respects regional tax requirements
 		 * @financialReporting Essential for tax reporting and compliance
 		 */
-		totalTaxAmount: numericCols.currency
-			.amount("total_tax_amount")
-			.default("0.00"),
+		totalTaxAmount: numericCols.currency.amount("total_tax_amount").default("0.00"),
 
 		/**
 		 * @finalPricing Total amount charged to customer
@@ -202,50 +179,29 @@ export const orgMemberProductOrder = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex(`uq_${orgMemberProductOrderTableName}_order_number_org`).on(
-			t.orgId,
-			t.displayId,
-		),
+		uniqueIndex(`uq_${orgMemberProductOrderTableName}_order_number_org`).on(t.orgId, t.displayId),
 
 		// Performance Indexes - Multi-tenant queries
-		index(`idx_${orgMemberProductOrderTableName}_org_status`).on(
-			t.orgId,
-			t.status,
-		),
-		index(`idx_${orgMemberProductOrderTableName}_member_status`).on(
-			t.memberId,
-			t.status,
-		),
+		index(`idx_${orgMemberProductOrderTableName}_org_status`).on(t.orgId, t.status),
+		index(`idx_${orgMemberProductOrderTableName}_member_status`).on(t.memberId, t.status),
 
 		// Financial reporting indexes
-		index(`idx_${orgMemberProductOrderTableName}_payment_status`).on(
-			t.paymentStatus,
-		),
-		index(`idx_${orgMemberProductOrderTableName}_total_amount`).on(
-			t.totalAmount,
-		),
+		index(`idx_${orgMemberProductOrderTableName}_payment_status`).on(t.paymentStatus),
+		index(`idx_${orgMemberProductOrderTableName}_total_amount`).on(t.totalAmount),
 		index(`idx_${orgMemberProductOrderTableName}_currency`).on(t.currencyCode),
 
 		// Time-based analytics indexes
 		index(`idx_${orgMemberProductOrderTableName}_ordered_at`).on(t.orderedAt),
 		index(`idx_${orgMemberProductOrderTableName}_paid_at`).on(t.paidAt),
-		index(`idx_${orgMemberProductOrderTableName}_fulfilled_at`).on(
-			t.fulfilledAt,
-		),
+		index(`idx_${orgMemberProductOrderTableName}_fulfilled_at`).on(t.fulfilledAt),
 
 		// Customer service indexes
-		index(`idx_${orgMemberProductOrderTableName}_external_payment`).on(
-			t.externalPaymentId,
-		),
-		index(`idx_${orgMemberProductOrderTableName}_payment_method`).on(
-			t.paymentMethod,
-		),
+		index(`idx_${orgMemberProductOrderTableName}_external_payment`).on(t.externalPaymentId),
+		index(`idx_${orgMemberProductOrderTableName}_payment_method`).on(t.paymentMethod),
 
 		// Audit indexes
 		index(`idx_${orgMemberProductOrderTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberProductOrderTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgMemberProductOrderTableName}_last_updated_at`).on(t.lastUpdatedAt),
 
 		// Business logic constraints
 		check(
@@ -256,10 +212,7 @@ export const orgMemberProductOrder = table(
 			"positive_amounts",
 			sql`${t.subtotalAmount} >= 0 AND ${t.totalDiscountAmount} >= 0 AND ${t.totalTaxAmount} >= 0`,
 		),
-		check(
-			"valid_payment_timing",
-			sql`${t.paidAt} IS NULL OR ${t.paidAt} >= ${t.orderedAt}`,
-		),
+		check("valid_payment_timing", sql`${t.paidAt} IS NULL OR ${t.paidAt} >= ${t.orderedAt}`),
 		check(
 			"valid_fulfillment_timing",
 			sql`${t.fulfilledAt} IS NULL OR ${t.fulfilledAt} >= ${t.orderedAt}`,
@@ -340,22 +293,18 @@ export const orgMemberProductOrderItem = table(
 			t.productId,
 			t.variantId,
 		),
-		index(`idx_${orgMemberProductOrderItemTableName}_payment_plan_id`).on(
-			t.paymentPlanId,
-		),
+		index(`idx_${orgMemberProductOrderItemTableName}_payment_plan_id`).on(t.paymentPlanId),
 
 		// Business constraints
 		check("positive_quantity", sql`${t.quantity} > 0`),
-		check(
-			"total_price_calculation",
-			sql`${t.totalPrice} = ${t.unitPrice} * ${t.quantity}`,
-		),
+		check("total_price_calculation", sql`${t.totalPrice} = ${t.unitPrice} * ${t.quantity}`),
 		check("valid_access_tier", sql`${t.selectedAccessTier} >= 0`),
 	],
 );
 
 const orgMemberProductOrderDiscountTableName = `${orgMemberProductOrderTableName}_discount`;
 
+// TODO: orgMemberProductOrderDiscount but for order item?
 /**
  * Order Discount Applications - Promotional Campaign Tracking
  *
@@ -367,8 +316,8 @@ export const orgMemberProductOrderDiscount = table(
 	{
 		id: textCols.id().notNull(),
 
-		orderItemId: textCols
-			.idFk("order_item_id")
+		orderId: textCols
+			.idFk("order_id")
 			.notNull()
 			.references(() => orgMemberProductOrder.id, { onDelete: "cascade" }),
 
@@ -378,9 +327,7 @@ export const orgMemberProductOrderDiscount = table(
 		discountId: textCols
 			.idFk("discount_id")
 			.references(() => orgDiscount.id, { onDelete: "set null" }),
-		couponId: textCols
-			.idFk("coupon_id")
-			.references(() => orgCoupon.id, { onDelete: "set null" }),
+		couponId: textCols.idFk("coupon_id").references(() => orgCoupon.id, { onDelete: "set null" }),
 		giftCardId: textCols
 			.idFk("gift_card_id")
 			.references(() => orgGiftCard.id, { onDelete: "set null" }),
@@ -394,18 +341,10 @@ export const orgMemberProductOrderDiscount = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderDiscountTableName}_order_item_id`).on(
-			t.orderItemId,
-		),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_discount_id`).on(
-			t.discountId,
-		),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_coupon_id`).on(
-			t.couponId,
-		),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_gift_card_id`).on(
-			t.giftCardId,
-		),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_order_item_id`).on(t.orderId),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_discount_id`).on(t.discountId),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_coupon_id`).on(t.couponId),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_gift_card_id`).on(t.giftCardId),
 
 		// Business constraints
 		check("positive_discount", sql`${t.discountAmount} >= 0`),
@@ -467,9 +406,7 @@ export const orgMemberProductOrderTaxCalculation = table(
 		 * @auditTrail Shows how tax amount was derived
 		 */
 		taxableAmount: numericCols.currency.amount("taxable_amount").notNull(),
-		calculatedTaxAmount: numericCols.currency
-			.amount("calculated_tax_amount")
-			.notNull(),
+		calculatedTaxAmount: numericCols.currency.amount("calculated_tax_amount").notNull(),
 
 		/**
 		 * @regionSnapshot Tax jurisdiction at time of order
@@ -490,24 +427,13 @@ export const orgMemberProductOrderTaxCalculation = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_order_id`).on(
-			t.orderId,
-		),
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_tax_rate_id`).on(
-			t.taxRateId,
-		),
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_rate`).on(
-			t.taxRate,
-		),
-		index(
-			`idx_${orgMemberProductOrderTaxCalculationTableName}_jurisdiction`,
-		).on(t.taxJurisdiction),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_order_id`).on(t.orderId),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_tax_rate_id`).on(t.taxRateId),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_rate`).on(t.taxRate),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_jurisdiction`).on(t.taxJurisdiction),
 
 		// Business constraints
-		check(
-			"positive_amounts",
-			sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`,
-		),
+		check("positive_amounts", sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`),
 		check(
 			"tax_calculation_accuracy",
 			sql`${t.calculatedTaxAmount} = ROUND(${t.taxableAmount} * ${t.taxRate} / 100, 2)`,
@@ -540,20 +466,17 @@ export const paymentMethodEnum = pgEnum("payment_method", [
 	"store_credit",
 ]);
 
-export const paymentTransactionStatusEnum = pgEnum(
-	"payment_transaction_status",
-	[
-		"pending",
-		"authorized",
-		"captured",
-		"settled",
-		"failed",
-		"cancelled",
-		"refunded",
-		"disputed",
-		"chargeback",
-	],
-);
+export const paymentTransactionStatusEnum = pgEnum("payment_transaction_status", [
+	"pending",
+	"authorized",
+	"captured",
+	"settled",
+	"failed",
+	"cancelled",
+	"refunded",
+	"disputed",
+	"chargeback",
+]);
 
 /**
  * Order Payment Details - Complete Payment Transaction Record
@@ -588,9 +511,7 @@ export const orgMemberProductOrderPayment = table(
 		 * @financialDetails Payment amounts and fees
 		 */
 		grossAmount: numericCols.currency.amount("gross_amount").notNull(), // What customer paid
-		processingFee: numericCols.currency
-			.amount("processing_fee")
-			.default("0.00"), // Gateway fee
+		processingFee: numericCols.currency.amount("processing_fee").default("0.00"), // Gateway fee
 		netAmount: numericCols.currency.amount("net_amount").notNull(), // What org receives
 
 		/**
@@ -620,47 +541,23 @@ export const orgMemberProductOrderPayment = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderPaymentTableName}_order_id`).on(
-			t.orderId,
+		index(`idx_${orgMemberProductOrderPaymentTableName}_order_id`).on(t.orderId),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway_transaction`).on(
+			t.gatewayTransactionId,
 		),
-		index(
-			`idx_${orgMemberProductOrderPaymentTableName}_gateway_transaction`,
-		).on(t.gatewayTransactionId),
 		index(`idx_${orgMemberProductOrderPaymentTableName}_status`).on(t.status),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway`).on(
-			t.paymentGateway,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_method`).on(
-			t.paymentMethod,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_authorized_at`).on(
-			t.authorizedAt,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_captured_at`).on(
-			t.capturedAt,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_settled_at`).on(
-			t.settledAt,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_disputed_at`).on(
-			t.disputedAt,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway`).on(t.paymentGateway),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_method`).on(t.paymentMethod),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_authorized_at`).on(t.authorizedAt),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_captured_at`).on(t.capturedAt),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_settled_at`).on(t.settledAt),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_disputed_at`).on(t.disputedAt),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_last_updated_at`).on(t.lastUpdatedAt),
 
 		// Business constraints
-		check(
-			"amount_calculation",
-			sql`${t.netAmount} = ${t.grossAmount} - ${t.processingFee}`,
-		),
-		check(
-			"positive_amounts",
-			sql`${t.grossAmount} >= 0 AND ${t.processingFee} >= 0`,
-		),
+		check("amount_calculation", sql`${t.netAmount} = ${t.grossAmount} - ${t.processingFee}`),
+		check("positive_amounts", sql`${t.grossAmount} >= 0 AND ${t.processingFee} >= 0`),
 	],
 );
 

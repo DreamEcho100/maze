@@ -75,9 +75,9 @@ export const orgMemberProductOrderItemRelations = relations(
 export const orgMemberProductOrderDiscountRelations = relations(
 	orgMemberProductOrderDiscount,
 	({ one }) => ({
-		order: one(orgMemberProductOrder, {
-			fields: [orgMemberProductOrderDiscount.orderItemId],
-			references: [orgMemberProductOrder.id],
+		order: one(orgMemberProductOrderItem, {
+			fields: [orgMemberProductOrderDiscount.orderId],
+			references: [orgMemberProductOrderItem.id],
 		}),
 		discount: one(orgDiscount, {
 			fields: [orgMemberProductOrderDiscount.discountId],
@@ -91,10 +91,10 @@ export const orgMemberProductOrderDiscountRelations = relations(
 			fields: [orgMemberProductOrderDiscount.giftCardId],
 			references: [orgGiftCard.id],
 		}),
-		orderItem: one(orgMemberProductOrderItem, {
-			fields: [orgMemberProductOrderDiscount.orderItemId],
-			references: [orgMemberProductOrderItem.id],
-		}),
+		// order: one(orgMemberProductOrder		, {
+		// 	fields: [orgMemberProductOrderDiscount.orderId],
+		// 	references: [orgMemberProductOrder.id],
+		// }),
 	}),
 );
 

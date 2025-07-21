@@ -39,12 +39,12 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)
 
 export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", ["percent", "fixed"]);
 const orgTaxRateTableName = `${orgTableName}_tax_rates`;
-export const orgTaxRateMethodEnum = pgEnum("org_tax_rates_method", [
-	"inclusive", // Tax included in price, example equation on how it will apply: price * (1 - discount) * (1 + tax)
-	"exclusive", // Tax added on top of price, example equation on how it will apply: price * (1 - discount) + tax
-	"compound", // Tax applied on top of tax, e.g., VAT on VAT, example equation on how it will apply: price * (1 - discount) * (1 + tax) * (1 + compoundTax)
-	"flat", // Flat fee per item, e.g., environmental tax, example equation on how it will apply: price * (1 - discount) + flatFee
-]);
+// export const orgTaxRateMethodEnum = pgEnum("org_tax_rates_method", [
+// 	"inclusive", // Tax included in price, example equation on how it will apply: price * (1 - discount) * (1 + tax)
+// 	"exclusive", // Tax added on top of price, example equation on how it will apply: price * (1 - discount) + tax
+// 	"compound", // Tax applied on top of tax, e.g., VAT on VAT, example equation on how it will apply: price * (1 - discount) * (1 + tax) * (1 + compoundTax)
+// 	"flat", // Flat fee per item, e.g., environmental tax, example equation on how it will apply: price * (1 - discount) + flatFee
+// ]);
 /**
  * @domain Taxation
  * @description Individual tax rules, scoped to regions and optionally time-bounded.
@@ -67,7 +67,7 @@ export const orgTaxRate = table(
 		code: textCols.code().notNull(),
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
-		method: orgTaxRateMethodEnum("method").notNull().default("inclusive"),
+		// method: orgTaxRateMethodEnum("method").notNull().default("inclusive"),
 		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
 		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
@@ -75,6 +75,7 @@ export const orgTaxRate = table(
 		 * @compound When true, this tax is applied after previous ones.
 		 */
 		isCompound: boolean("is_compound").default(false).notNull(),
+		isInclusive: boolean("is_compound").default(false).notNull(),
 
 		priority: numericCols.priority().notNull(),
 
