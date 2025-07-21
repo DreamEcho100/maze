@@ -14,6 +14,7 @@ import { seoMetadata } from "../general/seo/schema";
 import { orgLocale } from "../org/locale-region/schema";
 import { orgMember } from "../org/member/schema";
 import { org } from "../org/schema";
+import { userProfile } from "../user/profile/schema";
 import { user } from "../user/schema";
 import { byteaUlid } from "./custom-fields";
 
@@ -239,6 +240,7 @@ export const temporalCols = {
 		expiresAt: (name = "expires_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		publishedAt: (name = "published_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		scheduledAt: (name = "scheduled_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		verifiedAt: (name = "verified_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ FINANCIAL: High precision for financial events
@@ -278,6 +280,8 @@ export const sharedCols = {
 		textCols.idFk("member_id").references(() => orgMember.id, { onDelete: "cascade" }),
 
 	userIdFk: () => textCols.idFk("user_id").references(() => user.id, { onDelete: "cascade" }),
+	userProfileIdFk: () =>
+		textCols.idFk("user_profile_id").references(() => userProfile.id, { onDelete: "cascade" }),
 
 	// Localization columns
 	/** @param {string} [name] */

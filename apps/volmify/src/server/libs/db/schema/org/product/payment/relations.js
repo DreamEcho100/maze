@@ -18,8 +18,8 @@
  * platform growth and new monetization strategies while maintaining creator attribution.
  *
  * @creatorEconomyIntegration
- * Payment relations integrate with instructor attribution systems enabling revenue sharing
- * calculations and creator compensation workflows within org boundaries while
+ * Payment relations integrate with Org member attribution systems enabling revenue sharing
+ * calculations and creator/Org-member compensation workflows within org boundaries while
  * supporting cross-org professional collaboration patterns.
  *
  * @variantIntegration

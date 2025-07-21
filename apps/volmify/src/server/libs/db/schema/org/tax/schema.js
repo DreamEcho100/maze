@@ -39,6 +39,12 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)
 
 export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", ["percent", "fixed"]);
 const orgTaxRateTableName = `${orgTableName}_tax_rates`;
+export const orgTaxRateMethodEnum = pgEnum("org_tax_rates_method", [
+	"inclusive", // Tax included in price, example equation on how it will apply: price * (1 - discount) * (1 + tax)
+	"exclusive", // Tax added on top of price, example equation on how it will apply: price * (1 - discount) + tax
+	"compound", // Tax applied on top of tax, e.g., VAT on VAT, example equation on how it will apply: price * (1 - discount) * (1 + tax) * (1 + compoundTax)
+	"flat", // Flat fee per item, e.g., environmental tax, example equation on how it will apply: price * (1 - discount) + flatFee
+]);
 /**
  * @domain Taxation
  * @description Individual tax rules, scoped to regions and optionally time-bounded.
@@ -47,15 +53,21 @@ export const orgTaxRate = table(
 	orgTaxRateTableName,
 	{
 		id: textCols.id().notNull(),
+		// TODO: instead of regionId, we can make a many-to-many relation with orgRegion
+		// and use a junction table to link rates to multiple regions
+		// So we can have rates that apply to multiple regions
 		regionId: textCols
 			.idFk("region_id")
 			.references(() => orgRegion.id)
 			.notNull(),
+		// Add a flag to indicate if it needs to be applied to an orgRegion
+		isRegionScoped: boolean("is_region_scoped").default(true).notNull(),
 
 		// name: textCols.name().notNull(),
 		code: textCols.code().notNull(),
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
+		method: orgTaxRateMethodEnum("method").notNull().default("inclusive"),
 		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
 		currencyCode: sharedCols.currencyCodeFk().notNull(),
 

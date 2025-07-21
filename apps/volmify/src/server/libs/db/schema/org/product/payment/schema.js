@@ -136,9 +136,9 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
  * eliminating productPrice table redundancy and simplifying pricing management workflows.
  * Regional pricing, currency support, tax rates, and promotional pricing all integrated.
  *
- * @orgalRevenue Revenue tracking supports creator economy workflows with instructor
+ * @orgalRevenue Revenue tracking supports creator economy workflows with Org-member
  * attribution and org analytics for comprehensive financial reporting and
- * creator compensation calculations.
+ * Org-member compensation calculations.
  */
 export const orgProductVariantPaymentPlan = table(
 	orgProductVariantPaymentPlanTableName,

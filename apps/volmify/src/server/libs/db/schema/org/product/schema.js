@@ -4,21 +4,21 @@
  * @architecture Multi-Tenant Product Catalog + Professional Attribution + Payment Plan Integration
  * E-commerce product system supporting multiple product types (physical, digital, course, service)
  * with org boundaries, professional content attribution, and integrated payment strategies.
- * Designed for creator economy where instructors create educational content within org contexts
+ * Designed for creator economy where Org Members create educational content within org contexts
  * while maintaining clear revenue attribution and brand identity integration.
  *
  * @designPattern CTI + Professional Attribution + Brand Attribution + Variant-Based Commerce + Payment Integration
  * - CTI Pattern: Course-specific tables extend base product for educational content specialization
- * - Professional Attribution: Instructor-product attribution for creator economy revenue sharing workflows
+ * - Professional Attribution: Org Member-product attribution for creator economy revenue sharing workflows
  * - Brand Attribution: Org brand identity integration for consistent marketing strategies
  * - Variant-Based Commerce: Product variations (access levels, features) with independent pricing strategies
  * - Payment Integration: Direct integration with payment plans eliminating separate pricing table redundancy
  *
  * @integrationPoints
- * - Professional Attribution: Instructor revenue sharing and content creation workflows
+ * - Professional Attribution: Org Member revenue sharing and content creation workflows
  * - Brand Integration: Org brand identity and marketing attribution systems
  * - Payment Integration: Product variants connect directly to sophisticated payment plan strategies
- * - Course System: Educational content creation and delivery for instructor economy
+ * - Course System: Educational content creation and delivery for Org Member economy
  * - Promotional Integration: Discount campaigns and promotional strategies for revenue optimization
  *
  * @businessValue
@@ -35,10 +35,9 @@
  */
 
 import { eq } from "drizzle-orm";
-import { decimal, index, jsonb, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, jsonb, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
-import { userInstructorProfile } from "../../user/profile/instructor/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { orgBrand } from "../schema.js";
 import { orgTaxCategory } from "../tax/schema.js";
@@ -55,7 +54,7 @@ const orgProductTableName = `${orgTableName}_product`;
  * @businessLogic Determines product behavior and available features:
  * - physical: Traditional physical goods requiring shipping and inventory management
  * - digital: Digital downloads and software products with instant delivery
- * - course: Educational content with instructor attribution and creator economy workflows
+ * - course: Educational content with Org Member attribution and creator economy workflows
  * - service: Professional services and consultations with booking and delivery workflows
  */
 export const productTypeEnum = pgEnum(`${orgProductTableName}_type`, [
@@ -91,7 +90,7 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
  * different pricing strategies, access levels, or physical variations. Products serve as
  * the marketing and content foundation while variants handle pricing and commerce transactions.
  *
- * @professionalContext Course products connect to instructor profiles for creator economy
+ * @professionalContext Course products connect to Org Member profiles for creator economy
  * workflows including content attribution, revenue sharing calculations, and cross-org
  * professional collaboration while maintaining clear org boundaries.
  *
@@ -135,7 +134,7 @@ export const orgProduct = table(
 
 		/**
 		 * @businessRule Determines available features and behavior patterns
-		 * @courseContext When type='course', enables instructor attribution and educational workflows
+		 * @courseContext When type='course', enables Org Member attribution and educational workflows
 		 * @paymentContext Different types may have different payment plan capabilities and features
 		 */
 		type: productTypeEnum("type").default("physical").notNull(),
@@ -237,8 +236,8 @@ const orgProductVariantTable = `${orgProductTableName}_variant`;
  * and multi-currency support through integrated payment plan pricing.
  *
  * @courseContext For course products, variants might represent different access levels
- * (basic, premium, VIP) with different features and instructor interaction levels while
- * maintaining consistent content attribution to instructor profiles.
+ * (basic, premium, VIP) with different features and Org Member interaction levels while
+ * maintaining consistent content attribution to Org Member profiles.
  *
  * @scalabilityPattern Variant-based commerce scales across all product types while
  * maintaining consistent pricing and payment workflows regardless of product complexity
@@ -420,114 +419,6 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantI18nTabl
 			index(`idx_${tableName}_variant_id`).on(t.variantId),
 		],
 	},
-);
-
-// -------------------------------------
-// PROFESSIONAL ATTRIBUTION (CREATOR ECONOMY)
-// -------------------------------------
-
-const orgProductInstructorAttributionTableName = `${orgProductTableName}_instructor_attribution`;
-/**
- * Product Instructor Attribution - Creator Economy Professional Attribution
- *
- * @businessLogic Links products to instructor profiles for creator economy workflows
- * including content attribution, revenue sharing calculations, and professional recognition.
- * Enables instructors to receive credit and compensation for educational content creation
- * within org boundaries while supporting cross-org collaboration.
- *
- * @professionalContext Instructors maintain professional identity across orgs
- * while content attribution respects org boundaries. Revenue sharing enables
- * fair compensation for content creation within org business models.
- *
- * @orgScope Attribution operates within org context ensuring multi-tenant
- * isolation while enabling professional collaboration and revenue sharing workflows that
- * respect org business policies and creator compensation structures.
- *
- * @scalabilityPattern This attribution pattern can be replicated for other professional
- * types (consultants, designers, coaches) enabling diverse creator economy scenarios within
- * multi-tenant org architecture while maintaining consistent attribution workflows.
- *
- * @revenueIntegration Revenue sharing percentages integrate with payment plan revenue
- * calculations to ensure accurate creator compensation based on actual subscription and
- * purchase revenue generated by attributed content.
- */
-export const orgProductInstructorAttribution = table(
-	orgProductInstructorAttributionTableName,
-	{
-		id: textCols.id().notNull(),
-
-		/**
-		 * @professionalIdentity Instructor's professional profile for content attribution
-		 * @businessRule Links professional identity to content creation and revenue sharing
-		 * @crossOrgal Professional identity maintained across org boundaries
-		 */
-		instructorProfileId: textCols
-			.idFk("instructor_profile_id")
-			.notNull()
-			.references(() => userInstructorProfile.id),
-
-		/**
-		 * @contentAttribution Product this instructor contributed to creating
-		 * @businessRule Links professional contribution to specific org content
-		 * @revenueTracking Basis for revenue attribution and creator compensation calculations
-		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
-
-		/**
-		 * @orgContext Org context for this professional attribution
-		 * @businessRule Ensures attribution operates within org boundaries
-		 * @multiTenant Maintains org isolation while enabling professional attribution
-		 */
-		orgId: sharedCols.orgIdFk().notNull(),
-
-		/**
-		 * @revenueSharing Percentage of product revenue attributed to this instructor
-		 * @businessRule Enables fair creator compensation based on contribution level
-		 * @financialIntegration Integrates with payment plan revenue for accurate calculations
-		 */
-		revenueSharePercentage: decimal("revenue_share_percentage", {
-			precision: 5,
-			scale: 2,
-		}).default("0.00"),
-
-		// /**
-		//  * @professionalRole Instructor's role in content creation and delivery
-		//  * @businessRule Primary instructors typically handle content creation and student interaction
-		//  * @attributionHierarchy Enables clear professional responsibility and recognition
-		//  */
-		// isPrimary: boolean("is_primary").default(false),
-
-		createdAt: temporalCols.audit.createdAt(),
-		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
-		deletedAt: temporalCols.audit.deletedAt(),
-	},
-	(t) => [
-		// Business Constraints
-		uniqueIndex(`uq_${orgProductInstructorAttributionTableName}_org`).on(
-			t.productId,
-			t.instructorProfileId,
-			t.orgId,
-		),
-
-		// Performance Indexes for Professional Queries
-		index(`idx_${orgProductInstructorAttributionTableName}_profile_id`).on(t.instructorProfileId),
-		index(`idx_${orgProductInstructorAttributionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductInstructorAttributionTableName}_product_id`).on(t.productId),
-		// index(`idx_${orgProductInstructorAttributionTableName}_primary`).on(t.isPrimary),
-
-		// Revenue Attribution Queries
-		index(`idx_${orgProductInstructorAttributionTableName}_revenue`).on(
-			t.productId,
-			t.revenueSharePercentage,
-		),
-
-		index(`idx_${orgProductInstructorAttributionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductInstructorAttributionTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductInstructorAttributionTableName}_deleted_at`).on(t.deletedAt),
-	],
 );
 
 const orgProductBrandTableName = `${orgProductTableName}_brand_attribution`;

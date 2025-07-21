@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { boolean, index, jsonb, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { table, temporalCols, textCols } from "../../_utils/helpers";
 
 /**
@@ -120,7 +120,7 @@ export const contactInfo = table(
 		 * @trust
 		 * Used for trust scoring and prioritizing verified communication channels.
 		 */
-		verifiedAt: timestamp("verified_at"),
+		verifiedAt: temporalCols.business.verifiedAt(),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -161,7 +161,7 @@ export const contactInfo = table(
 		 */
 		uniqueIndex("uq_contact_info_email_entity").on(t.entityType, t.entityId, t.email),
 
-		index("idx_contact_info_verified").on(t.verifiedAt),
+		index("idx_contact_info_verified_at").on(t.verifiedAt),
 		index("idx_contact_info_created_at").on(t.createdAt),
 		index("idx_contact_info_last_updated_at").on(t.lastUpdatedAt),
 		index("idx_contact_info_deleted_at").on(t.deletedAt),

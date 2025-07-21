@@ -17,6 +17,7 @@ import {
 } from "../../org/schema.js";
 import { orgTaxRate } from "../../org/tax/schema.js";
 import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
+import { userProfileI18n } from "../../user/profile/schema.js";
 import { seoAlternateUrl } from "../seo/schema.js";
 import { skillI18n } from "../skill/schema.js";
 import { country, currency, exchangeRate, locale } from "./schema.js";
@@ -55,7 +56,7 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	orgsGiftCards: many(orgGiftCard),
 }));
 
-export const countryRelations = relations(country, ({ one, many }) => ({
+export const countryRelations = relations(country, ({ one }) => ({
 	currency: one(currency, {
 		fields: [country.currencyCode],
 		references: [currency.code],
@@ -78,39 +79,9 @@ export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
 }));
 
 export const localeRelations = relations(locale, ({ many }) => ({
-	// marketsTemplatesTranslations: many(marketTemplateTranslation),
-
-	// productsCoursesTranslations: many(orgProductCourseI18n),
-	// skillsTranslations: many(skillI18n),
-	// productsCoursesModulesTranslations: many(orgProductCourseModuleI18n),
-	// productsCoursesModulesSectionsTranslations: many(
-	// 	orgProductCourseModuleSectionI18n,
-	// ),
-	// productsCoursesModulesSectionsLessonsTranslations: many(
-	// 	orgProductCourseModuleSectionLessonI18n,
-	// ),
-	// lessonsTranslations: many(orgLessonI18n),
-	// orgsBrandsTranslations: many(orgBrandTranslation),
-	// // orgMarketsTranslations: many(orgMarketTranslation),
-	// productsTranslations: many(orgProductI18n),
-	// productsVariantsTranslations: many(orgProductVariantI18n),
-
-	// usersInstructorProfilesTranslations: many(userInstructorProfileTranslation),
-	// discountsTranslation: many(orgDiscountI18n),
-	// couponsTranslation: many(orgCouponI18n),
-	// giftCardsTranslation: many(orgGiftCardI18n),
-	// promotionsTranslation: many(orgPromotionI18n),
-	// productsVariantsPaymentPlansTranslations: many(
-	// 	orgProductVariantPaymentPlanI18n,
-	// ),
-
-	// // The following is not shared with the SEO table
-	// // oneTimePaymentPlansTranslations: many(orgProductVariantPaymentPlanOneTimeTypeI18n),
-	// subscriptionPaymentPlansTranslations: many(
-	// 	orgProductVariantPaymentPlanSubscriptionTypeI18n,
-	// ),
-	// usageBasedPaymentPlansTranslations: many(orgUsageBasedPaymentPlanI18n),
 	seoAlternateUrls: many(seoAlternateUrl),
 	skillsI18n: many(skillI18n),
 	usersInstructorsProfilesI18n: many(userInstructorProfileI18n),
+	usersProfilesI18n: many(userProfileI18n),
+	usersInstructorProfilesI18n: many(userInstructorProfileI18n),
 }));

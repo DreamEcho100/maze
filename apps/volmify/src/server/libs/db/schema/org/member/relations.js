@@ -1,6 +1,5 @@
 import { relations } from "drizzle-orm";
-
-import { user } from "../../user/schema.js";
+import { userProfile } from "../../user/profile/schema.js";
 import {
 	orgMemberLearningProfile,
 	orgMemberProductCourseChallengeRating,
@@ -23,10 +22,6 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 		fields: [orgMember.orgId],
 		references: [org.id],
 	}),
-	user: one(user, {
-		fields: [orgMember.userId],
-		references: [user.id],
-	}),
 	teamsMemberships: many(orgTeamMembership),
 	departmentMemberships: many(orgDepartmentMembership),
 	productsVariantsPaymentPlansSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
@@ -37,8 +32,15 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	invitationsReceived: many(orgMemberInvitation, {
 		relationName: "org_member_invitation_received",
 	}),
+	invitationsApproved: many(orgMemberInvitation, {
+		relationName: "org_member_invitation_approved",
+	}),
 	invitationsSent: many(orgMemberInvitation, {
 		relationName: "org_member_invitation_sent",
+	}),
+	userProfile: one(userProfile, {
+		fields: [orgMember.userProfileId],
+		references: [userProfile.id],
 	}),
 
 	// groups: many(orgMemberPermissionsGroup),
@@ -59,11 +61,16 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 	invitedByMember: one(orgMember, {
 		fields: [orgMemberInvitation.invitedByMemberId],
 		references: [orgMember.id],
-		relationName: "org_member_invitation_sent_by",
+		relationName: "org_member_invitation_sent",
+	}),
+	approvedByMember: one(orgMember, {
+		fields: [orgMemberInvitation.approvedByMemberId],
+		references: [orgMember.id],
+		relationName: "org_member_invitation_approved",
 	}),
 	invitedMember: one(orgMember, {
 		fields: [orgMemberInvitation.memberId],
 		references: [orgMember.id],
-		relationName: "org_member_invitation_received_by",
+		relationName: "org_member_invitation_received",
 	}),
 }));

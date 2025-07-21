@@ -1,13 +1,12 @@
 import { relations } from "drizzle-orm";
-import { contactInfo } from "../../../general/contact-info/schema.js";
 import { locale } from "../../../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
-import { instructorOrgAffiliation } from "../../../org/schema.js";
-import { user } from "../../../user/schema.js";
+import { userProfile } from "../schema.js";
 import {
 	userInstructorProfile,
-	userInstructorProfileContactInfo,
 	userInstructorProfileI18n,
+	userInstructorProfileMetrics,
+	userInstructorProfileSkill,
 } from "./schema.js";
 
 /**
@@ -18,40 +17,14 @@ import {
  * participating in multiple org contexts.
  */
 export const userInstructorProfileRelations = relations(userInstructorProfile, ({ one, many }) => ({
-	/**
-	 * @identityLink Links instructor profile to platform user account
-	 */
-	user: one(user, {
-		fields: [userInstructorProfile.userId],
-		references: [user.id],
+	userProfile: one(userProfile, {
+		fields: [userInstructorProfile.userProfileId],
+		references: [userProfile.id],
 	}),
 
-	/**
-	 * @orgParticipation Instructor affiliations across orgs
-	 */
-	orgAffiliations: many(instructorOrgAffiliation),
-
-	/**
-	 * @communicationHub Multiple contact points for instructor business
-	 */
-	contactInfo: many(userInstructorProfileContactInfo),
 	translations: many(userInstructorProfileI18n),
+	skills: many(userInstructorProfileSkill),
 }));
-
-export const userInstructorProfileContactInfoRelations = relations(
-	userInstructorProfileContactInfo,
-	({ one }) => ({
-		instructorProfile: one(userInstructorProfile, {
-			fields: [userInstructorProfileContactInfo.instructorProfileId],
-			references: [userInstructorProfile.id],
-		}),
-		contactInfo: one(contactInfo, {
-			fields: [userInstructorProfileContactInfo.contactInfoId],
-			references: [contactInfo.id],
-		}),
-	}),
-);
-
 export const userInstructorProfileTranslationRelations = relations(
 	userInstructorProfileI18n,
 	({ one }) => ({
@@ -76,8 +49,43 @@ export const userInstructorProfileTranslationRelations = relations(
 		 * @instructorProfileLink Links translation to the main instructor profile
 		 */
 		instructorProfile: one(userInstructorProfile, {
-			fields: [userInstructorProfileI18n.userInstructorProfileId],
-			references: [userInstructorProfile.id],
+			fields: [userInstructorProfileI18n.instructorProfileId],
+			references: [userInstructorProfile.userProfileId],
+		}),
+	}),
+);
+
+export const userInstructorProfileSkillRelations = relations(
+	userInstructorProfileSkill,
+	({ one }) => ({
+		// TODO: Define skill relation
+		// /**
+		//  * @skillId Unique identifier for the skill
+		//  * @immutable Once set, should not change to maintain skill integrity
+		//  */
+		// skill: one(userInstructorProfile, {
+		// 	fields: [userInstructorProfileSkill.skillId],
+		// 	references: [userInstructorProfile.id],
+		// }),
+		/**
+		 * @instructorProfileLink Links skill to the main instructor profile
+		 */
+		instructorProfile: one(userInstructorProfile, {
+			fields: [userInstructorProfileSkill.instructorProfileId],
+			references: [userInstructorProfile.userProfileId],
+		}),
+	}),
+);
+
+export const userInstructorProfileMetricsRelations = relations(
+	userInstructorProfileMetrics,
+	({ one }) => ({
+		/**
+		 * @instructorProfileLink Links metrics to the main instructor profile
+		 */
+		instructorProfile: one(userInstructorProfile, {
+			fields: [userInstructorProfileMetrics.instructorProfileId],
+			references: [userInstructorProfile.userProfileId],
 		}),
 	}),
 );

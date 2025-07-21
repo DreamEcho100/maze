@@ -1,21 +1,9 @@
 import { eq } from "drizzle-orm";
-import {
-	decimal,
-	index,
-	jsonb,
-	pgEnum,
-	primaryKey,
-	text,
-	timestamp,
-	uniqueIndex,
-	varchar,
-} from "drizzle-orm/pg-core";
+import { index, jsonb, primaryKey, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../_utils/helpers.js";
 
-import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { buildOrgI18nTable, orgTableName } from "./_utils/helpers.js";
-import { orgMember } from "./member/schema.js";
 
 const orgMetadataJsonb = jsonb("metadata");
 
@@ -195,93 +183,13 @@ export const orgBrandMetrics = table(
 	},
 );
 
-export const instructorOrgAffiliationTypeEnum = pgEnum("instructor_org_affiliation_type", [
-	"owner",
-	"employee",
-	"contractor",
-	"guest",
-	"partner",
-	"volunteer",
-]);
-export const instructorOrgAffiliationStatusEnum = pgEnum("instructor_org_affiliation_status", [
-	"pending",
-	"active",
-	"suspended",
-	"terminated",
-]);
-export const instructorOrgAffiliationCompensationTypeEnum = pgEnum(
-	"instructor_org_affiliation_compensation_type",
-	["revenue_share", "flat_fee", "hourly", "salary", "per_course", "none"],
-);
-/**
- * Instructor-Org Affiliation
- *
- * @businessLogic Connects instructors to orgs for content creation,
- * collaboration, and payment.
- *
- * @compensationContext Enables flexible payment strategies per affiliation.
- *
- * @workflowTracking Tracks affiliation lifecycle, including invitations,
- * approval, and status transitions.
- */
-export const instructorOrgAffiliation = table(
-	`instructor_${org}_affiliation`,
-	{
-		id: textCols.id().notNull(),
-		instructorId: textCols
-			.idFk("instructor_id")
-			.notNull()
-			.references(() => userInstructorProfile.id),
-		memberId: sharedCols.orgMemberIdFk().notNull(),
-		orgId: sharedCols.orgIdFk().notNull(),
-		joinedAt: temporalCols.activity.joinedAt().defaultNow(),
-		createdAt: temporalCols.audit.createdAt(),
-
-		affiliationType: instructorOrgAffiliationTypeEnum("affiliation_type").notNull(),
-		// TODO: convert to enum, ex: "owner", "employee", "contractor", "guest", "partner", "volunteer"
-		role: text("role"),
-		title: textCols.title(),
-
-		compensationType:
-			instructorOrgAffiliationCompensationTypeEnum("compensation_type").default("revenue_share"),
-		compensationAmount: decimal("compensation_amount", {
-			precision: 10,
-			scale: 2,
-		}),
-		revenueSharePercentage: decimal("revenue_share_percentage", {
-			precision: 5,
-			scale: 2,
-		}),
-
-		status: instructorOrgAffiliationStatusEnum("status").default("pending"),
-		startedAt: timestamp("started_at").defaultNow(),
-		endedAt: timestamp("ended_at"),
-
-		// TODO: convert to enum, ex: "email", "phone", "in-person", other
-		connectionMethod: text("connection_method"),
-		invitedById: textCols.idFk("invited_by_id").references(() => user.id),
-		applicationNotes: text("application_notes"),
-		approvedBy: textCols.idFk("approved_by").references(() => orgMember.id),
-		approvedAt: timestamp("approved_at"),
-	},
-	(t) => {
-		const base = `instructor_${orgTableName}_affiliation`;
-		return [
-			uniqueIndex(`uq_${base}`).on(t.instructorId, t.orgId),
-			index(`idx_${base}_org`).on(t.orgId),
-			index(`idx_${base}_member`).on(t.memberId),
-			index(`idx_${base}_instructor`).on(t.instructorId),
-			index(`idx_${base}_status`).on(t.status),
-			index(`idx_${base}_affiliation_type`).on(t.affiliationType),
-			index(`idx_${base}_compensation_type`).on(t.compensationType),
-			index(`idx_${base}_invited_by`).on(t.invitedById),
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_joined_at`).on(t.joinedAt),
-			index(`idx_${base}_started_at`).on(t.startedAt),
-			index(`idx_${base}_ended_at`).on(t.endedAt),
-		];
-	},
-);
+// TODO: can be manged through the org membership
+// export const instructorOrgAffiliationStatusEnum = pgEnum("instructor_org_affiliation_status", [
+// 	"pending",
+// 	"active",
+// 	"suspended",
+// 	"terminated",
+// ]);
 
 // The following is commented out as it is not needed for now.
 // Org-specific locale settings

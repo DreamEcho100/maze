@@ -1,7 +1,6 @@
 import { index, pgEnum, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
-
-import { user } from "../../user/schema.js";
+import { userProfile } from "../../user/profile/schema.js";
 import { orgTableName } from "../_utils/helpers.js";
 
 export const orgMemberBaseRoleEnum = pgEnum("org_member_base_role", [
@@ -35,8 +34,8 @@ export const orgMember = table(
 
 		orgId: sharedCols.orgIdFk().notNull(),
 
-		userId: sharedCols.userIdFk().notNull(),
-
+		// userId: sharedCols.userIdFk().notNull(),
+		userProfileId: sharedCols.userProfileIdFk().notNull(),
 		/**
 		 * Determines baseline org access. Most logic uses permission groups for actual decisions.
 		 */
@@ -50,14 +49,14 @@ export const orgMember = table(
 		displayName: textCols.displayName().notNull(),
 
 		invitedAt: temporalCols.activity.invitedAt().defaultNow(),
-		invitedById: textCols.idFk("invited_by_id").references(() => user.id),
+		invitedById: textCols.idFk("invited_by_id").references(() => userProfile.id),
 		joinedAt: temporalCols.activity.joinedAt(),
 	},
 	(table) => {
 		const base = `${orgTableName}_member`;
 		return [
 			index(`idx_${base}_created_at`).on(table.createdAt),
-			uniqueIndex(`uq_${base}_user_org`).on(table.userId, table.orgId),
+			uniqueIndex(`uq_${base}_user_profile_org`).on(table.userProfileId, table.orgId),
 		];
 	},
 );
@@ -88,6 +87,8 @@ export const orgMemberInvitation = table(
 			.idFk("invited_by_member_id")
 			.notNull()
 			.references(() => orgMember.id, { onDelete: "cascade" }),
+		approvedByMemberId: textCols.idFk("approved_by_member_id").references(() => orgMember.id),
+
 		expiresAt: temporalCols.business.expiresAt().notNull(),
 		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),

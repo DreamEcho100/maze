@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { userInstructorProfileContactInfo } from "../../user/profile/instructor/schema";
+import { userProfileContactInfo } from "../../user/profile/schema";
 import { contactInfo } from "./schema";
 
 /**
@@ -16,7 +16,7 @@ import { contactInfo } from "./schema";
  * - 🔌 Integration-Ready: Allows new entity types to connect to contact info with minimal friction
  *
  * @useCases
- * - Instructor profile contact management
+ * - User profile contact management
  * - Future support for org, user, and brand-level contacts
  * - Dynamic communication routing, support escalation, and partner outreach
  *
@@ -30,7 +30,7 @@ import { contactInfo } from "./schema";
  * Defines polymorphic contact associations for platform entities.
  *
  * @relation contactInfoRelations
- * Allows user-instructor profiles (and in future, other entity types) to associate
+ * Allows user profiles (and in future, other entity types) to associate
  * with centralized contact records for use in communication, billing, and support.
  *
  * @scalability
@@ -38,20 +38,20 @@ import { contactInfo } from "./schema";
  */
 export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	/**
-	 * Instructor Profile → Contact Info (many-to-many via junction)
+	 * User Profile → Contact Info (many-to-many via junction)
 	 *
 	 * @purpose
-	 * Enables instructor profiles to associate with one or more contact records
+	 * Enables user profiles to associate with one or more contact records
 	 * (e.g., primary, billing, support) for communication workflows.
 	 *
 	 * @businessContext
-	 * Instructor relationships often span multiple orgs, roles, and
+	 * User relationships often span multiple orgs, roles, and
 	 * responsibilities — this allows differentiated contacts per scenario.
 	 *
 	 * @usedIn
-	 * - Instructor onboarding and CRM
+	 * - User onboarding and CRM
 	 * - Payment and revenue sharing communication
 	 * - Professional collaboration setup
 	 */
-	usersInstructorProfiles: many(userInstructorProfileContactInfo),
+	usersProfiles: many(userProfileContactInfo),
 }));

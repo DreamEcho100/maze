@@ -1,11 +1,23 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, jsonb, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	check,
+	index,
+	integer,
+	jsonb,
+	pgEnum,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
-import { userInstructorProfile } from "../../../user/profile/instructor/schema.js";
+import {
+	numericCols,
+	sharedCols,
+	table,
+	temporalCols,
+	textCols,
+} from "../../../_utils/helpers.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { org } from "../../schema.js";
-import { orgTaxCategory } from "../../tax/schema.js";
+import { orgTaxRate } from "../../tax/schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard } from "../offers/schema.js";
 import { orgProductVariantPaymentPlan } from "../payment/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
@@ -13,16 +25,19 @@ import { orgProduct, orgProductVariant } from "../schema.js";
 const orgMemberProductOrderTableName = `${orgTableName}_member_product_order`;
 
 // ✅ ORDER STATUS: Complete e-commerce lifecycle
-export const orgMemberProductOrderStatusEnum = pgEnum(`${orgMemberProductOrderTableName}_status`, [
-	"pending", // Order created, awaiting payment
-	"processing", // Payment received, processing order
-	"confirmed", // Order confirmed, access granted
-	"fulfilled", // Digital delivery completed
-	"cancelled", // Order cancelled before payment
-	"refunded", // Order refunded after payment
-	"failed", // Payment or processing failed
-	"expired", // Order expired without payment
-]);
+export const orgMemberProductOrderStatusEnum = pgEnum(
+	`${orgMemberProductOrderTableName}_status`,
+	[
+		"pending", // Order created, awaiting payment
+		"processing", // Payment received, processing order
+		"confirmed", // Order confirmed, access granted
+		"fulfilled", // Digital delivery completed
+		"cancelled", // Order cancelled before payment
+		"refunded", // Order refunded after payment
+		"failed", // Payment or processing failed
+		"expired", // Order expired without payment
+	],
+);
 
 // ✅ PAYMENT STATUS: Financial transaction tracking
 export const orgMemberProductOrderPaymentStatusEnum = pgEnum(
@@ -49,7 +64,7 @@ export const orgMemberProductOrderPaymentStatusEnum = pgEnum(
  * supporting multiple payment methods, promotional campaigns, and subscription integration
  * while maintaining org boundaries and creator attribution workflows.
  *
- * @creatorEconomy Revenue attribution foundation enabling instructor compensation
+ * @creatorEconomy Revenue attribution foundation enabling Org member compensation
  * calculations and org revenue sharing with detailed financial tracking for
  * creator economy monetization and transparent revenue distribution.
  *
@@ -67,7 +82,7 @@ export const orgMemberProductOrder = table(
 		 * @businessRule Unique within org for customer communication and support
 		 * @auditTrail Used in emails, receipts, and customer service interactions
 		 */
-		orderNumber: textCols.code("order_number").notNull(),
+		displayId: textCols.code("display_id").notNull(),
 
 		/**
 		 * @multiTenant Org context for order processing and revenue attribution
@@ -83,42 +98,16 @@ export const orgMemberProductOrder = table(
 		 */
 		memberId: sharedCols.orgMemberIdFk().notNull(),
 
-		/**
-		 * @ecommerceFoundation Product being purchased
-		 * @contentAttribution Links order to instructor/brand attribution
-		 * @businessRule Product determines available variants and payment plans
-		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "restrict" }),
-
-		/**
-		 * @commerceVariation Specific product variant purchased
-		 * @pricingStrategy Variant determines pricing tier and features
-		 * @businessRule Variant must belong to the specified product
-		 */
-		variantId: textCols
-			.idFk("variant_id")
-			.notNull()
-			.references(() => orgProductVariant.id, { onDelete: "restrict" }),
-
-		/**
-		 * @paymentStrategy Payment plan selected for purchase
-		 * @accessControl Payment plan determines content access level and billing
-		 * @businessRule Payment plan must be available for the selected variant
-		 */
-		paymentPlanId: textCols
-			.idFk("payment_plan_id")
-			.notNull()
-			.references(() => orgProductVariantPaymentPlan.id, { onDelete: "restrict" }),
+		// Q: Should it connect to the country table?
 
 		/**
 		 * @orderLifecycle Current order processing status
 		 * @businessRule Determines order workflow and customer communication
 		 * @accessControl Status affects content access permissions
 		 */
-		status: orgMemberProductOrderStatusEnum("status").notNull().default("pending"),
+		status: orgMemberProductOrderStatusEnum("status")
+			.notNull()
+			.default("pending"),
 
 		/**
 		 * @paymentTracking Financial transaction status for revenue management
@@ -141,14 +130,18 @@ export const orgMemberProductOrder = table(
 		 * @businessRule Sum of all applied discounts (coupons, promotions, gift cards)
 		 * @revenueImpact Reduces final order amount and affects revenue attribution
 		 */
-		discountAmount: numericCols.currency.amount("discount_amount").default("0.00"),
+		totalDiscountAmount: numericCols.currency
+			.amount("discount_amount")
+			.default("0.00"),
 
 		/**
 		 * @taxCompliance Tax amount calculated based on org tax policies
 		 * @businessRule Tax calculation respects regional tax requirements
 		 * @financialReporting Essential for tax reporting and compliance
 		 */
-		taxAmount: numericCols.currency.amount("tax_amount").default("0.00"),
+		totalTaxAmount: numericCols.currency
+			.amount("total_tax_amount")
+			.default("0.00"),
 
 		/**
 		 * @finalPricing Total amount charged to customer
@@ -195,13 +188,6 @@ export const orgMemberProductOrder = table(
 		metadata: textCols.metadata(),
 
 		/**
-		 * @tierSelection Customer-selected access tier within payment plan limits
-		 * @businessRule Must be <= payment plan's maximum access tier
-		 * @contentGating Determines which content customer can access
-		 */
-		selectedAccessTier: integer("selected_access_tier").notNull(),
-
-		/**
 		 * @pricingSnapshot Price for selected tier (varies by tier within plan)
 		 * @historicalAccuracy Preserves pricing at time of purchase
 		 */
@@ -216,53 +202,72 @@ export const orgMemberProductOrder = table(
 	},
 	(t) => [
 		// Business Constraints
-		uniqueIndex(`uq_${orgMemberProductOrderTableName}_order_number_org`).on(t.orgId, t.orderNumber),
+		uniqueIndex(`uq_${orgMemberProductOrderTableName}_order_number_org`).on(
+			t.orgId,
+			t.displayId,
+		),
 
 		// Performance Indexes - Multi-tenant queries
-		index(`idx_${orgMemberProductOrderTableName}_org_status`).on(t.orgId, t.status),
-		index(`idx_${orgMemberProductOrderTableName}_member_status`).on(t.memberId, t.status),
-		index(`idx_${orgMemberProductOrderTableName}_product_variant`).on(t.productId, t.variantId),
+		index(`idx_${orgMemberProductOrderTableName}_org_status`).on(
+			t.orgId,
+			t.status,
+		),
+		index(`idx_${orgMemberProductOrderTableName}_member_status`).on(
+			t.memberId,
+			t.status,
+		),
 
 		// Financial reporting indexes
-		index(`idx_${orgMemberProductOrderTableName}_payment_status`).on(t.paymentStatus),
-		index(`idx_${orgMemberProductOrderTableName}_total_amount`).on(t.totalAmount),
+		index(`idx_${orgMemberProductOrderTableName}_payment_status`).on(
+			t.paymentStatus,
+		),
+		index(`idx_${orgMemberProductOrderTableName}_total_amount`).on(
+			t.totalAmount,
+		),
 		index(`idx_${orgMemberProductOrderTableName}_currency`).on(t.currencyCode),
 
 		// Time-based analytics indexes
 		index(`idx_${orgMemberProductOrderTableName}_ordered_at`).on(t.orderedAt),
 		index(`idx_${orgMemberProductOrderTableName}_paid_at`).on(t.paidAt),
-		index(`idx_${orgMemberProductOrderTableName}_fulfilled_at`).on(t.fulfilledAt),
+		index(`idx_${orgMemberProductOrderTableName}_fulfilled_at`).on(
+			t.fulfilledAt,
+		),
 
 		// Customer service indexes
-		index(`idx_${orgMemberProductOrderTableName}_external_payment`).on(t.externalPaymentId),
-		index(`idx_${orgMemberProductOrderTableName}_payment_method`).on(t.paymentMethod),
+		index(`idx_${orgMemberProductOrderTableName}_external_payment`).on(
+			t.externalPaymentId,
+		),
+		index(`idx_${orgMemberProductOrderTableName}_payment_method`).on(
+			t.paymentMethod,
+		),
 
 		// Audit indexes
 		index(`idx_${orgMemberProductOrderTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberProductOrderTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberProductOrderTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 
 		// Business logic constraints
 		check(
 			"total_amount_calculation",
-			sql`${t.totalAmount} = ${t.subtotalAmount} - ${t.discountAmount} + ${t.taxAmount}`,
+			sql`${t.totalAmount} = ${t.subtotalAmount} - ${t.totalDiscountAmount} + ${t.totalTaxAmount}`,
 		),
 		check(
 			"positive_amounts",
-			sql`${t.subtotalAmount} >= 0 AND ${t.discountAmount} >= 0 AND ${t.taxAmount} >= 0`,
+			sql`${t.subtotalAmount} >= 0 AND ${t.totalDiscountAmount} >= 0 AND ${t.totalTaxAmount} >= 0`,
 		),
-		check("valid_payment_timing", sql`${t.paidAt} IS NULL OR ${t.paidAt} >= ${t.orderedAt}`),
+		check(
+			"valid_payment_timing",
+			sql`${t.paidAt} IS NULL OR ${t.paidAt} >= ${t.orderedAt}`,
+		),
 		check(
 			"valid_fulfillment_timing",
 			sql`${t.fulfilledAt} IS NULL OR ${t.fulfilledAt} >= ${t.orderedAt}`,
 		),
-
-		// ✅ CRITICAL: Ensure selected tier is valid for payment plan
-		check("valid_selected_tier", sql`${t.selectedAccessTier} >= 0`),
 	],
 );
 
 const orgMemberProductOrderItemTableName = `${orgMemberProductOrderTableName}_item`;
-
 /**
  * Order Line Items - Detailed Order Breakdown
  *
@@ -296,27 +301,56 @@ export const orgMemberProductOrderItem = table(
 			.references(() => orgProductVariant.id, { onDelete: "restrict" }),
 
 		/**
+		 * @paymentStrategy Payment plan selected for purchase
+		 * @accessControl Payment plan determines content access level and billing
+		 * @businessRule Payment plan must be available for the selected variant
+		 */
+		paymentPlanId: textCols
+			.idFk("payment_plan_id")
+			.notNull()
+			.references(() => orgProductVariantPaymentPlan.id, {
+				onDelete: "restrict",
+			}),
+		/**
+		 * @tierSelection Customer-selected access tier provided by payment plan limits
+		 * @contentGating Determines which content customer can access
+		 */
+		selectedAccessTier: integer("selected_access_tier").notNull(),
+
+		/**
 		 * @pricingSnapshot Pricing at time of order (for historical accuracy)
 		 */
 		unitPrice: numericCols.currency.amount("unit_price").notNull(),
 		quantity: integer("quantity").notNull().default(1),
 		totalPrice: numericCols.currency.amount("total_price").notNull(),
 
+		// Storing the payment plan specific details in a `metadata` column
+		// or using a separate relation table for complex plans in  a CTI way passed on the `orgProductVariantPaymentTypeEnum`?
 		/**
-		 * @accessControl Access tier granted by this purchase
+		 * @orderMetadata Additional item-specific information
+		 * @businessRule Used for customer service and order management
 		 */
-		grantedAccessTier: integer("granted_access_tier").notNull(),
+		metadata: textCols.metadata(),
 
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
 		index(`idx_${orgMemberProductOrderItemTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberProductOrderItemTableName}_product_variant`).on(t.productId, t.variantId),
+		index(`idx_${orgMemberProductOrderItemTableName}_product_id_variant_id`).on(
+			t.productId,
+			t.variantId,
+		),
+		index(`idx_${orgMemberProductOrderItemTableName}_payment_plan_id`).on(
+			t.paymentPlanId,
+		),
 
 		// Business constraints
 		check("positive_quantity", sql`${t.quantity} > 0`),
-		check("total_price_calculation", sql`${t.totalPrice} = ${t.unitPrice} * ${t.quantity}`),
-		check("valid_access_tier", sql`${t.grantedAccessTier} >= 0 AND ${t.grantedAccessTier} <= 10`),
+		check(
+			"total_price_calculation",
+			sql`${t.totalPrice} = ${t.unitPrice} * ${t.quantity}`,
+		),
+		check("valid_access_tier", sql`${t.selectedAccessTier} >= 0`),
 	],
 );
 
@@ -333,8 +367,8 @@ export const orgMemberProductOrderDiscount = table(
 	{
 		id: textCols.id().notNull(),
 
-		orderId: textCols
-			.idFk("order_id")
+		orderItemId: textCols
+			.idFk("order_item_id")
 			.notNull()
 			.references(() => orgMemberProductOrder.id, { onDelete: "cascade" }),
 
@@ -344,7 +378,9 @@ export const orgMemberProductOrderDiscount = table(
 		discountId: textCols
 			.idFk("discount_id")
 			.references(() => orgDiscount.id, { onDelete: "set null" }),
-		couponId: textCols.idFk("coupon_id").references(() => orgCoupon.id, { onDelete: "set null" }),
+		couponId: textCols
+			.idFk("coupon_id")
+			.references(() => orgCoupon.id, { onDelete: "set null" }),
 		giftCardId: textCols
 			.idFk("gift_card_id")
 			.references(() => orgGiftCard.id, { onDelete: "set null" }),
@@ -358,10 +394,18 @@ export const orgMemberProductOrderDiscount = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderDiscountTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_discount_id`).on(t.discountId),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_coupon_id`).on(t.couponId),
-		index(`idx_${orgMemberProductOrderDiscountTableName}_gift_card_id`).on(t.giftCardId),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_order_item_id`).on(
+			t.orderItemId,
+		),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_discount_id`).on(
+			t.discountId,
+		),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_coupon_id`).on(
+			t.couponId,
+		),
+		index(`idx_${orgMemberProductOrderDiscountTableName}_gift_card_id`).on(
+			t.giftCardId,
+		),
 
 		// Business constraints
 		check("positive_discount", sql`${t.discountAmount} >= 0`),
@@ -380,6 +424,7 @@ export const taxCalculationMethodEnum = pgEnum("tax_calculation_method", [
 	"exempt", // Tax exempt transaction
 ]);
 
+// Q: Add a nullable productVariantId or a new table for variant-specific tax rates?
 /**
  * Order Tax Calculation - Historical Tax Accuracy & Compliance
  *
@@ -401,13 +446,14 @@ export const orgMemberProductOrderTaxCalculation = table(
 			.references(() => orgMemberProductOrder.id, { onDelete: "cascade" }),
 
 		/**
-		 * @taxSnapshot Tax category and rate at time of order
-		 * @historicalAccuracy Preserves tax rules even if category is later modified
+		 * @taxRateSnapshot Tax rate applied at time of order
+		 * @historicalAccuracy Preserves original tax rate for audit trails
+		 * @legalCompliance Required for tax reporting and compliance
 		 */
-		taxCategoryId: textCols
-			.idFk("tax_category_id")
-			.references(() => orgTaxCategory.id, { onDelete: "set null" }),
-		taxCategoryName: textCols.category("tax_category_name").notNull(), // Snapshot
+		taxRateId: textCols
+			.idFk("tax_rate_id")
+			.references(() => orgTaxRate.id, { onDelete: "set null" }),
+		taxRateName: textCols.category("tax_rate_name").notNull(), // Snapshot
 
 		/**
 		 * @rateSnapshot Tax rate at time of calculation
@@ -421,13 +467,19 @@ export const orgMemberProductOrderTaxCalculation = table(
 		 * @auditTrail Shows how tax amount was derived
 		 */
 		taxableAmount: numericCols.currency.amount("taxable_amount").notNull(),
-		calculatedTaxAmount: numericCols.currency.amount("calculated_tax_amount").notNull(),
+		calculatedTaxAmount: numericCols.currency
+			.amount("calculated_tax_amount")
+			.notNull(),
 
 		/**
 		 * @regionSnapshot Tax jurisdiction at time of order
 		 * @internationalCompliance Preserves tax location for cross-border transactions
 		 */
+		// Q: Should it connect to the country table?
+		// Q: Should it be on the main order table?
 		taxJurisdiction: textCols.category("tax_jurisdiction"), // "US-CA", "GB", "DE-BY"
+
+		isCompound: boolean("is_compound").default(false), // Compound tax applied on top of other taxes
 
 		/**
 		 * @calculationMethod How tax was calculated
@@ -438,13 +490,24 @@ export const orgMemberProductOrderTaxCalculation = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_tax_category`).on(t.taxCategoryId),
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_rate`).on(t.taxRate),
-		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_jurisdiction`).on(t.taxJurisdiction),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_order_id`).on(
+			t.orderId,
+		),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_tax_rate_id`).on(
+			t.taxRateId,
+		),
+		index(`idx_${orgMemberProductOrderTaxCalculationTableName}_rate`).on(
+			t.taxRate,
+		),
+		index(
+			`idx_${orgMemberProductOrderTaxCalculationTableName}_jurisdiction`,
+		).on(t.taxJurisdiction),
 
 		// Business constraints
-		check("positive_amounts", sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`),
+		check(
+			"positive_amounts",
+			sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`,
+		),
 		check(
 			"tax_calculation_accuracy",
 			sql`${t.calculatedTaxAmount} = ROUND(${t.taxableAmount} * ${t.taxRate} / 100, 2)`,
@@ -455,13 +518,14 @@ export const orgMemberProductOrderTaxCalculation = table(
 const orgMemberProductOrderPaymentTableName = `${orgMemberProductOrderTableName}_payment`;
 
 export const paymentGatewayEnum = pgEnum("payment_gateway", [
-	"stripe",
-	"paypal",
-	"square",
-	"braintree",
-	"authorize_net",
-	"razorpay",
-	"mollie",
+	// "stripe",
+	// "paypal",
+	// "square",
+	// "braintree",
+	// "authorize_net",
+	// "razorpay",
+	// "mollie",
+	"paymob",
 ]);
 
 export const paymentMethodEnum = pgEnum("payment_method", [
@@ -476,17 +540,20 @@ export const paymentMethodEnum = pgEnum("payment_method", [
 	"store_credit",
 ]);
 
-export const paymentTransactionStatusEnum = pgEnum("payment_transaction_status", [
-	"pending",
-	"authorized",
-	"captured",
-	"settled",
-	"failed",
-	"cancelled",
-	"refunded",
-	"disputed",
-	"chargeback",
-]);
+export const paymentTransactionStatusEnum = pgEnum(
+	"payment_transaction_status",
+	[
+		"pending",
+		"authorized",
+		"captured",
+		"settled",
+		"failed",
+		"cancelled",
+		"refunded",
+		"disputed",
+		"chargeback",
+	],
+);
 
 /**
  * Order Payment Details - Complete Payment Transaction Record
@@ -521,7 +588,9 @@ export const orgMemberProductOrderPayment = table(
 		 * @financialDetails Payment amounts and fees
 		 */
 		grossAmount: numericCols.currency.amount("gross_amount").notNull(), // What customer paid
-		processingFee: numericCols.currency.amount("processing_fee").default("0.00"), // Gateway fee
+		processingFee: numericCols.currency
+			.amount("processing_fee")
+			.default("0.00"), // Gateway fee
 		netAmount: numericCols.currency.amount("net_amount").notNull(), // What org receives
 
 		/**
@@ -548,106 +617,51 @@ export const orgMemberProductOrderPayment = table(
 		gatewayResponse: jsonb("gateway_response"),
 
 		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberProductOrderPaymentTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway_transaction`).on(
-			t.gatewayTransactionId,
+		index(`idx_${orgMemberProductOrderPaymentTableName}_order_id`).on(
+			t.orderId,
 		),
+		index(
+			`idx_${orgMemberProductOrderPaymentTableName}_gateway_transaction`,
+		).on(t.gatewayTransactionId),
 		index(`idx_${orgMemberProductOrderPaymentTableName}_status`).on(t.status),
-		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway`).on(t.paymentGateway),
-
-		// Business constraints
-		check("amount_calculation", sql`${t.netAmount} = ${t.grossAmount} - ${t.processingFee}`),
-		check("positive_amounts", sql`${t.grossAmount} >= 0 AND ${t.processingFee} >= 0`),
-	],
-);
-
-const orgMemberProductOrderRevenueAttributionTableName = `${orgMemberProductOrderTableName}_revenue_attribution`;
-
-export const revenueRecipientTypeEnum = pgEnum("revenue_recipient_type", [
-	"organization", // Org receives revenue
-	"instructor", // Creator/instructor receives revenue
-	"platform", // Platform fee
-	"payment_processor", // Gateway processing fee
-	"tax_authority", // Tax amount
-]);
-
-export const revenueAttributionBasisEnum = pgEnum("revenue_attribution_basis", [
-	"product_ownership", // Product creator
-	"instructor_attribution", // Course instructor
-	"org_commission", // Organization commission
-	"platform_fee", // Platform service fee
-	"processing_fee", // Payment processing
-	"referral_commission", // Referral program
-]);
-
-/**
- * Order Revenue Attribution - Creator Economy Revenue Distribution
- *
- * @creatorEconomy Tracks how order revenue is distributed among stakeholders
- * @revenueSharing Links to instructor attribution for creator compensation
- * @transparentAccounting Clear revenue breakdown for all parties
- */
-export const orgMemberProductOrderRevenueAttribution = table(
-	orgMemberProductOrderRevenueAttributionTableName,
-	{
-		id: textCols.id().notNull(),
-
-		orderId: textCols
-			.idFk("order_id")
-			.notNull()
-			.references(() => orgMemberProductOrder.id, { onDelete: "cascade" }),
-
-		/**
-		 * @revenueRecipient Who receives this revenue portion
-		 */
-		recipientType: revenueRecipientTypeEnum("recipient_type").notNull(),
-
-		// Flexible recipient identification
-		orgId: textCols.idFk("org_id").references(() => org.id),
-		instructorProfileId: textCols
-			.idFk("instructor_profile_id")
-			.references(() => userInstructorProfile.id),
-		platformRecipient: textCols.category("platform_recipient"), // "platform_fee", "processing_fee"
-
-		/**
-		 * @revenueCalculation Revenue amount and calculation details
-		 */
-		revenueAmount: numericCols.currency.amount("revenue_amount").notNull(),
-		revenuePercentage: numericCols.percentage.revenueShare(),
-
-		/**
-		 * @attributionBasis How this revenue share was calculated
-		 */
-		attributionBasis: revenueAttributionBasisEnum("attribution_basis").notNull(),
-
-		/**
-		 * @currencyConsistency Revenue currency
-		 */
-		currencyCode: sharedCols.currencyCodeFk().notNull(),
-
-		createdAt: temporalCols.audit.createdAt(),
-	},
-	(t) => [
-		index(`idx_${orgMemberProductOrderRevenueAttributionTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberProductOrderRevenueAttributionTableName}_recipient_type`).on(
-			t.recipientType,
+		index(`idx_${orgMemberProductOrderPaymentTableName}_gateway`).on(
+			t.paymentGateway,
 		),
-		index(`idx_${orgMemberProductOrderRevenueAttributionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgMemberProductOrderRevenueAttributionTableName}_instructor`).on(
-			t.instructorProfileId,
+		index(`idx_${orgMemberProductOrderPaymentTableName}_method`).on(
+			t.paymentMethod,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_authorized_at`).on(
+			t.authorizedAt,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_captured_at`).on(
+			t.capturedAt,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_settled_at`).on(
+			t.settledAt,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_disputed_at`).on(
+			t.disputedAt,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_created_at`).on(
+			t.createdAt,
+		),
+		index(`idx_${orgMemberProductOrderPaymentTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
 		),
 
 		// Business constraints
-		check("positive_revenue", sql`${t.revenueAmount} >= 0`),
 		check(
-			"valid_percentage",
-			sql`${t.revenuePercentage} IS NULL OR (${t.revenuePercentage} >= 0 AND ${t.revenuePercentage} <= 100)`,
+			"amount_calculation",
+			sql`${t.netAmount} = ${t.grossAmount} - ${t.processingFee}`,
 		),
 		check(
-			"single_recipient",
-			sql`(${t.orgId} IS NOT NULL)::int + (${t.instructorProfileId} IS NOT NULL)::int + (${t.platformRecipient} IS NOT NULL)::int = 1`,
+			"positive_amounts",
+			sql`${t.grossAmount} >= 0 AND ${t.processingFee} >= 0`,
 		),
 	],
 );
+
+// TODO: add a log specific table for order payment

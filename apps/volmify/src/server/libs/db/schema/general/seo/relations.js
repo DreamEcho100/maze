@@ -12,6 +12,7 @@ import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
 import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
+import { userProfileI18n } from "../../user/profile/schema.js";
 import { locale } from "../locale-currency-market/schema.js";
 import { skillI18n } from "../skill/schema.js";
 import {
@@ -63,9 +64,13 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [orgBrandTranslation.seoMetadataId],
 	}),
 
-	usersInstructorProfilesTranslations: one(userInstructorProfileI18n, {
+	userInstructorProfileI18n: one(userInstructorProfileI18n, {
 		fields: [seoMetadata.id],
 		references: [userInstructorProfileI18n.seoMetadataId],
+	}),
+	userProfileI18n: one(userProfileI18n, {
+		fields: [seoMetadata.id],
+		references: [userProfileI18n.seoMetadataId],
 	}),
 
 	// discountsTranslation: one(orgDiscountI18n, {

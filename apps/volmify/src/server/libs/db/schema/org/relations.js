@@ -2,7 +2,6 @@ import { relations } from "drizzle-orm";
 import { currency } from "../general/locale-currency-market/schema.js";
 import { seoMetadata } from "../general/seo/schema.js";
 import { skill } from "../general/skill/schema.js";
-import { userInstructorProfile } from "../user/profile/instructor/schema.js";
 import { user } from "../user/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
 import { orgLesson } from "./lesson/schema.js";
@@ -16,24 +15,8 @@ import {
 	orgMemberProductVariantPaymentPlanSubscription,
 	orgProductVariantPaymentPlan,
 } from "./product/payment/schema.js";
-import { orgProductBrandAttribution, orgProductInstructorAttribution } from "./product/schema.js";
-import {
-	instructorOrgAffiliation,
-	org,
-	orgBrand,
-	orgBrandTranslation,
-	orgCurrencySettings,
-	// orgDepartment,
-	// orgDepartmentMembership,
-	// orgMember,
-	// orgMemberInvitation,
-	// orgMemberPermissionsGroup,
-	// orgPermissionsGroup,
-	// orgPermissionsGroupPermission,
-	// orgTeam,
-	// orgTeamDepartment,
-	// orgTeamMemberships,
-} from "./schema.js";
+import { orgProductBrandAttribution } from "./product/schema.js";
+import { org, orgBrand, orgBrandTranslation, orgCurrencySettings } from "./schema.js";
 
 /**
  * @fileoverview Multi-Tenant ABAC-Scoped Org Relationship Map
@@ -57,7 +40,6 @@ export const orgRelations = relations(org, ({ many }) => ({
 	// permissionGroups: many(orgPermissionsGroup),
 	currencySettings: many(orgCurrencySettings),
 	brands: many(orgBrand),
-	instructorAffiliations: many(instructorOrgAffiliation),
 	skillsCreated: many(skill),
 	lessons: many(orgLesson),
 
@@ -140,27 +122,3 @@ export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ on
 		references: [orgLocale.localeKey],
 	}),
 }));
-
-/**
- * @instructorNetwork Instructor Affiliation
- * @revenueAttribution Connects instructor to org-scoped content ownership
- * @abacScope Instructor–Org–Member bridge for scoped authorization
- */
-export const instructorOrgAffiliationRelations = relations(
-	instructorOrgAffiliation,
-	({ one, many }) => ({
-		instructor: one(userInstructorProfile, {
-			fields: [instructorOrgAffiliation.instructorId],
-			references: [userInstructorProfile.id],
-		}),
-		org: one(org, {
-			fields: [instructorOrgAffiliation.orgId],
-			references: [org.id],
-		}),
-		member: one(orgMember, {
-			fields: [instructorOrgAffiliation.memberId],
-			references: [orgMember.id],
-		}),
-		productAttributions: many(orgProductInstructorAttribution),
-	}),
-);

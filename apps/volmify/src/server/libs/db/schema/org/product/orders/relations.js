@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-
+import { userProfileOrgMembershipProductAttributionRevenue } from "../../../user/profile/schema.js";
 import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard } from "../offers/schema.js";
@@ -10,7 +10,6 @@ import {
 	orgMemberProductOrderDiscount,
 	orgMemberProductOrderItem,
 	orgMemberProductOrderPayment,
-	orgMemberProductOrderRevenueAttribution,
 	orgMemberProductOrderTaxCalculation,
 } from "./schema.js";
 
@@ -38,26 +37,6 @@ export const orgMemberProductOrderRelations = relations(orgMemberProductOrder, (
 	}),
 
 	/**
-	 * @productPurchase Product and variant details
-	 */
-	product: one(orgProduct, {
-		fields: [orgMemberProductOrder.productId],
-		references: [orgProduct.id],
-	}),
-	variant: one(orgProductVariant, {
-		fields: [orgMemberProductOrder.variantId],
-		references: [orgProductVariant.id],
-	}),
-
-	/**
-	 * @paymentStrategy Payment plan used for purchase
-	 */
-	paymentPlan: one(orgProductVariantPaymentPlan, {
-		fields: [orgMemberProductOrder.paymentPlanId],
-		references: [orgProductVariantPaymentPlan.id],
-	}),
-
-	/**
 	 * @orderDetails Line items and discount applications
 	 */
 	items: many(orgMemberProductOrderItem),
@@ -65,18 +44,11 @@ export const orgMemberProductOrderRelations = relations(orgMemberProductOrder, (
 
 	taxCalculations: many(orgMemberProductOrderTaxCalculation),
 	paymentDetails: many(orgMemberProductOrderPayment),
-	revenueAttributions: many(orgMemberProductOrderRevenueAttribution),
-
-	// ✅ NEW: Payment plan tier relation
-	selectedTier: one(orgProductVariantPaymentPlan, {
-		fields: [orgMemberProductOrder.paymentPlanId, orgMemberProductOrder.selectedAccessTier],
-		references: [orgProductVariantPaymentPlan.id, orgProductVariantPaymentPlan.accessTier],
-	}),
 }));
 
 export const orgMemberProductOrderItemRelations = relations(
 	orgMemberProductOrderItem,
-	({ one }) => ({
+	({ many, one }) => ({
 		order: one(orgMemberProductOrder, {
 			fields: [orgMemberProductOrderItem.orderId],
 			references: [orgMemberProductOrder.id],
@@ -89,6 +61,14 @@ export const orgMemberProductOrderItemRelations = relations(
 			fields: [orgMemberProductOrderItem.variantId],
 			references: [orgProductVariant.id],
 		}),
+		/**
+		 * @paymentStrategy Payment plan/tier used for purchase
+		 */
+		paymentPlan: one(orgProductVariantPaymentPlan, {
+			fields: [orgMemberProductOrderItem.paymentPlanId],
+			references: [orgProductVariantPaymentPlan.id],
+		}),
+		revenueAttributions: many(userProfileOrgMembershipProductAttributionRevenue),
 	}),
 );
 
@@ -96,7 +76,7 @@ export const orgMemberProductOrderDiscountRelations = relations(
 	orgMemberProductOrderDiscount,
 	({ one }) => ({
 		order: one(orgMemberProductOrder, {
-			fields: [orgMemberProductOrderDiscount.orderId],
+			fields: [orgMemberProductOrderDiscount.orderItemId],
 			references: [orgMemberProductOrder.id],
 		}),
 		discount: one(orgDiscount, {
@@ -110,6 +90,33 @@ export const orgMemberProductOrderDiscountRelations = relations(
 		giftCard: one(orgGiftCard, {
 			fields: [orgMemberProductOrderDiscount.giftCardId],
 			references: [orgGiftCard.id],
+		}),
+		orderItem: one(orgMemberProductOrderItem, {
+			fields: [orgMemberProductOrderDiscount.orderItemId],
+			references: [orgMemberProductOrderItem.id],
+		}),
+	}),
+);
+
+export const orgMemberProductOrderTaxCalculationRelations = relations(
+	orgMemberProductOrderTaxCalculation,
+	({ one }) => ({
+		order: one(orgMemberProductOrder, {
+			fields: [orgMemberProductOrderTaxCalculation.orderId],
+			references: [orgMemberProductOrder.id],
+		}),
+		taxRate: one(orgMemberProductOrderTaxCalculation, {
+			fields: [orgMemberProductOrderTaxCalculation.taxRateId],
+			references: [orgMemberProductOrderTaxCalculation.taxRateId],
+		}),
+	}),
+);
+export const orgMemberProductOrderPaymentRelations = relations(
+	orgMemberProductOrderPayment,
+	({ one }) => ({
+		order: one(orgMemberProductOrder, {
+			fields: [orgMemberProductOrderPayment.orderId],
+			references: [orgMemberProductOrder.id],
 		}),
 	}),
 );

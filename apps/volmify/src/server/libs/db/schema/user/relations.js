@@ -1,13 +1,11 @@
 import { relations } from "drizzle-orm";
-import { orgMember } from "../org/member/schema.js";
 import { orgTeam } from "../org/member/team/schema.js";
 import {
 	orgMemberLearningProfile,
 	orgMemberProductCourseChallengeRating,
 } from "../org/product/by-type/course/schema.js";
 import { orgMemberProductVariantPaymentPlanSubscription } from "../org/product/payment/schema.js";
-import { instructorOrgAffiliation } from "../org/schema.js";
-import { userInstructorProfile } from "./profile/instructor/schema.js";
+import { userProfile } from "./profile/schema.js";
 import {
 	user,
 	userEmailVerificationRequest,
@@ -19,17 +17,16 @@ export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(userSession),
 	userEmailVerificationRequests: many(userEmailVerificationRequest),
 	passwordResetSessions: many(userPasswordResetSession),
-	affiliations: many(instructorOrgAffiliation),
-	instructorProfiles: many(userInstructorProfile),
 	courseProductsChallengeRatings: many(orgMemberProductCourseChallengeRating),
 	learningProfile: many(orgMemberLearningProfile),
 	//
-	orgMemberships: many(orgMember),
 	createdTeams: many(orgTeam),
 
 	orgsProductsVariantsPaymentPlansSubscription: many(
 		orgMemberProductVariantPaymentPlanSubscription,
 	),
+
+	profiles: many(userProfile),
 }));
 export const userSessionRelations = relations(userSession, ({ one }) => ({
 	user: one(user, {

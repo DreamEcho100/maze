@@ -1,20 +1,8 @@
-import { eq } from "drizzle-orm";
-import {
-	boolean,
-	decimal,
-	index,
-	integer,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { index, integer, uniqueIndex } from "drizzle-orm/pg-core";
 // Assuming these tables exist in your schema
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers";
-import { contactInfo } from "../../../general/contact-info/schema";
-import { orgLocale } from "../../../org/locale-region/schema";
-import { orgProduct } from "../../../org/product/schema";
-import { instructorOrgAffiliation } from "../../../org/schema";
-import { userTableName } from "../../_utils/helpers";
+import { buildUserI18nTable, userTableName } from "../../_utils/helpers";
+import { userProfile } from "../schema";
 
 const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
 /**
@@ -26,10 +14,15 @@ const userInstructorProfileTableName = `${userTableName}_instructor_profile`;
 export const userInstructorProfile = table(
 	userInstructorProfileTableName,
 	{
-		id: textCols.id().notNull(),
-		userId: sharedCols.userIdFk().notNull(),
+		// id: textCols.id().notNull(),
+		userProfileId: textCols
+			.idFk("user_profile_id")
+			.notNull()
+			.references(() => userProfile.id, { onDelete: "cascade" })
+			.primaryKey(),
+		// userId: sharedCols.userIdFk().notNull(),
 		slug: textCols.slug().notNull(),
-		verifiedAt: boolean("verified_at").default(false),
+		verifiedAt: temporalCols.business.verifiedAt(),
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -85,7 +78,7 @@ export const userInstructorProfile = table(
 	(t) => [
 		// uniqueIndex("uq_instructor_user").on(t.userId),
 		uniqueIndex(`uq_${userInstructorProfileTableName}_slug`).on(t.slug),
-		index(`idx_${userInstructorProfileTableName}_user_id`).on(t.userId),
+		index(`idx_${userInstructorProfileTableName}_user_profile_id`).on(t.userProfileId),
 		index(`idx_${userInstructorProfileTableName}_verified_at`).on(t.verifiedAt),
 		index(`idx_${userInstructorProfileTableName}_created_at`).on(t.createdAt),
 		index(`idx_${userInstructorProfileTableName}_last_updated_at`).on(t.lastUpdatedAt),
@@ -103,25 +96,18 @@ export const userInstructorProfile = table(
 //   activeUsers, engagements, revenue, enrollments
 // }
 
-const userInstructorProfileI18nTableName = `${userTableName}_instructor_profile_i18n`;
-export const userInstructorProfileI18n = table(
-	userInstructorProfileI18nTableName,
+// const userInstructorProfileI18nTableName = `${userTableName}_instructor_profile_i18n`;
+export const userInstructorProfileI18n = buildUserI18nTable(userInstructorProfileTableName)(
 	{
-		id: textCols.id().notNull(),
-		userInstructorProfileId: textCols
-			.idFk(`${userTableName}_instructor_profile_id`)
-			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
+		instructorProfileId: textCols
+			.idFk("instructor_profile_id")
+			.references(() => userInstructorProfile.userProfileId, {
+				onDelete: "cascade",
+			})
 			.notNull(),
-		localeKey: sharedCols
-			.orgLocaleKeyFk("locale_key")
-			.notNull()
-			.references(() => orgLocale.localeKey, { onDelete: "cascade" }),
-		isDefault: sharedCols.isDefault(),
-
 		// // Professional identity
 		// // Translatable instructor fields
-		professionalTitle: text("professional_title"),
-		bio: text("bio"),
+		professionalTitle: textCols.title("professional_title"),
 		// specialization: text("specialization"),
 
 		// // Teaching preferences (localized)
@@ -130,87 +116,13 @@ export const userInstructorProfileI18n = table(
 
 		// SEO metadata reference
 		seoMetadataId: sharedCols.seoMetadataIdFk(),
-
-		createdAt: temporalCols.audit.createdAt(),
-		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_locale_key`).on(
-			t.userInstructorProfileId,
-			t.localeKey,
-		),
-		uniqueIndex(`uq_${userInstructorProfileI18nTableName}_default`)
-			.on(t.userInstructorProfileId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-		index(`idx_${userInstructorProfileI18nTableName}_profile_id`).on(t.userInstructorProfileId),
-		index(`idx_${userInstructorProfileI18nTableName}_locale_key`).on(t.localeKey),
-		index(`idx_${userInstructorProfileI18nTableName}_seo_metadata_id`).on(t.seoMetadataId),
-		index(`idx_${userInstructorProfileI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${userInstructorProfileI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
-	],
-);
-
-const userInstructorProfileContactInfoTableName = `${userTableName}_instructor_profile_contact_info`;
-export const userInstructorProfileContactInfo = table(
-	userInstructorProfileContactInfoTableName,
 	{
-		id: textCols.id().notNull(),
-		instructorProfileId: textCols
-			.idFk("instructor_profile_id")
-			.notNull()
-			.references(() => userInstructorProfile.id, { onDelete: "cascade" }),
-		contactInfoId: textCols
-			.idFk("contact_info_id")
-			.notNull()
-			.references(() => contactInfo.id, { onDelete: "cascade" }),
-		// isPrimary: boolean("is_primary").default(false),
-		createdAt: temporalCols.audit.createdAt(),
+		fkKey: "instructorProfileId",
+		extraConfig: (t, tName) => [
+			index(`idx_${tName}_instructor_profile_id`).on(t.instructorProfileId),
+		],
 	},
-	(t) => [
-		index(`idx_${userInstructorProfileContactInfoTableName}_instructor_profile_id`).on(
-			t.instructorProfileId,
-		),
-		index(`idx_${userInstructorProfileContactInfoTableName}_contact_info_id`).on(t.contactInfoId),
-		index(`idx_${userInstructorProfileContactInfoTableName}_created_at`).on(t.createdAt),
-		// uniqueIndex("uq_instructor_contact_primary")
-		// 	.on(t.instructorProfileId, t.isPrimary)
-		// 	.where(eq(t.isPrimary, true)),
-	],
-);
-
-const userInstructorProfileProductTableName = `${userTableName}_instructor_profile_product`;
-/**
- * Instructor Revenue Tracking
- *
- * @businessLogic Revenue attribution for instructor course creators
- * Supports the vendorRevenue connection mentioned in course schema
- */
-export const userInstructorProfileRevenue = table(
-	userInstructorProfileProductTableName,
-	{
-		id: textCols.id().notNull(),
-		instructorMembershipId: textCols
-			.idFk("instructor_membership_id")
-			.notNull()
-			.references(() => instructorOrgAffiliation.id),
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id),
-		// Connect to order/transaction tables when implemented
-		orderId: textCols.idFk("order_id"), // Will reference order table
-		revenueAmount: decimal("revenue_amount", { precision: 12, scale: 2 }),
-		sharePercentage: decimal("share_percentage", { precision: 5, scale: 2 }),
-		paidAt: timestamp("paid_at"),
-		createdAt: temporalCols.audit.createdAt(),
-	},
-	(t) => [
-		index(`idx_${userInstructorProfileProductTableName}_instructor_membership_id`).on(
-			t.instructorMembershipId,
-		),
-		index(`idx_${userInstructorProfileProductTableName}_product_id`).on(t.productId),
-		index(`idx_${userInstructorProfileProductTableName}_order_id`).on(t.orderId),
-	],
 );
 
 const userInstructorProfileSkillTableName = `${userTableName}_instructor_profile_skill`;
@@ -218,18 +130,14 @@ export const userInstructorProfileSkill = table(
 	userInstructorProfileSkillTableName,
 	{
 		id: textCols.id().notNull(),
-		profileId: textCols
-			.idFk("profile_id")
-			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
+		instructorProfileId: textCols
+			.idFk("instructor_profile_id")
+			.references(() => userInstructorProfile.userProfileId, {
+				onDelete: "cascade",
+			})
 			.notNull(),
-		// Engagement metrics
-		totalStudents: integer("total_students").default(0),
+		// TODO: connect to the skill table
 
-		ratingTotal: numericCols.ratingTotal("rating_total").default(0),
-		ratingCount: numericCols.ratingCount("rating_count").default(0),
-		ratingAvg: numericCols.ratingAgg("rating_avg").default("0.00"),
-
-		totalReviews: integer("total_reviews").default(0),
 		createdAt: temporalCols.audit.createdAt(),
 
 		// totalCourses: integer("total_courses").default(0),
@@ -294,14 +202,12 @@ export const userInstructorProfileSkill = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${userInstructorProfileSkillTableName}_profile_id`).on(t.profileId),
+		index(`idx_${userInstructorProfileSkillTableName}_instructor_profile_id`).on(
+			t.instructorProfileId,
+		),
 		index(`idx_${userInstructorProfileSkillTableName}_last_updated`).on(t.lastUpdatedAt),
 		index(`idx_${userInstructorProfileSkillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${userInstructorProfileSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${userInstructorProfileSkillTableName}_rating_total`).on(t.ratingTotal),
-		index(`idx_${userInstructorProfileSkillTableName}_rating_count`).on(t.ratingCount),
-		index(`idx_${userInstructorProfileSkillTableName}_rating_avg`).on(t.ratingAvg),
-		index(`idx_${userInstructorProfileSkillTableName}_total_reviews`).on(t.totalReviews),
 	],
 );
 // TODO:
@@ -310,30 +216,34 @@ export const userInstructorProfileSkill = table(
 // orgInstructorAnalytics: {
 //   instructorId, orgId, period, activeUsers, engagements, periodType: "daily|weekly|monthly"
 // }
-const userInstructorProfileSkillI18nTableName = `${userTableName}_instructor_profile_skill_i18n`;
-export const userInstructorProfileCoursesMetrics = table(
-	userInstructorProfileSkillI18nTableName,
+
+const userInstructorProfileMetricsTableName = `${userTableName}_instructor_profile_metrics`;
+export const userInstructorProfileMetrics = table(
+	userInstructorProfileMetricsTableName,
 	{
 		id: textCols.id().notNull(),
-		profileId: textCols
-			.idFk("profile_id")
-			.references(() => userInstructorProfile.id, { onDelete: "cascade" })
+		instructorProfileId: textCols
+			.idFk("instructor_profile_id")
+			.references(() => userInstructorProfile.userProfileId, {
+				onDelete: "cascade",
+			})
 			.notNull(),
-		amount: integer("amount").default(0),
 
-		totalRevenueGenerated: decimal("total_revenue_generated", {
-			precision: 12,
-			scale: 2,
-		}).default("0"),
-		totalPayouts: decimal("total_payouts", { precision: 12, scale: 2 }).default("0"),
-
+		// Engagement metrics
+		totalStudents: integer("total_students").default(0),
+		totalCourses: integer("total_courses").default(0),
 		totalCompletedByStudents: integer("total_completed_by_students").default(0),
 		totalInProgressByStudents: integer("total_in_progress_by_students").default(0),
 
 		ratingTotal: numericCols.ratingTotal("rating_total").default(0),
 		ratingCount: numericCols.ratingCount("rating_count").default(0),
 		ratingAvg: numericCols.ratingAgg("rating_avg").default("0.00"),
+
 		totalReviews: integer("total_reviews").default(0),
+
+		totalRevenueGenerated: numericCols.currency.price("total_revenue_generated").default("0.00"),
+		totalPayouts: numericCols.currency.price("total_payouts").default("0.00"),
+
 		// totalActive: integer("total_courses_active").default(0),
 		// totalArchived: integer("total_courses_archived").default(0),
 		// totalPending: integer("total_courses_pending").default(0),
@@ -355,12 +265,27 @@ export const userInstructorProfileCoursesMetrics = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${userInstructorProfileSkillI18nTableName}_profile_id`).on(t.profileId),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_total`).on(t.ratingTotal),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_count`).on(t.ratingCount),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_rating_avg`).on(t.ratingAvg),
-		index(`idx_${userInstructorProfileSkillI18nTableName}_total_reviews`).on(t.totalReviews),
+		index(`idx_${userInstructorProfileMetricsTableName}_instructor_profile_id`).on(
+			t.instructorProfileId,
+		),
+		index(`idx_${userInstructorProfileMetricsTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${userInstructorProfileMetricsTableName}_rating_total`).on(t.ratingTotal),
+		index(`idx_${userInstructorProfileMetricsTableName}_rating_count`).on(t.ratingCount),
+		index(`idx_${userInstructorProfileMetricsTableName}_rating_avg`).on(t.ratingAvg),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_reviews`).on(t.totalReviews),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_revenue_generated`).on(
+			t.totalRevenueGenerated,
+		),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_payouts`).on(t.totalPayouts),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_students`).on(t.totalStudents),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_courses`).on(t.totalCourses),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_completed_by_students`).on(
+			t.totalCompletedByStudents,
+		),
+		index(`idx_${userInstructorProfileMetricsTableName}_total_in_progress_by_students`).on(
+			t.totalInProgressByStudents,
+		),
+		index(`idx_${userInstructorProfileMetricsTableName}_created_at`).on(t.createdAt),
+		index(`idx_${userInstructorProfileMetricsTableName}_last_updated`).on(t.lastUpdatedAt),
 	],
 );
