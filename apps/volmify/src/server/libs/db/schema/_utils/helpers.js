@@ -15,6 +15,7 @@ import { orgLocale } from "../org/locale-region/schema";
 import { orgMember } from "../org/member/schema";
 import { org } from "../org/schema";
 import { user } from "../user/schema";
+import { byteaUlid } from "./custom-fields";
 
 const createId = ulid;
 
@@ -31,8 +32,8 @@ const createId = ulid;
 export const table = pgTable;
 
 export const textCols = {
-	id: () => text("id").primaryKey().$default(createId),
-	idFk: text,
+	id: () => byteaUlid("id").primaryKey().$default(createId),
+	idFk: byteaUlid,
 	// Identifiers & URLs (ASCII-optimized)
 	slug: () => varchar("slug", { length: 128 }), // URL-safe, indexed frequently
 	key: () => varchar("key", { length: 128 }), // Permission keys, API keys
@@ -159,22 +160,18 @@ export const numericCols = {
 	// Access Control
 	/** @param {string} [name] */
 	accessTier: (name) => integer(name ?? "access_tier").default(1), // 1-10 tier levels
-	priority: ({ name = "priority", default: defaultVal = 0 }) =>
-		integer(name).default(defaultVal), // Rule priority
+	priority: ({ name = "priority", default: defaultVal = 0 }) => integer(name).default(defaultVal), // Rule priority
 	//
 	// ✅ FINANCIAL: High-precision currency amounts
 	currency: {
 		// Standard currency amounts (supports micro-currencies)
 		amount: (name = "amount") => decimal(name, { precision: 12, scale: 4 }),
 		price: (name = "price") => decimal(name, { precision: 12, scale: 4 }),
-		basePrice: (name = "base_price") =>
-			decimal(name, { precision: 12, scale: 4 }),
-		finalPrice: (name = "final_price") =>
-			decimal(name, { precision: 12, scale: 4 }),
+		basePrice: (name = "base_price") => decimal(name, { precision: 12, scale: 4 }),
+		finalPrice: (name = "final_price") => decimal(name, { precision: 12, scale: 4 }),
 
 		// Discount/coupon values
-		discountValue: (name = "value") =>
-			decimal(name, { precision: 12, scale: 4 }),
+		discountValue: (name = "value") => decimal(name, { precision: 12, scale: 4 }),
 		couponValue: (name = "value") => decimal(name, { precision: 12, scale: 4 }),
 
 		// Balances and credits
@@ -187,57 +184,44 @@ export const numericCols = {
 		// Standard percentages (0.00-100.00%)
 		rate: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
 		taxRate: (name = "rate") => decimal(name, { precision: 5, scale: 4 }), // Higher precision for tax
-		discountPercentage: (name = "percentage") =>
-			decimal(name, { precision: 5, scale: 2 }),
-		revenueShare: (name = "revenue_share") =>
-			decimal(name, { precision: 5, scale: 4 }),
+		discountPercentage: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
+		revenueShare: (name = "revenue_share") => decimal(name, { precision: 5, scale: 4 }),
 		vatRate: (name = "vat_rate") => decimal(name, { precision: 5, scale: 4 }),
 	},
 
 	// ✅ EXCHANGE RATES: Ultra-high precision
 	exchangeRate: {
 		rate: (name = "rate") => decimal(name, { precision: 16, scale: 8 }), // Exchange rate precision
-		roundingIncrement: (name = "rounding_increment") =>
-			decimal(name, { precision: 10, scale: 6 }),
+		roundingIncrement: (name = "rounding_increment") => decimal(name, { precision: 10, scale: 6 }),
 	},
 
 	// ✅ RATINGS & METRICS: User-facing metrics
 	rating: {
 		// Course/content ratings (0.00-10.00)
-		courseRating: (name = "rating") =>
-			decimal(name, { precision: 3, scale: 2 }),
-		avgRating: (name = "avg_rating") =>
-			decimal(name, { precision: 3, scale: 2 }),
-		difficultyRating: (name = "difficulty_rating") =>
-			decimal(name, { precision: 3, scale: 2 }),
+		courseRating: (name = "rating") => decimal(name, { precision: 3, scale: 2 }),
+		avgRating: (name = "avg_rating") => decimal(name, { precision: 3, scale: 2 }),
+		difficultyRating: (name = "difficulty_rating") => decimal(name, { precision: 3, scale: 2 }),
 	},
 	// rating_: (name = "rating") => integer(name),
 
 	// ✅ ANALYTICS: Performance metrics
 	analytics: {
 		// Click-through rates, conversion rates
-		conversionRate: (name = "conversion_rate") =>
-			decimal(name, { precision: 5, scale: 4 }),
-		clickThroughRate: (name = "click_through_rate") =>
-			decimal(name, { precision: 5, scale: 4 }),
-		averagePosition: (name = "average_position") =>
-			decimal(name, { precision: 5, scale: 2 }),
+		conversionRate: (name = "conversion_rate") => decimal(name, { precision: 5, scale: 4 }),
+		clickThroughRate: (name = "click_through_rate") => decimal(name, { precision: 5, scale: 4 }),
+		averagePosition: (name = "average_position") => decimal(name, { precision: 5, scale: 2 }),
 	},
 };
 
 export const temporalCols = {
 	// Business events (second precision sufficient)
-	startsAt: () =>
-		timestamp("starts_at", { precision: 3, withTimezone: true }).defaultNow(),
+	startsAt: () => timestamp("starts_at", { precision: 3, withTimezone: true }).defaultNow(),
 	endsAt: () => timestamp("ends_at", { precision: 3, withTimezone: true }),
-	expiresAt: () =>
-		timestamp("expires_at", { precision: 3, withTimezone: true }),
+	expiresAt: () => timestamp("expires_at", { precision: 3, withTimezone: true }),
 
 	// User activity (minute precision for analytics)
-	lastAccessedAt: () =>
-		timestamp("last_accessed_at", { precision: 3, withTimezone: true }),
-	completedAt: () =>
-		timestamp("completed_at", { precision: 3, withTimezone: true }),
+	lastAccessedAt: () => timestamp("last_accessed_at", { precision: 3, withTimezone: true }),
+	completedAt: () => timestamp("completed_at", { precision: 3, withTimezone: true }),
 
 	// ✅ AUDIT TRAIL: High precision for compliance
 	audit: {
@@ -245,78 +229,55 @@ export const temporalCols = {
 			timestamp(name, { precision: 3, withTimezone: true }).defaultNow(),
 		lastUpdatedAt: (name = "last_updated_at") =>
 			timestamp(name, { precision: 3, withTimezone: true }).defaultNow(),
-		deletedAt: (name = "deleted_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
+		deletedAt: (name = "deleted_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ BUSINESS EVENTS: Second precision sufficient
 	business: {
-		startsAt: (name = "starts_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		endsAt: (name = "ends_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		expiresAt: (name = "expires_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		publishedAt: (name = "published_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		scheduledAt: (name = "scheduled_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
+		startsAt: (name = "starts_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		endsAt: (name = "ends_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		expiresAt: (name = "expires_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		publishedAt: (name = "published_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		scheduledAt: (name = "scheduled_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ FINANCIAL: High precision for financial events
 	financial: {
 		issuedAt: (name = "issued_at") =>
 			timestamp(name, { precision: 3, withTimezone: true }).defaultNow(),
-		paidAt: (name = "paid_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		refundedAt: (name = "refunded_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		validFrom: (name = "valid_from") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		validTo: (name = "valid_to") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
+		paidAt: (name = "paid_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		refundedAt: (name = "refunded_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		validFrom: (name = "valid_from") => timestamp(name, { precision: 3, withTimezone: true }),
+		validTo: (name = "valid_to") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ USER ACTIVITY: Minute precision for analytics
 	activity: {
 		lastAccessedAt: (name = "last_accessed_at") =>
 			timestamp(name, { precision: 3, withTimezone: true }),
-		completedAt: (name = "completed_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		lastSeenAt: (name = "last_seen_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		joinedAt: (name = "joined_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		invitedAt: (name = "invited_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		acceptedAt: (name = "accepted_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		declinedAt: (name = "declined_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
+		completedAt: (name = "completed_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		lastSeenAt: (name = "last_seen_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		joinedAt: (name = "joined_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		invitedAt: (name = "invited_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		acceptedAt: (name = "accepted_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		declinedAt: (name = "declined_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ SYSTEM EVENTS: Millisecond precision for debugging
 	system: {
-		processedAt: (name = "processed_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		syncedAt: (name = "synced_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
-		indexedAt: (name = "indexed_at") =>
-			timestamp(name, { precision: 3, withTimezone: true }),
+		processedAt: (name = "processed_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		syncedAt: (name = "synced_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		indexedAt: (name = "indexed_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 };
 
 export const sharedCols = {
 	// Multi-tenant foundations
-	orgIdFk: () =>
-		textCols.idFk("org_id").references(() => org.id, { onDelete: "cascade" }),
+	orgIdFk: () => textCols.idFk("org_id").references(() => org.id, { onDelete: "cascade" }),
 	orgMemberIdFk: () =>
-		textCols
-			.idFk("member_id")
-			.references(() => orgMember.id, { onDelete: "cascade" }),
+		textCols.idFk("member_id").references(() => orgMember.id, { onDelete: "cascade" }),
 
-	userIdFk: () =>
-		textCols.idFk("user_id").references(() => user.id, { onDelete: "cascade" }),
+	userIdFk: () => textCols.idFk("user_id").references(() => user.id, { onDelete: "cascade" }),
 
 	// Localization columns
 	/** @param {string} [name] */
@@ -350,9 +311,7 @@ export const sharedCols = {
 
 	// SEO & Marketing
 	seoMetadataIdFk: () =>
-		textCols
-			.idFk("seo_metadata_id")
-			.references(() => seoMetadata.id, { onDelete: "set null" }),
+		textCols.idFk("seo_metadata_id").references(() => seoMetadata.id, { onDelete: "set null" }),
 };
 
 export const ecommerceCols = {
@@ -389,8 +348,7 @@ export const lmsCols = {
 	// Ratings and feedback (community quality)
 	levelRating: () => integer("level_rating"), // 1-10 prerequisite level
 	difficultyRating: () => integer("difficulty_rating"), // 1-10 complexity
-	avgRating: () =>
-		decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"), // 0.00-10.00
+	avgRating: () => decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"), // 0.00-10.00
 
 	// Access control
 	requiredAccessTier: () => integer("required_access_tier").default(1),
