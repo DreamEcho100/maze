@@ -9,17 +9,10 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import {
-	numericCols,
-	sharedCols,
-	table,
-	temporalCols,
-	textCols,
-} from "../../../_utils/helpers.js";
+import { numericCols, sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
-import { orgMember } from "../../member/schema.js";
 import { orgProductCollection } from "../collection/schema.js";
-import { orgMemberProductOrder } from "../orders/schema.js";
+import { orgMemberOrder } from "../orders/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
 
 const orgDiscountTableName = `${orgTableName}_discount`;
@@ -40,10 +33,12 @@ export const orgDiscountTypeEnum = pgEnum(`${orgDiscountTableName}_type`, [
  * @permissionContext Defines scoping logic for discount applicability
  * @abacRole Affects who can redeem based on resource association
  */
-export const discountAppliesToEnum = pgEnum(
-	`${orgDiscountTableName}_applies_to`,
-	["product", "variant", "collection", "all"],
-);
+export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`, [
+	"product",
+	"variant",
+	"collection",
+	"all",
+]);
 
 /**
  * @table discount
@@ -80,11 +75,7 @@ export const orgDiscount = table(
 		index(`idx_${orgDiscountTableName}_active`).on(t.isActive),
 		index(`idx_${orgDiscountTableName}_applies_to`).on(t.appliesTo),
 		index(`idx_${orgDiscountTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgDiscountTableName}_active_dates`).on(
-			t.isActive,
-			t.startsAt,
-			t.endsAt,
-		),
+		index(`idx_${orgDiscountTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
 		index(`idx_${orgDiscountTableName}_currency_code`).on(t.currencyCode),
 	],
 );
@@ -177,9 +168,7 @@ export const orgDiscountProductVariant = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.discountId, t.variantId] }),
-		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(
-			t.createdAt,
-		),
+		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(t.createdAt),
 	],
 );
 
@@ -234,23 +223,16 @@ export const orgMemberOrderDiscountUsage = table(
 			.notNull()
 			.references(() => orgDiscount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: textCols
-			.idFk("order_id")
-			.references(() => orgMemberProductOrder.id),
+		orderId: textCols.idFk("order_id").references(() => orgMemberOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(
-			t.memberId,
-			t.discountId,
-		),
+		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
 		index(`idx_${orgDiscountUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgDiscountUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -288,11 +270,7 @@ export const orgCoupon = table(
 		index(`idx_${orgCouponTableName}_discount_id`).on(t.discountId),
 		index(`idx_${orgCouponTableName}_active`).on(t.isActive),
 		index(`idx_${orgCouponTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgCouponTableName}_active_dates`).on(
-			t.isActive,
-			t.startsAt,
-			t.endsAt,
-		),
+		index(`idx_${orgCouponTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
 		index(`idx_${orgCouponTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgCouponTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgCouponTableName}_deleted_at`).on(t.deletedAt),
@@ -343,9 +321,10 @@ export const orgGiftCard = table(
 		remainingBalance: numericCols.currency.balance().notNull(),
 		currencyCode: sharedCols.currencyCodeFk().notNull(),
 		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
-		issuedToMemberId: textCols
-			.idFk("issued_to_member_id")
-			.references(() => orgMember.id),
+		// Who created/issued the gift card
+		issuedByEmployeeId: sharedCols.orgEmployeeIdFk("issued_by_employee_id").notNull(),
+		// Who receives it
+		issuedToMemberId: sharedCols.orgMemberIdFk("issued_to_member_id"),
 		issuedToEmail: text("issued_to_email"),
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
 		expiresAt: temporalCols.business.expiresAt(),
@@ -359,7 +338,7 @@ export const orgGiftCard = table(
 		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
 		index(`idx_${orgGiftCardTableName}_org`).on(t.orgId),
 		index(`idx_${orgGiftCardTableName}_currency`).on(t.currencyCode),
-		index(`idx_${orgGiftCardTableName}_member_id`).on(t.issuedToMemberId),
+		index(`idx_${orgGiftCardTableName}_member_id`).on(t.issuedByEmployeeId),
 		index(`idx_${orgGiftCardTableName}_email`).on(t.issuedToEmail),
 		index(`idx_${orgGiftCardTableName}_active`).on(t.isActive),
 		index(`idx_${orgGiftCardTableName}_expires`).on(t.expiresAt),
@@ -417,15 +396,11 @@ export const orgMemberGiftCardUsage = table(
 	},
 	(t) => [
 		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(
-			t.giftCardId,
-		),
+		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(t.giftCardId),
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
 		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -455,11 +430,7 @@ export const orgPromotion = table(
 		index(`idx_${orgPromotionTableName}n_org`).on(t.orgId),
 		index(`idx_${orgPromotionTableName}n_active`).on(t.isActive),
 		index(`idx_${orgPromotionTableName}n_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgPromotionTableName}n_active_dates`).on(
-			t.isActive,
-			t.startsAt,
-			t.endsAt,
-		),
+		index(`idx_${orgPromotionTableName}n_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
 		index(`idx_${orgPromotionTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgPromotionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgPromotionTableName}_deleted_at`).on(t.deletedAt),

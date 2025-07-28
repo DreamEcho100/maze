@@ -1,7 +1,8 @@
 import { relations } from "drizzle-orm";
 import { orgProductCourseSkill } from "../../org/product/by-type/course/schema";
 import { org } from "../../org/schema";
-import { locale } from "../locale-currency-market/schema";
+import { userJobProfileSkill } from "../../user/profile/job/schema";
+import { locale } from "../locale-and-currency/schema";
 import { seoMetadata } from "../seo/schema";
 import { skill, skillI18n } from "./schema";
 
@@ -9,10 +10,10 @@ export const skillRelations = relations(skill, ({ many, one }) => ({
 	parentSkill: one(skill, {
 		fields: [skill.parentSkillId],
 		references: [skill.id],
-		relationName: "skillHierarchy",
+		relationName: "parent_skill_hierarchy",
 	}),
 	childSkills: many(skill, {
-		relationName: "skillHierarchy",
+		relationName: "childS_sills_hierarchy",
 	}),
 	appliedByOrg: one(org, {
 		fields: [skill.appliedByOrgId],
@@ -27,6 +28,7 @@ export const skillRelations = relations(skill, ({ many, one }) => ({
 	}),
 	productsCourseType: many(orgProductCourseSkill),
 	translations: many(skillI18n),
+	jobProfileSkills: many(userJobProfileSkill),
 }));
 export const skillI18nRelations = relations(skillI18n, ({ many, one }) => ({
 	skill: one(skill, {

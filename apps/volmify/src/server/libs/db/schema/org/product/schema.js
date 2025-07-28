@@ -1,21 +1,21 @@
 /**
  * @fileoverview Product Schema - Multi-Tenant E-commerce Product Catalog with Creator Attribution
  *
- * @architecture Multi-Tenant Product Catalog + Professional Attribution + Payment Plan Integration
+ * @architecture Multi-Tenant Product Catalog + Job Attribution + Payment Plan Integration
  * E-commerce product system supporting multiple product types (physical, digital, course, service)
  * with org boundaries, professional content attribution, and integrated payment strategies.
  * Designed for creator economy where Org Members create educational content within org contexts
  * while maintaining clear revenue attribution and brand identity integration.
  *
- * @designPattern CTI + Professional Attribution + Brand Attribution + Variant-Based Commerce + Payment Integration
+ * @designPattern CTI + Job Attribution + Brand Attribution + Variant-Based Commerce + Payment Integration
  * - CTI Pattern: Course-specific tables extend base product for educational content specialization
- * - Professional Attribution: Org Member-product attribution for creator economy revenue sharing workflows
+ * - Job Attribution: Org Member-product attribution for creator economy revenue sharing workflows
  * - Brand Attribution: Org brand identity integration for consistent marketing strategies
  * - Variant-Based Commerce: Product variations (access levels, features) with independent pricing strategies
  * - Payment Integration: Direct integration with payment plans eliminating separate pricing table redundancy
  *
  * @integrationPoints
- * - Professional Attribution: Org Member revenue sharing and content creation workflows
+ * - Job Attribution: Org Member revenue sharing and content creation workflows
  * - Brand Integration: Org brand identity and marketing attribution systems
  * - Payment Integration: Product variants connect directly to sophisticated payment plan strategies
  * - Course System: Educational content creation and delivery for Org Member economy
@@ -29,13 +29,22 @@
  *
  * @scalingDesign
  * CTI pattern enables adding new product types without affecting existing commerce workflows.
- * Professional attribution system scales to support multiple creator types and revenue models.
+ * Job attribution system scales to support multiple creator types and revenue models.
  * Payment plan integration eliminates pricing table redundancy while maintaining sophisticated
  * pricing strategies and promotional campaign compatibility.
  */
 
-import { eq } from "drizzle-orm";
-import { index, jsonb, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { eq, sql } from "drizzle-orm";
+import {
+	boolean,
+	check,
+	decimal,
+	index,
+	jsonb,
+	pgEnum,
+	primaryKey,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
@@ -55,7 +64,7 @@ const orgProductTableName = `${orgTableName}_product`;
  * - physical: Traditional physical goods requiring shipping and inventory management
  * - digital: Digital downloads and software products with instant delivery
  * - course: Educational content with Org Member attribution and creator economy workflows
- * - service: Professional services and consultations with booking and delivery workflows
+ * - service: Job services and consultations with booking and delivery workflows
  */
 export const productTypeEnum = pgEnum(`${orgProductTableName}_type`, [
 	"physical",
@@ -76,7 +85,40 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 	"draft",
 	"active",
 	"archived",
+	"pending_approval", // Pending approval by org admin or who have the permission to approve products
+	"rejected", // Rejected by org admin or who have the permission to approve products
+	// "pending_review", // Pending review by org admin or who have the permission to review products
 ]);
+
+const orgProductApprovalTableName = `${orgProductTableName}_approval`;
+export const orgProductApprovalStatusEnum = pgEnum(`${orgProductApprovalTableName}_status`, [
+	"pending", // Awaiting review
+	"approved", // Approved by reviewer
+	"rejected", // Rejected with comments
+]);
+/**
+ * @module ProductApproval
+ * @domain Human-based review and compliance enforcement for user-created content
+ *
+ * @description Supports course drafts, rejection comments, and admin flow.
+ */
+export const orgProductApproval = table(orgProductApprovalTableName, {
+	id: textCols.id().notNull(),
+
+	productId: textCols
+		.idFk("product_id")
+		.notNull()
+		.references(() => orgProduct.id),
+	submittedByEmployeeId: sharedCols.orgEmployeeIdFk("submitted_by_employee_id").notNull(),
+	reviewedByEmployeeId: sharedCols.orgEmployeeIdFk("reviewed_by_employee_id"),
+
+	status: orgProductApprovalStatusEnum("status").default("pending"),
+
+	notes: textCols.description("notes"), // Reviewer comments or feedback
+	reviewedAt: temporalCols.business.reviewedAt("reviewed_at").notNull(),
+	createdAt: temporalCols.audit.createdAt(),
+	lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+});
 
 // -------------------------------------
 // CORE PRODUCT CATALOG
@@ -150,6 +192,12 @@ export const orgProduct = table(
 		//  * @businessFlexibility Enables product-specific features without schema changes
 		//  */
 		// metadata: jsonb("metadata"),
+		hasPendingApproval: boolean("has_pending_approval").default(false),
+		// approvalId: textCols.idFk("approval_id").references(() => orgProductApproval.id),
+		approvedAt: temporalCols.business.approvedAt("approved_at"),
+		rejectedAt: temporalCols.business.rejectedAt("rejected_at"), // Reusing approvedAt for rejected
+		// approvedBy: textCols.idFk("approved_by").references(() => orgEmployee.id, {
+		// 	onDelete: "set null",
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -483,5 +531,58 @@ export const orgProductBrandAttribution = table(
 
 		// Performance Indexes
 		index(`idx_${orgProductBrandTableName}_created_at`).on(t.createdAt),
+	],
+);
+
+// Q: The revenue pool for products or for product variants or for the products variants payment plans?
+const orgProductRevenuePoolTableName = `${orgProductTableName}_revenue_pool`;
+export const orgProductRevenuePool = table(
+	orgProductRevenuePoolTableName,
+	{
+		// id: textCols.id().notNull(),
+		productId: textCols
+			.idFk("product_id")
+			.primaryKey()
+			.references(() => orgProduct.id)
+			.notNull(),
+		totalAllocatedPercentage: decimal("total_allocated_percentage", {
+			precision: 5,
+			scale: 2,
+		}).default("0.00"),
+		remainingPercentage: decimal("remaining_percentage", { precision: 5, scale: 2 }).default(
+			"100.00",
+		),
+
+		// Revenue allocation tracking
+		allocationHistory: jsonb("allocation_history"), // Track changes for audit
+		lastAllocationByEmployeeId: sharedCols.orgEmployeeIdFk("last_allocation_by_employee_id"),
+		lastAllocationAt: temporalCols.audit.lastUpdatedAt(),
+
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+	},
+	(t) => [
+		check(
+			`ck_${orgProductRevenuePoolTableName}_valid_percentages`,
+			sql`${t.totalAllocatedPercentage} + ${t.remainingPercentage} = 100`,
+		),
+		check(
+			`ck_${orgProductRevenuePoolTableName}_non_negative_remaining`,
+			sql`${t.remainingPercentage} >= 0`,
+		),
+
+		// uniqueIndex("uq_product_revenue_pool").on(t.productId), // One pool per product
+		check(
+			`ck_${orgProductRevenuePoolTableName}_valid_percentages`,
+			sql`${t.totalAllocatedPercentage} + ${t.remainingPercentage} = 100`,
+		),
+		check(
+			`ck_${orgProductRevenuePoolTableName}_non_negative_remaining`,
+			sql`${t.remainingPercentage} >= 0`,
+		),
+		check(
+			"valid_allocated_range",
+			sql`${t.totalAllocatedPercentage} >= 0 AND ${t.totalAllocatedPercentage} <= 100`,
+		),
 	],
 );

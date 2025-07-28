@@ -1,20 +1,25 @@
-import { index, pgEnum, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { index, pgEnum, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
-import { userProfile } from "../../user/profile/schema.js";
+import { user } from "../../user/schema.js";
 import { orgTableName } from "../_utils/helpers.js";
 
-export const orgMemberBaseRoleEnum = pgEnum("org_member_base_role", [
-	"admin", // Full org privileges; manage members, teams, configs
-	"member", // Standard member role; actual permissions governed by group mappings
+// - **`orgMember`** = Customer/user presence in org (enrolls in courses, places orders)
+
+const orgMemberTableName = `${orgTableName}_member`;
+
+export const orgMemberBaseRoleEnum = pgEnum(`${orgMemberTableName}_base_role`, [
 	"owner", // Full control over the org; can manage settings, members, and resources
+	"member", // Standard member role; actual permissions governed by group mappings
+	// "admin", // Full org privileges; manage members, teams, configs
+	"employee",
 ]);
 
-export const orgMemberStatusEnum = pgEnum("org_member_status", [
-	"active", // Currently active member
-	"invited", // Awaiting acceptance of invitation
-	"suspended", // Temporarily suspended; cannot access org resources
-	"left", // Member has left the org
-	"removed", // Member removed by admin; cannot rejoin without new invite
+export const orgMemberStatusEnum = pgEnum(`${orgMemberTableName}_status`, [
+	"active",
+	// Q: What're the possible statuses of a member/user of an org?
+	"banned",
+	"pending",
+	"none_but_invited_as_employee",
 ]);
 
 /**
@@ -25,7 +30,7 @@ export const orgMemberStatusEnum = pgEnum("org_member_status", [
  * in ABAC evaluations. Connects the global user identity to tenant-specific roles.
  */
 export const orgMember = table(
-	`${orgTableName}_member`,
+	orgMemberTableName,
 	{
 		id: textCols.id().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
@@ -36,32 +41,29 @@ export const orgMember = table(
 
 		// userId: sharedCols.userIdFk().notNull(),
 		userProfileId: sharedCols.userProfileIdFk().notNull(),
+
+		// Q: displayName vs customerDisplayName/memberDisplayName
+		displayName: textCols.displayName(),
 		/**
 		 * Determines baseline org access. Most logic uses permission groups for actual decisions.
 		 */
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
 
 		/**
-		 * Status can be: invited, active, suspended, left
+		 * Status can be:
 		 */
-		status: orgMemberStatusEnum("status").notNull().default("invited"),
+		status: orgMemberStatusEnum("status").notNull().default("active"),
 
-		displayName: textCols.displayName().notNull(),
-
-		invitedAt: temporalCols.activity.invitedAt().defaultNow(),
-		invitedById: textCols.idFk("invited_by_id").references(() => userProfile.id),
 		joinedAt: temporalCols.activity.joinedAt(),
+		lastActiveAt: temporalCols.activity.lastActiveAt(),
 	},
-	(table) => {
-		const base = `${orgTableName}_member`;
-		return [
-			index(`idx_${base}_created_at`).on(table.createdAt),
-			uniqueIndex(`uq_${base}_user_profile_org`).on(table.userProfileId, table.orgId),
-		];
-	},
+	(table) => [
+		index(`idx_${orgMemberTableName}_created_at`).on(table.createdAt),
+		uniqueIndex(`uq_${orgMemberTableName}_user_profile_org`).on(table.userProfileId, table.orgId),
+	],
 );
 
-export const orgMemberInvitationStatusEnum = pgEnum(`${orgTableName}_member_invitation_status`, [
+export const orgMemberInvitationStatusEnum = pgEnum(`${orgMemberTableName}_invitation_status`, [
 	"pending", // Awaiting response
 	"accepted", // Member joined org
 	"declined", // Invitee declined
@@ -76,36 +78,46 @@ export const orgMemberInvitationStatusEnum = pgEnum(`${orgTableName}_member_invi
  * Handles invitation issuance and acceptance into the ABAC org model.
  */
 export const orgMemberInvitation = table(
-	`${orgTableName}_member_invitation`,
+	`${orgMemberTableName}_invitation`,
 	{
 		id: textCols.id().notNull(),
-		createdAt: temporalCols.audit.createdAt(),
-		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		orgId: sharedCols.orgIdFk().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
-		invitedByMemberId: textCols
-			.idFk("invited_by_member_id")
-			.notNull()
-			.references(() => orgMember.id, { onDelete: "cascade" }),
-		approvedByMemberId: textCols.idFk("approved_by_member_id").references(() => orgMember.id),
 
+		// Customer invitation context
+		invitationType: pgEnum("invitation_type", ["customer", "learner", "community"])("type").default(
+			"learner",
+		),
+		welcomeMessage: textCols.shortDescription("welcome_message"),
+
+		// TODO:
+		// // Course/product access (optional)
+		// grantedCourseAccess: text("granted_course_access").array(),
+
+		invitedByMemberId: sharedCols.orgMemberIdFk("invited_by_member_id").notNull(), // Any member can invite customers
+		status: orgMemberInvitationStatusEnum("status").default("pending"),
 		expiresAt: temporalCols.business.expiresAt().notNull(),
-		status: orgMemberInvitationStatusEnum("status").notNull().default("pending"),
+
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+
 		role: orgMemberBaseRoleEnum("role").notNull().default("member"),
-		message: text("message"),
 		acceptedAt: temporalCols.activity.acceptedAt(),
 		declinedAt: temporalCols.activity.declinedAt(),
 		memberId: textCols.idFk("member_id").references(() => orgMember.id),
+		userId: textCols.idFk("user_id").references(() => user.id),
+		// invitedByEmployeeId: sharedCols
+		// 	.orgEmployeeIdFk("invited_by_employee_id")
 	},
 	(t) => {
-		const base = `${orgTableName}_member_invitation`;
+		const base = `${orgMemberTableName}_invitation`;
 		return [
 			index(`idx_${base}_created_at`).on(t.createdAt),
 			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
 			index(`idx_${base}_status`).on(t.status),
 			index(`idx_${base}_expires_at`).on(t.expiresAt),
 			index(`idx_${base}_email`).on(t.email),
-			index(`idx_${base}_invited_by_user_id`).on(t.invitedByMemberId),
+			index(`idx_${base}_invited_by_member_id`).on(t.invitedByMemberId),
 			index(`idx_${base}_org_id`).on(t.orgId),
 			uniqueIndex(`uq_${base}_email_org`).on(t.email, t.orgId),
 		];

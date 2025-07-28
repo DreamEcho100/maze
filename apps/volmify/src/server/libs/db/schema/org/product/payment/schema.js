@@ -228,13 +228,13 @@ export const orgProductVariantPaymentPlan = table(
 		 * @campaignManagement When this pricing becomes effective
 		 * @promotionalStrategy Enables scheduled pricing changes and campaigns
 		 */
-		startsAt: temporalCols.business.startsAt().defaultNow(),
+		validFrom: temporalCols.financial.validFrom().defaultNow(),
 
 		/**
 		 * @campaignManagement When this pricing expires (null = permanent)
 		 * @promotionalStrategy Supports time-limited promotional pricing
 		 */
-		endsAt: temporalCols.business.endsAt(),
+		validTo: temporalCols.financial.validTo(),
 
 		// /**
 		//  * @extensibility Additional payment plan metadata for integrations and analytics
@@ -249,6 +249,12 @@ export const orgProductVariantPaymentPlan = table(
 		 * @monetizationStrategy Enables content-based pricing differentiation
 		 */
 		accessTier: integer("access_tier").default(1).notNull(),
+		// Q: is `accessTierName` needed or redundant?
+		// accessTierName: text("access_tier_name").default("Basic").notNull(),
+
+		// Q: renaming `minQuantity` to `minQuantityPerOrder`? or does the `minQuantity` indicate something else?
+		minQuantity: integer("min_quantity").default(1),
+		maxQuantity: integer("max_quantity"),
 
 		/**
 		 * @ecommerceFeature Allows customers to purchase products for other recipients
@@ -260,7 +266,7 @@ export const orgProductVariantPaymentPlan = table(
 		// /**
 		//  * @contentAccess JSON defining course content access rules for this variant
 		//  * @businessFlexibility Enables sophisticated course progression and gating rules
-		//  * @instructorControl Allows instructors to define variant-specific content access
+		//  * @jobControl Allows jobs to define variant-specific content access
 		//  */
 		// courseAccessRules: jsonb("course_access_rules"),
 		// // Example: {
@@ -268,7 +274,7 @@ export const orgProductVariantPaymentPlan = table(
 		// //   "modules_unlock_order": "sequential", // or "any_order"
 		// //   "quiz_required_for_progression": true,
 		// //   "downloadable_resources": true,
-		// //   "instructor_qa_access": true,
+		// //   "job_qa_access": true,
 		// //   "certificate_eligible": true
 		// // }
 
@@ -293,7 +299,7 @@ export const orgProductVariantPaymentPlan = table(
 		// ),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_active`).on(t.isActive),
 		index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(t.isFeatured),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(t.startsAt, t.endsAt),
+		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(t.validFrom, t.validTo),
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_price`).on(t.price), // Revenue analytics
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
 		// 	t.compareAtPrice,
@@ -494,7 +500,7 @@ export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUn
  * @customerAcquisition Trial period capabilities reduce purchase friction and enable
  * customers to experience product value before payment commitment.
  *
- * @compensationModel Recurring revenue engine for instructors and orgs
+ * @compensationModel Recurring revenue engine for jobs and orgs
  * @permissionContext Managed by org admins with variant access
  * @auditTrail Includes timestamps for usage analytics and plan lifecycle
  */
@@ -664,7 +670,7 @@ const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}
  * and billing cycle management through webhook integration.
  *
  * @orgalRevenue Revenue tracking supports creator economy workflows with
- * instructor attribution calculations and org financial reporting for
+ * job attribution calculations and org financial reporting for
  * comprehensive creator compensation and business analytics.
  *
  * @memberContextSupport Supports both org members and external customers
@@ -735,7 +741,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 
 		/**
 		 * @revenueTracking Total amount customer has paid for this subscription
-		 * @creatorEconomy Basis for instructor revenue sharing and org analytics
+		 * @creatorEconomy Basis for job revenue sharing and org analytics
 		 */
 		totalPaid: numericCols.currency.price().default("0"),
 
@@ -758,17 +764,17 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 */
 		externalMetadata: jsonb("external_metadata"),
 
-		// /**
-		//  * @paymentGateway External subscription ID from payment processor
-		//  * @webhookIntegration Links internal subscription management to payment processor
-		//  */
-		// externalSubscriptionId: textCols.idFk("external_subscription_id"),
+		/**
+		 * @paymentGateway External subscription ID from payment processor
+		 * @webhookIntegration Links internal subscription management to payment processor
+		 */
+		externalSubscriptionId: textCols.idFk("external_subscription_id"),
 
-		// /**
-		//  * @paymentGateway External customer ID from payment processor
-		//  * @billingIntegration Links to payment gateway customer record for billing management
-		//  */
-		// externalCustomerId: textCols.idFk("external_customer_id"),
+		/**
+		 * @paymentGateway External customer ID from payment processor
+		 * @billingIntegration Links to payment gateway customer record for billing management
+		 */
+		externalCustomerId: textCols.idFk("external_customer_id"),
 
 		createdAt: temporalCols.activity.completedAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -785,9 +791,12 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_access`).on(
 			t.accessExpiresAt,
 		),
-		// index(
-		// 	`idx_${orgProductVariantPaymentPlanMemberSubscriptionTableName}_external_subscription_id`,
-		// ).on(t.externalSubscriptionId),
+		index(
+			`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_external_subscription_id`,
+		).on(t.externalSubscriptionId),
+		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_external_customer_id`).on(
+			t.externalCustomerId,
+		),
 		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_currency`).on(
 			t.currencyCode,
 		),

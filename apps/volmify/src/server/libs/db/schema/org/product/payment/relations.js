@@ -29,7 +29,7 @@
  */
 
 import { relations } from "drizzle-orm";
-import { currency } from "../../../general/locale-currency-market/schema.js";
+import { currency } from "../../../general/locale-and-currency/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgLocale } from "../../locale-region/schema.js";
@@ -90,7 +90,7 @@ export const orgProductVariantPaymentPlanOneTimeTypeRelations = relations(
 			fields: [orgProductVariantPaymentPlanOneTimeType.planId],
 			references: [orgProductVariantPaymentPlan.id],
 		}),
-		currencyCode: one(currency, {
+		currency: one(currency, {
 			fields: [orgProductVariantPaymentPlanOneTimeType.currencyCode],
 			references: [currency.code],
 		}),
@@ -117,7 +117,7 @@ export const orgProductVariantPaymentPlanSubscriptionTypeRelations = relations(
 			fields: [orgProductVariantPaymentPlanSubscriptionType.planId],
 			references: [orgProductVariantPaymentPlan.id],
 		}),
-		currencyCode: one(currency, {
+		currency: one(currency, {
 			fields: [orgProductVariantPaymentPlanSubscriptionType.currencyCode],
 			references: [currency.code],
 		}),

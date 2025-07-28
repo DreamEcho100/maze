@@ -1,33 +1,30 @@
 import { relations } from "drizzle-orm";
+import { account, accountTransaction } from "../../account/schema.js";
 import { userProfile } from "../../user/profile/schema.js";
 import {
 	orgMemberLearningProfile,
 	orgMemberProductCourseChallengeRating,
 	orgMemberProductCourseEnrollment,
 } from "../product/by-type/course/schema.js";
-import {
-	orgGiftCard,
-	orgMemberGiftCardUsage,
-	orgMemberOrderDiscountUsage,
-} from "../product/offers/schema.js";
-import { orgMemberProductOrder } from "../product/orders/schema.js";
+import { orgMemberGiftCardUsage, orgMemberOrderDiscountUsage } from "../product/offers/schema.js";
+import { orgMemberOrder } from "../product/orders/schema.js";
 import { orgMemberProductVariantPaymentPlanSubscription } from "../product/payment/schema.js";
 import { org } from "../schema.js";
-import { orgDepartmentMembership } from "./department/schema.js";
+import { orgEmployee } from "./employee/schema.js";
 import { orgMember, orgMemberInvitation } from "./schema";
-import { orgTeamMembership } from "./team/schema.js";
 
 export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	org: one(org, {
 		fields: [orgMember.orgId],
 		references: [org.id],
 	}),
-	teamsMemberships: many(orgTeamMembership),
-	departmentMemberships: many(orgDepartmentMembership),
+	employee: one(orgEmployee, {
+		fields: [orgMember.id],
+		references: [orgEmployee.memberId],
+	}),
 	productsVariantsPaymentPlansSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
 	ordersDiscountsUsages: many(orgMemberOrderDiscountUsage),
 	ordersDiscountsUsage: many(orgMemberOrderDiscountUsage),
-	issuedGiftCardsTo: many(orgGiftCard),
 	giftCardsUsage: many(orgMemberGiftCardUsage),
 	invitationsReceived: many(orgMemberInvitation, {
 		relationName: "org_member_invitation_received",
@@ -50,7 +47,11 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 	courseEnrollments: many(orgMemberProductCourseEnrollment),
 	courseChallengeRatings: many(orgMemberProductCourseChallengeRating),
 	learningProfiles: many(orgMemberLearningProfile),
-	orders: many(orgMemberProductOrder),
+	orders: many(orgMemberOrder),
+
+	// Q: Can/Should the member have one or more accounts with a default one?
+	accounts: many(account),
+	refundTransactions: many(accountTransaction),
 }));
 
 export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
@@ -62,11 +63,6 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 		fields: [orgMemberInvitation.invitedByMemberId],
 		references: [orgMember.id],
 		relationName: "org_member_invitation_sent",
-	}),
-	approvedByMember: one(orgMember, {
-		fields: [orgMemberInvitation.approvedByMemberId],
-		references: [orgMember.id],
-		relationName: "org_member_invitation_approved",
 	}),
 	invitedMember: one(orgMember, {
 		fields: [orgMemberInvitation.memberId],

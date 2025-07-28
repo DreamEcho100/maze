@@ -1,19 +1,15 @@
 import { relations } from "drizzle-orm";
 import { contactInfo } from "../../general/contact-info/schema";
-import { locale } from "../../general/locale-currency-market/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgMember } from "../../org/member/schema";
-import { orgMemberProductOrderItem } from "../../org/product/orders/schema";
-import { orgProduct } from "../../org/product/schema";
+import { userLocale } from "../locale/schema";
 import { user } from "../schema";
-import { userInstructorProfile } from "./instructor/schema";
+import { userJobProfile } from "./job/schema";
 import {
 	userProfile,
 	userProfileContactInfo,
 	userProfileI18n,
 	userProfileOrgMembership,
-	userProfileOrgMembershipProductAttribution,
-	userProfileOrgMembershipProductAttributionRevenue,
 } from "./schema";
 
 export const userProfileRelations = relations(userProfile, ({ many, one }) => ({
@@ -23,21 +19,24 @@ export const userProfileRelations = relations(userProfile, ({ many, one }) => ({
 	}),
 	translations: many(userProfileI18n),
 	contacts: many(userProfileContactInfo),
-	instructorProfiles: many(userInstructorProfile),
 	orgsMembership: many(userProfileOrgMembership),
+	jobProfile: one(userJobProfile, {
+		fields: [userProfile.id],
+		references: [userJobProfile.userProfileId],
+	}),
 }));
 export const userProfileI18nRelations = relations(userProfileI18n, ({ one }) => ({
 	/**
 	 * @localeKey Unique locale identifier for translations
 	 * @immutable Once set, should not change to maintain translation integrity
 	 */
-	locale: one(locale, {
+	locale: one(userLocale, {
 		fields: [userProfileI18n.localeKey],
-		references: [locale.key],
+		references: [userLocale.localeKey],
 	}),
 
 	/**
-	 * @seoMetadata SEO metadata for translated instructor profiles
+	 * @seoMetadata SEO metadata for translated job profiles
 	 */
 	seoMetadata: one(seoMetadata, {
 		fields: [userProfileI18n.seoMetadataId],
@@ -45,7 +44,7 @@ export const userProfileI18nRelations = relations(userProfileI18n, ({ one }) => 
 	}),
 
 	/**
-	 * @instructorProfileLink Links translation to the main instructor profile
+	 * @jobProfileLink Links translation to the main job profile
 	 */
 	profile: one(userProfile, {
 		fields: [userProfileI18n.userProfileId],
@@ -62,53 +61,23 @@ export const userProfileContactInfoRelations = relations(userProfileContactInfo,
 		references: [contactInfo.id],
 	}),
 }));
-export const userProfileOrgMembershipRelations = relations(
-	userProfileOrgMembership,
-	({ many, one }) => ({
-		userProfile: one(userProfile, {
-			fields: [userProfileOrgMembership.userProfileId],
-			references: [userProfile.id],
-		}),
-		orgMember: one(orgMember, {
-			fields: [userProfileOrgMembership.orgMemberId],
-			references: [orgMember.id],
-		}),
-		orgProductAttribution: many(userProfileOrgMembershipProductAttribution),
-		// invitedByOrgMember: one(orgMember, {
-		// 	fields: [userProfileOrgMembership.invitedByOrgMemberId],
-		// 	references: [orgMember.id],
-		// 	relationName: "user_profile_org_membership_invited_by_org_member",
-		// }),
-		// approvedByOrgMember: one(orgMember, {
-		// 	fields: [userProfileOrgMembership.approvedByOrgMemberId],
-		// 	references: [orgMember.id],
-		// 	relationName: "user_profile_org_membership_approved_by_org_member",
-		// }),
+export const userProfileOrgMembershipRelations = relations(userProfileOrgMembership, ({ one }) => ({
+	userProfile: one(userProfile, {
+		fields: [userProfileOrgMembership.userProfileId],
+		references: [userProfile.id],
 	}),
-);
-export const userProfileOrgMembershipProductAttributionRelations = relations(
-	userProfileOrgMembershipProductAttribution,
-	({ one }) => ({
-		membership: one(userProfileOrgMembership, {
-			fields: [userProfileOrgMembershipProductAttribution.membershipId],
-			references: [userProfileOrgMembership.id],
-		}),
-		product: one(orgProduct, {
-			fields: [userProfileOrgMembershipProductAttribution.productId],
-			references: [orgProduct.id],
-		}),
+	orgMember: one(orgMember, {
+		fields: [userProfileOrgMembership.orgMemberId],
+		references: [orgMember.id],
 	}),
-);
-export const userProfileOrgMembershipProductAttributionRevenueRelations = relations(
-	userProfileOrgMembershipProductAttributionRevenue,
-	({ one }) => ({
-		orderItem: one(orgMemberProductOrderItem, {
-			fields: [userProfileOrgMembershipProductAttributionRevenue.orderItemId],
-			references: [orgMemberProductOrderItem.id],
-		}),
-		attributedMember: one(userProfileOrgMembershipProductAttribution, {
-			fields: [userProfileOrgMembershipProductAttributionRevenue.attributedMemberId],
-			references: [userProfileOrgMembershipProductAttribution.id],
-		}),
-	}),
-);
+	// invitedByOrgMember: one(orgMember, {
+	// 	fields: [userProfileOrgMembership.invitedByOrgMemberId],
+	// 	references: [orgMember.id],
+	// 	relationName: "user_profile_org_membership_invited_by_org_member",
+	// }),
+	// approvedByOrgMember: one(orgMember, {
+	// 	fields: [userProfileOrgMembership.approvedByOrgMemberId],
+	// 	references: [orgMember.id],
+	// 	relationName: "user_profile_org_membership_approved_by_org_member",
+	// }),
+}));

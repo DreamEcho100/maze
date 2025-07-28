@@ -1,12 +1,24 @@
-import { boolean, foreignKey, index, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	foreignKey,
+	index,
+	pgEnum,
+	primaryKey,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-import { sharedCols, table, temporalCols, textCols } from "../../../_utils/helpers.js";
+import {
+	sharedCols,
+	table,
+	temporalCols,
+	textCols,
+} from "../../../_utils/helpers.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgTeam } from "../team/schema.js";
 
 const orgDepartmentTableName = `${orgTableName}_department`;
 
-const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
+export const orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
 	"department",
 	"division",
 	"business_unit",
@@ -14,6 +26,20 @@ const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
 	"region",
 	// "branch", // Franchise branches
 ]);
+
+// Q: will the following be able to achieve the following or it's missing something?
+// - Departments are typically for employees, not customers
+// - Engineering Department (employees work here)
+// - Marketing Department (employees have roles here)
+// - Sales Department (employees are assigned here)
+// - Salary allocation by department
+// - Team budget management
+// - Performance reviews by department
+// - Reporting structure (manager → team → department)
+// - EMPLOYEE permissions are department/team based
+// - Engineering team has code repository access
+// - Marketing team has campaign management access
+// - Finance team has accounting system access
 
 // // Enhanced department schema with branch capabilities
 // export const orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
@@ -36,7 +62,7 @@ const _orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
  *
  * @abacRole Structural Grouping
  * Traditional department construct for hierarchical orgs. Provides
- * structure and influences default permissions for members and teams.
+ * structure and influences default permissions for employees and teams.
  */
 export const orgDepartment = table(
 	orgDepartmentTableName,
@@ -59,17 +85,20 @@ export const orgDepartment = table(
 		 * @branchLike
 		 * Project teams with departmental support
 		 */
-		allowsCrossDepartmentMembers: boolean("allows_cross_department_members").default(false),
+		allowsCrossDepartmentEmployees: boolean(
+			"allows_cross_department_employees",
+		).default(false),
 
 		// /**
 		//  * @branchLike Enhanced department capabilities
 		//  */
-		// departmentType: orgDepartmentTypeEnum("department_type").default("department"),
+		// Q: an enum or a separate table category like structure?
+		// type: orgDepartmentTypeEnum("type").default("department"),
 		// // "department", "division", "business_unit", "office", "region"
 
 		// isAutonomous: boolean("is_autonomous").default(false), // Semi-independent operations
 		// budgetAuthority: boolean("budget_authority").default(false), // Can manage budgets
-		// canHireMembers: boolean("can_hire_members").default(false),
+		// canHireEmployees: boolean("can_hire_employees").default(false),
 
 		// /**
 		//  * @geographic Geographic context for office-like departments
@@ -88,7 +117,7 @@ export const orgDepartment = table(
 		//  * @management Local management structure
 		//  */
 		// hasLocalManagement: boolean("has_local_management").default(false),
-		// localManagerId: fk("local_manager_id").references(() => orgMember.id),
+		// localManagerId: fk("local_manager_id").references(() => orgEmployee.id),
 
 		/*
 // Configuration examples for different department types:
@@ -98,7 +127,7 @@ const departmentConfigurations = {
   "department": {
     isAutonomous: false,
     budgetAuthority: false,
-    canHireMembers: false,
+    canHireEmployees: false,
     profitLossResponsibility: false
   },
   
@@ -106,7 +135,7 @@ const departmentConfigurations = {
   "branch": {
     isAutonomous: true,
     budgetAuthority: true,
-    canHireMembers: true,
+    canHireEmployees: true,
     profitLossResponsibility: true,
     hasLocalManagement: true
   },
@@ -115,7 +144,7 @@ const departmentConfigurations = {
   "division": {
     isAutonomous: true,
     budgetAuthority: true,
-    canHireMembers: true,
+    canHireEmployees: true,
     profitLossResponsibility: true
   },
   
@@ -202,49 +231,53 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentI18nTableName)(
 	},
 );
 
-const orgDepartmentMembershipTableName = `${orgDepartmentTableName}_membership`;
-export const orgDepartmentMembershipStatusEnum = pgEnum(
-	`${orgDepartmentMembershipTableName}_status`,
+const orgDepartmentEmployeesTableName = `${orgDepartmentTableName}_employees`;
+export const orgDepartmentEmployeesStatusEnum = pgEnum(
+	`${orgDepartmentEmployeesTableName}_status`,
 	["active", "inactive", "pending", "removed"],
 );
 
 /**
- * Member-Department Assignment (M:M)
+ * Employee-Department Assignment (M:M)
  *
  * @abacRole Structural Permission Grouping
- * Members can belong to one or more departments. This informs both permission
+ * Employees can belong to one or more departments. This informs both permission
  * inheritance and UI logic (like filtering or default views).
  */
-export const orgDepartmentMembership = table(
-	orgDepartmentMembershipTableName,
+export const orgDepartmentEmployee = table(
+	orgDepartmentEmployeesTableName,
 	{
-		memberId: sharedCols.orgMemberIdFk().notNull(),
+		employeeId: sharedCols.orgEmployeeIdFk().notNull(),
 
 		departmentId: textCols
 			.idFk("department_id")
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		status: orgDepartmentMembershipStatusEnum("status").notNull().default("active"),
-		// role: departmentMembershipRoleEnum("role"), // "manager", "member", "lead"
+		status: orgDepartmentEmployeesStatusEnum("status")
+			.notNull()
+			.default("active"),
+		// role: departmentEmployeesRoleEnum("role"), // "manager", "employee", "lead"
 		joinedAt: temporalCols.activity.joinedAt().defaultNow(),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		primaryKey({ columns: [t.memberId, t.departmentId] }),
-		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}`).on(
-		// 	t.memberId,
+		primaryKey({ columns: [t.employeeId, t.departmentId] }),
+		// uniqueIndex(`uq_${orgDepartmentEmployeesTableName}`).on(
+		// 	t.employeeId,
 		// 	t.departmentId,
 		// ),
-		// uniqueIndex(`uq_${orgDepartmentMembershipTableName}_default`)
-		// 	.on(t.memberId, t.isDefault)
+		// uniqueIndex(`uq_${orgDepartmentEmployeesTableName}_default`)
+		// 	.on(t.employeeId, t.isDefault)
 		// 	.where(eq(t.isDefault, true)),
-		index(`idx_${orgDepartmentMembershipTableName}_status`).on(t.status),
-		index(`idx_${orgDepartmentMembershipTableName}_joined_at`).on(t.joinedAt),
-		index(`idx_${orgDepartmentMembershipTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDepartmentMembershipTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgDepartmentEmployeesTableName}_status`).on(t.status),
+		index(`idx_${orgDepartmentEmployeesTableName}_joined_at`).on(t.joinedAt),
+		index(`idx_${orgDepartmentEmployeesTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgDepartmentEmployeesTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 	],
 );
 

@@ -1,4 +1,14 @@
-import { boolean, index, numeric, pgEnum, primaryKey } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+	boolean,
+	check,
+	index,
+	integer,
+	jsonb,
+	pgEnum,
+	primaryKey,
+	uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
@@ -37,7 +47,16 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryI18nTableName)
 	},
 );
 
-export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", ["percent", "fixed"]);
+export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", [
+	"percent", // Percentage of the price, e.g., VAT, sales tax
+	"fixed", // Fixed amount per item, e.g., environmental tax, flat fee
+	// "compound", // Percentage applied on top of another tax, e.g., VAT on VAT
+	// "flat", // Flat fee per item, e.g., environmental tax, example equation on how it will apply: price * (1 - discount) + flatFee
+	// "exempt", // No tax applied, e.g., tax-exempt products or services
+	// "zero_rate", // Tax rate of 0%, e.g., zero-rated goods or services
+	// "rebate", // Refundable tax, e.g., input tax credits
+	// "other", // Custom tax type not covered by the above
+]);
 const orgTaxRateTableName = `${orgTableName}_tax_rates`;
 // export const orgTaxRateMethodEnum = pgEnum("org_tax_rates_method", [
 // 	"inclusive", // Tax included in price, example equation on how it will apply: price * (1 - discount) * (1 + tax)
@@ -53,6 +72,7 @@ export const orgTaxRate = table(
 	orgTaxRateTableName,
 	{
 		id: textCols.id().notNull(),
+		orgId: sharedCols.orgIdFk().notNull(),
 		// TODO: instead of regionId, we can make a many-to-many relation with orgRegion
 		// and use a junction table to link rates to multiple regions
 		// So we can have rates that apply to multiple regions
@@ -63,24 +83,43 @@ export const orgTaxRate = table(
 		// Add a flag to indicate if it needs to be applied to an orgRegion
 		isRegionScoped: boolean("is_region_scoped").default(true).notNull(),
 
+		/**
+		 * @regionSnapshot Tax jurisdiction at time of order
+		 * @internationalCompliance Preserves tax location for cross-border transactions
+		 */
+		// Q: Should it connect to the country table?
+		// Q: Should it be on the main order table?
+		jurisdiction: textCols.category("jurisdiction"), // "US-CA", "GB", "DE-BY"
+
 		// name: textCols.name().notNull(),
-		code: textCols.code().notNull(),
+		code: textCols.code().notNull(), // e.g. "VAT", "sales_tax", "digital_goods"
 
 		type: orgTaxRateTypeEnum("type").notNull().default("percent"),
-		// method: orgTaxRateMethodEnum("method").notNull().default("inclusive"),
-		rate: numeric("rate", { precision: 10, scale: 4 }).notNull(),
-		currencyCode: sharedCols.currencyCodeFk().notNull(),
 
-		/**
-		 * @compound When true, this tax is applied after previous ones.
-		 */
-		isCompound: boolean("is_compound").default(false).notNull(),
-		isInclusive: boolean("is_compound").default(false).notNull(),
+		// Q: Would the `amount` field be enough? which is better, efficient, or more optimized?
+		rate: numericCols.percentage.rate("rate"), // For percentage rates, e.g. 15% = 15.00
+		amount: numericCols.currency.amount("amount"), // For fixed rates, e.g. $5.00 flat fee
+		currencyCode: sharedCols.currencyCodeFk(), // For fixed rates, e.g. "USD", "EUR"
 
-		priority: numericCols.priority().notNull(),
+		effectiveFrom: temporalCols.business.startsAt("effective_from").notNull(),
+		effectiveTo: temporalCols.business.endsAt("effective_to"), // NULL = current
 
-		startsAt: temporalCols.business.startsAt(),
-		endsAt: temporalCols.business.endsAt(),
+		isInclusive: boolean("is_inclusive").default(false).notNull(),
+
+		// /**
+		//  * @compound When true, this tax is applied after previous ones.
+		//  */
+		// isCompound: boolean("is_compound").default(false).notNull(),
+		// priority: numericCols.priority().notNull(), // Lower numbers are applied first, e.g. 1 = highest priority
+
+		// Q: can't I use the `lastUpdatedAt` to determine the version or track, or is it not reliable or better to use a separate version column?
+		// ✅ VERSIONING: Track rate changes
+		modificationVersion: integer("modification_version").notNull().default(1),
+		systemChangesVersion: integer("system_changes_version").notNull().default(1),
+		// supersededBy: textCols.idFk("superseded_by").references(() => orgTaxRate.id),
+
+		// startsAt: temporalCols.business.startsAt(),
+		// endsAt: temporalCols.business.endsAt(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
@@ -90,9 +129,28 @@ export const orgTaxRate = table(
 		index(`idx_${orgTaxRateTableName}_code`).on(t.code),
 		index(`idx_${orgTaxRateTableName}_type`).on(t.type),
 		index(`idx_${orgTaxRateTableName}_currency`).on(t.currencyCode),
-		index(`idx_${orgTaxRateTableName}_priority`).on(t.priority),
-		index(`idx_${orgTaxRateTableName}_starts_at`).on(t.startsAt),
-		index(`idx_${orgTaxRateTableName}_ends_at`).on(t.endsAt),
+		// index(`idx_${orgTaxRateTableName}_priority`).on(t.priority),
+		// index(`idx_${orgTaxRateTableName}_starts_at`).on(t.startsAt),
+		// index(`idx_${orgTaxRateTableName}_ends_at`).on(t.endsAt),
+
+		// uniqueIndex("uq_active_tax_rate")
+		// 	.on(t.orgId, t.taxCategoryId, t.jurisdiction)
+		// 	.where(sql`${t.effectiveTo} IS NULL`),
+
+		// ✅ CONSTRAINT: Effective period validity
+		check(
+			"valid_effective_period",
+			sql`${t.effectiveTo} IS NULL OR ${t.effectiveTo} > ${t.effectiveFrom}`,
+		),
+
+		// ✅ CONSTRAINT: Rate bounds
+		check("valid_rate_range", sql`${t.rate} >= 0 AND ${t.rate} <= 100`),
+		// Check if it's a fixed type, to have amount field not null and rate field null, and vice versa
+		// Q: Is the following will be translated correctly to SQL?
+		check(
+			"valid_rate_amount",
+			sql`(${t.type} = '${orgTaxRateTypeEnum.enumValues[1]}' AND ${t.amount} IS NOT NULL AND ${t.rate} IS NULL) OR (${t.type} = '${orgTaxRateTypeEnum.enumValues[0]}' AND ${t.amount} IS NULL AND ${t.rate} IS NOT NULL)`,
+		),
 	],
 );
 const orgTaxRateI18nTableName = `${orgTaxRateTableName}_i18n`;
@@ -114,6 +172,49 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateI18nTableName)(
 			index(`idx_${tableName}_rate_id`).on(t.rateId),
 		],
 	},
+);
+
+// TODO: Move to it's own file, to be used globally across the app and easily imported and updated
+const orgTaxRateSnapshotCurrentSystemChangesVersion = 0;
+
+const orgTaxRateSnapshotTableName = `${orgTaxRateTableName}_snapshot`;
+export const orgTaxRateSnapshot = table(
+	orgTaxRateSnapshotTableName,
+	{
+		id: textCols.id().notNull(),
+		systemChangesVersion: integer("system_changes_version")
+			.notNull()
+			.default(orgTaxRateSnapshotCurrentSystemChangesVersion),
+		modificationVersion: integer("modification_version").notNull().default(1),
+		rateId: textCols
+			.idFk("rate_id")
+			.references(() => orgTaxRate.id)
+			.notNull(),
+
+		/**
+		 * INDUSTRY STANDARD: Tax rate snapshots for audit compliance
+		 *
+		 * Store the full tax rate object as JSON for historical accuracy.
+		 *
+		 * This enables precise auditing, rollback, historical analysis, and
+		 * allows orders to reference the exact tax rate as it existed at the time.
+		 *
+		 * You could optimize by only storing relevant fields, but full snapshots
+		 * are safer for compliance and future-proofing.
+		 */
+		data: jsonb("data").notNull(),
+
+		// Metadata
+		createdAt: temporalCols.audit.createdAt().notNull(),
+		byEmployeeId: sharedCols.orgEmployeeIdFk("by_employee_id").notNull(),
+	},
+	(t) => [
+		uniqueIndex(
+			`uq_${orgTaxRateSnapshotTableName}_rate_id_system_changes_version_modification_version`,
+		).on(t.rateId, t.systemChangesVersion, t.modificationVersion),
+		index(`idx_${orgTaxRateSnapshotTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgTaxRateSnapshotTableName}_rate_id`).on(t.rateId),
+	],
 );
 
 const orgTaxRateTaxCategoryTableName = `${orgTaxRateTableName}_tax_category`;

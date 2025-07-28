@@ -11,9 +11,9 @@ import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/sche
 import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import { org, orgBrandTranslation } from "../../org/schema.js";
 import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
-import { userInstructorProfileI18n } from "../../user/profile/instructor/schema.js";
+// import { userJobProfileI18n } from "../../user/profile/job/schema.js";
 import { userProfileI18n } from "../../user/profile/schema.js";
-import { locale } from "../locale-currency-market/schema.js";
+import { locale } from "../locale-and-currency/schema.js";
 import { skillI18n } from "../skill/schema.js";
 import {
 	seoAlternateUrl,
@@ -32,7 +32,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	createdByOrg: one(org, {
 		fields: [seoMetadata.orgId],
 		references: [org.id],
-		relationName: "seo_metadata_created_by_org",
 	}),
 
 	// org: one(org, {
@@ -64,14 +63,8 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		references: [orgBrandTranslation.seoMetadataId],
 	}),
 
-	userInstructorProfileI18n: one(userInstructorProfileI18n, {
-		fields: [seoMetadata.id],
-		references: [userInstructorProfileI18n.seoMetadataId],
-	}),
-	userProfileI18n: one(userProfileI18n, {
-		fields: [seoMetadata.id],
-		references: [userProfileI18n.seoMetadataId],
-	}),
+	// usersJobProfilesI18n: many(userJobProfileI18n),
+	usersProfilesI18n: many(userProfileI18n),
 
 	// discountsTranslation: one(orgDiscountI18n, {
 	// 	fields: [seoMetadata.id],
@@ -117,10 +110,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	orgTaxRateI18n: one(orgTaxRateI18n, {
 		fields: [seoMetadata.id],
 		references: [orgTaxRateI18n.seoMetadataId],
-	}),
-	productVariantPaymentPlanI18n: one(orgProductVariantPaymentPlanI18n, {
-		fields: [seoMetadata.id],
-		references: [orgProductVariantPaymentPlanI18n.seoMetadataId],
 	}),
 	orgProductCourseModuleI18n: one(orgProductCourseModuleI18n, {
 		fields: [seoMetadata.id],

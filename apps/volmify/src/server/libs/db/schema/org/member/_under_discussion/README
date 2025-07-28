@@ -200,7 +200,7 @@ const PolicyDetailView = {
 // Dashboard: /org/roles
 const RoleListView = {
   displayColumns: [
-    'name',            // Course Instructor, Department Manager
+    'name',            // Course Job, Department Manager
     'description',     // Role description
     'policyCount',     // Number of policies in role
     'assignmentCount', // How many actors have this role

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
-import { currency } from "../general/locale-currency-market/schema.js";
+import { account, accountTransaction } from "../account/schema.js";
+import { currency } from "../general/locale-and-currency/schema.js";
 import { seoMetadata } from "../general/seo/schema.js";
 import { skill } from "../general/skill/schema.js";
 import { user } from "../user/schema.js";
@@ -7,6 +8,11 @@ import { orgFunnel } from "./funnel/schema.js";
 import { orgLesson } from "./lesson/schema.js";
 import { orgLocale, orgRegion } from "./locale-region/schema.js";
 import { orgDepartment } from "./member/department/schema.js";
+import {
+	orgEmployee,
+	orgEmployeeInvitation,
+	orgEmployeeProductAttribution,
+} from "./member/employee/schema.js";
 import { orgMember, orgMemberInvitation } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
 // import { orgLesson, skill } from "./product/by-type/course/schema.js";
@@ -33,8 +39,14 @@ import { org, orgBrand, orgBrandTranslation, orgCurrencySettings } from "./schem
  * @permissionContext Entity Hub — all ABAC-scoped entities originate from here
  */
 export const orgRelations = relations(org, ({ many }) => ({
+	accounts: many(account),
+	accountsTransaction: many(accountTransaction),
+
 	members: many(orgMember),
 	membersInvitations: many(orgMemberInvitation),
+	employees: many(orgEmployee),
+	employeesProductsAttributions: many(orgEmployeeProductAttribution),
+	employeesInvitations: many(orgEmployeeInvitation),
 	teams: many(orgTeam),
 	departments: many(orgDepartment),
 	// permissionGroups: many(orgPermissionsGroup),
@@ -72,7 +84,6 @@ export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ on
 	member: one(orgMember, {
 		fields: [orgMemberInvitation.memberId],
 		references: [orgMember.id],
-		relationName: "member_invitation",
 	}),
 }));
 

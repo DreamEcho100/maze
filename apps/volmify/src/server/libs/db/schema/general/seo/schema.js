@@ -151,7 +151,7 @@ export const seoOpenGraph = table(
             "tags": ["tutorial", "react"]
         }
         
-        Profile (instructor profiles):
+        Profile (job profiles):
         {
             "firstName": "John",
             "lastName": "Doe", 

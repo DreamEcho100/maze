@@ -5,6 +5,7 @@ import {
 	orgMemberProductCourseChallengeRating,
 } from "../org/product/by-type/course/schema.js";
 import { orgMemberProductVariantPaymentPlanSubscription } from "../org/product/payment/schema.js";
+import { userLocale } from "./locale/schema.js";
 import { userProfile } from "./profile/schema.js";
 import {
 	user,
@@ -27,6 +28,7 @@ export const userRelations = relations(user, ({ many }) => ({
 	),
 
 	profiles: many(userProfile),
+	locales: many(userLocale),
 }));
 export const userSessionRelations = relations(userSession, ({ one }) => ({
 	user: one(user, {

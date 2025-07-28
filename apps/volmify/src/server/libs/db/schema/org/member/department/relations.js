@@ -1,13 +1,12 @@
 import { relations } from "drizzle-orm";
 import { orgLocale } from "../../locale-region/schema";
 import { org } from "../../schema";
-import { orgMember } from "../schema";
+import { orgEmployee } from "../employee/schema";
 import { orgTeam } from "../team/schema";
 import {
 	orgDepartment,
+	orgDepartmentEmployee,
 	orgDepartmentI18n,
-	orgDepartmentMembership,
-	// orgDepartmentMembership,
 	orgDepartmentTeam,
 } from "./schema";
 
@@ -24,7 +23,7 @@ export const orgDepartmentRelations = relations(orgDepartment, ({ many, one }) =
 	children: many(orgDepartment, {
 		relationName: "children_departments",
 	}),
-	memberships: many(orgDepartmentMembership),
+	employees: many(orgDepartmentEmployee),
 	teams: many(orgDepartmentTeam),
 	translations: many(orgDepartmentI18n),
 }));
@@ -39,13 +38,13 @@ export const orgDepartmentI18nRelations = relations(orgDepartmentI18n, ({ one })
 	}),
 }));
 
-export const orgDepartmentMembershipRelations = relations(orgDepartmentMembership, ({ one }) => ({
-	member: one(orgMember, {
-		fields: [orgDepartmentMembership.memberId],
-		references: [orgMember.id],
+export const orgDepartmentEmployeeRelations = relations(orgDepartmentEmployee, ({ one }) => ({
+	employee: one(orgEmployee, {
+		fields: [orgDepartmentEmployee.employeeId],
+		references: [orgEmployee.id],
 	}),
 	department: one(orgDepartment, {
-		fields: [orgDepartmentMembership.departmentId],
+		fields: [orgDepartmentEmployee.departmentId],
 		references: [orgDepartment.id],
 	}),
 }));
@@ -58,5 +57,5 @@ export const orgDepartmentTeamRelations = relations(orgDepartmentTeam, ({ one })
 		fields: [orgDepartmentTeam.teamId],
 		references: [orgTeam.id],
 	}),
-	// memberships: many(orgDepartmentMembership),
+	// employees: many(orgDepartmentEmployee),
 }));

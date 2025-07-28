@@ -3,8 +3,8 @@ import { user } from "../../../user/schema";
 import { orgLocale } from "../../locale-region/schema";
 import { org } from "../../schema";
 import { orgDepartmentTeam } from "../department/schema";
-import { orgMember } from "../schema";
-import { orgTeam, orgTeamI18n, orgTeamMembership } from "./schema";
+import { orgEmployee } from "../employee/schema";
+import { orgTeam, orgTeamEmployee, orgTeamI18n } from "./schema";
 
 export const orgTeamRelations = relations(orgTeam, ({ one, many }) => ({
 	createdBy: one(user, {
@@ -15,7 +15,7 @@ export const orgTeamRelations = relations(orgTeam, ({ one, many }) => ({
 		fields: [orgTeam.orgId],
 		references: [org.id],
 	}),
-	memberships: many(orgTeamMembership),
+	employees: many(orgTeamEmployee),
 	departments: many(orgDepartmentTeam),
 }));
 export const orgTeamI18nRelations = relations(orgTeamI18n, ({ one }) => ({
@@ -29,13 +29,13 @@ export const orgTeamI18nRelations = relations(orgTeamI18n, ({ one }) => ({
 	}),
 }));
 
-export const orgTeamMembershipRelations = relations(orgTeamMembership, ({ one }) => ({
+export const orgTeamEmployeeRelations = relations(orgTeamEmployee, ({ one }) => ({
 	team: one(orgTeam, {
-		fields: [orgTeamMembership.teamId],
+		fields: [orgTeamEmployee.teamId],
 		references: [orgTeam.id],
 	}),
-	member: one(orgMember, {
-		fields: [orgTeamMembership.memberId],
-		references: [orgMember.id],
+	employee: one(orgEmployee, {
+		fields: [orgTeamEmployee.employeeId],
+		references: [orgEmployee.id],
 	}),
 }));

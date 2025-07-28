@@ -9,11 +9,13 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
-import { currency, locale } from "../general/locale-currency-market/schema";
+import { currency, locale } from "../general/locale-and-currency/schema";
 import { seoMetadata } from "../general/seo/schema";
 import { orgLocale } from "../org/locale-region/schema";
+import { orgEmployee } from "../org/member/employee/schema";
 import { orgMember } from "../org/member/schema";
 import { org } from "../org/schema";
+import { userLocale } from "../user/locale/schema";
 import { userProfile } from "../user/profile/schema";
 import { user } from "../user/schema";
 import { byteaUlid } from "./custom-fields";
@@ -83,7 +85,7 @@ export const textCols = {
 	// Q: Should it be called excerpt or summary?
 	/** @param {string} name */
 	shortDescription: (name) => varchar(name, { length: 1536 }), // Product descriptions
-	tagline: () => varchar("tagline", { length: 384 }), // Marketing taglines
+	tagline: (name = "tagline") => varchar(name, { length: 384 }), // Marketing taglines
 
 	// Long content (not indexed)
 	/**
@@ -100,7 +102,7 @@ export const textCols = {
 	 *
 	 * Course descriptions
 	 */
-	description: () => text("description"),
+	description: (name = "description") => text(name),
 	/**
 	 * CONTENT (unlimited, not indexed)
 	 *
@@ -148,7 +150,6 @@ export const textCols = {
 
 export const numericCols = {
 	// IDs and Counters
-	// id: () => text("id").notNull(), // UUID strings for multi-tenant
 	sortOrder: () => integer("sort_order").default(0), // Course module ordering
 	version: () => integer("version").default(1), // Content versioning
 
@@ -186,7 +187,7 @@ export const numericCols = {
 		// Standard percentages (0.00-100.00%)
 		rate: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
 		taxRate: (name = "rate") => decimal(name, { precision: 5, scale: 4 }), // Higher precision for tax
-		discountPercentage: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
+		_: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
 		revenueShare: (name = "revenue_share") => decimal(name, { precision: 5, scale: 4 }),
 		vatRate: (name = "vat_rate") => decimal(name, { precision: 5, scale: 4 }),
 	},
@@ -236,11 +237,21 @@ export const temporalCols = {
 	// ✅ BUSINESS EVENTS: Second precision sufficient
 	business: {
 		startsAt: (name = "starts_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		transactionDate: (name = "transaction_date") =>
+			timestamp(name, { precision: 3, withTimezone: true }).defaultNow(),
 		endsAt: (name = "ends_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		expiresAt: (name = "expires_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		publishedAt: (name = "published_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		scheduledAt: (name = "scheduled_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		verifiedAt: (name = "verified_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		hiredAt: (name = "hired_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		terminatedAt: (name = "terminated_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		leaveOfAbsenceAt: (name = "leave_of_absence_at") =>
+			timestamp(name, { precision: 3, withTimezone: true }),
+		appliedAt: (name = "applied_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		approvedAt: (name = "approved_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		rejectedAt: (name = "rejected_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		reviewedAt: (name = "reviewed_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ FINANCIAL: High precision for financial events
@@ -255,7 +266,10 @@ export const temporalCols = {
 
 	// ✅ USER ACTIVITY: Minute precision for analytics
 	activity: {
+		// Q: lastAccessedAt vs lastActiveAt
 		lastAccessedAt: (name = "last_accessed_at") =>
+			timestamp(name, { precision: 3, withTimezone: true }),
+		lastActiveAt: (name = "last_active_at") =>
 			timestamp(name, { precision: 3, withTimezone: true }),
 		completedAt: (name = "completed_at") => timestamp(name, { precision: 3, withTimezone: true }),
 		lastSeenAt: (name = "last_seen_at") => timestamp(name, { precision: 3, withTimezone: true }),
@@ -276,8 +290,10 @@ export const temporalCols = {
 export const sharedCols = {
 	// Multi-tenant foundations
 	orgIdFk: () => textCols.idFk("org_id").references(() => org.id, { onDelete: "cascade" }),
-	orgMemberIdFk: () =>
-		textCols.idFk("member_id").references(() => orgMember.id, { onDelete: "cascade" }),
+	orgMemberIdFk: (name = "member_id") =>
+		textCols.idFk(name).references(() => orgMember.id, { onDelete: "cascade" }),
+	orgEmployeeIdFk: (name = "employee_id") =>
+		textCols.idFk(name).references(() => orgEmployee.id, { onDelete: "cascade" }),
 
 	userIdFk: () => textCols.idFk("user_id").references(() => user.id, { onDelete: "cascade" }),
 	userProfileIdFk: () =>
@@ -293,8 +309,13 @@ export const sharedCols = {
 			onDelete: "cascade",
 		}),
 	/** @param {string} [name] */
-	orgLocaleKeyFk: (name = "local_key") =>
+	orgLocaleKeyFk: (name = "org_local_key") =>
 		sharedCols.localeKey(name).references(() => orgLocale.localeKey, {
+			onDelete: "cascade",
+		}),
+	/** @param {string} [name] */
+	userLocaleKeyFk: (name = "user_local_key") =>
+		sharedCols.localeKey(name).references(() => userLocale.localeKey, {
 			onDelete: "cascade",
 		}),
 

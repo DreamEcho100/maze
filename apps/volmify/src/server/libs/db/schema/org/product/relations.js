@@ -1,7 +1,7 @@
 /**
  * @fileoverview Product Relations - Multi-Tenant E-commerce Integration with Creator Attribution
  *
- * @integrationPattern Professional Attribution + Brand Integration + Payment Plan Integration + E-commerce Relations
+ * @integrationPattern Job Attribution + Brand Integration + Payment Plan Integration + E-commerce Relations
  * Enables comprehensive product relationships supporting creator economy workflows, org
  * brand identity, sophisticated e-commerce scenarios, and integrated payment strategies. Relations
  * facilitate professional content attribution, revenue sharing, cross-org collaboration,
@@ -14,7 +14,7 @@
  * pricing table redundancy while maintaining sophisticated pricing and promotional strategies.
  *
  * @scalabilityContext
- * Professional attribution patterns can be replicated for other creator types (consultants,
+ * Job attribution patterns can be replicated for other creator types (consultants,
  * designers, coaches) enabling diverse creator economy scenarios within multi-tenant architecture.
  * Payment plan integration scales across all product types while maintaining consistent commerce
  * workflows and promotional campaign compatibility.
@@ -26,15 +26,16 @@
  */
 
 import { relations } from "drizzle-orm";
-import { locale } from "../../general/locale-currency-market/schema.js";
+import { locale } from "../../general/locale-and-currency/schema.js";
 import { seoMetadata } from "../../general/seo/schema.js";
-import { userProfileOrgMembershipProductAttribution } from "../../user/profile/schema.js";
+// import { orgMemberProductAttribution } from "../../user/profile/schema.js";
 import { orgLocale } from "../locale-region/schema.js";
+import { orgEmployee, orgEmployeeProductAttribution } from "../member/employee/schema.js";
 import { org, orgBrand } from "../schema.js";
 import { orgProductCourse } from "./by-type/course/schema.js";
 import { orgProductCollectionProduct } from "./collection/schema.js";
 import { orgDiscountProduct, orgDiscountProductVariant } from "./offers/schema.js";
-import { orgMemberProductOrder } from "./orders/schema.js";
+import { orgMemberOrder } from "./orders/schema.js";
 import { orgProductVariantPaymentPlan } from "./payment/schema.js";
 import {
 	// discountProduct,
@@ -43,6 +44,7 @@ import {
 	orgProductBrandAttribution,
 	// productPrice,
 	orgProductI18n,
+	orgProductRevenuePool,
 	orgProductVariant,
 	orgProductVariantI18n,
 	// productZonePrice,
@@ -58,7 +60,7 @@ import {
  *
  * @businessRelationships
  * - Org product catalog management and multi-tenant isolation
- * - Professional creator attribution for educational content and revenue sharing workflows
+ * - Job creator attribution for educational content and revenue sharing workflows
  * - Brand identity integration for consistent marketing and customer recognition strategies
  * - Payment plan integration through variants for sophisticated pricing and promotional strategies
  * - E-commerce infrastructure including promotional campaigns and customer acquisition workflows
@@ -120,9 +122,11 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
 	}),
 
 	discounts: many(orgDiscountProduct),
-	orders: many(orgMemberProductOrder),
+	orders: many(orgMemberOrder),
 
-	orgsMembersAttributions: many(userProfileOrgMembershipProductAttribution),
+	employeeAttributions: many(orgEmployeeProductAttribution),
+
+	revenuePools: many(orgProductRevenuePool),
 }));
 
 /**
@@ -255,3 +259,14 @@ export const productBrandAttributionRelations = relations(
 		}),
 	}),
 );
+
+export const orgProductRevenuePoolRelations = relations(orgProductRevenuePool, ({ one }) => ({
+	lastAllocatedByEmployee: one(orgEmployee, {
+		fields: [orgProductRevenuePool.lastAllocationByEmployeeId],
+		references: [orgEmployee.id],
+	}),
+	product: one(orgProduct, {
+		fields: [orgProductRevenuePool.productId],
+		references: [orgProduct.id],
+	}),
+}));

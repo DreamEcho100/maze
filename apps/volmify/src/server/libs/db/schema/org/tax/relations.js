@@ -1,7 +1,8 @@
 import { relations } from "drizzle-orm";
-import { currency } from "../../general/locale-currency-market/schema";
+import { currency } from "../../general/locale-and-currency/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
+import { orgEmployee } from "../member/employee/schema";
 import { orgProductVariantPaymentPlan } from "../product/payment/schema";
 import { orgProductVariant } from "../product/schema";
 import {
@@ -9,6 +10,7 @@ import {
 	orgTaxCategoryI18n,
 	orgTaxRate,
 	orgTaxRateI18n,
+	orgTaxRateSnapshot,
 	orgTaxRateTaxCategory,
 } from "./schema";
 
@@ -62,5 +64,16 @@ export const orgTaxRateTaxCategoryRelations = relations(orgTaxRateTaxCategory, (
 	category: one(orgTaxCategory, {
 		fields: [orgTaxRateTaxCategory.categoryId],
 		references: [orgTaxCategory.id],
+	}),
+}));
+
+export const orgTaxRateSnapshotRelations = relations(orgTaxRateSnapshot, ({ one }) => ({
+	taxRate: one(orgTaxRate, {
+		fields: [orgTaxRateSnapshot.rateId],
+		references: [orgTaxRate.id],
+	}),
+	createdByEmployee: one(orgEmployee, {
+		fields: [orgTaxRateSnapshot.byEmployeeId], // Updated field name
+		references: [orgEmployee.id],
 	}),
 }));

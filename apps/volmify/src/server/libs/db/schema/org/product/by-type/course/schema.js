@@ -26,10 +26,12 @@ import { orgProduct } from "../../schema";
 
 const orgProductCourseTableName = `${orgTableName}_product_course`;
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?
-export const orgProductCourseLevelEnum = pgEnum(
-	`${orgProductCourseTableName}_level`,
-	["beginner", "intermediate", "advanced", "expert"],
-);
+export const orgProductCourseLevelEnum = pgEnum(`${orgProductCourseTableName}_level`, [
+	"beginner",
+	"intermediate",
+	"advanced",
+	"expert",
+]);
 
 export const orgProductCourse = table(
 	orgProductCourseTableName,
@@ -42,9 +44,7 @@ export const orgProductCourse = table(
 			.idFk("product_id")
 			.references(() => orgProduct.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
-			.default(0)
-			.notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -64,35 +64,23 @@ export const orgProductCourse = table(
 		 */
 		difficulty: integer("difficulty").default(5), // 1-10 scale
 
-		userLevelRatingTotal: numericCols
-			.ratingTotal("user_level_rating_total")
-			.default(0),
-		userLevelRatingCount: numericCols
-			.ratingCount("user_level_rating_count")
-			.default(0),
+		userLevelRatingTotal: numericCols.ratingTotal("user_level_rating_total").default(0),
+		userLevelRatingCount: numericCols.ratingCount("user_level_rating_count").default(0),
 		/**
 		 * @userFeedback Average user rating for course level appropriateness
 		 * @qualityAssurance Community-validated level accuracy for creator credibility
 		 * @recommendationEngine Data for improving course discovery algorithms
 		 */
-		userLevelRatingAvg: numericCols
-			.ratingAgg("user_level_rating_avg")
-			.default("0.00"),
+		userLevelRatingAvg: numericCols.ratingAgg("user_level_rating_avg").default("0.00"),
 
-		userDifficultyRatingTotal: numericCols
-			.ratingTotal("user_difficulty_rating_total")
-			.default(0),
-		userDifficultyRatingCount: numericCols
-			.ratingCount("user_difficulty_rating_count")
-			.default(0),
+		userDifficultyRatingTotal: numericCols.ratingTotal("user_difficulty_rating_total").default(0),
+		userDifficultyRatingCount: numericCols.ratingCount("user_difficulty_rating_count").default(0),
 		/**
 		 * @userFeedback Average user rating for course difficulty assessment
 		 * @learningOptimization Community feedback for course improvement and positioning
 		 * @platformIntelligence Aggregate data for marketplace recommendation systems
 		 */
-		userDifficultyRatingAvg: numericCols
-			.ratingAgg("user_difficulty_rating_avg")
-			.default("0.00"),
+		userDifficultyRatingAvg: numericCols.ratingAgg("user_difficulty_rating_avg").default("0.00"),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -107,23 +95,13 @@ export const orgProductCourse = table(
 	(t) => [
 		index(`idx_${orgProductCourseI18nTableName}_product`).on(t.productId),
 		index(`idx_${orgProductCourseI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseI18nTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgProductCourseI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductCourseI18nTableName}_level`).on(t.level),
 		index(`idx_${orgProductCourseI18nTableName}_difficulty`).on(t.difficulty),
-		index(`idx_${orgProductCourseI18nTableName}_duration`).on(
-			t.estimatedDurationInMinutes,
-		),
-		index(`idx_${orgProductCourseI18nTableName}_level_rating_total`).on(
-			t.userLevelRatingTotal,
-		),
-		index(`idx_${orgProductCourseI18nTableName}_level_rating_count`).on(
-			t.userLevelRatingCount,
-		),
-		index(`idx_${orgProductCourseI18nTableName}_level_rating_avg`).on(
-			t.userLevelRatingAvg,
-		),
+		index(`idx_${orgProductCourseI18nTableName}_duration`).on(t.estimatedDurationInMinutes),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_total`).on(t.userLevelRatingTotal),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_count`).on(t.userLevelRatingCount),
+		index(`idx_${orgProductCourseI18nTableName}_level_rating_avg`).on(t.userLevelRatingAvg),
 		index(`idx_${orgProductCourseI18nTableName}_difficulty_rating_total`).on(
 			t.userDifficultyRatingTotal,
 		),
@@ -137,9 +115,7 @@ export const orgProductCourse = table(
 );
 
 const orgProductCourseI18nTableName = `${orgProductCourseTableName}_i18n`;
-export const orgProductCourseI18n = buildOrgI18nTable(
-	orgProductCourseI18nTableName,
-)(
+export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseI18nTableName)(
 	{
 		courseId: textCols
 			.idFk("course_id")
@@ -161,9 +137,7 @@ export const orgProductCourseI18n = buildOrgI18nTable(
 	},
 	{
 		fkKey: "courseId",
-		extraConfig: (self, tableName) => [
-			index(`idx_${tableName}_course_id`).on(self.courseId),
-		],
+		extraConfig: (self, tableName) => [index(`idx_${tableName}_course_id`).on(self.courseId)],
 	},
 );
 
@@ -206,18 +180,13 @@ export const orgProductCourseSkill = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(
-			t.courseId,
-			t.skillId,
-		),
+		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(t.courseId, t.skillId),
 		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(t.isLearningOutcome),
 		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(t.proficiencyLevel),
 		index(`idx_${orgProductCourseSkillTableName}_weight`).on(t.weight),
 		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(t.courseId),
 		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(t.skillId),
-		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(t.createdAt),
 		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(t.deletedAt),
 		check("weight_range", sql`${t.weight} >= 1 AND ${t.weight} <= 10`),
@@ -231,7 +200,7 @@ const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_p
  * Course Rating - Community-Driven Course Assessment
  *
  * @businessLogic User ratings for course level and difficulty accuracy enabling
- * community-driven quality assurance and course improvement feedback for instructors
+ * community-driven quality assurance and course improvement feedback for jobs
  * within creator economy quality optimization workflows.
  */
 export const orgMemberProductCourseChallengeRating = table(
@@ -246,7 +215,7 @@ export const orgMemberProductCourseChallengeRating = table(
 
 		/**
 		 * @qualityFeedback User assessment of course level accuracy
-		 * @creatorFeedback Helps instructors understand if course matches advertised level
+		 * @creatorFeedback Helps jobs understand if course matches advertised level
 		 */
 		levelRatingTotal: numericCols.ratingTotal("level_rating_total").default(0),
 		levelRatingCount: numericCols.ratingCount("level_rating_count").default(0),
@@ -254,17 +223,15 @@ export const orgMemberProductCourseChallengeRating = table(
 
 		/**
 		 * @complexityFeedback User assessment of course difficulty accuracy
-		 * @courseImprovement Enables instructors to adjust content complexity based on feedback
+		 * @courseImprovement Enables jobs to adjust content complexity based on feedback
 		 */
 		difficultyRatingTotal: integer("difficulty_rating_total").default(0),
 		difficultyRatingCount: integer("difficulty_rating_count").default(0),
-		difficultyRatingAvg: numericCols
-			.ratingAgg("difficulty_rating_avg")
-			.default("0.00"),
+		difficultyRatingAvg: numericCols.ratingAgg("difficulty_rating_avg").default("0.00"),
 
 		/**
 		 * @qualitativeFeedback Optional explanation for ratings
-		 * @instructorInsights Detailed feedback for course improvement and creator development
+		 * @jobInsights Detailed feedback for course improvement and creator development
 		 */
 		feedback: text("feedback"),
 
@@ -274,39 +241,34 @@ export const orgMemberProductCourseChallengeRating = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		uniqueIndex(
-			`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`,
-		).on(t.courseId, t.memberId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(
+		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
 			t.courseId,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(
 			t.memberId,
 		),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_total`,
-		).on(t.levelRatingTotal),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_count`,
-		).on(t.levelRatingCount),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_avg`,
-		).on(t.levelRatingAvg),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_total`,
-		).on(t.difficultyRatingTotal),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_count`,
-		).on(t.difficultyRatingCount),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_avg`,
-		).on(t.difficultyRatingAvg),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`,
-		).on(t.createdAt),
-		index(
-			`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`,
-		).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_total`).on(
+			t.levelRatingTotal,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_count`).on(
+			t.levelRatingCount,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_avg`).on(
+			t.levelRatingAvg,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_total`).on(
+			t.difficultyRatingTotal,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_count`).on(
+			t.difficultyRatingCount,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_avg`).on(
+			t.difficultyRatingAvg,
+		),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
+		),
 		// check(
 		// 	"level_rating_range",
 		// 	sql`${t.levelRatingTotal} >= 1 AND ${t.levelRatingTotal} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
@@ -317,7 +279,34 @@ export const orgMemberProductCourseChallengeRating = table(
 		// ),
 	],
 );
-// TODO: add a history track for `orgMemberProductCourseChallengeRating`
+
+const orgMemberProductCourseChallengeRatingHistoryTableName = `${orgMemberProductCourseChallengeRatingTableName}_history`;
+export const orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum = pgEnum(
+	"org_member_product_course_challenge_rating_history_change_reason",
+	[
+		"updated", // User changed their rating (normal update)
+		// Q: Should the `"corrected"` be allowed? and when it should be used and wheere?
+		"corrected", // Admin or user fixed an error or mistake in the rating
+		"initial", // The original/first rating entry
+	],
+);
+
+export const orgMemberProductCourseChallengeRatingHistory = table(
+	orgMemberProductCourseChallengeRatingHistoryTableName,
+	{
+		id: textCols.id().notNull(),
+		ratingId: textCols.idFk("rating_id").references(() => orgMemberProductCourseChallengeRating.id),
+
+		// Historical values
+		previousLevelRating: numericCols.ratingTotal("previous_level_rating"),
+		previousDifficultyRating: numericCols.ratingTotal("previous_difficulty_rating"),
+		previousFeedback: text("previous_feedback"),
+
+		// Change metadata
+		changedAt: temporalCols.audit.createdAt(),
+		changeReason: orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum("change_reason"),
+	},
+);
 
 const orgProductCourseModuleTableName = `${orgProductCourseTableName}_module`;
 // Naming problem: should it be `module` or `section`?
@@ -362,31 +351,20 @@ export const orgProductCourseModule = table(
 		//  settings: jsonb("settings"),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(
-			t.courseId,
-			t.sortOrder,
-		),
+		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(t.courseId, t.sortOrder),
 		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(
-			t.requiredAccessTier,
-		),
+		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(t.requiredAccessTier),
 		index(`idx_${orgProductCourseModuleTableName}_required`).on(t.isRequired),
-		index(`idx_${orgProductCourseModuleTableName}_duration`).on(
-			t.estimatedDurationInMinutes,
-		),
+		index(`idx_${orgProductCourseModuleTableName}_duration`).on(t.estimatedDurationInMinutes),
 		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
 );
 
 const orgProductCourseModuleI18nTableName = `${orgProductCourseModuleTableName}_i18n`;
-export const orgProductCourseModuleI18n = buildOrgI18nTable(
-	orgProductCourseModuleI18nTableName,
-)(
+export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModuleI18nTableName)(
 	{
 		moduleId: textCols
 			.idFk("moduleId")
@@ -455,24 +433,16 @@ export const orgProductCourseModuleSection = table(
 			t.moduleId,
 			t.sortOrder,
 		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(
-			t.moduleId,
+		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(t.moduleId),
+		index(`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`).on(
+			t.requiredAccessTier,
 		),
-		index(
-			`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`,
-		).on(t.requiredAccessTier),
-		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(
-			t.isRequired,
+		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(t.isRequired),
+		index(`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`).on(
+			t.estimatedDurationInMinutes,
 		),
-		index(
-			`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`,
-		).on(t.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
@@ -570,25 +540,16 @@ export const orgProductCourseModuleSectionLesson = table(
 			t.sectionId,
 			t.sortOrder,
 		),
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(
-			t.sectionId,
-			t.lessonId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(
-			t.sectionId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(
-			t.lessonId,
-		),
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(t.sectionId, t.lessonId),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(t.sectionId),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(t.lessonId),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_access_tier`).on(
 			t.requiredAccessTier,
 		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(
-			t.createdAt,
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_last_updated_at`).on(
+			t.lastUpdatedAt,
 		),
-		index(
-			`idx_${orgProductCourseModuleSectionLessonTableName}_last_updated_at`,
-		).on(t.lastUpdatedAt),
 		check("required_access_tier_range", sql`${t.requiredAccessTier} >= 0`),
 		check("sort_order_range", sql`${t.sortOrder} >= 0`),
 	],
@@ -645,9 +606,7 @@ export const orgMemberProductCourseEnrollment = table(
 			.idFk("course_id")
 			.references(() => orgProductCourse.id)
 			.notNull(),
-		status: orgMemberProductCourseEnrollmentStatusEnum("status")
-			.default("not_started")
-			.notNull(),
+		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
 		progressPercentage: lmsCols.progressPercentage(),
 		completedAt: temporalCols.activity.completedAt(),
 
@@ -677,33 +636,17 @@ export const orgMemberProductCourseEnrollment = table(
 	},
 	(t) => [
 		primaryKey({ columns: [t.memberId, t.courseId] }),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(
-			t.memberId,
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(t.courseId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(t.status),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`).on(
+			t.progressPercentage,
 		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(
-			t.courseId,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(
-			t.status,
-		),
-		index(
-			`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`,
-		).on(t.progressPercentage),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(
-			t.completedAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(
-			t.enrolledAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(
-			t.lastAccessedAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(
-			`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`,
-		).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(t.completedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(t.enrolledAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(t.lastAccessedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 
@@ -747,22 +690,18 @@ export const orgMemberLearningProfile = table(
 	(t) => [
 		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),
 
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_courses_completed`,
-		).on(t.totalCoursesCompleted),
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`,
-		).on(t.totalLearningInMinutes),
-		index(
-			`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`,
-		).on(t.totalCertificatesEarned),
+		index(`idx_${orgMemberLearningProfileTableName}_total_courses_completed`).on(
+			t.totalCoursesCompleted,
+		),
+		index(`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`).on(
+			t.totalLearningInMinutes,
+		),
+		index(`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`).on(
+			t.totalCertificatesEarned,
+		),
 
-		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(
-			t.createdAt,
-		),
-		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
-		),
+		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(t.lastUpdatedAt),
 	],
 );
 

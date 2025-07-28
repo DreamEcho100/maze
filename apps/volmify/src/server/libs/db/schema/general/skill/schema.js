@@ -1,8 +1,8 @@
-import { boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { sharedCols, table, temporalCols, textCols } from "../../_utils/helpers";
 
 import { org } from "../../org/schema";
-import { locale } from "../locale-currency-market/schema";
+import { locale } from "../locale-and-currency/schema";
 
 const skillTableName = "skill";
 // Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
@@ -53,6 +53,12 @@ export const skill = table(
 	},
 	(t) => [
 		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(t.appliedByOrgId, t.slug),
+		// Q: Can the skill have multiple parents? and why?
+		foreignKey({
+			columns: [t.parentSkillId],
+			foreignColumns: [t.id],
+			name: `fk_${skillTableName}_parent_skill_id`,
+		}),
 		// index(`idx_${skillTableName}_category`).on(t.category),
 		index(`idx_${skillTableName}_parent_skill_id`).on(t.parentSkillId),
 		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),

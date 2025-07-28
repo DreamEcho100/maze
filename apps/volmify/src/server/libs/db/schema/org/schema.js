@@ -184,7 +184,7 @@ export const orgBrandMetrics = table(
 );
 
 // TODO: can be manged through the org membership
-// export const instructorOrgAffiliationStatusEnum = pgEnum("instructor_org_affiliation_status", [
+// export const jobOrgAffiliationStatusEnum = pgEnum("job_org_affiliation_status", [
 // 	"pending",
 // 	"active",
 // 	"suspended",
@@ -240,7 +240,7 @@ export const orgBrandMetrics = table(
 // canCreateCourses: boolean("can_create_courses").default(true),
 // canManageStudents: boolean("can_manage_students").default(false),
 // canAccessAnalytics: boolean("can_access_analytics").default(true),
-// canManageOtherInstructors: boolean("can_manage_other_instructors").default(
+// canManageOtherJobs: boolean("can_manage_other_jobs").default(
 // 	false,
 // ),
 // authorizationLevel: text("authorization_level").default("standard"), // "restricted", "standard", "elevated", "admin"

@@ -2,7 +2,7 @@ import { boolean, index, integer, text, uniqueIndex } from "drizzle-orm/pg-core"
 import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_utils/helpers.js";
 
 /**
- * @fileoverview 🌍 Currency & Market Schema — Global Commerce Backbone
+ * @fileoverview 🌍 Currency Schema — Global Commerce Backbone
  *
  * @context
  * Enables multi-currency support, international market templates, regional compliance,
@@ -11,7 +11,6 @@ import { numericCols, sharedCols, table, temporalCols, textCols } from "../../_u
  *
  * @design
  * - Reference data for currencies and countries (ISO 4217 & 3166)
- * - Market templates as reusable configurations
  * - Exchange rate history for audit-ready currency conversions
  *
  * @integrations
@@ -193,8 +192,8 @@ export const exchangeRate = table(
 	"exchange_rate",
 	{
 		id: textCols.id(),
-		baseCurrency: sharedCols.currencyCodeFk("base_currency").notNull(),
-		targetCurrency: sharedCols.currencyCodeFk("target_currency").notNull(),
+		baseCurrencyCode: sharedCols.currencyCodeFk("base_currency_code").notNull(),
+		targetCurrencyCode: sharedCols.currencyCodeFk("target_currency_code").notNull(),
 		rate: numericCols.exchangeRate.rate().notNull(),
 		source: textCols.source(), // e.g., "ECB", "manual"
 		validFrom: temporalCols.financial.validFrom().notNull(),
@@ -208,8 +207,13 @@ export const exchangeRate = table(
 	(t) => {
 		const base = "exchange_rate";
 		return [
-			uniqueIndex(`uq_${base}_period`).on(t.baseCurrency, t.targetCurrency, t.validFrom, t.source),
-			index(`idx_${base}_currencies`).on(t.baseCurrency, t.targetCurrency),
+			uniqueIndex(`uq_${base}_period`).on(
+				t.baseCurrencyCode,
+				t.targetCurrencyCode,
+				t.validFrom,
+				t.source,
+			),
+			index(`idx_${base}_currencies`).on(t.baseCurrencyCode, t.targetCurrencyCode),
 			index(`idx_${base}_date`).on(t.validFrom, t.validTo),
 			index(`idx_${base}_active_date`).on(t.validFrom, t.validTo, t.deletedAt),
 			index(`idx_${base}_source`).on(t.source),

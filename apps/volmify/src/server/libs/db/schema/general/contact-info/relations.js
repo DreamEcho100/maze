@@ -51,7 +51,7 @@ export const contactInfoRelations = relations(contactInfo, ({ many }) => ({
 	 * @usedIn
 	 * - User onboarding and CRM
 	 * - Payment and revenue sharing communication
-	 * - Professional collaboration setup
+	 * - Job collaboration setup
 	 */
 	usersProfiles: many(userProfileContactInfo),
 }));

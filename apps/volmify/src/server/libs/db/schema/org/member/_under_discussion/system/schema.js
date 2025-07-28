@@ -1,5 +1,5 @@
 import { index } from "drizzle-orm/pg-core";
-import { table, temporalCols, textCols } from "../_utils/helpers";
+import { table, temporalCols, textCols } from "../../../../_utils/helpers";
 
 /**
  * @fileoverview System Permission Registry - ABAC Foundation

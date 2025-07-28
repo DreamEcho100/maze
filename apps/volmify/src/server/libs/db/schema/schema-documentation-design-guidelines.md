@@ -13,7 +13,7 @@ Given our multi-tenant educational content platform with creator economy and sop
 - **Organization-Centric Design**: How all features operate within organizational boundaries with brand attribution
 - **Creator Economy Integration**: How professional attribution and revenue sharing systems work together
 - **E-commerce Foundation**: How product variants, payment plans, and pricing strategies integrate
-- **Professional Scalability**: How the architecture supports multiple profession types and cross-organizational collaboration
+- **Job Scalability**: How the architecture supports multiple profession types and cross-organizational collaboration
 - **Integrated Payment Architecture**: How payment plans eliminate pricing table redundancy while maintaining sophistication
 
 ## **📁 Documentation Structure**
@@ -26,9 +26,9 @@ Given our multi-tenant educational content platform with creator economy and sop
 
 📂 user/
 └── profile/
-    └── instructor/              # Professional instructor profiles for creator economy
-        ├── schema.js            # Instructor identity and teaching capabilities
-        └── relations.js         # Cross-organizational instructor relationships
+    └── job/              # Job job profiles for creator economy
+        ├── schema.js            # Job identity and teaching capabilities
+        └── relations.js         # Cross-organizational job relationships
 
 📂 organization/
 ├── schema.js                   # Organizations + brands + markets + pricing zones
@@ -36,7 +36,7 @@ Given our multi-tenant educational content platform with creator economy and sop
 
 📂 product/
 ├── schema.js                   # Multi-product foundation + variants + professional attribution
-├── relations.js                # Professional and brand attribution relationships
+├── relations.js                # Job and brand attribution relationships
 ├── payment/
 │   ├── schema.js              # Integrated payment plans (CTI: one-time, subscription, usage-based)
 │   └── relations.js           # Payment plan relationships and subscription management
@@ -72,13 +72,13 @@ Given our multi-tenant educational content platform with creator economy and sop
  * 
  * @designPattern [Specific Pattern] + [Integration Strategy]
  * - CTI Pattern: For extensible type hierarchies (products, payment plans, professional profiles)
- * - Professional Attribution: Creator economy revenue sharing and content ownership
+ * - Job Attribution: Creator economy revenue sharing and content ownership
  * - Brand Attribution: Organizational brand identity integration
  * - Integrated Pricing: Payment plans with built-in market/currency pricing
- * - Cross-Organizational: Professional collaboration beyond organizational boundaries
+ * - Cross-Organizational: Job collaboration beyond organizational boundaries
  * 
  * @integrationPoints
- * - Professional Attribution: Creator economy revenue sharing and content creation workflows
+ * - Job Attribution: Creator economy revenue sharing and content creation workflows
  * - E-commerce Foundation: Product variants, payment plans, and subscription management
  * - Organizational Revenue: Creator compensation and business analytics
  * - International Commerce: Multi-currency support and regional market optimization
@@ -103,7 +103,7 @@ Given our multi-tenant educational content platform with creator economy and sop
  * Focus on creator economy workflows, e-commerce processes, or organizational boundaries.
  * 
  * @professionalContext [How this supports professional identity/attribution] (when applicable)
- * Professional creator workflows, cross-organizational collaboration, revenue attribution.
+ * Job creator workflows, cross-organizational collaboration, revenue attribution.
  * 
  * @ecommerceContext [How this enables e-commerce functionality] (when applicable)
  * Product catalog management, payment processing, subscription lifecycle, pricing strategies.
@@ -126,7 +126,7 @@ Given our multi-tenant educational content platform with creator economy and sop
 ```javascript
 /**
  * @businessRule [Important constraint or business logic]
- * @professionalContext [Professional workflow relevance]
+ * @professionalContext [Job workflow relevance]
  * @organizationScope [Multi-tenant boundary enforcement]
  * @ecommerceContext [E-commerce workflow significance]
  * @revenueContext [Revenue attribution or calculation relevance]
@@ -160,14 +160,14 @@ export const enumName = pgEnum("enum_name", ["value1", "value2", "value3"]);
 /**
  * @businessConstraint [Complex business rule this enforces]
  * @organizationBoundary [Multi-tenant isolation enforcement]
- * @professionalIdentity [Professional uniqueness or attribution rule]
+ * @professionalIdentity [Job uniqueness or attribution rule]
  */
 uniqueIndex("constraint_name").on(table.field1, table.field2),
 
 // Performance Indexes
 /**
  * @performanceCritical [High-frequency query pattern this optimizes]
- * @professionalWorkflow [Professional query optimization]
+ * @professionalWorkflow [Job query optimization]
  * @ecommerceWorkflow [E-commerce query optimization]
  * @revenueAnalytics [Revenue calculation optimization]
  */
@@ -305,8 +305,8 @@ export const entityRelations = relations(entity, ({ one, many }) => ({
 ## **🎯 Content Focus Areas**
 
 ### **Creator Economy Documentation Priority**
-1. **Professional Attribution**: How content ownership and revenue sharing works
-2. **Cross-Organizational Collaboration**: Professional identity across organizations
+1. **Job Attribution**: How content ownership and revenue sharing works
+2. **Cross-Organizational Collaboration**: Job identity across organizations
 3. **Brand Attribution**: Organizational brand identity and content attribution
 4. **Revenue Distribution**: Creator compensation and organizational analytics
 
@@ -318,7 +318,7 @@ export const entityRelations = relations(entity, ({ one, many }) => ({
 
 ### **Multi-Tenant Documentation Priority**
 1. **Organizational Boundaries**: How data isolation and business independence works
-2. **Professional Scalability**: How patterns support multiple creator types
+2. **Job Scalability**: How patterns support multiple creator types
 3. **Brand Management**: Organizational brand identity across product catalogs
 4. **Cross-Schema Integration**: How professional profiles integrate across domains
 
@@ -327,7 +327,7 @@ export const entityRelations = relations(entity, ({ one, many }) => ({
 ### **What TO Document**
 - **Architectural decisions** and why they enable creator economy workflows
 - **Business workflows** that span multiple tables or involve complex logic
-- **Professional attribution patterns** and how they scale
+- **Job attribution patterns** and how they scale
 - **E-commerce integration points** and payment strategy sophistication
 - **Multi-tenant boundaries** and organizational collaboration patterns
 - **Performance-critical paths** for creator and e-commerce workflows
@@ -379,7 +379,7 @@ export const entityRelations = relations(entity, ({ one, many }) => ({
 ## **📏 Key Success Factors**
 
 ### **Creator Economy Focus**
-- **Professional Identity Management**: Multi-profile system and cross-organizational identity
+- **Job Identity Management**: Multi-profile system and cross-organizational identity
 - **Content Attribution Systems**: Brand and professional attribution workflows
 - **Revenue Models**: Creator compensation and organizational analytics
 - **Collaboration Patterns**: Cross-organizational professional workflows

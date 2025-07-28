@@ -12,12 +12,23 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { sharedCols, table, temporalCols, textCols } from "../../../../_utils/helpers.js";
+import {
+	sharedCols,
+	table,
+	temporalCols,
+	textCols,
+} from "../../../../_utils/helpers.js";
 import { user } from "../../../../user/schema.js";
 import { orgTableName } from "../../../_utils/helpers.js";
 import { orgDepartment } from "../../department/schema.js";
-import { orgMember } from "../../schema.js";
+import { orgEmployee } from "../../employee/schema.js";
 import { orgTeam } from "../../team/schema.js";
+
+// Q: Will the following be able to achieve something like:
+// - EMPLOYEE permissions are department/team based
+// - Engineering team has code repository access
+// - Marketing team has campaign management access
+// - Finance team has accounting system access
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔐 ABAC Permission System - Complete Policy Architecture
@@ -28,17 +39,20 @@ import { orgTeam } from "../../team/schema.js";
  *
  * @domain Permissions
  * @description Defines atomic actions that can be granted via policies
- * @examples "edit_invoice", "view_reports", "manage_members", "create_courses"
+ * @examples "edit_invoice", "view_reports", "manage_employees", "create_courses"
  */
 const orgPermissionTableName = `${orgTableName}_permission`;
-export const orgPermissionScopeEnum = pgEnum(`${orgPermissionTableName}_scope`, [
-	"global", // Applies to all resources in the org
-	"org", // Applies to all resources within the org
-	"resource", // Applies to a specific resource
-	"team", // Applies to all resources within a specific team
-	"department", // Applies to all resources within a specific department
-	"member", // Applies to all resources owned by a specific member
-]);
+export const orgPermissionScopeEnum = pgEnum(
+	`${orgPermissionTableName}_scope`,
+	[
+		"global", // Applies to all resources in the org
+		"org", // Applies to all resources within the org
+		"resource", // Applies to a specific resource
+		"team", // Applies to all resources within a specific team
+		"department", // Applies to all resources within a specific department
+		"employee", // Applies to all resources owned by a specific employee
+	],
+);
 
 export const orgPermission = table(
 	orgPermissionTableName,
@@ -48,7 +62,7 @@ export const orgPermission = table(
 
 		/**
 		 * @key Unique identifier used in code and policies
-		 * @examples "courses.create", "members.invite", "reports.view", "invoices.edit"
+		 * @examples "courses.create", "employees.invite", "reports.view", "invoices.edit"
 		 */
 		key: textCols.key().notNull(),
 
@@ -65,7 +79,7 @@ export const orgPermission = table(
 
 		/**
 		 * @category Logical grouping for permission management UI
-		 * @examples "course_management", "member_management", "financial", "reporting"
+		 * @examples "course_management", "employee_management", "financial", "reporting"
 		 */
 		category: textCols.category(),
 
@@ -139,10 +153,13 @@ export const orgPolicy = table(
  * @description Links permissions to policies with conditional access logic
  */
 const orgPolicyRuleTableName = `${orgPolicyTableName}_rule`;
-export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyRuleTableName}_effect`, [
-	"allow", // Grants permission if conditions are met
-	"deny", // Explicitly denies permission if conditions are met
-]);
+export const orgPolicyRuleEffectEnum = pgEnum(
+	`${orgPolicyRuleTableName}_effect`,
+	[
+		"allow", // Grants permission if conditions are met
+		"deny", // Explicitly denies permission if conditions are met
+	],
+);
 
 export const orgPolicyRule = table(
 	orgPolicyRuleTableName,
@@ -192,7 +209,10 @@ export const orgPolicyRule = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
+		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(
+			t.policyId,
+			t.permissionId,
+		),
 		index(`idx_${orgPolicyRuleTableName}_effect`).on(t.effect),
 		index(`idx_${orgPolicyRuleTableName}_priority`).on(t.priority),
 		index(`idx_${orgPolicyRuleTableName}_created_at`).on(t.createdAt),
@@ -280,7 +300,7 @@ export const orgRolePolicy = table(
  * Policy Assignments to Actors
  *
  * @domain ABAC Assignments
- * @description Assigns policies directly to members, teams, or departments
+ * @description Assigns policies directly to employees, teams, or departments
  */
 const orgPolicyAssignmentTableName = `${orgPolicyTableName}_assignment`;
 export const orgPolicyAssignment = table(
@@ -297,19 +317,21 @@ export const orgPolicyAssignment = table(
 		 * @actor Assignment target (exactly one must be set)
 		 * @constraint Enforced via check constraint - only one actor type per assignment
 		 */
-		memberId: sharedCols.orgMemberIdFk(),
+		employeeId: sharedCols.orgEmployeeIdFk(),
 		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
-			onDelete: "cascade",
-		}),
+		departmentId: textCols
+			.idFk("department_id")
+			.references(() => orgDepartment.id, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedById: textCols.idFk("assigned_by").references(() => orgMember.id),
+		assignedById: textCols.idFk("assigned_by").references(() => orgEmployee.id),
 		expiresAt: temporalCols.business.expiresAt(), // Optional policy expiration
 
 		// /**
@@ -325,15 +347,15 @@ export const orgPolicyAssignment = table(
 		check(
 			`ck_${orgPolicyAssignmentTableName}_single_actor`,
 			sql`(
-                (${t.memberId} IS NOT NULL)::int + 
+                (${t.employeeId} IS NOT NULL)::int + 
                 (${t.teamId} IS NOT NULL)::int + 
                 (${t.departmentId} IS NOT NULL)::int
             ) = 1`,
 		),
 		// Unique policy assignment per actor
-		uniqueIndex(`uq_${orgPolicyAssignmentTableName}_member_policy`)
-			.on(t.policyId, t.memberId)
-			.where(isNotNull(t.memberId)),
+		uniqueIndex(`uq_${orgPolicyAssignmentTableName}_employee_policy`)
+			.on(t.policyId, t.employeeId)
+			.where(isNotNull(t.employeeId)),
 		uniqueIndex(`uq_${orgPolicyAssignmentTableName}_team_policy`)
 			.on(t.policyId, t.teamId)
 			.where(isNotNull(t.teamId)),
@@ -341,7 +363,7 @@ export const orgPolicyAssignment = table(
 			.on(t.policyId, t.departmentId)
 			.where(isNotNull(t.departmentId)),
 		// Performance indexes
-		index(`idx_${orgPolicyAssignmentTableName}_member`).on(t.memberId),
+		index(`idx_${orgPolicyAssignmentTableName}_employee`).on(t.employeeId),
 		index(`idx_${orgPolicyAssignmentTableName}_team`).on(t.teamId),
 		index(`idx_${orgPolicyAssignmentTableName}_department`).on(t.departmentId),
 		index(`idx_${orgPolicyAssignmentTableName}_assigned_at`).on(t.assignedAt),
@@ -354,7 +376,7 @@ export const orgPolicyAssignment = table(
  * Role Assignments to Actors
  *
  * @domain Role Management
- * @description Assigns role templates to members, teams, or departments
+ * @description Assigns role templates to employees, teams, or departments
  */
 const orgRoleAssignmentTableName = `${orgRoleTableName}_assignment`;
 export const orgRoleAssignment = table(
@@ -370,19 +392,21 @@ export const orgRoleAssignment = table(
 		/**
 		 * @actor Assignment target (exactly one must be set)
 		 */
-		memberId: sharedCols.orgMemberIdFk(),
+		employeeId: sharedCols.orgEmployeeIdFk(),
 		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
-			onDelete: "cascade",
-		}),
+		departmentId: textCols
+			.idFk("department_id")
+			.references(() => orgDepartment.id, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @assignment Assignment metadata and audit trail
 		 */
 		assignedAt: timestamp("assigned_at").defaultNow(),
-		assignedById: textCols.idFk("assigned_by").references(() => orgMember.id),
+		assignedById: textCols.idFk("assigned_by").references(() => orgEmployee.id),
 		expiresAt: temporalCols.business.expiresAt(), // Optional role expiration
 
 		// /**
@@ -398,15 +422,15 @@ export const orgRoleAssignment = table(
 		check(
 			`ck_${orgRoleAssignmentTableName}_single_actor`,
 			sql`(
-                (${t.memberId} IS NOT NULL)::int + 
+                (${t.employeeId} IS NOT NULL)::int + 
                 (${t.teamId} IS NOT NULL)::int + 
                 (${t.departmentId} IS NOT NULL)::int
             ) = 1`,
 		),
 		// Unique role assignment per actor
-		uniqueIndex(`uq_${orgRoleAssignmentTableName}_member_role`)
-			.on(t.roleId, t.memberId)
-			.where(isNotNull(t.memberId)),
+		uniqueIndex(`uq_${orgRoleAssignmentTableName}_employee_role`)
+			.on(t.roleId, t.employeeId)
+			.where(isNotNull(t.employeeId)),
 		uniqueIndex(`uq_${orgRoleAssignmentTableName}_team_role`)
 			.on(t.roleId, t.teamId)
 			.where(isNotNull(t.teamId)),
@@ -414,7 +438,7 @@ export const orgRoleAssignment = table(
 			.on(t.roleId, t.departmentId)
 			.where(isNotNull(t.departmentId)),
 		// Performance indexes
-		index(`idx_${orgRoleAssignmentTableName}_member`).on(t.memberId),
+		index(`idx_${orgRoleAssignmentTableName}_employee`).on(t.employeeId),
 		index(`idx_${orgRoleAssignmentTableName}_team`).on(t.teamId),
 		index(`idx_${orgRoleAssignmentTableName}_department`).on(t.departmentId),
 		index(`idx_${orgRoleAssignmentTableName}_assigned_at`).on(t.assignedAt),
@@ -439,7 +463,7 @@ export const orgPermissionAuditLog = table(
 		/**
 		 * @audit Core audit information
 		 */
-		memberId: sharedCols.orgMemberIdFk(),
+		employeeId: sharedCols.orgEmployeeIdFk(),
 		permissionKey: varchar("permission_key", { length: 128 }).notNull(),
 
 		/**
@@ -465,11 +489,18 @@ export const orgPermissionAuditLog = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgPermissionAuditLogTableName}_member`).on(t.memberId),
-		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(t.permissionKey),
+		index(`idx_${orgPermissionAuditLogTableName}_employee`).on(t.employeeId),
+		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(
+			t.permissionKey,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_granted`).on(t.granted),
-		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(t.evaluatedAt),
-		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(t.resourceType, t.resourceId),
+		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(
+			t.evaluatedAt,
+		),
+		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(
+			t.resourceType,
+			t.resourceId,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_created_at`).on(t.createdAt),
 	],
 );
@@ -484,7 +515,7 @@ const permissions = [
   { key: "courses.create", name: "Create Courses", category: "course_management" },
   { key: "courses.edit.own", name: "Edit Own Courses", category: "course_management" },
   { key: "courses.edit.any", name: "Edit Any Course", category: "course_management" },
-  { key: "members.invite", name: "Invite Members", category: "member_management" },
+  { key: "employees.invite", name: "Invite Employees", category: "employee_management" },
   { key: "reports.financial.view", name: "View Financial Reports", category: "financial" },
 ];
 
@@ -499,16 +530,16 @@ const contentCreatorPolicy = {
 };
 
 // Example Role Template
-const instructorRole = {
-  name: "Course Instructor",
-  policies: ["Content Creator Policy", "Basic Member Policy"]
+const jobRole = {
+  name: "Course Job",
+  policies: ["Content Creator Policy", "Basic Employee Policy"]
 };
 
 // ABAC Evaluation Context
 interface ABACContext {
   subject: {
     userId: string;
-    memberId: string;
+    employeeId: string;
     departmentId?: string;
     teamIds: string[];
   };
@@ -534,3 +565,18 @@ interface PermissionResult {
   evaluationTime: number;
 }
 */
+
+// /**
+//  * @module AbacDelegations
+//  * @description Optional "act as" system — allows employee A to delegate authority to B
+//  */
+// export const abacDelegations = pgTable('abac_delegations', {
+// 	id: uuid('id').primaryKey().defaultRandom(),
+
+// 	orgId: uuid('org_id').references(() => organizations.id),
+// 	fromEmployeeId: uuid('from_employee_id').notNull().references(() => orgEmployees.id),
+// 	toEmployeeId: uuid('to_employee_id').notNull().references(() => orgEmployees.id),
+
+// 	expiresAt: timestamp('expires_at'),
+// 	createdAt: timestamp('created_at').defaultNow(),
+// })

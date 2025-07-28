@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { currency } from "../../general/locale-currency-market/schema";
+import { currency } from "../../general/locale-and-currency/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
 import { orgLessonI18n } from "../lesson/schema";
