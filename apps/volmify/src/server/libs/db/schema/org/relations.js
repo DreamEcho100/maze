@@ -3,7 +3,6 @@ import { account, accountTransaction } from "../account/schema.js";
 import { currency } from "../general/locale-and-currency/schema.js";
 import { seoMetadata } from "../general/seo/schema.js";
 import { skill } from "../general/skill/schema.js";
-import { user } from "../user/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
 import { orgLesson } from "./lesson/schema.js";
 import { orgLocale, orgRegion } from "./locale-region/schema.js";
@@ -65,26 +64,6 @@ export const orgRelations = relations(org, ({ many }) => ({
 	coupons: many(orgCoupon),
 	giftCards: many(orgGiftCard),
 	promotions: many(orgPromotion),
-}));
-
-/**
- * @invitationFlow Member Invitation
- * @abacOnboarding Pre-authorization mechanism prior to subject activation
- * @lifecycleBridge Connects invite to eventual member record
- */
-export const orgMemberInvitationRelations = relations(orgMemberInvitation, ({ one }) => ({
-	org: one(org, {
-		fields: [orgMemberInvitation.orgId],
-		references: [org.id],
-	}),
-	invitedByUser: one(user, {
-		fields: [orgMemberInvitation.invitedByMemberId],
-		references: [user.id],
-	}),
-	member: one(orgMember, {
-		fields: [orgMemberInvitation.memberId],
-		references: [orgMember.id],
-	}),
 }));
 
 /**

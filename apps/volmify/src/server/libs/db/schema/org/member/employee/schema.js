@@ -17,7 +17,22 @@ import { orgMember } from "../schema";
 // - **Employees** create content and receive revenue attribution through their job profiles
 
 const orgEmployeeTableName = `${orgTableName}_employee`;
-export const orgEmployeeBaseRoleEnum = pgEnum(`${orgEmployeeTableName}_base_role`, [
+export const orgEmployeeRoleEnum = pgEnum(`${orgEmployeeTableName}_base_role`, [
+	"admin", // Org admin with full permissions
+	// "manager", // Org manager with elevated permissions
+	// "employee", // Regular employee with standard permissions
+	// "contractor", // External contractor with limited permissions
+	// "intern", // Intern with limited permissions
+	// "volunteer", // Volunteer with minimal permissions
+	// "guest", // Guest with very limited permissions
+	// "creator", // Content creator with permissions to create and manage content
+	// "instructor", // Content creator
+	// "content_creator", // Digital content specialist
+	// "support", // Customer support
+	// "marketing", // Marketing team
+	// "sales", // Sales team
+	// "finance", // Finance/accounting
+	// "hr", // Human resources
 	// Q: What're the posable roles for an employee on an org by this project structure? _(keep in mind that it will be used for basic auth)_
 ]);
 export const orgEmployeeStatusEnum = pgEnum(`${orgEmployeeTableName}_status`, [
