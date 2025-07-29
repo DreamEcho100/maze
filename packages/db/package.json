@@ -22,8 +22,8 @@
 		"build": "tsc",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "tsc",
-    "format": "biome format ./src ",
-    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"format": "biome format ./src ",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"push": "pnpm with-env drizzle-kit push",
 		"studio": "pnpm with-env drizzle-kit studio",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -31,15 +31,15 @@
 	},
 	"dependencies": {
 		"@vercel/postgres": "^0.10.0",
-		"drizzle-orm": "^0.38.4",
+		"drizzle-orm": "catalog:",
 		"drizzle-zod": "^0.6.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-    "@biomejs/biome": "catalog:",
+		"@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
 		"dotenv-cli": "^8.0.0",
-		"drizzle-kit": "^0.30.5",
+		"drizzle-kit": "catalog:",
 		"typescript": "catalog:"
 	}
 }
