@@ -54,7 +54,7 @@ export const orgPermissionScopeEnum = pgEnum(`${orgPermissionTableName}_scope`, 
 export const orgPermission = table(
 	orgPermissionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 
 		/**
@@ -110,7 +110,7 @@ const orgPolicyTableName = `${orgTableName}_policy`;
 export const orgPolicy = table(
 	orgPolicyTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 
 		/**
@@ -158,7 +158,7 @@ export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyRuleTableName}_effect`
 export const orgPolicyRule = table(
 	orgPolicyRuleTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		policyId: textCols
 			.idFk("policy_id")
 			.references(() => orgPolicy.id, { onDelete: "cascade" })
@@ -221,7 +221,7 @@ const orgRoleTableName = `${orgTableName}_role`;
 export const orgRole = table(
 	orgRoleTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 
 		/**
@@ -297,7 +297,7 @@ const orgPolicyAssignmentTableName = `${orgPolicyTableName}_assignment`;
 export const orgPolicyAssignment = table(
 	orgPolicyAssignmentTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		policyId: textCols
 			.idFk("policy_id")
 			.references(() => orgPolicy.id, { onDelete: "cascade" })
@@ -371,7 +371,7 @@ const orgRoleAssignmentTableName = `${orgRoleTableName}_assignment`;
 export const orgRoleAssignment = table(
 	orgRoleAssignmentTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		roleId: textCols
 			.idFk("role_id")
 			.references(() => orgRole.id, { onDelete: "cascade" })
@@ -444,7 +444,7 @@ const orgPermissionAuditLogTableName = `${orgTableName}_permission_audit_log`;
 export const orgPermissionAuditLog = table(
 	orgPermissionAuditLogTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 
 		/**

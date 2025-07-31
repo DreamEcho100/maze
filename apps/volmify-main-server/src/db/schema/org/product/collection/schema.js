@@ -29,7 +29,7 @@ export const orgProductCollection = table(
 		/**
 		 * @uniqueIdentifier Internal PK for referencing this collection
 		 */
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @abacScope FK to the owning org

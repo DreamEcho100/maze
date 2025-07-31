@@ -30,7 +30,7 @@ export const invitationTypeEnum = pgEnum("invitation_type", [
 export const orgMemberInvitation = table(
 	`${orgMemberTableName}_invitation`,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		email: varchar("email", { length: 256 }).notNull(),
 

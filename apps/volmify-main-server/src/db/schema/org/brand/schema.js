@@ -17,7 +17,7 @@ const orgBrandTableName = `${orgTableName}_brand`;
 export const orgBrand = table(
 	orgBrandTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
 		logoUrl: textCols.url("logo_url"),
@@ -88,7 +88,7 @@ const orgBrandMetricsTableName = `${orgTableName}_brand_metrics`;
 export const orgBrandMetrics = table(
 	orgBrandMetricsTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgBrandId: textCols
 			.idFk("vendor_brand_id")
 			.references(() => orgBrand.id, { onDelete: "cascade" })

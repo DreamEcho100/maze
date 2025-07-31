@@ -57,7 +57,7 @@ export const orgEmployeeStatusEnum = pgEnum(`${orgEmployeeTableName}_status`, [
 export const orgEmployee = table(
 	orgEmployeeTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		orgId: orgIdFkCol().notNull(),
 		// This will be gated and validated on the API level to ensure only org employees can be employees
@@ -95,33 +95,33 @@ export const orgEmployee = table(
 
 		isSalaried: boolean("is_salaried").default(false),
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: orgEmployeeTableName,
-			cols: t,
+			cols,
 		}),
 		...orgMemberIdExtraConfig({
 			tName: orgEmployeeTableName,
-			cols: t,
+			cols,
 		}),
 		...multiForeignKeys({
 			tName: orgEmployeeTableName,
 			indexAll: true,
 			fkGroups: [
 				{
-					cols: [t.invitedById],
-					foreignColumns: [t.id],
+					cols: [cols.invitedById],
+					foreignColumns: [cols.id],
 					afterBuild: (fk) => fk.onDelete("set null"),
 				},
 			],
 		}),
 		uniqueIndex({
 			tName: orgEmployeeTableName,
-			cols: [t.orgId, t.memberId],
+			cols: [cols.orgId, cols.memberId],
 		}),
 		uniqueIndex({
 			tName: orgEmployeeTableName,
-			cols: [t.orgId, t.jobProfileId],
+			cols: [cols.orgId, cols.jobProfileId],
 		}),
 	],
 );

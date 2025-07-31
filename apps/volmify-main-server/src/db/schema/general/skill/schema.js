@@ -20,7 +20,7 @@ const skillTableName = "skill";
 export const skill = table(
 	skillTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		/**
 		 * @skillTaxonomy Standardized skill identifier for marketplace consistency
 		 * @analyticsFoundation Enables cross-org skill tracking and recommendations
@@ -100,7 +100,7 @@ const skillI18nTableName = `${skillTableName}_i18n`;
 export const skillI18n = table(
 	skillI18nTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		skillId: textCols
 			.idFk("skill_id")
 			.references(() => skill.id)

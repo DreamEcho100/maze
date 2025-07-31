@@ -39,7 +39,7 @@ export const userProfileTypeEnum = pgEnum("user_profile_type", [
 export const userProfile = table(
 	userProfileTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		userId: userIdFkCol().notNull(),
 		// orgId: orgIdFkCol().notNull(),
 
@@ -112,7 +112,7 @@ const userProfileContactInfoTableName = `${userTableName}_profile_contact_info`;
 export const userProfileContactInfo = table(
 	userProfileContactInfoTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		userProfileId: userProfileIdFkCol().notNull(),
 		contactInfoId: textCols.idFk("contact_info_id").notNull(),
 		// .references(() => contactInfo.id, { onDelete: "cascade" }),
@@ -121,25 +121,17 @@ export const userProfileContactInfo = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		// uniqueIndex("uq_job_default_contact_info")
-		// 	.on(t.userProfileId, t.isDefault)
-		// 	.where(eq(t.isDefault, true)),
-		// index(`idx_${userProfileContactInfoTableName}_user_profile_id`).on(t.userProfileId),
-		// index(`idx_${userProfileContactInfoTableName}_contact_info_id`).on(t.contactInfoId),
-		// index(`idx_${userProfileContactInfoTableName}_created_at`).on(t.createdAt),
-		// index(`idx_${userProfileContactInfoTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		// index(`idx_${userProfileContactInfoTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
 		...userProfileIdExtraConfig({
 			tName: userProfileContactInfoTableName,
-			cols: t,
+			cols,
 		}),
 		...multiForeignKeys({
 			tName: userProfileContactInfoTableName,
 			indexAll: true,
 			fkGroups: [
 				{
-					cols: [t.contactInfoId],
+					cols: [cols.contactInfoId],
 					foreignColumns: [contactInfo.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -147,15 +139,15 @@ export const userProfileContactInfo = table(
 		}),
 		uniqueIndex({
 			tName: userProfileContactInfoTableName,
-			cols: [t.userProfileId, t.isDefault],
-		}).where(eq(t.isDefault, true)),
+			cols: [cols.userProfileId, cols.isDefault],
+		}).where(eq(cols.isDefault, true)),
 		...multiIndexes({
 			tName: userProfileContactInfoTableName,
 			colsGrps: [
-				{ cols: [t.isDefault] },
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
-				{ cols: [t.deletedAt] },
+				{ cols: [cols.isDefault] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
 			],
 		}),
 	],
@@ -187,7 +179,7 @@ export const userProfileOrgMembership = table(
 	{
 		// IMP
 		// Q: make the primary key a `id` field or a compound primary key of `userProfileId` and `orgMemberId`?
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		userProfileId: userProfileIdFkCol().notNull(),
 		orgMemberId: orgMemberIdFkCol().notNull(),
 

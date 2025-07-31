@@ -1,12 +1,14 @@
 import { sql } from "drizzle-orm";
 import { jsonb, pgEnum } from "drizzle-orm/pg-core";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
 import { numericCols } from "../_utils/cols/numeric.js";
 import {
 	currencyCodeExtraConfig,
 	currencyCodeFkCol,
 } from "../_utils/cols/shared/foreign-keys/currency-code.js";
-import { orgEmployeeIdExtraConfig } from "../_utils/cols/shared/foreign-keys/employee-id.js";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "../_utils/cols/shared/foreign-keys/employee-id.js";
 import {
 	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
@@ -48,7 +50,7 @@ export const OrgAccountingLedgerNormalBalanceTypeEnum = pgEnum("balance_type", [
 //  * - Expenses: Job Payouts, Stripe Fees
 //  */
 // export const accountTypes = table(`${accountTableName}_types`, {
-// 	id: textCols.id().notNull(),
+// 	id: textCols.idPk().notNull(),
 // 	name: textCols.name().notNull(),
 // 	category: textCols.category().notNull(), // 'asset', 'liability', 'revenue', 'expense', 'equity', 'other'.
 // 	system: boolean("system").default(false), // If true, internal platform usage
@@ -61,7 +63,7 @@ export const OrgAccountingLedgerNormalBalanceTypeEnum = pgEnum("balance_type", [
 export const account = table(
 	accountTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 
@@ -81,29 +83,29 @@ export const account = table(
 		isSystem: sharedCols.isSystem(),
 		isActive: sharedCols.isActive(),
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: accountTableName,
-			cols: t,
+			cols,
 		}),
 		...orgMemberIdExtraConfig({
 			tName: accountTableName,
-			cols: t,
+			cols,
 		}),
 		...currencyCodeExtraConfig({
 			tName: accountTableName,
-			cols: t,
+			cols,
 		}),
 		...multiIndexes({
 			tName: accountTableName,
 			colsGrps: [
-				{ cols: [t.name] },
-				{ cols: [t.type] },
-				{ cols: [t.currencyCode] },
+				{ cols: [cols.name] },
+				{ cols: [cols.type] },
+				{ cols: [cols.currencyCode] },
 				// { cols: [t.isSystem] },
 				// { cols: [t.isActive] },
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
 			],
 		}),
 		// TODO:
@@ -122,7 +124,7 @@ const accountBalanceSnapshotTableName = `${accountTableName}_balance_snapshot`;
 export const accountBalanceSnapshot = table(
 	accountBalanceSnapshotTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		accountId: textCols.idFk("account_id").notNull(),
 		// Q: snapshotDate vs createdAt? Should we use createdAt for the snapshot date? consistency vs clarity vs accuracy?
 		snapshotDate: temporalCols.business.transactionDate("snapshot_date").notNull(),
@@ -202,7 +204,7 @@ export const accountTransactionBusinessEntityTypeEnum = pgEnum(
 export const accountTransaction = table(
 	accountTransactionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		// Q: is there a case where we need to store orgId here? and should it be nullable?
 		orgId: orgIdFkCol(), // Org ID for the transaction
 
@@ -223,32 +225,37 @@ export const accountTransaction = table(
 
 		// Audit
 		createdAt: temporalCols.audit.createdAt(),
-		createdByEmployeeId: orgEmployeeIdFkCol("created_by_employee_id"),
+		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
 
 		// Business entity reference (enhances your existing reference system)
 		businessEntityType: accountTransactionBusinessEntityTypeEnum("business_entity_type"),
 		businessEntityId: textCols.idFk("business_entity_id"), // Points to order, payout, etc.
 	},
-	(t) => [
+	(cols) => [
 		// uniqueIndex(`uq_${accountTransactionTableName}_reference_entity`).on(
 		// 	t.referenceType,
 		// 	t.referenceId,
 		// ),
 		...orgIdExtraConfig({
 			tName: accountTransactionTableName,
-			cols: t,
+			cols,
+		}),
+		...orgEmployeeIdExtraConfig({
+			tName: accountTransactionTableName,
+			cols,
+			colFkKey: "createdByEmployeeId",
 		}),
 		...multiIndexes({
 			tName: accountTransactionTableName,
 			colsGrps: [
-				{ cols: [t.createdAt] },
-				{ cols: [t.createdByEmployeeId] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.createdByEmployeeId] },
 				// { cols: [t.businessEntityType, t.businessEntityId] },
-				{ cols: [t.reference] },
-				{ cols: [t.transactionNumber] },
-				{ cols: [t.transactionDate] },
-				{ cols: [t.totalAmount] },
-				{ cols: [t.currencyCode] },
+				{ cols: [cols.reference] },
+				{ cols: [cols.transactionNumber] },
+				{ cols: [cols.transactionDate] },
+				{ cols: [cols.totalAmount] },
+				{ cols: [cols.currencyCode] },
 			],
 		}),
 	],
@@ -263,7 +270,7 @@ const accountTransactionLineTableName = `${accountTransactionTableName}_line`;
 export const accountTransactionLine = table(
 	accountTransactionLineTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		accountId: textCols.idFk("account_id").notNull(),
 		transactionId: textCols.idFk("transaction_id").notNull(),
 
@@ -325,7 +332,7 @@ export const accountTransactionContextRelationshipTypeEnum = pgEnum(
 export const accountTransactionContext = table(
 	accountTransactionContextTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/** @businessLogic Links to your existing transaction record */
 		transactionId: textCols.idFk("transaction_id").notNull(),
@@ -375,7 +382,7 @@ export const accountTransactionUserAccessLevelEnum = pgEnum(
 export const accountTransactionUserContext = table(
 	accountTransactionUserContextTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/** @businessLogic Links to base context record */
 		contextId: textCols.idFk("context_id").notNull(),
@@ -391,20 +398,20 @@ export const accountTransactionUserContext = table(
 		/** @auditTrail Source of this access grant */
 		accessSource: textCols.tagline("access_source"), // "member_activity", "employee_role", "admin_grant"
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: accountTransactionUserContextTableName,
-			cols: t,
+			cols,
 		}),
 		...userIdExtraConfig({
 			tName: accountTransactionUserContextTableName,
-			cols: t,
+			cols,
 		}),
 		multiForeignKeys({
 			tName: accountTransactionUserContextTableName,
 			fkGroups: [
 				{
-					cols: [t.contextId],
+					cols: [cols.contextId],
 					foreignColumns: [accountTransactionContext.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -433,7 +440,7 @@ export const accountTransactionEmployeeRoleEnum = pgEnum(
 export const accountTransactionEmployeeContext = table(
 	accountTransactionEmployeeContextTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		contextId: textCols.idFk("context_id").notNull(),
 
@@ -446,16 +453,20 @@ export const accountTransactionEmployeeContext = table(
 		/** @revenueContext Attribution percentage for revenue transactions */
 		attributionPercentage: numericCols.percentage._("attribution_percentage"),
 	},
-	(t) => [
+	(cols) => [
 		...orgEmployeeIdExtraConfig({
 			tName: accountTransactionEmployeeContextTableName,
-			cols: t,
+			cols,
+		}),
+		...orgEmployeeIdExtraConfig({
+			tName: accountTransactionEmployeeContextTableName,
+			cols,
 		}),
 		...multiForeignKeys({
 			tName: accountTransactionEmployeeContextTableName,
 			fkGroups: [
 				{
-					cols: [t.contextId],
+					cols: [cols.contextId],
 					foreignColumns: [accountTransactionContext.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -465,7 +476,7 @@ export const accountTransactionEmployeeContext = table(
 			tName: accountTransactionEmployeeContextTableName,
 			colsGrps: [
 				// { cols: [t.employeeRole] },
-				{ cols: [t.attributionPercentage] },
+				{ cols: [cols.attributionPercentage] },
 			],
 		}),
 	],
@@ -482,7 +493,7 @@ export const accountTransactionMemberRoleEnum = pgEnum(
 export const accountTransactionMemberContext = table(
 	accountTransactionMemberContextTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		contextId: textCols.idFk("context_id").notNull(),
 
@@ -492,16 +503,16 @@ export const accountTransactionMemberContext = table(
 		/** @businessRule Member's relationship to transaction */
 		memberRole: accountTransactionMemberRoleEnum("member_role").notNull(),
 	},
-	(t) => [
+	(cols) => [
 		...orgMemberIdExtraConfig({
 			tName: accountTransactionMemberContextTableName,
-			cols: t,
+			cols,
 		}),
 		...multiForeignKeys({
 			tName: accountTransactionMemberContextTableName,
 			fkGroups: [
 				{
-					cols: [t.contextId],
+					cols: [cols.contextId],
 					foreignColumns: [accountTransactionContext.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -527,7 +538,7 @@ export const accountTransactionOrgRoleEnum = pgEnum(
 export const accountTransactionOrgContext = table(
 	accountTransactionOrgContextTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		contextId: textCols.idFk("context_id").notNull(),
 
@@ -537,16 +548,16 @@ export const accountTransactionOrgContext = table(
 		/** @businessRule Organization's relationship to transaction */
 		orgRole: accountTransactionOrgRoleEnum("org_role").notNull(),
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: accountTransactionOrgContextTableName,
-			cols: t,
+			cols,
 		}),
 		multiForeignKeys({
 			tName: accountTransactionOrgContextTableName,
 			fkGroups: [
 				{
-					cols: [t.contextId],
+					cols: [cols.contextId],
 					foreignColumns: [accountTransactionContext.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},

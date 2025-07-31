@@ -19,7 +19,7 @@ export const orgEmployeeInvitationStatusEnum = pgEnum(`${orgEmployeeTableName}_i
 ]);
 
 export const orgEmployeeInvitation = table("org_employee_invitation", {
-	id: textCols.id().notNull(),
+	id: textCols.idPk().notNull(),
 	orgId: orgIdFkCol().notNull(),
 	email: textCols.emailAddress("email").notNull(),
 

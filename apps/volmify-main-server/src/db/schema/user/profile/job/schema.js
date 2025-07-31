@@ -35,7 +35,7 @@ const userJobProfileTableName = `${userTableName}_job_profile`;
 export const userJobProfile = table(
 	userJobProfileTableName,
 	{
-		// id: textCols.id().notNull(),
+		// id: textCols.idPk().notNull(),
 		userProfileId: userProfileIdFkCol().notNull(),
 		// userId: userIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
@@ -149,7 +149,7 @@ export const userJobProfile = table(
 		// lastTrustScoreUpdate: timestamp("last_trust_score_update"),
 	},
 	(cols) => [
-		// // uniqueIndex("uq_job_user").on(t.userId),
+		// // uniqueIndex("uq_job_user").on(cols.userId),
 		...userProfileIdExtraConfig({
 			tName: userJobProfileTableName,
 			cols,
@@ -173,7 +173,7 @@ export const userJobProfile = table(
 			],
 		}),
 		// check(`ck_${userJobProfileTableName}_job_profile_type_enforcement`,
-		//   sql`EXISTS(SELECT 1 FROM ${userProfileTableName} WHERE id = ${t.userProfileId} AND type = 'job')`),
+		//   sql`EXISTS(SELECT 1 FROM ${userProfileTableName} WHERE id = ${cols.userProfileId} AND type = 'job')`),
 	],
 );
 // TODO: Metrics
@@ -212,7 +212,7 @@ export const userJobProfile = table(
 // 	},
 // 	{
 // 		fkKey: "jobProfileId",
-// 		extraConfig: (t, tName) => [index(`idx_${tName}_job_profile_id`).on(t.jobProfileId)],
+// 		extraConfig: (cols, tName) => [index(`idx_${tName}_job_profile_id`).on(cols.jobProfileId)],
 // 	},
 // );
 
@@ -220,7 +220,7 @@ const userJobProfileSkillTableName = `${userTableName}_job_profile_skill`;
 export const userJobProfileSkill = table(
 	userJobProfileSkillTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		jobProfileId: userJobProfileIdFkCol().notNull(),
 		skillId: textCols
 			.idFk("skill_id")
@@ -294,9 +294,9 @@ export const userJobProfileSkill = table(
 		// Last updated
 	},
 	(cols) => [
-		// index(`idx_${userJobProfileSkillTableName}_job_profile_id`).on(t.jobProfileId),
-		// index(`idx_${userJobProfileSkillTableName}_created_at`).on(t.createdAt),
-		// // index(`idx_${userJobProfileSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		// index(`idx_${userJobProfileSkillTableName}_job_profile_id`).on(cols.jobProfileId),
+		// index(`idx_${userJobProfileSkillTableName}_created_at`).on(cols.createdAt),
+		// // index(`idx_${userJobProfileSkillTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 		...userJobProfileIdExtraConfig({
 			tName: userJobProfileSkillTableName,
 			cols,
@@ -382,7 +382,7 @@ export const userJobProfileSkill = table(
 // });
 
 // TODO:
-// // Don't store aggregated metrics in profile - calculate on demand
+// // Don'cols store aggregated metrics in profile - calculate on demand
 // // Use dedicated analytics tables for time-series data
 // orgJobAnalytics: {
 //   jobId, orgId, period, activeUsers, engagements, periodType: "daily|weekly|monthly"
@@ -392,7 +392,7 @@ const userJobProfileMetricsTableName = `${userTableName}_job_profile_metrics`;
 export const userJobProfileMetrics = table(
 	userJobProfileMetricsTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		jobProfileId: userJobProfileIdFkCol().notNull(),
 
 		// Engagement metrics
@@ -445,43 +445,43 @@ export const userJobProfileMetrics = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		// index(`idx_${userJobProfileMetricsTableName}_created_at`).on(t.createdAt),
-		// index(`idx_${userJobProfileMetricsTableName}_last_updated`).on(t.lastUpdatedAt),
+	(cols) => [
+		// index(`idx_${userJobProfileMetricsTableName}_created_at`).on(cols.createdAt),
+		// index(`idx_${userJobProfileMetricsTableName}_last_updated`).on(cols.lastUpdatedAt),
 		...userJobProfileIdExtraConfig({
 			tName: userJobProfileMetricsTableName,
-			cols: t,
+			cols,
 		}),
 		// uniqueIndex({
 		// 	tName: userJobProfileMetricsTableName,
-		// 	cols: [t.jobProfileId],
+		// 	cols: [cols.jobProfileId],
 		// }),
 		...multiIndexes({
 			tName: userJobProfileMetricsTableName,
 			colsGrps: [
-				{ cols: [t.jobProfileId] },
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
-				{ cols: [t.total] },
-				{ cols: [t.ratingTotal] },
-				{ cols: [t.ratingCount] },
-				{ cols: [t.ratingAvg] },
-				{ cols: [t.reviewsCount] },
-				{ cols: [t.revenueGeneratedTotal] },
-				{ cols: [t.payoutsTotal] },
-				{ cols: [t.studentsCount] },
-				{ cols: [t.completedByStudentsCount] },
-				{ cols: [t.inProgressByStudentsCount] },
-				{ cols: [t.coursesTotal] },
-				{ cols: [t.coursesRatingTotal] },
-				{ cols: [t.coursesRatingCount] },
-				{ cols: [t.coursesRatingAvg] },
-				{ cols: [t.coursesReviewsCount] },
-				{ cols: [t.coursesRevenueGeneratedTotal] },
-				{ cols: [t.coursesPayoutsTotal] },
-				{ cols: [t.coursesStudentsCount] },
-				{ cols: [t.courseCompletedByStudentsCount] },
-				{ cols: [t.coursesInProgressByStudentsCount] },
+				{ cols: [cols.jobProfileId] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.total] },
+				{ cols: [cols.ratingTotal] },
+				{ cols: [cols.ratingCount] },
+				{ cols: [cols.ratingAvg] },
+				{ cols: [cols.reviewsCount] },
+				{ cols: [cols.revenueGeneratedTotal] },
+				{ cols: [cols.payoutsTotal] },
+				{ cols: [cols.studentsCount] },
+				{ cols: [cols.completedByStudentsCount] },
+				{ cols: [cols.inProgressByStudentsCount] },
+				{ cols: [cols.coursesTotal] },
+				{ cols: [cols.coursesRatingTotal] },
+				{ cols: [cols.coursesRatingCount] },
+				{ cols: [cols.coursesRatingAvg] },
+				{ cols: [cols.coursesReviewsCount] },
+				{ cols: [cols.coursesRevenueGeneratedTotal] },
+				{ cols: [cols.coursesPayoutsTotal] },
+				{ cols: [cols.coursesStudentsCount] },
+				{ cols: [cols.courseCompletedByStudentsCount] },
+				{ cols: [cols.coursesInProgressByStudentsCount] },
 			],
 		}),
 	],
@@ -490,7 +490,7 @@ export const userJobProfileMetrics = table(
 // export const userJobProfileAnalyticsTimeSeries = table(
 // 	"user_job_profile_analytics_time_series",
 // 	{
-// 		id: textCols.id().notNull(),
+// 		id: textCols.idPk().notNull(),
 // 		jobProfileId: textCols
 // 			.idFk("job_profile_id")
 // 			.references(() => userJobProfile.userProfileId),
@@ -517,7 +517,7 @@ export const userJobProfileMetrics = table(
 export const userJobProfileVerification = table(
   'user_job_profile_verification',
   {
-    id: textCols.id().notNull(),
+    id: textCols.idPk().notNull(),
     jobProfileId: textCols.idFk("job_profile_id")
       .references(() => userJobProfile.userProfileId),
     

@@ -40,7 +40,7 @@ const seoMetadataTableName = "seo_metadata";
 export const seoMetadata = table(
 	seoMetadataTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		// Q: Is it better to have a nullable orgId column here or a separate org_seo_metadata table?
 		orgId: orgIdFkCol(),
 
@@ -88,12 +88,6 @@ export const seoMetadata = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		// index("idx_seo_org").on(t.orgId),
-		// index("idx_seo_canonical").on(t.canonicalUrl),
-		// index("idx_seo_status").on(t.status),
-		// index("idx_seo_focus_keyword").on(t.focusKeyword),
-		// index("idx_seo_created_at").on(t.createdAt),
-		// index("idx_seo_last_updated_at").on(t.lastUpdatedAt),
 		...orgIdExtraConfig({
 			tName: seoMetadataTableName,
 			cols,
@@ -120,7 +114,7 @@ const seoMetadataOpenGraphTableName = `${seoMetadataTableName}_open_graph`;
 export const seoMetadataOpenGraph = table(
 	seoMetadataOpenGraphTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		seoMetadataId: seoMetadataIdFkCol(),
 
 		// Core Open Graph fields
@@ -201,7 +195,7 @@ const seoMetadataTwitterCardTableName = `${seoMetadataTableName}_twitter_card`;
 export const seoMetadataTwitterCard = table(
 	seoMetadataTwitterCardTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		seoMetadataId: seoMetadataIdFkCol(),
 
 		// Core Twitter Card fields
@@ -270,7 +264,7 @@ const seoMetadataStructuredDataTableName = `${seoMetadataTableName}_structured_d
 export const seoMetadataStructuredData = table(
 	"seo_structured_data",
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		seoMetadataId: seoMetadataIdFkCol(),
 
 		// Schema.org type
@@ -287,21 +281,20 @@ export const seoMetadataStructuredData = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		// index("idx_seo_structured_metadata").on(t.seoMetadataId),
-		// index("idx_seo_structured_type").on(t.schemaType),
-		// index("idx_seo_structured_active").on(t.isActive),
-		// index("idx_seo_structured_priority").on(t.priority),
-
+	(cols) => [
 		// // GIN index for searching within JSON data
 		// index("idx_seo_structured_data").using("gin", t.data),
 		...seoMetadataIdExtraConfig({
 			tName: seoMetadataStructuredDataTableName,
-			cols: t,
+			cols,
 		}),
 		...multiIndexes({
 			tName: seoMetadataStructuredDataTableName,
-			colsGrps: [{ cols: [t.schemaType] }, { cols: [t.createdAt] }, { cols: [t.lastUpdatedAt] }],
+			colsGrps: [
+				{ cols: [cols.schemaType] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
 		}),
 
 		// TODO: Add a check constraint for priority to not be less than 1
@@ -316,7 +309,7 @@ const seoMetadataAlternateUrlTableName = `${seoMetadataTableName}_alternate_url`
 export const seoMetadataAlternateUrl = table(
 	seoMetadataAlternateUrlTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		seoMetadataId: seoMetadataIdFkCol(),
 
 		// Alternate URL details
@@ -330,35 +323,27 @@ export const seoMetadataAlternateUrl = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		// index("idx_seo_alternate_metadata").on(t.seoMetadataId),
-		// index("idx_seo_alternate_locale_key").on(t.localeKey),
-		// index("idx_seo_alternate_hreflang").on(t.hreflang),
-		// uniqueIndex("uq_seo_alternate_metadata_locale_key").on(t.seoMetadataId, t.localeKey),
-		// uniqueIndex("uq_seo_alternate_hreflang").on(t.seoMetadataId, t.hreflang),
-		// index("idx_seo_alternate_is_default").on(t.isDefault),
-		// index("idx_seo_alternate_created_at").on(t.createdAt),
-		// index("idx_seo_alternate_last_updated_at").on(t.lastUpdatedAt),
+	(cols) => [
 		...seoMetadataIdExtraConfig({
 			tName: seoMetadataAlternateUrlTableName,
-			cols: t,
+			cols,
 		}),
 		uniqueIndex({
 			tName: seoMetadataAlternateUrlTableName,
-			cols: [t.seoMetadataId, t.localeKey],
+			cols: [cols.seoMetadataId, cols.localeKey],
 		}),
 		uniqueIndex({
 			tName: seoMetadataAlternateUrlTableName,
-			cols: [t.seoMetadataId, t.hreflang],
+			cols: [cols.seoMetadataId, cols.hreflang],
 		}),
 		...multiIndexes({
 			tName: seoMetadataAlternateUrlTableName,
 			colsGrps: [
-				{ cols: [t.localeKey] },
-				{ cols: [t.hreflang] },
-				{ cols: [t.isDefault] },
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
+				{ cols: [cols.localeKey] },
+				{ cols: [cols.hreflang] },
+				{ cols: [cols.isDefault] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
 			],
 		}),
 	],
@@ -371,7 +356,7 @@ const seoMetadataCustomMetaTableName = `${seoMetadataTableName}_custom_meta`;
 export const seoMetadataCustomMeta = table(
 	seoMetadataCustomMetaTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		seoMetadataId: seoMetadataIdFkCol(),
 
 		// Meta tag details
@@ -389,32 +374,24 @@ export const seoMetadataCustomMeta = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		// index("idx_seo_meta_metadata_id").on(t.seoMetadataId),
-		// index("idx_seo_meta_type").on(t.tagType),
-		// index("idx_seo_meta_category").on(t.category),
-		// index("idx_seo_meta_active").on(t.isActive),
-		// index("idx_seo_meta_order").on(t.sortOrder),
-		// uniqueIndex("uq_seo_meta_tag").on(t.seoMetadataId, t.tagType, t.tagKey),
-		// index("idx_seo_meta_created_at").on(t.createdAt),
-		// index("idx_seo_meta_last_updated_at").on(t.lastUpdatedAt),
+	(cols) => [
 		...seoMetadataIdExtraConfig({
 			tName: seoMetadataCustomMetaTableName,
-			cols: t,
+			cols,
 		}),
 		uniqueIndex({
 			tName: seoMetadataCustomMetaTableName,
-			cols: [t.seoMetadataId, t.tagType, t.tagKey],
+			cols: [cols.seoMetadataId, cols.tagType, cols.tagKey],
 		}),
 		...multiIndexes({
 			tName: seoMetadataCustomMetaTableName,
 			colsGrps: [
-				{ cols: [t.tagType] },
-				{ cols: [t.category] },
-				{ cols: [t.isActive] },
-				{ cols: [t.sortOrder] },
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
+				{ cols: [cols.tagType] },
+				{ cols: [cols.category] },
+				{ cols: [cols.isActive] },
+				{ cols: [cols.sortOrder] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
 			],
 		}),
 	],

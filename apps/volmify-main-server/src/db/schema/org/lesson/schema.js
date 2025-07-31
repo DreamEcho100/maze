@@ -28,7 +28,7 @@ export const orgLessonTypeEnum = pgEnum(`${orgLessonTableName}_type`, [
 export const orgLesson = table(
 	orgLessonTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		type: orgLessonTypeEnum("type").notNull(),
 		createdAt: temporalCols.audit.createdAt(),

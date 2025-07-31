@@ -61,7 +61,7 @@ export const orgMemberOrderPaymentStatusEnum = pgEnum(`${orgMemberOrderTableName
 export const orgMemberOrder = table(
 	orgMemberOrderTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @orderIdentification Human-readable order number for customer service
@@ -235,7 +235,7 @@ const orgMemberOrderItemTableName = `${orgMemberOrderTableName}_item`;
 export const orgMemberOrderItem = table(
 	orgMemberOrderItemTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @orderRelation Parent order this item belongs to
@@ -319,7 +319,7 @@ const orgMemberOrderDiscountTableName = `${orgMemberOrderTableName}_discount`;
 export const orgMemberOrderDiscount = table(
 	orgMemberOrderDiscountTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		orderId: textCols
 			.idFk("order_id")
@@ -379,7 +379,7 @@ export const taxCalculationMethodEnum = pgEnum("tax_calculation_method", [
 export const orgMemberOrderTaxCalculation = table(
 	orgMemberOrderTaxCalculationTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @orderRelation Parent order this tax calculation belongs to
@@ -466,7 +466,7 @@ export const paymentMethodEnum = pgEnum("payment_method", [
 export const orgMemberOrderPayment = table(
 	orgMemberOrderPaymentTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		orderId: textCols
 			.idFk("order_id")

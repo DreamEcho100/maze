@@ -51,7 +51,7 @@ import { table } from "#db/schema/_utils/tables";
 export const systemPermissionCategory = table(
 	"system_permission_category",
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		/**
 		 * Namespace identifier for permission grouping
 		 * @businessRule snake_case, represents functional domain
@@ -91,7 +91,7 @@ export const systemPermissionCategory = table(
 export const systemPermission = table(
 	"system_permission",
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		/**
 		 * Unique permission attribute identifier
 		 * @abacAttribute Core attribute for access control decisions

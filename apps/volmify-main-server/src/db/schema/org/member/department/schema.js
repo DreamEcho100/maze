@@ -58,7 +58,7 @@ export const orgDepartmentTypeEnum = pgEnum(`${orgDepartmentTableName}_type`, [
 export const orgDepartment = table(
 	orgDepartmentTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		orgId: orgIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),

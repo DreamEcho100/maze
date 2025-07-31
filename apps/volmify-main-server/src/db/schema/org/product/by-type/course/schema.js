@@ -36,7 +36,7 @@ export const orgProductCourseLevelEnum = pgEnum(`${orgProductCourseTableName}_le
 export const orgProductCourse = table(
 	orgProductCourseTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		// Hmm, should the connection be to the `product` table or the `productVariant` table? why? pros and cons?
 		// Which make sense to this project?
 		// I mean, what is the difference between a product and a product variant, how they work together, how they are related, and help in this context?
@@ -208,7 +208,7 @@ const orgMemberProductCourseChallengeRatingTableName = `${orgTableName}_member_p
 export const orgMemberProductCourseChallengeRating = table(
 	orgMemberProductCourseChallengeRatingTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		courseId: textCols
 			.idFk("course_id")
 			.references(() => orgProductCourse.id)
@@ -296,7 +296,7 @@ export const orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum = pgEn
 export const orgMemberProductCourseChallengeRatingHistory = table(
 	orgMemberProductCourseChallengeRatingHistoryTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		ratingId: textCols.idFk("rating_id").references(() => orgMemberProductCourseChallengeRating.id),
 
 		// Historical values
@@ -315,7 +315,7 @@ const orgProductCourseModuleTableName = `${orgProductCourseTableName}_module`;
 export const orgProductCourseModule = table(
 	orgProductCourseModuleTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		courseId: textCols
 			.idFk("product_course_id")
 			.references(() => orgProductCourse.id)
@@ -395,7 +395,7 @@ const orgProductCourseModuleSectionTableName = `${orgProductCourseTableName}_mod
 export const orgProductCourseModuleSection = table(
 	orgProductCourseModuleSectionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		moduleId: textCols
 			.idFk("module_id")
 			.references(() => orgProductCourseModule.id)
@@ -494,7 +494,7 @@ const orgProductCourseModuleSectionLessonTableName = `${orgProductCourseTableNam
 export const orgProductCourseModuleSectionLesson = table(
 	orgProductCourseModuleSectionLessonTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		sectionId: textCols
 			.idFk("section_id")
@@ -670,7 +670,7 @@ const orgMemberLearningProfileTableName = `${orgTableName}_member_learning_profi
 export const orgMemberLearningProfile = table(
 	orgMemberLearningProfileTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		memberId: orgMemberIdFkCol().notNull().unique(),
 
 		/**

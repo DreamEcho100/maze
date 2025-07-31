@@ -109,7 +109,7 @@ export const orgProductApprovalStatusEnum = pgEnum(`${orgProductApprovalTableNam
  * @description Supports course drafts, rejection comments, and admin flow.
  */
 export const orgProductApproval = table(orgProductApprovalTableName, {
-	id: textCols.id().notNull(),
+	id: textCols.idPk().notNull(),
 
 	productId: textCols
 		.idFk("product_id")
@@ -157,7 +157,7 @@ export const orgProductApproval = table(orgProductApprovalTableName, {
 export const orgProduct = table(
 	orgProductTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @orgScope Org that owns and manages this product
@@ -296,7 +296,7 @@ const orgProductVariantTable = `${orgProductTableName}_variant`;
 export const orgProductVariant = table(
 	orgProductVariantTable,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
@@ -537,7 +537,7 @@ const orgProductRevenuePoolTableName = `${orgProductTableName}_revenue_pool`;
 export const orgProductRevenuePool = table(
 	orgProductRevenuePoolTableName,
 	{
-		// id: textCols.id().notNull(),
+		// id: textCols.idPk().notNull(),
 		productId: textCols
 			.idFk("product_id")
 			.primaryKey()

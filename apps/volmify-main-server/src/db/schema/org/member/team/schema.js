@@ -22,7 +22,7 @@ const orgTeamTableName = `${orgTableName}_team`;
 export const orgTeam = table(
 	orgTeamTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),

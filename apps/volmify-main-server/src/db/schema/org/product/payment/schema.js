@@ -151,7 +151,7 @@ const orgProductVariantPaymentPlanTableName = `${orgTableName}_product_variant_p
 export const orgProductVariantPaymentPlan = table(
 	orgProductVariantPaymentPlanTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * @integrationContext Binds plan to specific purchasable entity
@@ -708,7 +708,7 @@ const orgMemberProductVariantPaymentPlanSubscriptionTableName = `${orgTableName}
 export const orgMemberProductVariantPaymentPlanSubscription = table(
 	orgMemberProductVariantPaymentPlanSubscriptionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		// TODO: change to purchased by user
 		/**

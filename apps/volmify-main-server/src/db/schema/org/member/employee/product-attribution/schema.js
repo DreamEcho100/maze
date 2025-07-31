@@ -40,7 +40,7 @@ export const orgEmployeeProductAttributionCompensationTypeEnum = pgEnum(
 export const orgEmployeeProductAttribution = table(
 	orgEmployeeProductAttributionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		// ✅ BENEFIT: Clear professional context for attribution
 		// "This course revenue goes to John's job profile"
 		// NOTE: The relationship between org, employee, and product will be enforced at the API level
@@ -174,7 +174,7 @@ export const orgEmployeeProductAttributionRevenueBasisEnum = pgEnum(
 export const orgEmployeeProductAttributionRevenue = table(
 	orgEmployeeProductAttributionRevenueTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		orderItemId: textCols
 			.idFk("order_item_id")

@@ -163,7 +163,7 @@ const countryTableName = "country";
 export const country = table(
 	countryTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		isoCode: textCols.code("iso_code").notNull().unique(), // ISO 3166-1 alpha-2 (e.g., "US")
 		isoCode3: textCols.code("iso_code_3").notNull().unique(), // ISO 3166-1 alpha-3
 		numericCode: textCols.code("numeric_code").notNull(),
@@ -230,7 +230,7 @@ const exchangeRateTableName = "exchange_rate";
 export const exchangeRate = table(
 	exchangeRateTableName,
 	{
-		id: textCols.id(),
+		id: textCols.idPk(),
 		baseCurrencyCode: currencyCodeFkCol({ name: "base_currency_code" }).notNull(),
 		targetCurrencyCode: currencyCodeFkCol({ name: "target_currency_code" }).notNull(),
 		rate: numericCols.exchangeRate.rate().notNull(),

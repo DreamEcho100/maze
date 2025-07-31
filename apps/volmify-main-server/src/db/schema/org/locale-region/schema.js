@@ -24,7 +24,7 @@ const orgLocaleTableName = `${orgTableName}_locale`;
 export const orgLocale = table(
 	orgLocaleTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		localeKey: localeKeyFkCol().notNull(),
 
@@ -52,7 +52,7 @@ export const orgLocale = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
+	(cols) => [
 		// uniqueIndex(`uq_${orgLocaleTableName}`).on(t.orgId, t.localeKey),
 		// uniqueIndex(`uq_${orgLocaleTableName}_default`)
 		// 	.on(t.orgId, t.isDefault)
@@ -61,27 +61,27 @@ export const orgLocale = table(
 		// // index(`idx_${orgLocaleTableName}_priority`).on(t.priority),
 		...orgIdExtraConfig({
 			tName: orgLocaleTableName,
-			cols: t,
+			cols,
 		}),
 		...localeKeyExtraConfig({
 			tName: orgLocaleTableName,
-			cols: t,
+			cols,
 		}),
 		uniqueIndex({
 			tName: orgLocaleTableName,
-			cols: [t.orgId, t.localeKey],
+			cols: [cols.orgId, cols.localeKey],
 		}),
 		uniqueIndex({
 			tName: orgLocaleTableName,
-			cols: [t.orgId, t.isDefault],
-		}).where(eq(t.isDefault, true)),
+			cols: [cols.orgId, cols.isDefault],
+		}).where(eq(cols.isDefault, true)),
 		...multiIndexes({
 			tName: orgLocaleTableName,
 			colsGrps: [
-				{ cols: [t.isActive] },
-				// { cols: [t.priority] }, // TODO: Uncomment when priority is implemented
-				{ cols: [t.createdAt] },
-				{ cols: [t.lastUpdatedAt] },
+				{ cols: [cols.isActive] },
+				// { cols: [cols.priority] }, // TODO: Uncomment when priority is implemented
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
 			],
 		}),
 	],
@@ -96,7 +96,7 @@ const orgRegionTableName = `${orgTableName}_region`;
 export const orgRegion = table(
 	orgRegionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		currencyCode: currencyCodeFkCol().notNull(),
 		includesTax: boolean("includes_tax").default(false).notNull(),
@@ -112,22 +112,26 @@ export const orgRegion = table(
 		// autonomyLevel: autonomyLevelEnum("autonomy_level").default("operational"),
 		// // "operational", "strategic", "full_autonomous"
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: orgRegionTableName,
-			cols: t,
+			cols,
 		}),
 		...currencyCodeExtraConfig({
 			tName: orgRegionTableName,
-			cols: t,
+			cols,
 		}),
 		uniqueIndex({
 			tName: orgRegionTableName,
-			cols: [t.orgId, t.currencyCode],
-		}).where(eq(t.deletedAt, null)),
+			cols: [cols.orgId, cols.currencyCode],
+		}).where(eq(cols.deletedAt, null)),
 		...multiIndexes({
 			tName: orgRegionTableName,
-			colsGrps: [{ cols: [t.createdAt] }, { cols: [t.lastUpdatedAt] }, { cols: [t.deletedAt] }],
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
 		}),
 	],
 );
@@ -146,7 +150,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 		extraConfig: (t, tName) => [
 			...seoMetadataIdExtraConfig({
 				tName,
-				cols: t,
+				cols,
 			}),
 			...multiForeignKeys({
 				tName,

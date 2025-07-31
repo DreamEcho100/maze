@@ -12,7 +12,7 @@ import { userTableName } from "./_utils/helpers.js";
 export const user = table(
 	userTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
@@ -51,7 +51,7 @@ const userSessionTableName = `${userTableName}_session`;
 export const userSession = table(
 	userSessionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		tokenHash: bytea("token_hash").notNull(), // ✅ Uint8Array storage
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -99,7 +99,7 @@ const userEmailVerificationTableName = `${userTableName}_email_verification`;
 export const userEmailVerificationRequest = table(
 	userEmailVerificationTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		code: textCols.longCode("code").notNull(),
 		expiresAt: temporalCols.business.expiresAt().notNull(),
@@ -131,7 +131,7 @@ const userPasswordResetTableName = `${userTableName}_password_reset`;
 export const userPasswordResetSession = table(
 	userPasswordResetTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		code: textCols.longCode("code").notNull(),
 		expiresAt: temporalCols.business.expiresAt().notNull(),

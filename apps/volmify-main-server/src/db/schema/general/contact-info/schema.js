@@ -47,7 +47,7 @@ const contactInfoTableName = "contact_info";
 export const contactInfo = table(
 	contactInfoTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 
 		/**
 		 * Type of the entity this contact belongs to (e.g., "org", "user").

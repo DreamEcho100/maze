@@ -19,7 +19,7 @@ const userLocaleTableName = `${userTableName}_locale`;
 export const userLocale = table(
 	userLocaleTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		userId: userIdFkCol().notNull(),
 		localeKey: localeKeyFkCol().notNull(),
 

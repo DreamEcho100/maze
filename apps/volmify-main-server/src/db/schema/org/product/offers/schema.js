@@ -56,7 +56,7 @@ export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`
 export const orgDiscount = table(
 	orgDiscountTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 
 		type: orgDiscountTypeEnum("type").notNull(),
@@ -219,7 +219,7 @@ const orgDiscountUsageTableName = `${orgTableName}_member_discount_usage`;
 export const orgMemberOrderDiscountUsage = table(
 	orgDiscountUsageTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		memberId: orgMemberIdFkCol().notNull(),
 		discountId: textCols
 			.idFk("discount_id")
@@ -249,7 +249,7 @@ const orgCouponTableName = `${orgTableName}_coupon`;
 export const orgCoupon = table(
 	orgCouponTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		discountId: textCols
 			.idFk("discount_id")
@@ -313,7 +313,7 @@ const orgGiftCardTableName = `${orgTableName}_gift_card`;
 export const orgGiftCard = table(
 	orgGiftCardTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		code: textCols.code().notNull(),
 		initialBalance: numericCols.currency.balance().notNull(),
@@ -377,7 +377,7 @@ const orgMemberGiftCardUsageTableName = `${orgTableName}_member_gift_card_usage`
 export const orgMemberGiftCardUsage = table(
 	orgMemberGiftCardUsageTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		memberId: orgMemberIdFkCol().notNull(),
 		giftCardId: textCols
 			.idFk("gift_card_id")
@@ -407,7 +407,7 @@ const orgPromotionTableName = `${orgTableName}_promotion`;
 export const orgPromotion = table(
 	orgPromotionTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		slug: text("slug").notNull(),
 		bannerImage: text("banner_image"),

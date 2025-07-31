@@ -34,7 +34,7 @@ const orgMetadataJsonb = jsonb("metadata");
 export const org = table(
 	orgTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
@@ -119,21 +119,21 @@ export const orgCurrencySettings = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
+	(cols) => [
 		compositePrimaryKey({
 			tName: orgCurrencySettingsTableName,
-			cols: [t.orgId, t.currencyCode],
+			cols: [cols.orgId, cols.currencyCode],
 		}),
 		...orgIdExtraConfig({
 			tName: orgCurrencySettingsTableName,
-			cols: t,
+			cols,
 		}),
 		...currencyCodeExtraConfig({
 			tName: orgCurrencySettingsTableName,
-			cols: t,
+			cols,
 		}),
-		uniqueIndex({ tName: orgCurrencySettingsTableName, cols: [t.orgId, t.isDefault] }).where(
-			eq(t.isDefault, true),
+		uniqueIndex({ tName: orgCurrencySettingsTableName, cols: [cols.orgId, cols.isDefault] }).where(
+			eq(cols.isDefault, true),
 		),
 	],
 );

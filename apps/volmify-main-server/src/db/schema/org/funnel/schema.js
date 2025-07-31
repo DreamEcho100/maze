@@ -26,7 +26,7 @@ const orgFunnelTableName = `${orgTableName}_funnel`;
 export const orgFunnel = table(
 	orgFunnelTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
 		// defaultLocaleKey: getLocaleKey("default_locale_key")
@@ -36,7 +36,7 @@ export const orgFunnel = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
+	(cols) => [
 		// uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
 		// index(`idx_${orgFunnelTableName}_org_id`).on(t.orgId),
 		// index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
@@ -44,15 +44,19 @@ export const orgFunnel = table(
 		// index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
 		...orgIdExtraConfig({
 			tName: orgFunnelTableName,
-			cols: t,
+			cols,
 		}),
 		uniqueIndex({
 			tName: orgFunnelTableName,
-			cols: [t.orgId, t.slug],
+			cols: [cols.orgId, cols.slug],
 		}),
 		...multiIndexes({
 			tName: orgFunnelTableName,
-			colsGrps: [{ cols: [t.createdAt] }, { cols: [t.lastUpdatedAt] }, { cols: [t.deletedAt] }],
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
 		}),
 	],
 );
@@ -73,36 +77,36 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 	},
 	{
 		fkKey: "funnelId",
-		extraConfig: (t, tableName) => [
+		extraConfig: (cols, tableName) => [
 			// index(`idx_${tableName}_name`).on(t.name)
 			...multiForeignKeys({
 				tName: tableName,
 				fkGroups: [
 					{
-						cols: [t.funnelId],
+						cols: [cols.funnelId],
 						foreignColumns: [orgFunnel.id],
 					},
 				],
 			}),
 			...seoMetadataIdExtraConfig({
 				tName: tableName,
-				cols: t,
+				cols,
 			}),
 			...multiIndexes({
 				tName: tableName,
-				colsGrps: [{ cols: [t.name] }],
+				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],
 	},
 );
 
-const orgLocaleTableName = `${orgTableName}_locale`;
+const orgFunnelRegionName = `${orgTableName}_funnel_region`;
 /**
  * @domain Funnels → Regions
  * @description Join table for multi-region support in funnels.
  */
 export const orgFunnelRegion = table(
-	orgLocaleTableName,
+	orgFunnelRegionName,
 	{
 		funnelId: textCols
 			.idFk("funnel_id")
@@ -116,10 +120,10 @@ export const orgFunnelRegion = table(
 	},
 	(cols) => [
 		// primaryKey({ columns: [t.funnelId, t.regionId] }),
-		// index(`idx_${orgLocaleTableName}_created_at`).on(t.createdAt),
-		compositePrimaryKey({ tName: orgLocaleTableName, cols: [cols.funnelId, cols.regionId] }),
+		// index(`idx_${orgFunnelRegionName}_created_at`).on(t.createdAt),
+		compositePrimaryKey({ tName: orgFunnelRegionName, cols: [cols.funnelId, cols.regionId] }),
 		...multiForeignKeys({
-			tName: orgLocaleTableName,
+			tName: orgFunnelRegionName,
 			fkGroups: [
 				{
 					cols: [cols.funnelId],
@@ -132,7 +136,7 @@ export const orgFunnelRegion = table(
 			],
 		}),
 		...multiIndexes({
-			tName: orgLocaleTableName,
+			tName: orgFunnelRegionName,
 			colsGrps: [{ cols: [cols.createdAt] }],
 		}),
 	],
@@ -146,7 +150,7 @@ const orgFunnelDomainTableName = `${orgTableName}_funnel_domain`;
 export const orgFunnelDomain = table(
 	orgFunnelDomainTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		funnelId: textCols
 			.idFk("funnel_id")
 			// .references(() => orgFunnel.id)
@@ -201,28 +205,10 @@ export const orgFunnelDomain = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		// // primaryKey({ columns: [t.funnelId, t.regionId] }),
-		// uniqueIndex(`uq_${orgFunnelDomainTableName}_domain`)
-		// 	.on(cols.domain)
-		// 	.where(eq(cols.deletedAt, null)),
-		// index(`idx_${orgFunnelDomainTableName}_funnel_id`).on(cols.funnelId),
-		// index(`idx_${orgFunnelDomainTableName}_region_id`).on(cols.regionId),
-		// // index(`idx_${orgFunnelDomainTableName}_locale_key`).on(t.getLocaleKey),
-		// index(`idx_${orgFunnelDomainTableName}_is_custom_domain`).on(cols.isCustomDomain),
-		// index(`idx_${orgFunnelDomainTableName}_is_subdomain`).on(cols.isSubdomain),
-		// index(`idx_${orgFunnelDomainTableName}_is_canonical`).on(cols.isCanonical),
-		// index(`idx_${orgFunnelDomainTableName}_is_managed_dns`).on(cols.isManagedDns),
-		// index(`idx_${orgFunnelDomainTableName}_is_ssl_enabled`).on(cols.IsSslEnabled),
-		// index(`idx_${orgFunnelDomainTableName}_dns_verified`).on(cols.dnsVerified),
-		// index(`idx_${orgFunnelDomainTableName}_is_preview`).on(cols.isPreview),
-		// index(`idx_${orgFunnelDomainTableName}_has_custom_404`).on(cols.hasCustom404),
-		// index(`idx_${orgFunnelDomainTableName}_created_at`).on(cols.createdAt),
-		// index(`idx_${orgFunnelDomainTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		// index(`idx_${orgFunnelDomainTableName}_deleted_at`).on(cols.deletedAt),
 		compositePrimaryKey({ tName: orgFunnelDomainTableName, cols: [cols.funnelId, cols.domain] }),
 		uniqueIndex({
 			tName: orgFunnelDomainTableName,
-			cols: [cols.funnelId, cols.domain],
+			cols: [cols.domain],
 		}).where(eq(cols.deletedAt, null)),
 		...multiForeignKeys({
 			tName: orgFunnelDomainTableName,

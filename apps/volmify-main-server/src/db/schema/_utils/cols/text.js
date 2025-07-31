@@ -5,7 +5,7 @@ import { byteaUlid } from "../custom-fields";
 const createId = ulid;
 
 export const textCols = {
-	id: () => byteaUlid("id").primaryKey().$default(createId),
+	idPk: () => byteaUlid("id").primaryKey().$default(createId),
 	idFk: byteaUlid,
 	// Identifiers & URLs (ASCII-optimized)
 	slug: () => varchar("slug", { length: 128 }), // URL-safe, indexed frequently

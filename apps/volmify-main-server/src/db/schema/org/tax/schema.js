@@ -34,7 +34,7 @@ const orgTaxCategoryTableName = `${orgTableName}_tax_category`;
 export const orgTaxCategory = table(
 	orgTaxCategoryTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		code: textCols.code().notNull(),
 	},
 	(cols) => [
@@ -104,7 +104,7 @@ const orgTaxRateTableName = `${orgTableName}_tax_rates`;
 export const orgTaxRate = table(
 	orgTaxRateTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
 		// TODO: instead of regionId, we can make a many-to-many relation with orgRegion
 		// and use a junction table to link rates to multiple regions
@@ -145,7 +145,7 @@ export const orgTaxRate = table(
 		// isCompound: boolean("is_compound").default(false).notNull(),
 		// priority: numericCols.priority().notNull(), // Lower numbers are applied first, e.g. 1 = highest priority
 
-		// Q: can't I use the `lastUpdatedAt` to determine the version or track, or is it not reliable or better to use a separate version column?
+		// Q: can'cols I use the `lastUpdatedAt` to determine the version or track, or is it not reliable or better to use a separate version column?
 		// ✅ VERSIONING: Track rate changes
 		modificationVersion: integer("modification_version").notNull().default(1),
 		systemChangesVersion: integer("system_changes_version").notNull().default(1),
@@ -157,20 +157,20 @@ export const orgTaxRate = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
+	(cols) => [
 		...orgIdExtraConfig({
 			tName: orgTaxRateTableName,
-			cols: t,
+			cols,
 		}),
 		...currencyCodeExtraConfig({
 			tName: orgTaxRateTableName,
-			cols: t,
+			cols,
 		}),
 		...multiForeignKeys({
 			tName: orgTaxRateTableName,
 			fkGroups: [
 				{
-					cols: [t.regionId],
+					cols: [cols.regionId],
 					foreignColumns: [orgRegion.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -178,33 +178,36 @@ export const orgTaxRate = table(
 		}),
 		...multiIndexes({
 			tName: orgTaxRateTableName,
-			colsGrps: [{ cols: [t.code] }, { cols: [t.type] }],
+			colsGrps: [{ cols: [cols.code] }, { cols: [cols.type] }],
 		}),
-		// index(`idx_${orgTaxRateTableName}_priority`).on(t.priority),
-		// index(`idx_${orgTaxRateTableName}_starts_at`).on(t.startsAt),
-		// index(`idx_${orgTaxRateTableName}_ends_at`).on(t.endsAt),
+		// index(`idx_${orgTaxRateTableName}_priority`).on(cols.priority),
+		// index(`idx_${orgTaxRateTableName}_starts_at`).on(cols.startsAt),
+		// index(`idx_${orgTaxRateTableName}_ends_at`).on(cols.endsAt),
 
 		// uniqueIndex("uq_active_tax_rate")
-		// 	.on(t.orgId, t.taxCategoryId, t.jurisdiction)
-		// 	.where(sql`${t.effectiveTo} IS NULL`),
+		// 	.on(cols.orgId, cols.taxCategoryId, cols.jurisdiction)
+		// 	.where(sql`${cols.effectiveTo} IS NULL`),
 
 		// ✅ CONSTRAINT: Effective period validity
 		check(
 			`ck_${orgTaxRateTableName}_valid_effective_period`,
-			sql`${t.effectiveTo} IS NULL OR ${t.effectiveTo} > ${t.effectiveFrom}`,
+			sql`${cols.effectiveTo} IS NULL OR ${cols.effectiveTo} > ${cols.effectiveFrom}`,
 		),
 
 		// ✅ CONSTRAINT: Rate bounds
-		check(`ck_${orgTaxRateTableName}_valid_rate_range`, sql`${t.rate} >= 0 AND ${t.rate} <= 100`),
+		check(
+			`ck_${orgTaxRateTableName}_valid_rate_range`,
+			sql`${cols.rate} >= 0 AND ${cols.rate} <= 100`,
+		),
 		// Check if it's a fixed type, to have amount field not null and rate field null, and vice versa
 		// Q: Is the following will be translated correctly to SQL?
 		// check(
 		// 	`ck_${orgTaxRateTableName}_valid_rate_amount`,
-		// 	sql`(${t.type} = '${orgTaxRateTypeEnum.enumValues[1]}' AND ${t.amount} IS NOT NULL AND ${t.rate} IS NULL) OR (${t.type} = '${orgTaxRateTypeEnum.enumValues[0]}' AND ${t.amount} IS NULL AND ${t.rate} IS NOT NULL)`,
+		// 	sql`(${cols.type} = '${orgTaxRateTypeEnum.enumValues[1]}' AND ${cols.amount} IS NOT NULL AND ${cols.rate} IS NULL) OR (${cols.type} = '${orgTaxRateTypeEnum.enumValues[0]}' AND ${cols.amount} IS NULL AND ${cols.rate} IS NOT NULL)`,
 		// ),
 		check(
 			`ck_${orgTaxRateTableName}_valid_rate_amount`,
-			sql`(${t.type} = 'fixed' AND ${t.amount} IS NOT NULL AND ${t.rate} IS NULL) OR (${t.type} = 'percent' AND ${t.amount} IS NULL AND ${t.rate} IS NOT NULL)`,
+			sql`(${cols.type} = 'fixed' AND ${cols.amount} IS NOT NULL AND ${cols.rate} IS NULL) OR (${cols.type} = 'percent' AND ${cols.amount} IS NULL AND ${cols.rate} IS NOT NULL)`,
 		),
 	],
 );
@@ -251,7 +254,7 @@ const orgTaxRateSnapshotTableName = `${orgTaxRateTableName}_snapshot`;
 export const orgTaxRateSnapshot = table(
 	orgTaxRateSnapshotTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		systemChangesVersion: integer("system_changes_version")
 			.notNull()
 			.default(orgTaxRateSnapshotCurrentSystemChangesVersion),
@@ -278,17 +281,17 @@ export const orgTaxRateSnapshot = table(
 		createdAt: temporalCols.audit.createdAt().notNull(),
 		byEmployeeId: orgEmployeeIdFkCol({ name: "by_employee_id" }).notNull(),
 	},
-	(t) => [
+	(cols) => [
 		...orgEmployeeIdExtraConfig({
 			tName: orgTaxRateSnapshotTableName,
-			cols: t,
+			cols,
 			colFkKey: "byEmployeeId",
 		}),
 		...multiForeignKeys({
 			tName: orgTaxRateSnapshotTableName,
 			fkGroups: [
 				{
-					cols: [t.rateId],
+					cols: [cols.rateId],
 					foreignColumns: [orgTaxRate.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
@@ -296,11 +299,11 @@ export const orgTaxRateSnapshot = table(
 		}),
 		uniqueIndex({
 			tName: orgTaxRateSnapshotTableName,
-			cols: [t.rateId, t.systemChangesVersion, t.modificationVersion],
+			cols: [cols.rateId, cols.systemChangesVersion, cols.modificationVersion],
 		}),
 		...multiIndexes({
 			tName: orgTaxRateSnapshotTableName,
-			colsGrps: [{ cols: [t.createdAt] }],
+			colsGrps: [{ cols: [cols.createdAt] }],
 		}),
 	],
 );
@@ -323,16 +326,16 @@ export const orgTaxRateTaxCategory = table(
 			.notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		// uniqueIndex(`uq_${orgTaxRateTaxCategoryTableName}_category_id_rate`).on(t.rateId, t.categoryId),
-		// index(`idx_${orgTaxRateTaxCategoryTableName}_created_at`).on(t.createdAt),
+	(cols) => [
+		// uniqueIndex(`uq_${orgTaxRateTaxCategoryTableName}_category_id_rate`).on(cols.rateId, cols.categoryId),
+		// index(`idx_${orgTaxRateTaxCategoryTableName}_created_at`).on(cols.createdAt),
 		compositePrimaryKey({
 			tName: orgTaxRateTaxCategoryTableName,
-			cols: [t.rateId, t.categoryId],
+			cols: [cols.rateId, cols.categoryId],
 		}),
 		...multiIndexes({
 			tName: orgTaxRateTaxCategoryTableName,
-			colsGrps: [{ cols: [t.createdAt] }],
+			colsGrps: [{ cols: [cols.createdAt] }],
 		}),
 	],
 );

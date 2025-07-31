@@ -37,7 +37,7 @@ export const orgMemberStatusEnum = pgEnum(`${orgMemberTableName}_status`, [
 export const orgMember = table(
 	orgMemberTableName,
 	{
-		id: textCols.id().notNull(),
+		id: textCols.idPk().notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
