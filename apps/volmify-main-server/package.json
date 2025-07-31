@@ -2,6 +2,9 @@
 	"name": "server",
 	"main": "src/index.ts",
 	"type": "module",
+	"imports": {
+		"#*": "./src/*"
+	},
 	"scripts": {
 		"build": "tsdown",
 		"check-types": "tsc -b",
@@ -25,7 +28,10 @@
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "catalog:",
 		"hono": "^4.8.2",
+		"id128": "^1.6.6",
 		"pg": "^8.14.1",
+		"ulid": "^3.0.1",
+		"uqr": "^0.1.2",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
