@@ -1,722 +1,933 @@
-# **📚 Volmify Database Schema Overview**
+# **📚 Volmify Database Schema Architecture**
 
-## **🎓 What Volmify Is**
+## **🎯 What Volmify Is**
 
-### **Primary Purpose**
-Volmify is a comprehensive **creator economy platform** that combines learning management, e-commerce, and professional marketplace capabilities. It enables organizations to create, sell, and manage educational content while providing sophisticated employee management and revenue attribution systems.
-
-### **Core Capabilities**
+### **Platform Vision**
+Volmify is a **multi-tenant creator economy platform** that enables organizations to build comprehensive digital businesses combining:
 - **Learning Management System (LMS)**: Course creation, enrollment, progress tracking
-- **E-commerce Platform**: Product sales, subscriptions, gift cards, payment processing  
-- **Creator Economy**: Revenue attribution, professional profiles, compensation management
-- **Employee Management**: Staff onboarding, department organization, approval workflows
-- **Professional Marketplace**: Cross-organizational job profiles, skill attribution, reputation systems
-- **Advanced Financial System**: Double-entry accounting with multi-context CTI access for marketplace-scale performance
+- **E-commerce Platform**: Product sales, subscriptions, payments, tax management
+- **Creator Economy**: Revenue attribution, professional profiles, cross-organizational reputation
+- **Enterprise Features**: Employee management, departments, teams, budget authority
+- **Professional Marketplace**: Cross-organizational job profiles and skill attribution
 
-## **🏗 Core Architecture Principles**
+### **Core Value Proposition**
+Organizations can create, sell, and manage educational content while providing sophisticated employee management and revenue attribution systems that scale from single-creator businesses to enterprise marketplaces.
 
-### **Multi-Tenant Foundation**
-Every entity in Volmify is scoped to an organization (`orgId`), ensuring complete data isolation and supporting multiple independent tenants on the same platform.
+## **🏗️ Core Architecture Principles**
 
-### **User Identity Hierarchy**
-```
-User (platform identity)
-├── userProfile (main) - base customer profile  
-├── userProfile (job) - professional profiles extending main profile
-└── userLocale - language preferences with proficiency levels
-
-orgMember (tenant-scoped customer/learner)
-└── orgEmployee (enhanced staff role with optional job profile link)
+### **1. Multi-Tenant Foundation**
+Every business entity is scoped to an organization (`orgId`) ensuring complete data isolation:
+```javascript
+// Every table includes orgId for tenant separation
+orgProduct.orgId    // Product belongs to specific organization
+orgMember.orgId     // Member belongs to specific organization  
+orgEmployee.orgId   // Employee belongs to specific organization
 ```
 
-### **Role Separation & Authority Levels**
-- **Members**: Customers and learners who place orders, enroll in courses, participate in community
-- **Employees**: Staff and creators who create content, receive revenue attribution, manage operations
-- **Same user can be both**: Member (customer) AND employee (creator) within the same organization
-- **Authority Hierarchy**: Employees have administrative authority over organizational operations, while maintaining member privileges for customer activities
+### **2. Clear Identity Hierarchy**
+```
+User (platform-wide identity)
+├── userProfile (customer identity)
+├── userJobProfile (professional identity extending userProfile)
+└── userLocale (language preferences)
 
-### **Class Table Inheritance (CTI)**
-Financial transactions use CTI for multi-context access, enabling O(log n) performance with indexed lookups for user transaction queries regardless of organizational complexity.
+Organization-Scoped Roles:
+├── orgMember (customer/learner role)
+└── orgEmployee (staff/creator role, optional job profile link)
+```
 
-### **Multi-Context Access**
-Single transactions are accessible through multiple entity contexts (user, employee, member, organization) with appropriate permission scoping and O(log n) indexed performance.
+### **3. Authority Separation Pattern**
+- **Members**: Customers and learners (purchase, learn, participate)
+- **Employees**: Staff and creators (create content, manage operations, receive attribution)
+- **Dual Roles**: Same user can be both member AND employee with separated permissions
+
+### **4. Professional Attribution System**
+- Revenue flows to **employees** (creators/staff) based on contribution
+- Attribution calculated on **post-platform-fee** amounts for accuracy
+- Optional **job profile** integration for cross-organizational reputation
+
+### **5. Sophisticated Constraint Management**
+- **Deterministic constraint naming** with PostgreSQL 63-character limit compliance
+- **Automated FK helper system** for consistency and maintainability
+- **Multi-index and multi-foreign-key utilities** for complex relationships
 
 ## **👤 User Management System**
 
-### **Platform Identity**
-- **`user`**: Universal identity across the entire platform - cross-tenant, login-capable, globally unique
-- **`userProfile`**: User's contextual profiles - one main profile (customer identity) and multiple job profiles (professional identities extending main profile)
-- **`userJobProfile`**: Professional profiles that extend userProfile, work across organizations, enabling reputation and skill tracking
-
-### **User Profile Architecture Logic**
+### **Platform Identity (`user`)**
+Global user identity that works across all organizations:
 ```javascript
-// Clear Identity Separation:
-user → userProfile (main customer identity)
-user → userProfile (job) → userJobProfile (professional extension of userProfile)
-
-// Organizational Context:
-orgMember.userProfileId → userProfile (main)     // Customer context
-orgEmployee.jobProfileId → userJobProfile        // Professional context (extends userProfile)
-
-// API-Level Enforcement:
-// userJobProfile validation ensures it extends from userProfile of same user
-// This maintains referential integrity while enabling professional context
+export const user = table("user", {
+  id: textCols.idPk(),
+  email: varchar("email", { length: 254 }).unique().notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  emailVerifiedAt: timestamp("email_verified_at"),
+  lastLoginAt: timestamp("last_login_at"),
+  twoFactorEnabledAt: timestamp("two_factor_enabled_at"),
+  // ... audit fields
+});
 ```
 
-### **Localization & Preferences**
-- **`userLocale`**: User language preferences with proficiency levels
-- **`userLocaleProficiency`**: Skill levels (native, fluent, conversational, basic)
-- **Multi-Language Support**: Platform-wide internationalization framework
+### **User Profiles (`userProfile`)**
+Contextual user profiles supporting multiple professional identities:
+```javascript
+export const userProfile = table("user_profile", {
+  id: textCols.idPk(),
+  userId: userIdFkCol().notNull(),
+  type: userProfileTypeEnum("type").default("main"), // "main" | "job"
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  // ... profile data
+});
+```
 
-### **Tenant-Scoped Identity**
-- **`orgMember`**: User's presence within a specific organization as customer/learner
-- **`orgEmployee`**: Optional upgrade to staff role with organizational duties and professional attribution
-- **`orgMemberInvitation`**: Customer onboarding workflow (simple acceptance)
-- **`orgEmployeeInvitation`**: Staff recruitment with administrative approval processes
+**Profile Types:**
+- **`main`**: Primary customer profile (one per user)
+- **`job`**: Professional profiles for creator economy (multiple allowed)
+
+### **Professional Profiles (`userJobProfile`)**
+Extended professional profiles for creator economy features:
+```javascript
+export const userJobProfile = table("user_job_profile", {
+  id: textCols.idPk(),
+  userProfileId: userProfileIdFkCol().notNull(), // Must be type="job"
+  title: varchar("title", { length: 100 }).notNull(),
+  yearsOfExperience: integer("years_of_experience"),
+  hourlyRate: numeric("hourly_rate", { precision: 10, scale: 2 }),
+  // ... professional data
+});
+```
+
+### **Localization (`userLocale`)**
+User language preferences with proficiency tracking:
+```javascript
+export const userLocale = table("user_locale", {
+  userId: userIdFkCol().notNull(),
+  localeKey: localeKeyFkCol().notNull(),
+  proficiency: userLocaleProficiencyEnum("proficiency").notNull(),
+  isDefault: boolean("is_default").default(false),
+  // ... composite primary key: [userId, localeKey]
+});
+```
 
 ## **🏢 Organization Management**
 
-### **Organizational Structure**
-- **`org`**: Core organization entity with settings, branding, and configuration
-- **`orgDepartment`**: Organizational divisions for employee structure with budget authority
-- **`orgTeam`**: Project-based teams for collaboration across departments
-- **`orgEmployeeDepartmentMembership`**: Employee assignment to departments with professional context
-- **`orgEmployeeTeamMembership`**: Employee participation in teams with work roles
-
-### **Budget Authority & Hierarchy**
+### **Core Organization (`org`)**
+Central organization entity with comprehensive configuration:
 ```javascript
-// Department Budget Hierarchy Rules:
-orgDepartment.budgetAuthority       // Department-level budget control
-orgDepartment.parentDepartmentId    // Hierarchical structure
-
-// Budget Inheritance Logic:
-// - Child departments cannot exceed parent department budget limits
-// - Employee spending authority inherits from primary department assignment
-// - Cross-departmental teams use team lead's primary department budget authority
-// - Budget validation enforced at transaction creation time
+export const org = table("org", {
+  id: textCols.idPk(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 50 }).unique().notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  settings: jsonb("settings"),
+  // ... audit fields
+});
 ```
 
-### **Learning Community Structure**
-- **`orgMemberLearningGroup`**: Study groups and learning communities for customers/learners
-- **`orgMemberCohort`**: Learning cohorts and class sections for structured learning
+### **Organization Membership (`orgMember`)**
+Customer/learner presence within an organization:
+```javascript
+export const orgMember = table("org_member", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  userProfileId: userProfileIdFkCol().notNull(), // Must be type="main"
+  membershipType: orgMembershipTypeEnum("membership_type").default("learner"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  // ... member data
+});
+```
 
-## **📚 Content & Learning Management**
+**Member Types:**
+- **`learner`**: Course students and community participants
+- **`customer`**: Product purchasers and service users
+- **`community_member`**: Free community participants
+
+### **Organization Employees (`orgEmployee`)**
+Staff and creator roles with administrative authority:
+```javascript
+export const orgEmployee = table("org_employee", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  memberId: memberIdFkCol().notNull(), // Extends member role
+  jobProfileId: userJobProfileIdFkCol(), // Optional professional identity
+  role: orgEmployeeRoleEnum("role").notNull(),
+  hiredAt: timestamp("hired_at").defaultNow(),
+  // ... employee data
+});
+```
+
+**Employee Roles:**
+- **`admin`**: Full organizational authority
+- **`manager`**: Department/team management
+- **`creator`**: Content creation and revenue attribution
+- **`staff`**: General operational duties
+
+### **Localization & Regions**
+Organization-specific locale and regional configuration:
+```javascript
+export const orgLocale = table("org_locale", {
+  orgId: orgIdFkCol().notNull(),
+  localeKey: localeKeyFkCol().notNull(),
+  isDefault: boolean("is_default").default(false),
+  // ... composite primary key: [orgId, localeKey]
+});
+
+export const orgRegion = table("org_region", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  countryCode: varchar("country_code", { length: 2 }).notNull(),
+  // ... regional configuration
+});
+```
+
+## **📚 Product & Content Management**
+
+### **Core Products (`orgProduct`)**
+Central product catalog with comprehensive metadata:
+```javascript
+export const orgProduct = table("org_product", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  seoMetadataId: seoMetadataIdFkCol().notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  type: orgProductTypeEnum("type").notNull(),
+  status: orgProductStatusEnum("status").default("draft"),
+  // ... product configuration
+});
+```
+
+**Product Types:**
+- **`course`**: Educational content with lessons and assessments
+- **`digital_download`**: Downloadable digital products
+- **`service`**: Professional services and consulting
+- **`physical`**: Physical products requiring shipping
+
+### **Product Variants (`orgProductVariant`)**
+Product variations with pricing and access configurations:
+```javascript
+export const orgProductVariant = table("org_product_variant", {
+  id: textCols.idPk(),
+  productId: textCols.idFk("product_id").references(() => orgProduct.id).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  basePrice: numeric("base_price", { precision: 12, scale: 4 }),
+  accessTier: numericCols.accessTier("access_tier"),
+  // ... variant configuration
+});
+```
 
 ### **Course Structure**
-- **`orgProduct`**: Core products including courses, with pricing and metadata
-- **`orgProductCourse`**: Course-specific configuration, duration, difficulty
-- **`orgProductCourseSection`**: Course sections and modules
-- **`orgProductCourseLesson`**: Individual lessons with content and media
-- **`orgProductCourseChallenge`**: Interactive challenges and assessments
+Hierarchical course organization with modules, sections, and lessons:
+```javascript
+// Course-specific configuration
+export const orgProductCourse = table("org_product_course", {
+  productId: textCols.idFk("product_id").references(() => orgProduct.id).primaryKey(),
+  duration: integer("duration"), // minutes
+  difficulty: orgCourseDifficultyEnum("difficulty"),
+  prerequisites: jsonb("prerequisites"),
+  // ... course metadata
+});
 
-### **Content Management**
-- **`systemContentVersion`**: Version control for all content types
-- **`orgContentApprovalChain`**: Content approval workflows (employee-managed)
-- **`systemContentTranslation`**: Multi-language content support
+// Course modules (top-level organization)
+export const orgProductCourseModule = table("org_product_course_module", {
+  id: textCols.idPk(),
+  courseProductId: textCols.idFk("course_product_id").references(() => orgProductCourse.productId).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").notNull(),
+  // ... module data
+});
 
-### **Learning Experience**
-- **`orgMemberProductCourseEnrollment`**: Student enrollment and progress tracking
-- **`orgMemberLearningProfile`**: Personalized learning analytics and preferences
-- **`orgMemberProductCourseChallengeRating`**: Student feedback and ratings
+// Module sections (chapters within modules)
+export const orgProductCourseModuleSection = table("org_product_course_module_section", {
+  id: textCols.idPk(),
+  moduleId: textCols.idFk("module_id").references(() => orgProductCourseModule.id).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").notNull(),
+  // ... section data
+});
 
-## **💰 E-commerce & Financial System**
+// Section lessons (individual learning units)
+export const orgProductCourseModuleSectionLesson = table("org_product_course_module_section_lesson", {
+  id: textCols.idPk(),
+  sectionId: textCols.idFk("section_id").references(() => orgProductCourseModuleSection.id).notNull(),
+  lessonId: textCols.idFk("lesson_id").references(() => orgLesson.id).notNull(),
+  sortOrder: integer("sort_order").notNull(),
+  requiredAccessTier: numericCols.accessTier("required_access_tier"),
+  // ... lesson configuration
+});
+```
 
-### **Product Catalog**
-- **`orgProductVariant`**: Product variations (pricing tiers, access levels)
-- **`orgProductOffer`**: Time-limited promotions and discounts
-- **`orgPriceBook`**: Tiered pricing strategies for different markets
-- **`orgProductBundle`**: Package deals and course collections
+### **Payment Plans**
+Sophisticated payment plan system supporting multiple monetization strategies:
+```javascript
+// Base payment plan
+export const orgProductVariantPaymentPlan = table("org_product_variant_payment_plan", {
+  id: textCols.idPk(),
+  variantId: textCols.idFk("variant_id").references(() => orgProductVariant.id).notNull(),
+  type: orgProductVariantPaymentTypeEnum("type").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  // ... plan configuration
+});
 
-### **Order Management**
-- **`orgMemberOrder`**: Customer purchase orders (members can be employees acting as customers)
-- **`orgMemberOrderItem`**: Individual items within orders
-- **`orgMemberProductVariantPaymentPlanSubscription`**: Subscription management
+// One-time payment configuration
+export const orgProductVariantPaymentPlanOneTime = table("org_product_variant_payment_plan_one_time", {
+  planId: textCols.idFk("plan_id").references(() => orgProductVariantPaymentPlan.id).primaryKey(),
+  price: numeric("price", { precision: 12, scale: 4 }).notNull(),
+  allowGiftCards: boolean("allow_gift_cards").default(true),
+  // ... one-time payment settings
+});
 
-### **Advanced Financial Operations - CTI SYSTEM**
-- **`account`**: Chart of accounts for double-entry bookkeeping (managed by employees)
-- **`accountTransaction`**: Transaction headers with business entity references
-- **`accountTransactionLine`**: Double-entry accounting lines (debits/credits)
+// Subscription payment configuration
+export const orgProductVariantPaymentPlanSubscription = table("org_product_variant_payment_plan_subscription", {
+  planId: textCols.idFk("plan_id").references(() => orgProductVariantPaymentPlan.id).primaryKey(),
+  basePrice: numeric("base_price", { precision: 12, scale: 4 }).notNull(),
+  interval: orgSubscriptionIntervalEnum("interval").notNull(),
+  intervalCount: integer("interval_count").default(1),
+  trialPeriodDays: integer("trial_period_days"),
+  // ... subscription settings
+});
 
-### **Multi-Context Transaction Access (CTI Pattern)**
-- **`accountTransactionContext`**: Base context metadata for multi-role access
-- **`accountTransactionUserContext`**: Cross-organizational user transaction access with O(log n) indexed performance
-- **`accountTransactionEmployeeContext`**: Professional employee transaction access for attribution and earnings
-- **`accountTransactionMemberContext`**: Customer member transaction access for purchase history
-- **`accountTransactionOrgContext`**: Administrative organization transaction access for oversight
+// Usage-based payment configuration
+export const orgProductVariantPaymentPlanUsageBased = table("org_product_variant_payment_plan_usage_based", {
+  planId: textCols.idFk("plan_id").references(() => orgProductVariantPaymentPlan.id).primaryKey(),
+  basePrice: numeric("base_price", { precision: 12, scale: 4 }),
+  usageUnit: varchar("usage_unit", { length: 50 }).notNull(),
+  pricePerUnit: numeric("price_per_unit", { precision: 12, scale: 4 }).notNull(),
+  includedUnits: integer("included_units").default(0),
+  // ... usage-based settings
+});
+```
 
-### **Business Entity Integration**
-- **Business Entity References**: `businessEntityType` + `businessEntityId` link transactions to orders, payouts, refunds
-- **Reference System**: Human-readable transaction references for audit trails
-- **Multi-Context Visibility**: Same transaction accessible from user, employee, member, and org contexts with appropriate permissions
+**Payment Plan Types:**
+- **`one_time`**: Traditional purchase model
+- **`subscription`**: Recurring billing model
+- **`usage_based`**: Pay-per-consumption model
+
+## **💰 E-commerce & Order Management**
+
+### **Order System (`orgMemberOrder`)**
+Comprehensive order management with multi-item support:
+```javascript
+export const orgMemberOrder = table("org_member_order", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  memberId: memberIdFkCol().notNull(),
+  orderNumber: varchar("order_number", { length: 20 }).unique().notNull(),
+  status: orgOrderStatusEnum("status").default("pending"),
+  totalAmount: numeric("total_amount", { precision: 12, scale: 4 }).notNull(),
+  taxAmount: numeric("tax_amount", { precision: 12, scale: 4 }),
+  currencyCode: currencyCodeFkCol().notNull(),
+  // ... order data
+});
+
+export const orgMemberOrderItem = table("org_member_order_item", {
+  id: textCols.idPk(),
+  orderId: textCols.idFk("order_id").references(() => orgMemberOrder.id).notNull(),
+  variantId: textCols.idFk("variant_id").references(() => orgProductVariant.id).notNull(),
+  paymentPlanId: textCols.idFk("payment_plan_id").references(() => orgProductVariantPaymentPlan.id).notNull(),
+  quantity: integer("quantity").default(1),
+  unitPrice: numeric("unit_price", { precision: 12, scale: 4 }).notNull(),
+  lineTotal: numeric("line_total", { precision: 12, scale: 4 }).notNull(),
+  // ... item configuration
+});
+```
+
+**Order Statuses:**
+- **`pending`**: Order created, awaiting payment
+- **`paid`**: Payment received, processing
+- **`fulfilled`**: Order completed, access granted
+- **`cancelled`**: Order cancelled
+- **`refunded`**: Order refunded
 
 ### **Gift Card System**
-- **`orgGiftCard`**: Gift card issuance (employee authority to issue)
-- **`orgMemberGiftCardUsage`**: Gift card usage tracking (any member including employees as customers)
-
-### **Tax & Compliance**
-- **`orgTaxRate`**: Tax rate configuration with historical tracking (employee-managed)
-- **`orgTaxRateSnapshot`**: Point-in-time tax rate preservation with employee attribution for compliance
-
-### **Revenue Calculation Flow**
+Employee-managed gift card issuance with member usage tracking:
 ```javascript
-// Post-Platform Fee Attribution Logic:
-Customer Payment: $100
+export const orgGiftCard = table("org_gift_card", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  code: varchar("code", { length: 20 }).unique().notNull(),
+  initialAmount: numeric("initial_amount", { precision: 12, scale: 4 }).notNull(),
+  currentBalance: numeric("current_balance", { precision: 12, scale: 4 }).notNull(),
+  issuedByEmployeeId: employeeIdFkCol().notNull(),
+  expiresAt: timestamp("expires_at"),
+  // ... gift card data
+});
+
+export const orgMemberGiftCardUsage = table("org_member_gift_card_usage", {
+  id: textCols.idPk(),
+  giftCardId: textCols.idFk("gift_card_id").references(() => orgGiftCard.id).notNull(),
+  memberId: memberIdFkCol().notNull(),
+  orderId: textCols.idFk("order_id").references(() => orgMemberOrder.id).notNull(),
+  amountUsed: numeric("amount_used", { precision: 12, scale: 4 }).notNull(),
+  usedAt: timestamp("used_at").defaultNow(),
+  // ... usage tracking
+});
+```
+
+## **💼 Creator Economy & Revenue Attribution**
+
+### **Employee Product Attribution**
+Revenue attribution system linking employees to products they create or manage:
+```javascript
+export const orgEmployeeProductAttribution = table("org_employee_product_attribution", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  employeeId: employeeIdFkCol().notNull(),
+  productId: textCols.idFk("product_id").references(() => orgProduct.id).notNull(),
+  revenueSharePercentage: numeric("revenue_share_percentage", { precision: 5, scale: 2 }).notNull(),
+  attributionType: orgAttributionTypeEnum("attribution_type").notNull(),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  effectiveTo: timestamp("effective_to"),
+  // ... attribution configuration
+});
+```
+
+**Attribution Types:**
+- **`creator`**: Primary content creator
+- **`collaborator`**: Contributing team member
+- **`manager`**: Project manager or supervisor
+- **`reviewer`**: Quality assurance and review
+
+### **Revenue Calculation & Distribution**
+Post-platform-fee revenue distribution to attributed employees:
+```javascript
+export const orgEmployeeProductAttributionRevenue = table("org_employee_product_attribution_revenue", {
+  id: textCols.idPk(),
+  attributionId: textCols.idFk("attribution_id").references(() => orgEmployeeProductAttribution.id).notNull(),
+  orderItemId: textCols.idFk("order_item_id").references(() => orgMemberOrderItem.id).notNull(),
+  grossRevenue: numeric("gross_revenue", { precision: 12, scale: 4 }).notNull(),
+  platformFee: numeric("platform_fee", { precision: 12, scale: 4 }).notNull(),
+  netRevenue: numeric("net_revenue", { precision: 12, scale: 4 }).notNull(),
+  attributedRevenue: numeric("attributed_revenue", { precision: 12, scale: 4 }).notNull(),
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+  // ... revenue tracking
+});
+```
+
+**Revenue Flow:**
+```
+Customer Payment ($100)
 ├── Platform Fee (5%): $5
-├── Processing Fee (3%): $3  
-├── Tax Withholding (jurisdiction-dependent): $8
-└── Net Revenue for Attribution: $84
+├── Processing Fee (3%): $3
+├── Tax (8%): $8
+└── Net Revenue: $84
 
-// Revenue Attribution on Net Amount:
-orgEmployeeProductAttribution: { revenueSharePercentage: 70 } // 70% of $84 = $58.80
-orgProductRevenuePool: { totalAllocationPercentage: 100 }     // 100% of $84 allocated
-
-// Cross-Product Attribution Validation:
-// Each product maintains independent attribution (no cross-product limits)
-// Same employee can have different attribution percentages across products
-// Attribution based on effort/contribution per product, not total workload
+Attribution (70% of $84): $58.80 → Employee
+Remaining (30% of $84): $25.20 → Organization
 ```
 
-### **Financial System Scalability**
-The CTI (Class Table Inheritance) transaction system enables:
-- **O(log n) Performance**: Indexed lookups regardless of user's role complexity
-- **Multi-Context Access**: Same transaction visible from user, employee, member, org perspectives
-- **Cross-Organizational Finance**: Users can view transactions across all organizations
-- **Creator Economy Scale**: Supports marketplace scenarios with complex attribution
-- **Enterprise Compliance**: Comprehensive audit trails with context-specific access controls
-
-## **🎯 Creator Economy & Revenue Attribution**
-
-### **Professional Attribution**
-- **`orgEmployeeProductAttribution`**: Links employees to products they create or manage with revenue sharing percentages
-- **`orgEmployeeProductAttributionRevenue`**: Revenue distribution to creators based on net revenue after platform fees
-- **`orgProductRevenuePool`**: Revenue allocation tracking ensuring 100% allocation per product
-
-### **Cross-Product Attribution Logic**
+### **Product Revenue Pool**
+Ensures 100% revenue allocation across all attributions:
 ```javascript
-// Independent Product Attribution:
-Employee John:
-├── Course A: 80% attribution of Course A net revenue
-├── Course B: 90% attribution of Course B net revenue  
-└── Course C: 50% attribution of Course C net revenue
-
-// Validation Rules:
-// ✅ Each product's attributions sum to 100%
-// ✅ Same employee can have different percentages across products
-// ✅ Attribution percentages based on contribution per product
-// ✅ Revenue calculation always on post-platform-fee amounts
+export const orgProductRevenuePool = table("org_product_revenue_pool", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  productId: textCols.idFk("product_id").references(() => orgProduct.id).notNull(),
+  totalAllocationPercentage: numeric("total_allocation_percentage", { precision: 5, scale: 2 }).notNull(),
+  lastAllocationByEmployeeId: employeeIdFkCol().notNull(),
+  lastAllocationAt: timestamp("last_allocation_at").defaultNow(),
+  // ... allocation tracking
+});
 ```
 
-### **Compensation Models**
-- **Revenue Share**: Percentage-based commission from product sales (post platform fees)
-- **Flat Fee**: Fixed payment per product or milestone
-- **Hourly Rate**: Time-based compensation
-- **Salary**: Fixed organizational compensation separate from product revenue
-- **Zero Attribution**: Volunteer roles or salary-only positions
+## **🏛️ Tax Management System**
 
-### **Professional Context**
-- **Employee-Job Profile Link**: Optional connection to professional identity for cross-organizational attribution tracking
-- **Cross-Organizational Reputation**: Job profiles track professional work across multiple organizations
-- **Skill Attribution**: Clear connection between professional work and skills/expertise for marketplace features
-
-## **🔄 Invitation & Access Management**
-
-### **Current Invitation Systems**
-- **`orgMemberInvitation`**: Customer/learner onboarding (simple acceptance workflow)
-- **`orgEmployeeInvitation`**: Staff recruitment (administrative approval required)
-
-### **Future CTI Invitation System (Planned Enhancement)**
+### **Tax Categories & Rates**
+Employee-managed tax configuration with historical tracking:
 ```javascript
-// Unified CTI Invitation Architecture (Future):
-orgInvitation                         // Base invitation entity
-├── orgInvitationMemberContext       // Customer invitation context
-├── orgInvitationEmployeeContext     // Staff invitation context  
-└── orgInvitationRequestContext      // Join request context (for private orgs)
+export const orgTaxCategory = table("org_tax_category", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  code: textCols.code().notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  // ... category configuration
+});
 
-// Benefits of CTI Approach:
-// ✅ Unified workflow for: invite, request-to-join, promote-member-to-employee
-// ✅ Consistent approval processes across invitation types
-// ✅ Private organization access control
-// ✅ Role transition management (member → employee promotion)
+export const orgTaxRate = table("org_tax_rate", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  taxCategoryId: textCols.idFk("tax_category_id").references(() => orgTaxCategory.id).notNull(),
+  regionId: textCols.idFk("region_id").references(() => orgRegion.id).notNull(),
+  type: orgTaxRateTypeEnum("type").notNull(),
+  rate: numeric("rate", { precision: 5, scale: 4 }),
+  amount: numeric("amount", { precision: 12, scale: 4 }),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  effectiveTo: timestamp("effective_to"),
+  // ... rate configuration
+});
 ```
 
-### **Authority & Approval Logic**
+**Tax Rate Types:**
+- **`percent`**: Percentage-based tax (rate field used)
+- **`fixed`**: Fixed amount tax (amount field used)
+
+### **Tax Rate Snapshots**
+Point-in-time tax rate preservation for order compliance:
 ```javascript
-// Current Approval Hierarchy:
-orgMemberInvitation                   // Direct acceptance (no approval needed)
-orgEmployeeInvitation.approvedByEmployeeId // Employee approval required
-
-// Business Rules:
-// - Members can directly accept customer invitations
-// - Employees require administrative approval from existing employees
-// - Role-based approval hierarchy (department heads approve department employees)
-// - First employee in organization approved by organization owner
+export const orgTaxRateSnapshot = table("org_tax_rate_snapshot", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  originalTaxRateId: textCols.idFk("original_tax_rate_id").references(() => orgTaxRate.id).notNull(),
+  orderId: textCols.idFk("order_id").references(() => orgMemberOrder.id).notNull(),
+  byEmployeeId: employeeIdFkCol().notNull(),
+  snapshotData: jsonb("snapshot_data").notNull(),
+  createdAt: temporalCols.audit.createdAt(),
+  // ... snapshot metadata
+});
 ```
 
-## **🔐 Security & Compliance**
+## **🔐 Invitation & Access Management**
 
-### **Data Governance**
-- **`systemDataRetentionPolicy`**: GDPR/SOX compliant data retention
-- **`systemAuditLog`**: Comprehensive audit trails for compliance
-- **`systemApiRateLimit`**: API protection and throttling
-
-### **Access Control & Authority Separation**
-- **Row-Level Security**: All queries automatically scoped to tenant
-- **Role-Based Permissions**: Clear separation between member (customer) and employee (administrative) capabilities
-- **Authority Hierarchy**: Employees have administrative authority; members have customer privileges
-- **Dual Role Management**: Users can be both member AND employee with combined but separated permissions
-- **Feature Flags**: `orgFeatureFlag` for tenant-specific capability control
-
-### **Financial Data Protection**
-- **CTI Context Security**: Users access financial data appropriate to their context (customer vs professional vs administrative)
-- **Cross-Organizational Privacy**: Professional financial data visible across organizations through job profiles with appropriate permissions
-- **Attribution Audit Trails**: Complete traceability of revenue attribution and distribution decisions
-
-## **🌍 Internationalization & Localization**
-
-### **Multi-Language Support**
-- **`systemContentTranslation`**: Professional translation workflows
-- **`systemLanguage`** & **`systemCountry`**: Regional configuration
-- **Tax Jurisdiction Support**: Location-based tax calculation with withholding rules
-
-### **Cultural Adaptation**
-- **Currency Support**: Multi-currency pricing and transactions
-- **Regional Compliance**: Jurisdiction-specific data handling
-- **Tax Withholding**: Automatic tax deduction for contractor payments where required by jurisdiction
-
-## **📊 Analytics & Business Intelligence**
-
-### **Dimensional Analytics**
-- **`dimDate`**: Time dimension for analytics queries
-- **`dimJobProfile`**: Job profile dimension with slowly changing attributes for cross-organizational analytics
-- **`factJobProfilePerformance`**: Performance metrics and KPIs across organizations
-
-### **Real-Time Insights**
-- **Learning Analytics**: Student progress and engagement tracking
-- **Revenue Analytics**: Creator compensation and product performance with attribution tracking
-- **Organizational Analytics**: Employee productivity and department metrics with budget performance
-
-## **🔄 Workflow Management**
-
-### **Business Process Automation**
-- **`systemWorkflowDefinition`**: Configurable workflow templates
-- **`systemWorkflowInstance`**: Active workflow executions
-- **Content Approval**: Multi-step review and approval processes (employee-managed)
-- **Employee Onboarding**: Structured recruitment and setup workflows with approval chains
-
-### **State Management**
-- **Order Lifecycle**: From cart to fulfillment (member-initiated, employee-managed)
-- **Content Lifecycle**: From draft to published (employee-managed)
-- **Employee Lifecycle**: From invitation to active employment (approval-based)
-
-## **🚀 Future Extensibility**
-
-### **Marketplace Vision**
-The architecture supports evolution into a comprehensive marketplace:
-- **Job Marketplace**: Professional profiles enable freelance and contract work across organizations
-- **Service Attribution**: Beyond courses to consulting, coaching, and services with cross-organizational tracking
-- **Cross-Organizational Collaboration**: Job profiles work across multiple organizations with unified reputation
-- **Reputation Systems**: Professional track record follows creators across organizations
-
-### **Employee Management Platform**
-- **HR Workflows**: Complete employee lifecycle management with department/team structures
-- **Performance Management**: Goal setting, reviews, and professional development linked to job profiles
-- **Compensation Management**: Complex salary and commission structures with attribution-based revenue sharing
-- **Organizational Design**: Flexible department and team structures with budget authority hierarchy
-
-### **Advanced Creator Economy**
-- **Multi-Revenue Streams**: Courses, consulting, coaching, digital products with unified attribution
-- **Creator Partnerships**: Revenue sharing between multiple creators with complex attribution models
-- **Professional Development**: Skill tracking and certification programs linked to job profiles
-- **Creator Analytics**: Comprehensive performance and earning insights across organizations
-
-### **Professional Features (Future Phases)**
-
-#### **Job Profile Integration Use Cases**
+### **Member Invitations**
+Simple customer onboarding with direct acceptance:
 ```javascript
-// Professional Discovery (Marketplace Feature):
-// Org seeks instructor for "Advanced React" course
-userJobProfile.skills: ["React", "TypeScript", "Teaching"]
-userJobProfile.experience: "Senior"  
-userJobProfile.crossOrgRating: 4.5+
-// → Auto-suggest qualified professionals across ALL organizations
-
-// Skill-Based Product Assignment:
-// New course creation workflow
-orgProduct.requiredSkills: ["Python", "Data Science"]
-orgProduct.difficultyLevel: "Intermediate"
-// → Match against userJobProfile.skills + historical attribution success
-// → Suggest best-fit employees for attribution
-
-// Cross-Organizational Collaboration:
-// Employee at Org A guest lectures at Org B
-orgEmployee (Org A) + userJobProfile → temporary attribution at Org B
-// → Revenue flows to professional identity, visible across both organizations
+export const orgMemberInvitation = table("org_member_invitation", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  email: varchar("email", { length: 254 }).notNull(),
+  type: invitationTypeEnum("type").default("learner"),
+  status: orgMemberInvitationStatusEnum("status").default("pending"),
+  token: varchar("token", { length: 64 }).unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  // ... invitation data
+});
 ```
 
-## **📋 Key Design Patterns**
-
-### **Event Sourcing**
-Financial transactions use event sourcing for audit compliance and state reconstruction.
-
-### **Snapshot Pattern**
-Tax rates and pricing use snapshots for historical accuracy and legal compliance.
-
-### **Soft Deletes**
-Critical business data uses soft deletes with audit trails rather than hard deletion.
-
-### **Tenant Isolation**
-Every table includes `orgId` for complete multi-tenant data separation.
-
-### **Professional Attribution Chain**
-Clear traceability: `Product → Employee → Job Profile → Revenue Distribution → Cross-Org Reputation`
-
-### **Authority Separation Pattern**
-Clear distinction between customer activities (members) and administrative activities (employees) with dual-role support.
-
-### **CTI Multi-Context Pattern**
-Single entities (transactions, invitations) accessible through multiple business contexts with appropriate permissions and O(log n) performance.
-
-## **📊 Schema Organization**
-
-### **Core Schema Domains**
-```
-📂 general/                    # Platform-wide shared resources
-├── locale-currency-market/    # Global standards and market data
-├── seo/                       # SEO and content discovery  
-├── skill/                     # Platform-wide skill taxonomy
-└── contact-info/              # Polymorphic contact management
-
-📂 user/                       # User domain (global identity)
-├── schema.js                  # User base identity
-├── relations.js               # User relationship foundations
-├── locale/                    # User localization preferences
-│   ├── schema.js              # userLocale with proficiency tracking
-│   └── relations.js           # Locale relationship management
-└── profile/                   # Specialized user profiles
-    ├── schema.js              # userProfile base with type differentiation
-    ├── relations.js           # Profile relationship management
-    ├── contact-info/           # Profile-based contact management
-    └── job/                   # Professional job profiles for creator economy
-        ├── schema.js          # userJobProfile extending userProfile
-        └── relations.js       # Cross-organizational job relationships
-
-📂 org/                        # Organization domain
-├── schema.js                  # org + orgBrand + orgLocale + orgRegion
-├── relations.js               # Multi-tenant boundaries and professional affiliations
-├── product/                   # Organization products
-│   ├── schema.js              # orgProduct + orgProductVariant
-│   ├── relations.js           # Product relationships and attribution
-│   ├── payment/               # Payment plans and subscriptions
-│   ├── offers/                # Promotional campaigns
-│   ├── collection/            # Product catalog organization
-│   ├── orders/                # E-commerce order management
-│   └── by-type/course/        # Course-specific product extensions
-├── member/                    # Organization membership (customers/learners)
-│   ├── schema.js              # orgMember + orgMemberLearningProfile + enrollment
-│   ├── relations.js           # Member relationships and learning analytics
-│   └── employee/              # Employee management (staff/creators)
-│       ├── schema.js          # orgEmployee with job profile integration
-│       └── relations.js       # Employee relationships and professional workflows
-├── department/                # Organizational structure (employee-focused)
-│   ├── schema.js              # orgDepartment with budget authority
-│   ├── relations.js           # Department relationships and hierarchy
-│   └── membership/            # Employee department assignments
-│       ├── schema.js          # orgEmployeeDepartmentMembership
-│       └── relations.js       # Department membership relationships
-├── team/                      # Team structure (employee-focused)
-│   ├── schema.js              # orgTeam with cross-departmental capability
-│   ├── relations.js           # Team relationships
-│   └── membership/            # Employee team assignments
-│       ├── schema.js          # orgEmployeeTeamMembership
-│       └── relations.js       # Team membership relationships
-├── locale-region/             # Market strategy and localization
-├── tax/                       # Organization tax configuration (employee-managed)
-└── funnel/                    # Sales funnel management
-
-📂 account/                    # Financial system (CTI ARCHITECTURE)
-├── schema.js                  # account + accountTransaction + accountTransactionLine
-├── relations.js               # Double-entry and CTI context relationships
-├── cti-helpers.js             # Multi-context transaction creation utilities
-└── context/                   # CTI multi-context access system
-    ├── schema.js              # accountTransactionContext + all CTI context tables
-    └── relations.js           # Context-specific relationship management
+### **Employee Invitations**
+Staff recruitment with administrative approval workflow:
+```javascript
+export const orgEmployeeInvitation = table("org_employee_invitation", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  email: varchar("email", { length: 254 }).notNull(),
+  role: orgEmployeeRoleEnum("role").notNull(),
+  status: orgEmployeeInvitationStatusEnum("status").default("pending"),
+  invitedByEmployeeId: employeeIdFkCol().notNull(),
+  approvedByEmployeeId: employeeIdFkCol(),
+  token: varchar("token", { length: 64 }).unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  // ... invitation data
+});
 ```
 
-### **Updated Architecture Flows**
+**Invitation Statuses:**
+- **`pending`**: Invitation sent, awaiting response
+- **`accepted`**: Invitation accepted by recipient
+- **`declined`**: Invitation declined by recipient
+- **`expired`**: Invitation expired before response
+- **`cancelled`**: Invitation cancelled by sender
 
-#### **Customer Journey (Member-Level)**
+## **💳 Financial System**
+
+### **Account Management**
+Chart of accounts for organizational financial tracking:
+```javascript
+export const account = table("account", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  employeeId: employeeIdFkCol(),
+  name: varchar("name", { length: 256 }).notNull(),
+  description: varchar("description", { length: 1536 }).notNull(),
+  type: accountTypeEnum("type").notNull(),
+  normalBalance: balanceTypeEnum("normal_balance").notNull(),
+  currentBalance: numeric("current_balance", { precision: 12, scale: 4 }).default("0.00"),
+  currencyCode: currencyCodeFkCol().notNull(),
+  isSystem: boolean("is_system").default(false),
+  isActive: boolean("is_active").default(true),
+  // ... account configuration
+});
+```
+
+**Account Types:**
+- **`asset`**: Cash, receivables, inventory
+- **`liability`**: Payables, loans, deferred revenue
+- **`equity`**: Owner's equity, retained earnings
+- **`revenue`**: Sales, service revenue
+- **`expense`**: Operating costs, salaries
+
+## **🌍 Internationalization & SEO**
+
+### **Locale & Currency Management**
+Platform-wide localization configuration:
+```javascript
+export const locale = table("locale", {
+  key: varchar("key", { length: 10 }).primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  nativeName: varchar("native_name", { length: 100 }).notNull(),
+  languageCode: varchar("language_code", { length: 2 }).notNull(),
+  countryCode: varchar("country_code", { length: 2 }),
+  isActive: boolean("is_active").default(true),
+  // ... locale configuration
+});
+
+export const currency = table("currency", {
+  code: varchar("code", { length: 3 }).primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  symbol: varchar("symbol", { length: 5 }).notNull(),
+  decimalPlaces: integer("decimal_places").default(2),
+  isActive: boolean("is_active").default(true),
+  // ... currency configuration
+});
+```
+
+### **SEO Metadata System**
+Comprehensive SEO management for all content:
+```javascript
+export const seoMetadata = table("seo_metadata", {
+  id: textCols.idPk(),
+  title: varchar("title", { length: 60 }),
+  description: varchar("description", { length: 160 }),
+  keywords: varchar("keywords", { length: 255 }),
+  canonicalUrl: varchar("canonical_url", { length: 255 }),
+  robotsDirective: varchar("robots_directive", { length: 50 }).default("index,follow"),
+  // ... SEO configuration
+});
+
+export const seoMetadataOpenGraph = table("seo_metadata_open_graph", {
+  seoMetadataId: textCols.idFk("seo_metadata_id").references(() => seoMetadata.id).primaryKey(),
+  title: varchar("title", { length: 95 }),
+  description: varchar("description", { length: 300 }),
+  imageUrl: varchar("image_url", { length: 255 }),
+  imageAlt: varchar("image_alt", { length: 125 }),
+  type: varchar("type", { length: 20 }).default("website"),
+  // ... Open Graph configuration
+});
+```
+
+## **🛠️ Schema Helper System**
+
+### **Foreign Key Utilities**
+Automated FK helper generation for consistency:
+```javascript
+// buildFkUtils creates consistent FK column and constraint helpers
+export const { fkCol: orgIdFkCol, extraConfig: orgIdExtraConfig } = buildFkUtils({
+  cacheKey: "org",
+  defaultColKey: "orgId",
+  defaultColName: "org_id",
+  getTable: () => require("#db/schema/org/schema.js").org,
+  getRefColumns: (table) => [table.id],
+  defaultOnDelete: "cascade",
+});
+
+// Usage in table definitions:
+export const orgProduct = table("org_product", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  // ... other columns
+}, (cols) => [
+  ...orgIdExtraConfig({ tName: "org_product", cols }),
+  // ... other constraints
+]);
+```
+
+### **Multi-Index & Multi-FK Helpers**
+Simplified constraint definition for complex relationships:
+```javascript
+// Multi-index helper for consistent index creation
+...multiIndexes({
+  tName: "user_profile",
+  colsGrps: [
+    { cols: [cols.userId] },
+    { cols: [cols.type] },
+    { cols: [cols.createdAt] },
+    { cols: [cols.lastUpdatedAt] },
+  ],
+}),
+
+// Multi-foreign-key helper for relationship management
+...multiForeignKeys({
+  tName: "org_member_order_item",
+  fkGroups: [
+    {
+      cols: [cols.orderId],
+      foreignColumns: [orgMemberOrder.id],
+      afterBuild: (fk) => fk.onDelete("cascade"),
+    },
+    {
+      cols: [cols.variantId],
+      foreignColumns: [orgProductVariant.id],
+      afterBuild: (fk) => fk.onDelete("restrict"),
+    },
+  ],
+}),
+```
+
+### **Constraint Naming Strategy**
+Deterministic constraint naming with PostgreSQL compliance:
+```javascript
+// Automated constraint naming that handles 63-character limit
+const buildConstraintName = (prefix, tableName, columns) => {
+  const cleanTableName = toCamelCase(createAbbreviation(tableName));
+  const cleanColumnNames = columns
+    .map((col) => toCamelCase(createAbbreviation(col.name)))
+    .join("_");
+  return shortenConstraintName(`${prefix}_${cleanTableName}_${cleanColumnNames}`);
+};
+
+// Results in consistent, collision-free constraint names:
+// fk_orgProd_orgId_12a34b56
+// uq_orgMemOrder_orderNum_78c90d12
+// idx_userProf_userId_ef34ab56
+```
+
+## **📊 Schema Organization Structure**
+
+```
+📂 apps/volmify-main-server/src/db/schema/
+│
+├── 📂 _utils/                     # Schema utilities and helpers
+│   ├── build-fk-utils.js         # Automated FK helper generation
+│   ├── helpers.js                # Core schema utilities
+│   ├── shorten-str.js            # String shortening for constraints
+│   └── 📂 cols/                  # Column type definitions
+│       ├── 📂 shared/            # Shared column utilities
+│       │   └── 📂 foreign-keys/  # FK column helpers
+│       ├── 📂 temporal/          # Timestamp columns
+│       ├── 📂 text/              # Text-based columns
+│       └── 📂 numeric/           # Numeric columns
+│
+├── 📂 general/                    # Platform-wide entities
+│   ├── 📂 locale-and-currency/   # Localization & currency
+│   ├── 📂 seo/                   # SEO metadata system
+│   ├── 📂 skill/                 # Platform skill taxonomy
+│   └── 📂 contact-info/          # Contact management
+│
+├── 📂 user/                       # User domain (global identity)
+│   ├── schema.js                 # Core user entity
+│   ├── relations.js              # User relationships
+│   ├── 📂 locale/                # User localization
+│   │   ├── schema.js             # User locale preferences
+│   │   └── relations.js          # Locale relationships
+│   └── 📂 profile/               # User profiles
+│       ├── schema.js             # User profile management
+│       ├── relations.js          # Profile relationships
+│       ├── 📂 contact-info/      # Profile contact info
+│       └── 📂 job/               # Professional job profiles
+│           ├── schema.js         # Job profile entities
+│           └── relations.js      # Job relationships
+│
+├── 📂 org/                        # Organization domain
+│   ├── schema.js                 # Core organization entity
+│   ├── relations.js              # Organization relationships
+│   ├── 📂 locale-region/         # Org localization
+│   ├── 📂 tax/                   # Tax management
+│   ├── 📂 funnel/                # Sales funnel management
+│   ├── 📂 member/                # Organization membership
+│   │   ├── schema.js             # Member management
+│   │   ├── relations.js          # Member relationships
+│   │   ├── 📂 invitation/        # Member invitations
+│   │   └── 📂 employee/          # Employee management
+│   │       ├── schema.js         # Employee entities
+│   │       ├── relations.js      # Employee relationships
+│   │       └── 📂 invitation/    # Employee invitations
+│   └── 📂 product/               # Product catalog
+│       ├── schema.js             # Core product entities
+│       ├── relations.js          # Product relationships
+│       ├── 📂 collection/        # Product collections
+│       ├── 📂 payment/           # Payment plans
+│       ├── 📂 orders/            # Order management
+│       └── 📂 by-type/          # Product-type specific
+│           └── 📂 course/        # Course products
+│               ├── schema.js     # Course structure
+│               └── relations.js  # Course relationships
+│
+├── 📂 account/                    # Financial system
+│   ├── schema.js                 # Accounting entities
+│   └── relations.js              # Financial relationships
+│
+└── 📂 index.js                   # Schema exports
+```
+
+## **🔄 Key Business Workflows**
+
+### **Customer Journey (Member)**
 ```mermaid
 graph TD
-    A[User] --> B[userProfile main]
-    B --> C[orgMember - Customer/Learner]
-    C --> D[Places Orders]
-    C --> E[Enrolls in Courses]
-    C --> F[Community Participation]
-    C --> G[Uses Gift Cards]
-    G --> H[accountTransactionMemberContext]
-    H --> I[Customer Financial View - O(log n)]
+    A[User Registration] --> B[Create userProfile main]
+    B --> C[Receive orgMemberInvitation]
+    C --> D[Accept Invitation]
+    D --> E[Become orgMember]
+    E --> F[Browse Products]
+    F --> G[Place Order]
+    G --> H[Make Payment]
+    H --> I[Access Product]
+    I --> J[Use Gift Cards]
+    J --> K[Rate & Review]
 ```
 
-#### **Creator Journey (Employee-Level)**
+### **Creator Journey (Employee)**
 ```mermaid
 graph TD
-    A[User] --> B[userProfile job → userJobProfile]
-    B --> C[orgMember - Base membership]
-    C --> D[orgEmployee - Staff upgrade]
-    D --> E[Job Profile Integration]
-    D --> F[Creates Content]
-    F --> G[orgEmployeeProductAttribution]
-    G --> H[Revenue Distribution - Post Platform Fees]
-    H --> I[accountTransactionEmployeeContext]
-    I --> J[Professional Financial View - O(log n)]
-    D --> K[Department/Team Structure with Budget Authority]
+    A[User with userProfile] --> B[Create userJobProfile]
+    B --> C[Receive orgEmployeeInvitation]
+    C --> D[Administrative Approval]
+    D --> E[Become orgEmployee]
+    E --> F[Link Job Profile Optional]
+    F --> G[Create Products]
+    G --> H[Set Revenue Attribution]
+    H --> I[Receive Revenue Share]
+    I --> J[Manage Tax Configuration]
+    J --> K[Issue Gift Cards]
 ```
 
-#### **CTI Financial Access Flow**
+### **Revenue Attribution Flow**
 ```mermaid
 graph TD
-    A[Single Transaction] --> B[accountTransaction]
-    B --> C[accountTransactionContext]
-    C --> D[accountTransactionUserContext - Cross-org view]
-    C --> E[accountTransactionEmployeeContext - Professional view]
-    C --> F[accountTransactionMemberContext - Customer view]
-    C --> G[accountTransactionOrgContext - Admin view]
-    D --> H[O(log n) User Query Performance]
-    E --> I[O(log n) Employee Query Performance]
-    F --> J[O(log n) Member Query Performance]
-    G --> K[O(log n) Org Query Performance]
+    A[Customer Purchase] --> B[Order Created]
+    B --> C[Payment Processed]
+    C --> D[Platform Fee Deducted]
+    D --> E[Net Revenue Calculated]
+    E --> F[Employee Attribution Applied]
+    F --> G[Revenue Distributed]
+    G --> H[Financial Records Created]
+    H --> I[Creator Compensation]
 ```
 
-#### **Professional Attribution Flow**
+### **Tax Management Workflow**
 ```mermaid
 graph TD
-    A[Customer Order] --> B[Gross Product Revenue]
-    B --> C[Platform Fee Deduction]
-    C --> D[Net Revenue for Attribution]
-    D --> E[orgEmployeeProductAttribution]
-    E --> F[orgEmployee with Job Profile]
-    F --> G[Professional Context]
-    G --> H[Revenue Distribution - Post Fees]
-    G --> I[Cross-Org Reputation Tracking]
-    H --> J[accountTransactionEmployeeContext]
-    I --> K[Job Profile Performance Analytics]
+    A[Employee Access] --> B[Configure Tax Categories]
+    B --> C[Set Regional Tax Rates]
+    C --> D[Customer Order Placed]
+    D --> E[Tax Rate Snapshot Created]
+    E --> F[Tax Calculated]
+    F --> G[Order Completed]
+    G --> H[Tax Records Preserved]
 ```
 
-#### **Authority & Invitation Workflows**
-```mermaid
-graph TD
-    A[Email Invitation] --> B{Invitation Type}
-    B -->|Customer| C[orgMemberInvitation]
-    B -->|Staff| D[orgEmployeeInvitation]
-    C --> E[Direct Member Creation]
-    E --> F[Customer Activities]
-    D --> G[Employee Approval Required]
-    G --> H{Approval Decision}
-    H -->|Approved| I[Employee Created]
-    H -->|Rejected| J[Invitation Declined]
-    I --> K[Professional Activities + Administrative Authority]
-    F --> L[Can be Promoted to Employee]
-    L --> D
-```
+## **🎯 Key Architecture Benefits**
 
-#### **Budget Authority Hierarchy**
-```mermaid
-graph TD
-    A[Organization Budget] --> B[Department A - $50K Authority]
-    A --> C[Department B - $30K Authority]
-    B --> D[Sub-Department A1 - $20K Authority]
-    B --> E[Sub-Department A2 - $25K Authority]
-    C --> F[Team X - Cross-Departmental]
-    F --> G[Uses Team Lead's Primary Department Budget]
-    D --> H[Employee Spending - Inherits Department Authority]
-    E --> I[Employee Spending - Inherits Department Authority]
-```
+### **1. Clean Authority Separation**
+- **Members**: Customer activities (purchase, learn, gift card usage)
+- **Employees**: Administrative activities (create content, manage tax, issue gift cards)
+- **Dual Roles**: Users can be both with clearly separated permissions
 
-## **🎯 Key Architectural Benefits**
-
-### **1. Clean Business Logic Separation**
-- **Members** handle customer activities (purchases, learning, gift card usage)
-- **Employees** handle professional activities (creation, attribution) AND administrative duties (tax management, approvals)
-- **Same user** can be both member AND employee with clear authority separation
-
-### **2. Professional Context Integration**
-- **Employees** optionally link to **job profiles** for professional identity and cross-organizational reputation
-- **Cross-organizational reputation** through job profiles enables marketplace features
-- **Clear attribution path**: Product → Employee → Job Profile → Cross-Org Professional Context
-
-### **3. CTI Financial Performance**
-- **O(log n) indexed query performance** regardless of user's role complexity across organizations
-- **Multi-context access** to same financial data from different business perspectives
-- **Marketplace-scale performance** for complex creator economy scenarios with proper indexing
-
-### **4. Revenue Attribution Clarity**
-- **Post-platform-fee attribution** ensures accurate creator compensation
-- **Independent product attribution** allows flexible revenue sharing per product
+### **2. Professional Attribution System**
+- **Post-platform-fee calculations** ensure accurate creator compensation
+- **Optional job profile integration** enables cross-organizational reputation
+- **Flexible attribution percentages** per product per employee
 - **Complete audit trail** from gross revenue to final creator payment
 
-### **5. Scalable Authority Management**
-- **Member invitations** for customer onboarding (simple workflow)
-- **Employee invitations** for staff recruitment with approval requirements
-- **Budget authority hierarchy** with clear inheritance rules
-- **Administrative vs customer permission separation**
+### **3. Sophisticated Constraint Management**
+- **Automated FK helpers** ensure consistency across schema
+- **Deterministic naming** with PostgreSQL 63-character compliance
+- **Multi-index utilities** simplify complex relationship definitions
+- **Constraint registry** for debugging and maintenance
 
-### **6. Organizational Structure Clarity**
-- **Department/Team membership** at employee level (work structure with budget authority)
-- **Learning groups/cohorts** at member level (community structure)
-- **Clear separation** of professional vs. learning organization
+### **4. Multi-Tenant Foundation**
+- **Complete data isolation** via `orgId` scoping
+- **Scalable architecture** supports unlimited organizations
+- **Professional identity spanning** multiple organizations via job profiles
+- **Cross-organizational reputation** tracking for marketplace features
 
-## **🚀 Migration from Current Schema**
+### **5. Comprehensive Financial System**
+- **Double-entry accounting** principles for accuracy
+- **Multi-currency support** for global operations
+- **Tax compliance** with historical rate preservation
+- **Revenue attribution** with platform fee handling
 
-### **Critical Changes Required**
+## **🚀 Development Quick Start**
 
-#### **Revenue Attribution Migration**
+### **Understanding the Schema Architecture**
+
+1. **Identity Hierarchy**
+   ```javascript
+   user → userProfile (main) → orgMember → customer activities
+   user → userProfile (job) → userJobProfile → orgEmployee → professional activities
+   ```
+
+2. **Authority Patterns**
+   ```javascript
+   // Customer activities (any member)
+   orgMemberOrder → customer purchases
+   orgMemberGiftCardUsage → gift card usage
+   
+   // Administrative activities (employees only)
+   orgGiftCard.issuedByEmployeeId → gift card issuance
+   orgTaxRateSnapshot.byEmployeeId → tax management
+   orgEmployeeProductAttribution → revenue attribution
+   ```
+
+3. **Foreign Key Patterns**
+   ```javascript
+   // Use FK helpers for consistency
+   orgId: orgIdFkCol().notNull(),
+   // Apply FK constraints via extraConfig
+   ...orgIdExtraConfig({ tName: tableName, cols }),
+   ```
+
+4. **Revenue Attribution Logic**
+   ```javascript
+   Customer Payment → Platform Fee → Net Revenue → Employee Attribution → Creator Compensation
+   ```
+
+### **Common Development Patterns**
+
 ```javascript
-// ❌ OLD: Generic member attribution
-orgMemberProductAttribution → orgEmployeeProductAttribution
-orgMemberProductAttributionRevenue → orgEmployeeProductAttributionRevenue
-
-// ✅ NEW: Employee-based professional attribution with job profile integration
-// Links products to employees (who have optional job profiles)
-// Clear separation: customers vs. creators
-// Attribution calculated on post-platform-fee revenue
+// Table definition with FK helpers
+export const orgProduct = table("org_product", {
+  id: textCols.idPk(),
+  orgId: orgIdFkCol().notNull(),
+  seoMetadataId: seoMetadataIdFkCol().notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  // ... other columns
+}, (cols) => [
+  // Apply FK constraints and indexes
+  ...orgIdExtraConfig({ tName: "org_product", cols }),
+  ...seoMetadataIdExtraConfig({ tName: "org_product", cols }),
+  
+  // Add custom constraints
+  uniqueIndex({ tName: "org_product", cols: [cols.orgId, cols.slug] }),
+  
+  // Add multiple indexes efficiently
+  ...multiIndexes({
+    tName: "org_product",
+    colsGrps: [
+      { cols: [cols.status] },
+      { cols: [cols.type] },
+      { cols: [cols.createdAt] },
+    ],
+  }),
+]);
 ```
 
-#### **Financial Operations Migration**
-```javascript
-// ❌ OLD: Member-level financial operations
-orgTaxRateSnapshot.byMemberId → byEmployeeId
-orgAccountingTransaction.postedByMemberId → postedByEmployeeId
+### **Key Development Guidelines**
 
-// ✅ NEW: Employee-level professional operations
-// Only staff should manage tax rates and post transactions
-// Members retain customer financial activities (orders, gift cards)
-```
+1. **Always use FK helpers** for foreign key columns and constraints
+2. **Apply extraConfig** for every foreign key relationship
+3. **Use multiIndexes** for multiple single-column indexes
+4. **Follow authority separation** between member and employee activities
+5. **Calculate revenue attribution** on post-platform-fee amounts
+6. **Preserve audit trails** with proper timestamp and employee attribution
+7. **Ensure constraint names** stay under PostgreSQL's 63-character limit
 
-#### **CTI Financial System Migration**
-```javascript
-// NEW: Multi-context transaction access system
-accountTransaction → Enhanced with businessEntityType/businessEntityId
-accountTransactionContext → Base context metadata
-accountTransactionUserContext → Cross-org user access (O(log n))
-accountTransactionEmployeeContext → Professional creator access (O(log n))
-accountTransactionMemberContext → Customer purchase access (O(log n))
-accountTransactionOrgContext → Administrative oversight access (O(log n))
+## **📈 Future Extensibility**
 
-// PERFORMANCE: O(log n) indexed user transaction queries vs complex polymorphic queries
-// SCALABILITY: Supports marketplace-scale user activity across multiple organizations
-```
+### **Marketplace Evolution**
+The architecture supports scaling into a comprehensive marketplace:
+- **Cross-organizational job profiles** enable freelance and contract work
+- **Professional reputation tracking** follows creators across organizations
+- **Flexible revenue attribution** supports complex creator partnerships
+- **Sophisticated tax management** handles multi-jurisdictional compliance
 
-#### **Organizational Structure Migration**
-```javascript
-// ❌ OLD: Generic member structure
-orgDepartmentMembership.memberId → orgEmployeeDepartmentMembership.employeeId
-orgTeamMembership.memberId → orgEmployeeTeamMembership.employeeId
+### **Enterprise Features**
+Built for enterprise-scale deployment:
+- **Department and team structures** with budget authority hierarchy
+- **Approval workflows** for employee onboarding and content management
+- **Financial compliance** with double-entry accounting and audit trails
+- **Multi-currency operations** for global business requirements
 
-// ✅ NEW: Employee-level professional structure with budget authority
-// Departments and teams are work organization for staff with clear hierarchy
-// Budget authority inheritance from department to employee level
-```
+### **Creator Economy Platform**
+Designed for the modern creator economy:
+- **Multiple revenue streams** (courses, consulting, digital products)
+- **Professional attribution** with cross-organizational tracking
+- **Sophisticated payment plans** (one-time, subscription, usage-based)
+- **Gift card system** for customer acquisition and retention
 
-#### **Administrative Operations Migration**
-```javascript
-// ❌ OLD: Generic member operations
-orgMemberInvitation.approvedByMemberId → approvedByEmployeeId (but members self-approve)
-orgProductRevenuePool.lastAllocationBy → lastAllocationByEmployeeId
-
-// ✅ NEW: Employee-level administrative duties
-// Only staff should manage revenue allocation and approve employee invitations
-// Members handle customer invitations through direct acceptance
-```
-
-### **Implementation Priority**
-1. **Revenue Attribution** (Critical) - Fix core business logic with post-fee calculation
-2. **CTI Financial System** (Critical) - Enable marketplace-scale performance with indexed queries
-3. **Financial Operations** (Critical) - Ensure compliance with proper authority separation
-4. **Organizational Structure** (High) - Professional hierarchy with budget authority rules
-5. **Administrative Operations** (Medium) - Staff workflow clarity with approval chains
-6. **Invitation Systems** (Medium) - Proper onboarding separation (or future CTI unification)
-
-## **🎯 Developer Quick Start**
-
-### **Understanding the Updated Architecture**
-1. **Member vs Employee Distinction**: Members are customers/learners, employees are staff/creators with administrative authority
-2. **Professional Attribution**: Revenue flows to employees (with optional job profiles) based on post-platform-fee calculations
-3. **CTI Financial System**: Multi-context access with O(log n) indexed performance for any entity type
-4. **Authority Separation**: Clear separation between customer activities and administrative operations
-5. **Budget Hierarchy**: Department-based budget authority with clear inheritance rules
-6. **Gift Card Logic**: Employees can issue, members (including employees) can use
-7. **Organizational Structure**: Departments/teams for employees with budget authority, learning groups for members
-
-### **Key Development Patterns**
-```javascript
-// Customer Activities (Member-level)
-orgMemberOrder → Customer purchases (members including employees as customers)
-orgMemberProductCourseEnrollment → Learning participation
-orgMemberLearningProfile → Learning analytics
-orgMemberGiftCardUsage → Gift card usage (any member)
-accountTransactionMemberContext → Customer financial view (O(log n))
-
-// Professional Activities (Employee-level)
-orgEmployeeProductAttribution → Content creation with post-fee revenue attribution
-orgEmployeeProductAttributionRevenue → Creator compensation (net of platform fees)
-orgEmployeeDepartmentMembership → Work organization with budget authority inheritance
-orgEmployeeInvitation → Staff recruitment (requires approval)
-orgGiftCard.issuedByEmployeeId → Administrative authority to issue gift cards
-orgTaxRateSnapshot.byEmployeeId → Administrative tax management
-accountTransactionEmployeeContext → Professional financial view (O(log n))
-
-// Cross-Organizational User View
-accountTransactionUserContext → All transactions across organizations (O(log n) indexed)
-
-// Financial Operations (CTI Multi-Context)
-accountTransaction → Double-entry transaction header
-accountTransactionLine → Accounting debits/credits
-accountTransactionUserContext → Cross-org user financial view
-accountTransactionEmployeeContext → Professional creator earnings (post-fees)
-accountTransactionMemberContext → Customer purchase history
-accountTransactionOrgContext → Administrative financial oversight
-
-// Performance-Optimized Queries (O(log n) with proper indexing)
-getUserTransactionsCTI(userId) → Indexed lookup across all organizations
-getEmployeeTransactionsCTI(employeeId) → Direct professional earnings access
-getMemberTransactionsCTI(memberId) → Customer transaction history
-getOrgTransactionsCTI(orgId) → Administrative financial oversight
-
-// Revenue Attribution Flow (Post Platform Fees)
-Customer Payment → Platform Fee Deduction → Net Revenue → 
-Employee Attribution → Job Profile Context → Revenue Distribution →
-CTI Context Creation → Multi-perspective Financial Access
-
-// Authority & Budget Flow
-Organization Budget → Department Budget Authority → Employee Spending Authority →
-Transaction Validation → CTI Context Creation → Audit Trail
-```
-
-### **Business Logic Validation Examples**
-```javascript
-// Revenue Attribution Validation
-function validateProductAttribution(productId) {
-  const attributions = getEmployeeAttributions(productId);
-  const totalPercentage = attributions.reduce((sum, attr) => sum + attr.percentage, 0);
-  return totalPercentage === 100; // Must sum to exactly 100%
-}
-
-// Budget Authority Validation  
-function validateEmployeeExpense(employeeId, amount) {
-  const department = getEmployeePrimaryDepartment(employeeId);
-  const budgetAuthority = calculateInheritedBudgetAuthority(department);
-  return amount <= budgetAuthority.remaining;
-}
-
-// CTI Context Creation
-function createTransactionWithContexts(transactionData, contextConfig) {
-  // 1. Create main transaction with business entity reference
-  // 2. Create double-entry accounting lines
-  // 3. Create appropriate CTI contexts based on business logic
-  // 4. Ensure O(log n) query performance with proper indexing
-}
-```
-
-This architecture transforms Volmify from a generic LMS to a professional creator economy platform with clear customer/creator separation, cross-organizational professional identity, sophisticated employee management capabilities with budget authority hierarchy, and marketplace-scale financial performance through the CTI system with proper indexing that aligns perfectly with your platform vision.
-
-The system now properly handles the authority separation where employees have administrative capabilities while retaining member privileges for customer activities, enables post-platform-fee revenue attribution for accurate creator compensation, and provides a scalable foundation for marketplace features through job profile integration and cross-organizational professional reputation tracking.
+This schema architecture transforms Volmify from a basic LMS into a comprehensive creator economy platform with enterprise-grade financial management, sophisticated revenue attribution, and scalable multi-tenant architecture that can grow from individual creators to large marketplace operations.

@@ -94,23 +94,25 @@ export const orgProductCourse = table(
 		// And the pricing model will be in a CTI many-to-many relationship with the `product` table
 		// As it can be subscription, one-time purchase, or free
 	},
-	(t) => [
-		index(`idx_${orgProductCourseTableName}_product`).on(t.productId),
-		index(`idx_${orgProductCourseTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductCourseTableName}_level`).on(t.level),
-		index(`idx_${orgProductCourseTableName}_difficulty`).on(t.difficulty),
-		index(`idx_${orgProductCourseTableName}_duration`).on(t.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseTableName}_level_rating_total`).on(t.userLevelRatingTotal),
-		index(`idx_${orgProductCourseTableName}_level_rating_count`).on(t.userLevelRatingCount),
-		index(`idx_${orgProductCourseTableName}_level_rating_avg`).on(t.userLevelRatingAvg),
+	(cols) => [
+		index(`idx_${orgProductCourseTableName}_product`).on(cols.productId),
+		index(`idx_${orgProductCourseTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgProductCourseTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		index(`idx_${orgProductCourseTableName}_level`).on(cols.level),
+		index(`idx_${orgProductCourseTableName}_difficulty`).on(cols.difficulty),
+		index(`idx_${orgProductCourseTableName}_duration`).on(cols.estimatedDurationInMinutes),
+		index(`idx_${orgProductCourseTableName}_level_rating_total`).on(cols.userLevelRatingTotal),
+		index(`idx_${orgProductCourseTableName}_level_rating_count`).on(cols.userLevelRatingCount),
+		index(`idx_${orgProductCourseTableName}_level_rating_avg`).on(cols.userLevelRatingAvg),
 		index(`idx_${orgProductCourseTableName}_difficulty_rating_total`).on(
-			t.userDifficultyRatingTotal,
+			cols.userDifficultyRatingTotal,
 		),
 		index(`idx_${orgProductCourseTableName}_difficulty_rating_count`).on(
-			t.userDifficultyRatingCount,
+			cols.userDifficultyRatingCount,
 		),
-		index(`idx_${orgProductCourseTableName}_difficulty_rating_avg`).on(t.userDifficultyRatingAvg),
+		index(`idx_${orgProductCourseTableName}_difficulty_rating_avg`).on(
+			cols.userDifficultyRatingAvg,
+		),
 	],
 );
 
@@ -178,19 +180,19 @@ export const orgProductCourseSkill = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(t.courseId, t.skillId),
-		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(t.isLearningOutcome),
-		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(t.proficiencyLevel),
-		index(`idx_${orgProductCourseSkillTableName}_weight`).on(t.weight),
-		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(t.skillId),
-		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(cols.courseId, cols.skillId),
+		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(cols.isLearningOutcome),
+		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(cols.proficiencyLevel),
+		index(`idx_${orgProductCourseSkillTableName}_weight`).on(cols.weight),
+		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(cols.courseId),
+		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(cols.skillId),
+		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(cols.deletedAt),
 		check(
 			`ck_${orgProductCourseSkillTableName}_weight_range`,
-			sql`${t.weight} >= 1 AND ${t.weight} <= 10`,
+			sql`${cols.weight} >= 1 AND ${cols.weight} <= 10`,
 		),
 	],
 );
@@ -242,42 +244,42 @@ export const orgMemberProductCourseChallengeRating = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
+	(cols) => [
 		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
-			t.courseId,
-			t.memberId,
+			cols.courseId,
+			cols.memberId,
 		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(t.memberId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(cols.courseId),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(cols.memberId),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_total`).on(
-			t.levelRatingTotal,
+			cols.levelRatingTotal,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_count`).on(
-			t.levelRatingCount,
+			cols.levelRatingCount,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_avg`).on(
-			t.levelRatingAvg,
+			cols.levelRatingAvg,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_total`).on(
-			t.difficultyRatingTotal,
+			cols.difficultyRatingTotal,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_count`).on(
-			t.difficultyRatingCount,
+			cols.difficultyRatingCount,
 		),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_avg`).on(
-			t.difficultyRatingAvg,
+			cols.difficultyRatingAvg,
 		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(cols.createdAt),
 		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
+			cols.lastUpdatedAt,
 		),
 		// check(
 		// 	`ck_${orgMemberProductCourseChallengeRatingTableName}_level_rating_range`,
-		// 	sql`${t.levelRatingTotal} >= 1 AND ${t.levelRatingTotal} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		// 	sql`${cols.levelRatingTotal} >= 1 AND ${cols.levelRatingTotal} <= 10 AND ${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10`,
 		// ),
 		// check(
 		// 	`ck_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_range`,
-		// 	sql`${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10 AND ${t.difficultyRating} >= 1 AND ${t.difficultyRating} <= 10`,
+		// 	sql`${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10 AND ${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10`,
 		// ),
 	],
 );
@@ -352,19 +354,19 @@ export const orgProductCourseModule = table(
 		//  // Section settings
 		//  settings: jsonb("settings"),
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(t.courseId, t.sortOrder),
-		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(t.requiredAccessTier),
-		index(`idx_${orgProductCourseModuleTableName}_required`).on(t.isRequired),
-		index(`idx_${orgProductCourseModuleTableName}_duration`).on(t.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(t.lastUpdatedAt),
+	(cols) => [
+		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(cols.courseId, cols.sortOrder),
+		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(cols.courseId),
+		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(cols.requiredAccessTier),
+		index(`idx_${orgProductCourseModuleTableName}_required`).on(cols.isRequired),
+		index(`idx_${orgProductCourseModuleTableName}_duration`).on(cols.estimatedDurationInMinutes),
+		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 		check(
 			`ck_${orgProductCourseModuleTableName}_required_access_tier_range`,
-			sql`${t.requiredAccessTier} >= 0`,
+			sql`${cols.requiredAccessTier} >= 0`,
 		),
-		check(`ck_${orgProductCourseModuleTableName}_sort_order_range`, sql`${t.sortOrder} >= 0`),
+		check(`ck_${orgProductCourseModuleTableName}_sort_order_range`, sql`${cols.sortOrder} >= 0`),
 	],
 );
 
@@ -380,7 +382,7 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModu
 	},
 	{
 		fkKey: "moduleId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
 	},
 );
 
@@ -429,28 +431,28 @@ export const orgProductCourseModuleSection = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
+	(cols) => [
 		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
-			t.moduleId,
-			t.sortOrder,
+			cols.moduleId,
+			cols.sortOrder,
 		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(t.moduleId),
+		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(cols.moduleId),
 		index(`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`).on(
-			t.requiredAccessTier,
+			cols.requiredAccessTier,
 		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(t.isRequired),
+		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(cols.isRequired),
 		index(`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`).on(
-			t.estimatedDurationInMinutes,
+			cols.estimatedDurationInMinutes,
 		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 		check(
 			`ck_${orgProductCourseModuleSectionTableName}_required_access_tier_range`,
-			sql`${t.requiredAccessTier} >= 0`,
+			sql`${cols.requiredAccessTier} >= 0`,
 		),
 		check(
 			`ck_${orgProductCourseModuleSectionTableName}_sort_order_range`,
-			sql`${t.sortOrder} >= 0`,
+			sql`${cols.sortOrder} >= 0`,
 		),
 	],
 );
@@ -469,9 +471,9 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	},
 	{
 		fkKey: "sectionId",
-		extraConfig: (t, tName) => [
-			index(`idx_${tName}_title`).on(t.title),
-			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
+		extraConfig: (cols, tName) => [
+			index(`idx_${tName}_title`).on(cols.title),
+			index(`idx_${tName}_seo_metadata_id`).on(cols.seoMetadataId),
 		],
 	},
 );
@@ -540,28 +542,31 @@ export const orgProductCourseModuleSectionLesson = table(
 		//  // Lesson settings (type-specific configurations)
 		//  settings
 	},
-	(t) => [
+	(cols) => [
 		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}_sort`).on(
-			t.sectionId,
-			t.sortOrder,
+			cols.sectionId,
+			cols.sortOrder,
 		),
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(t.sectionId, t.lessonId),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(t.sectionId),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(t.lessonId),
+		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(
+			cols.sectionId,
+			cols.lessonId,
+		),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(cols.sectionId),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(cols.lessonId),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_access_tier`).on(
-			t.requiredAccessTier,
+			cols.requiredAccessTier,
 		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(t.createdAt),
+		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(cols.createdAt),
 		index(`idx_${orgProductCourseModuleSectionLessonTableName}_last_updated_at`).on(
-			t.lastUpdatedAt,
+			cols.lastUpdatedAt,
 		),
 		check(
 			`ck_${orgProductCourseModuleSectionLessonTableName}_required_access_tier_range`,
-			sql`${t.requiredAccessTier} >= 0`,
+			sql`${cols.requiredAccessTier} >= 0`,
 		),
 		check(
 			`ck_${orgProductCourseModuleSectionLessonTableName}_sort_order_range`,
-			sql`${t.sortOrder} >= 0`,
+			sql`${cols.sortOrder} >= 0`,
 		),
 	],
 );
@@ -582,9 +587,9 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	},
 	{
 		fkKey: "lessonId",
-		extraConfig: (t, tName) => [
-			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
-			index(`idx_${tName}_title`).on(t.title),
+		extraConfig: (cols, tName) => [
+			index(`idx_${tName}_seo_metadata_id`).on(cols.seoMetadataId),
+			index(`idx_${tName}_title`).on(cols.title),
 		],
 	},
 );
@@ -643,19 +648,23 @@ export const orgMemberProductCourseEnrollment = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.memberId, t.courseId] }),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(t.memberId),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(t.courseId),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(t.status),
+	(cols) => [
+		primaryKey({ columns: [cols.memberId, cols.courseId] }),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(cols.memberId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(cols.courseId),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(cols.status),
 		index(`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`).on(
-			t.progressPercentage,
+			cols.progressPercentage,
 		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(t.completedAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(t.enrolledAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(t.lastAccessedAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(cols.completedAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(cols.enrolledAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(
+			cols.lastAccessedAt,
+		),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`).on(
+			cols.lastUpdatedAt,
+		),
 	],
 );
 
@@ -696,21 +705,21 @@ export const orgMemberLearningProfile = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(t.memberId),
+	(cols) => [
+		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(cols.memberId),
 
 		index(`idx_${orgMemberLearningProfileTableName}_total_courses_completed`).on(
-			t.totalCoursesCompleted,
+			cols.totalCoursesCompleted,
 		),
 		index(`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`).on(
-			t.totalLearningInMinutes,
+			cols.totalLearningInMinutes,
 		),
 		index(`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`).on(
-			t.totalCertificatesEarned,
+			cols.totalCertificatesEarned,
 		),
 
-		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 	],
 );
 

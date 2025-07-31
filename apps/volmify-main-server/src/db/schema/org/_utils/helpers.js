@@ -45,9 +45,9 @@ export const buildOrgI18nTable =
 				lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 				deletedAt: temporalCols.audit.deletedAt(),
 			},
-			(t) => [
+			(cols) => [
 				// TODO: Correct the `relations` `fields`
-				primaryKey({ columns: [t[options.fkKey], t.localeKey] }),
+				primaryKey({ columns: [cols[options.fkKey], cols.localeKey] }),
 				// uniqueIndex(`uq_${tName}_default`)
 				// 	.on(t[options.fkKey], t.isDefault)
 				// 	.where(eq(t.isDefault, true)),
@@ -56,13 +56,13 @@ export const buildOrgI18nTable =
 					indexAll: true,
 					fkGroups: [
 						{
-							cols: [t.localeKey],
+							cols: [cols.localeKey],
 							foreignColumns: [locale.key],
 							// afterBuild: (fk) => fk.onDelete("cascade"),
 						},
 					],
 				}),
-				uniqueIndex({ tName, cols: [t[options.fkKey], t.isDefault] }).where(eq(t.isDefault, true)),
+				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(eq(cols.isDefault, true)),
 				// index(shortenConstraintName(`idx_${tableName}_org_id`)).on(t.orgId),
 				// index(shortenConstraintName(`idx_${tableName}_${t[options.fkKey].name}`)).on(
 				// 	t[options.fkKey],
@@ -76,13 +76,13 @@ export const buildOrgI18nTable =
 					tName,
 					colsGrps: [
 						// { cols: [t[options.fkKey]] },
-						{ cols: [t.isDefault] },
-						{ cols: [t.createdAt] },
-						{ cols: [t.lastUpdatedAt] },
-						{ cols: [t.deletedAt] },
+						{ cols: [cols.isDefault] },
+						{ cols: [cols.createdAt] },
+						{ cols: [cols.lastUpdatedAt] },
+						{ cols: [cols.deletedAt] },
 					],
 				}),
-				...(options.extraConfig ? options.extraConfig(t, tName) : []),
+				...(options.extraConfig ? options.extraConfig(cols, tName) : []),
 			],
 		);
 	};

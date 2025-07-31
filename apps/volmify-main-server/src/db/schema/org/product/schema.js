@@ -260,7 +260,7 @@ export const orgProductI18n = buildOrgI18nTable(orgProductTableName)(
 	},
 	{
 		fkKey: "productId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_title`).on(t.title)],
+		extraConfig: (cols, tableName) => [index(`idx_${tableName}_title`).on(cols.title)],
 	},
 );
 
@@ -463,7 +463,7 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantTable)(
 	},
 	{
 		fkKey: "variantId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_title`).on(t.title)],
+		extraConfig: (cols, tableName) => [index(`idx_${tableName}_title`).on(cols.title)],
 	},
 );
 

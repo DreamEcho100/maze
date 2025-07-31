@@ -45,21 +45,23 @@ export const buildUserI18nTable =
 				lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 				deletedAt: temporalCols.audit.deletedAt(),
 			},
-			(t) => [
+			(cols) => [
 				// TODO: Correct the `relations` `fields`
-				primaryKey({ columns: [t[options.fkKey], t.localeKey] }),
+				primaryKey({ columns: [cols[options.fkKey], cols.localeKey] }),
 				...multiForeignKeys({
 					tName,
 					indexAll: true,
 					fkGroups: [
 						{
-							cols: [t.localeKey],
+							cols: [cols.localeKey],
 							foreignColumns: [locale.key],
 							// afterBuild: (fk) => fk.onDelete("cascade"),
 						},
 					],
 				}),
-				uniqueIndex({ tName, cols: [t[options.fkKey], t.isDefault] }).where(eq(t.isDefault, true)),
+				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
+					eq(cols.isDefault, true),
+				),
 				// index(shortenConstraintName(`idx_${tableName}_user_id`)).on(t.userId),
 				// index(shortenConstraintName(`idx_${tableName}_${t[options.fkKey].name}`)).on(
 				// 	t[options.fkKey],
@@ -69,13 +71,13 @@ export const buildUserI18nTable =
 					colsGrps: [
 						// { cols: [t[options.fkKey]] },
 						// { cols: [t.localeKey] },
-						{ cols: [t.isDefault] },
-						{ cols: [t.createdAt] },
-						{ cols: [t.lastUpdatedAt] },
-						{ cols: [t.deletedAt] },
+						{ cols: [cols.isDefault] },
+						{ cols: [cols.createdAt] },
+						{ cols: [cols.lastUpdatedAt] },
+						{ cols: [cols.deletedAt] },
 					],
 				}),
-				...(options.extraConfig ? options.extraConfig(t, tName) : []),
+				...(options.extraConfig ? options.extraConfig(cols, tName) : []),
 			],
 		);
 	};

@@ -212,7 +212,7 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentTableName)(
 	},
 	{
 		fkKey: "departmentId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_name`).on(t.name)],
+		extraConfig: (cols, tableName) => [index(`idx_${tableName}_name`).on(cols.name)],
 	},
 );
 

@@ -147,7 +147,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 	},
 	{
 		fkKey: "regionId",
-		extraConfig: (t, tName) => [
+		extraConfig: (cols, tName) => [
 			...seoMetadataIdExtraConfig({
 				tName,
 				cols,
@@ -156,7 +156,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 				tName,
 				fkGroups: [
 					{
-						cols: [t.regionId],
+						cols: [cols.regionId],
 						foreignColumns: [orgRegion.id],
 						afterBuild: (fk) => fk.onDelete("cascade"),
 					},
@@ -164,7 +164,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 			}),
 			...multiIndexes({
 				tName,
-				colsGrps: [{ cols: [t.name] }],
+				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],
 	},

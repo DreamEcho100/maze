@@ -76,14 +76,14 @@ export const orgDiscount = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgDiscountTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgDiscountTableName}_type`).on(t.type),
-		index(`idx_${orgDiscountTableName}_active`).on(t.isActive),
-		index(`idx_${orgDiscountTableName}_applies_to`).on(t.appliesTo),
-		index(`idx_${orgDiscountTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgDiscountTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
-		index(`idx_${orgDiscountTableName}_currency_code`).on(t.currencyCode),
+	(cols) => [
+		index(`idx_${orgDiscountTableName}_org_id`).on(cols.orgId),
+		index(`idx_${orgDiscountTableName}_type`).on(cols.type),
+		index(`idx_${orgDiscountTableName}_active`).on(cols.isActive),
+		index(`idx_${orgDiscountTableName}_applies_to`).on(cols.appliesTo),
+		index(`idx_${orgDiscountTableName}_dates`).on(cols.startsAt, cols.endsAt),
+		index(`idx_${orgDiscountTableName}_active_dates`).on(cols.isActive, cols.startsAt, cols.endsAt),
+		index(`idx_${orgDiscountTableName}_currency_code`).on(cols.currencyCode),
 	],
 );
 
@@ -107,7 +107,7 @@ export const orgDiscountI18n = buildOrgI18nTable(orgDiscountTableName)(
 	},
 	{
 		fkKey: "discountId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
 	},
 );
 
@@ -137,9 +137,9 @@ export const orgDiscountProduct = table(
 			.references(() => orgProduct.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.discountId, t.productId] }),
-		index(`idx_${orgDiscountProductTableName}_createdAt`).on(t.createdAt),
+	(cols) => [
+		primaryKey({ columns: [cols.discountId, cols.productId] }),
+		index(`idx_${orgDiscountProductTableName}_createdAt`).on(cols.createdAt),
 	],
 );
 
@@ -169,9 +169,9 @@ export const orgDiscountProductVariant = table(
 			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.discountId, t.variantId] }),
-		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(t.createdAt),
+	(cols) => [
+		primaryKey({ columns: [cols.discountId, cols.variantId] }),
+		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(cols.createdAt),
 	],
 );
 
@@ -204,9 +204,9 @@ export const orgDiscountProductCollection = table(
 			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.discountId, t.collectionId] }),
-		index(`idx_${orgDiscountCollectionTableName}_createdAt`).on(t.createdAt),
+	(cols) => [
+		primaryKey({ columns: [cols.discountId, cols.collectionId] }),
+		index(`idx_${orgDiscountCollectionTableName}_createdAt`).on(cols.createdAt),
 	],
 );
 
@@ -231,11 +231,11 @@ export const orgMemberOrderDiscountUsage = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(t.memberId, t.discountId),
-		index(`idx_${orgDiscountUsageTableName}_used_at`).on(t.usedAt),
-		index(`idx_${orgDiscountUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
+	(cols) => [
+		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(cols.memberId, cols.discountId),
+		index(`idx_${orgDiscountUsageTableName}_used_at`).on(cols.usedAt),
+		index(`idx_${orgDiscountUsageTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 	],
 );
 
@@ -267,16 +267,16 @@ export const orgCoupon = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(t.orgId, t.code),
-		index(`idx_${orgCouponTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgCouponTableName}_discount_id`).on(t.discountId),
-		index(`idx_${orgCouponTableName}_active`).on(t.isActive),
-		index(`idx_${orgCouponTableName}_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgCouponTableName}_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
-		index(`idx_${orgCouponTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgCouponTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgCouponTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(cols.orgId, cols.code),
+		index(`idx_${orgCouponTableName}_org_id`).on(cols.orgId),
+		index(`idx_${orgCouponTableName}_discount_id`).on(cols.discountId),
+		index(`idx_${orgCouponTableName}_active`).on(cols.isActive),
+		index(`idx_${orgCouponTableName}_dates`).on(cols.startsAt, cols.endsAt),
+		index(`idx_${orgCouponTableName}_active_dates`).on(cols.isActive, cols.startsAt, cols.endsAt),
+		index(`idx_${orgCouponTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgCouponTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		index(`idx_${orgCouponTableName}_deleted_at`).on(cols.deletedAt),
 	],
 );
 
@@ -299,7 +299,7 @@ export const orgCouponI18n = buildOrgI18nTable(orgCouponTableName)(
 	},
 	{
 		fkKey: "couponId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
 	},
 );
 
@@ -333,19 +333,19 @@ export const orgGiftCard = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(t.orgId, t.code),
-		index(`idx_${orgGiftCardTableName}_org`).on(t.orgId),
-		index(`idx_${orgGiftCardTableName}_currency`).on(t.currencyCode),
-		index(`idx_${orgGiftCardTableName}_member_id`).on(t.issuedByEmployeeId),
-		index(`idx_${orgGiftCardTableName}_email`).on(t.issuedToEmail),
-		index(`idx_${orgGiftCardTableName}_active`).on(t.isActive),
-		index(`idx_${orgGiftCardTableName}_expires`).on(t.expiresAt),
-		index(`idx_${orgGiftCardTableName}_balance`).on(t.remainingBalance),
-		index(`idx_${orgGiftCardTableName}_issued_at`).on(t.issuedAt),
-		index(`idx_${orgGiftCardTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgGiftCardTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgGiftCardTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(cols.orgId, cols.code),
+		index(`idx_${orgGiftCardTableName}_org`).on(cols.orgId),
+		index(`idx_${orgGiftCardTableName}_currency`).on(cols.currencyCode),
+		index(`idx_${orgGiftCardTableName}_member_id`).on(cols.issuedByEmployeeId),
+		index(`idx_${orgGiftCardTableName}_email`).on(cols.issuedToEmail),
+		index(`idx_${orgGiftCardTableName}_active`).on(cols.isActive),
+		index(`idx_${orgGiftCardTableName}_expires`).on(cols.expiresAt),
+		index(`idx_${orgGiftCardTableName}_balance`).on(cols.remainingBalance),
+		index(`idx_${orgGiftCardTableName}_issued_at`).on(cols.issuedAt),
+		index(`idx_${orgGiftCardTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgGiftCardTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		index(`idx_${orgGiftCardTableName}_deleted_at`).on(cols.deletedAt),
 	],
 );
 
@@ -365,7 +365,7 @@ export const orgGiftCardI18n = buildOrgI18nTable(orgGiftCardTableName)(
 	},
 	{
 		fkKey: "giftCardId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
 	},
 );
 
@@ -389,12 +389,12 @@ export const orgMemberGiftCardUsage = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(t.memberId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(t.giftCardId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(t.usedAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(t.lastUpdatedAt),
+	(cols) => [
+		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(cols.memberId),
+		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(cols.giftCardId),
+		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(cols.usedAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(cols.lastUpdatedAt),
 	],
 );
 
@@ -419,15 +419,19 @@ export const orgPromotion = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(t.orgId, t.slug),
-		index(`idx_${orgPromotionTableName}n_org`).on(t.orgId),
-		index(`idx_${orgPromotionTableName}n_active`).on(t.isActive),
-		index(`idx_${orgPromotionTableName}n_dates`).on(t.startsAt, t.endsAt),
-		index(`idx_${orgPromotionTableName}n_active_dates`).on(t.isActive, t.startsAt, t.endsAt),
-		index(`idx_${orgPromotionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgPromotionTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgPromotionTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(cols.orgId, cols.slug),
+		index(`idx_${orgPromotionTableName}n_org`).on(cols.orgId),
+		index(`idx_${orgPromotionTableName}n_active`).on(cols.isActive),
+		index(`idx_${orgPromotionTableName}n_dates`).on(cols.startsAt, cols.endsAt),
+		index(`idx_${orgPromotionTableName}n_active_dates`).on(
+			cols.isActive,
+			cols.startsAt,
+			cols.endsAt,
+		),
+		index(`idx_${orgPromotionTableName}_created_at`).on(cols.createdAt),
+		index(`idx_${orgPromotionTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		index(`idx_${orgPromotionTableName}_deleted_at`).on(cols.deletedAt),
 	],
 );
 
@@ -446,7 +450,7 @@ export const orgPromotionI18n = buildOrgI18nTable(orgPromotionTableName)(
 	},
 	{
 		fkKey: "promotionId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
 	},
 );
 
@@ -469,8 +473,8 @@ export const orgPromotionDiscount = table(
 			.references(() => orgDiscount.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.promotionId, t.discountId] }),
-		index(`idx_${orgPromotionDiscountTableName}_createdAt`).on(t.createdAt),
+	(cols) => [
+		primaryKey({ columns: [cols.promotionId, cols.discountId] }),
+		index(`idx_${orgPromotionDiscountTableName}_createdAt`).on(cols.createdAt),
 	],
 );

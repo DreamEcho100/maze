@@ -69,7 +69,7 @@ export const orgTeamI18n = buildOrgI18nTable(orgTeamTableName)(
 	},
 	{
 		fkKey: "teamId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_name`).on(t.name)],
+		extraConfig: (cols, tableName) => [index(`idx_${tableName}_name`).on(cols.name)],
 	},
 );
 
