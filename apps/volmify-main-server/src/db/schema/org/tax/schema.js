@@ -1,9 +1,24 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
-import { currencyCodeFkCol } from "#db/schema/general/locale-and-currency/schema.js";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { boolean, check, integer, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import {
+	currencyCodeExtraConfig,
+	currencyCodeFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
@@ -22,13 +37,18 @@ export const orgTaxCategory = table(
 		id: textCols.id().notNull(),
 		code: textCols.code().notNull(),
 	},
-	(t) => [index(`idx_${orgTaxCategoryTableName}_code`).on(t.code)],
+	(cols) => [
+		...multiIndexes({
+			tName: orgTaxCategoryTableName,
+			colsGrps: [{ cols: [cols.code] }],
+		}),
+	],
 );
 export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 	{
 		categoryId: textCols
 			.idFk("category_id")
-			.references(() => orgTaxCategory.id)
+			// .references(() => orgTaxCategory.id)
 			.notNull(),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 
@@ -37,7 +57,26 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 	},
 	{
 		fkKey: "categoryId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_name`).on(t.name)],
+		extraConfig: (cols, tableName) => [
+			// index(`idx_${tableName}_name`).on(cols.name)
+			...multiForeignKeys({
+				tName: tableName,
+				fkGroups: [
+					{
+						cols: [cols.categoryId],
+						foreignColumns: [orgTaxCategory.id],
+					},
+				],
+			}),
+			...seoMetadataIdExtraConfig({
+				tName: tableName,
+				cols,
+			}),
+			...multiIndexes({
+				tName: tableName,
+				colsGrps: [{ cols: [cols.name] }],
+			}),
+		],
 	},
 );
 
@@ -72,7 +111,7 @@ export const orgTaxRate = table(
 		// So we can have rates that apply to multiple regions
 		regionId: textCols
 			.idFk("region_id")
-			.references(() => orgRegion.id)
+			// .references(() => orgRegion.id)
 			.notNull(),
 		// Add a flag to indicate if it needs to be applied to an orgRegion
 		isRegionScoped: boolean("is_region_scoped").default(true).notNull(),
@@ -119,10 +158,28 @@ export const orgTaxRate = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
-		index(`idx_${orgTaxRateTableName}_region`).on(t.regionId),
-		index(`idx_${orgTaxRateTableName}_code`).on(t.code),
-		index(`idx_${orgTaxRateTableName}_type`).on(t.type),
-		index(`idx_${orgTaxRateTableName}_currency`).on(t.currencyCode),
+		...orgIdExtraConfig({
+			tName: orgTaxRateTableName,
+			cols: t,
+		}),
+		...currencyCodeExtraConfig({
+			tName: orgTaxRateTableName,
+			cols: t,
+		}),
+		...multiForeignKeys({
+			tName: orgTaxRateTableName,
+			fkGroups: [
+				{
+					cols: [t.regionId],
+					foreignColumns: [orgRegion.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgTaxRateTableName,
+			colsGrps: [{ cols: [t.code] }, { cols: [t.type] }],
+		}),
 		// index(`idx_${orgTaxRateTableName}_priority`).on(t.priority),
 		// index(`idx_${orgTaxRateTableName}_starts_at`).on(t.startsAt),
 		// index(`idx_${orgTaxRateTableName}_ends_at`).on(t.endsAt),
@@ -155,7 +212,7 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 	{
 		rateId: textCols
 			.idFk("rate_id")
-			.references(() => orgTaxRate.id)
+			// .references(() => orgTaxRate.id)
 			.notNull(),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 
@@ -164,7 +221,26 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 	},
 	{
 		fkKey: "rateId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_name`).on(t.name)],
+		extraConfig: (cols, tableName) => [
+			...multiForeignKeys({
+				tName: tableName,
+				fkGroups: [
+					{
+						cols: [cols.rateId],
+						foreignColumns: [orgTaxRate.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...seoMetadataIdExtraConfig({
+				tName: tableName,
+				cols,
+			}),
+			...multiIndexes({
+				tName: tableName,
+				colsGrps: [{ cols: [cols.name] }],
+			}),
+		],
 	},
 );
 
@@ -182,7 +258,7 @@ export const orgTaxRateSnapshot = table(
 		modificationVersion: integer("modification_version").notNull().default(1),
 		rateId: textCols
 			.idFk("rate_id")
-			.references(() => orgTaxRate.id)
+			// .references(() => orgTaxRate.id)
 			.notNull(),
 
 		/**
@@ -200,14 +276,32 @@ export const orgTaxRateSnapshot = table(
 
 		// Metadata
 		createdAt: temporalCols.audit.createdAt().notNull(),
-		byEmployeeId: orgEmployeeIdFkCol("by_employee_id").notNull(),
+		byEmployeeId: orgEmployeeIdFkCol({ name: "by_employee_id" }).notNull(),
 	},
 	(t) => [
-		uniqueIndex(
-			`uq_${orgTaxRateSnapshotTableName}_rate_id_system_changes_version_modification_version`,
-		).on(t.rateId, t.systemChangesVersion, t.modificationVersion),
-		index(`idx_${orgTaxRateSnapshotTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgTaxRateSnapshotTableName}_rate_id`).on(t.rateId),
+		...orgEmployeeIdExtraConfig({
+			tName: orgTaxRateSnapshotTableName,
+			cols: t,
+			colFkKey: "byEmployeeId",
+		}),
+		...multiForeignKeys({
+			tName: orgTaxRateSnapshotTableName,
+			fkGroups: [
+				{
+					cols: [t.rateId],
+					foreignColumns: [orgTaxRate.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgTaxRateSnapshotTableName,
+			cols: [t.rateId, t.systemChangesVersion, t.modificationVersion],
+		}),
+		...multiIndexes({
+			tName: orgTaxRateSnapshotTableName,
+			colsGrps: [{ cols: [t.createdAt] }],
+		}),
 	],
 );
 
@@ -230,7 +324,15 @@ export const orgTaxRateTaxCategory = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgTaxRateTaxCategoryTableName}_category_id_rate`).on(t.rateId, t.categoryId),
-		index(`idx_${orgTaxRateTaxCategoryTableName}_created_at`).on(t.createdAt),
+		// uniqueIndex(`uq_${orgTaxRateTaxCategoryTableName}_category_id_rate`).on(t.rateId, t.categoryId),
+		// index(`idx_${orgTaxRateTaxCategoryTableName}_created_at`).on(t.createdAt),
+		compositePrimaryKey({
+			tName: orgTaxRateTaxCategoryTableName,
+			cols: [t.rateId, t.categoryId],
+		}),
+		...multiIndexes({
+			tName: orgTaxRateTaxCategoryTableName,
+			colsGrps: [{ cols: [t.createdAt] }],
+		}),
 	],
 );

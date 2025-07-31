@@ -26,7 +26,7 @@ export const orgLocale = table(
 	{
 		id: textCols.id().notNull(),
 		orgId: orgIdFkCol().notNull(),
-		localeKey: localeKeyFkCol("locale_key").notNull(),
+		localeKey: localeKeyFkCol().notNull(),
 
 		/**
 		 * @orgalControl Org-specific locale configuration

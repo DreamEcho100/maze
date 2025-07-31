@@ -1,9 +1,13 @@
-import { index, pgEnum } from "drizzle-orm/pg-core";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { pgEnum } from "drizzle-orm/pg-core";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import { multiForeignKeys, multiIndexes } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
-import { seoMetadata } from "../../general/seo/schema";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 
 // import { user } from "../.
@@ -29,10 +33,15 @@ export const orgLesson = table(
 		type: orgLessonTypeEnum("type").notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		index(`idx_${orgLessonTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgLessonTableName}_type`).on(t.type),
-		index(`idx_${orgLessonTableName}_created_at`).on(t.createdAt),
+	(cols) => [
+		...orgIdExtraConfig({
+			tName: orgLessonTableName,
+			cols,
+		}),
+		...multiIndexes({
+			tName: orgLessonTableName,
+			colsGrps: [{ cols: [cols.orgId, cols.type] }, { cols: [cols.orgId, cols.createdAt] }],
+		}),
 	],
 );
 
@@ -40,16 +49,32 @@ export const orgLessonI18n = buildOrgI18nTable(orgLessonTableName)(
 	{
 		lessonId: textCols
 			.idFk("lesson_id")
-			.references(() => orgLesson.id)
+			// .references(() => orgLesson.id)
 			.notNull(),
-		seoMetadataId: textCols.idFk("seo_metadata_id").references(() => seoMetadata.id),
+		seoMetadataId: seoMetadataIdFkCol(), //.references(() => seoMetadata.id),
 		// .notNull(),
 		title: textCols.title().notNull(),
 		description: textCols.description(),
 	},
 	{
 		fkKey: "lessonId",
-		extraConfig: (t, tName) => [index(`idx_${tName}_title`).on(t.title)],
+		extraConfig: (cols, tName) => [
+			...seoMetadataIdExtraConfig({
+				tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.lessonId],
+						foreignColumns: [orgLesson.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({ tName, colsGrps: [{ cols: [cols.title] }] }),
+		],
 	},
 );
 

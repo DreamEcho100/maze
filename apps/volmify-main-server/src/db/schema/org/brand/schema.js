@@ -1,10 +1,11 @@
-import { index, uniqueIndex } from "drizzle-orm/pg-core";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema";
+import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { seoMetadataIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
+import { seoMetadata } from "#db/schema/general/seo/schema.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
-import { orgIdFkCol } from "../schema.js";
 
 const orgBrandTableName = `${orgTableName}_brand`;
 /**
@@ -26,13 +27,16 @@ export const orgBrand = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => {
-		const base = `${orgTableName}_brand`;
-		return [
-			uniqueIndex(`uq_${base}_slug`).on(t.orgId, t.slug),
-			index(`idx_${base}_category`).on(t.brandCategory),
-		];
-	},
+	(cols) => [
+		uniqueIndex({
+			tName: orgBrandTableName,
+			cols: [cols.orgId, cols.slug],
+		}),
+		multiIndexes({
+			tName: orgBrandTableName,
+			colsGrps: [{ cols: [cols.brandCategory] }],
+		}),
+	],
 );
 
 /**
@@ -53,20 +57,36 @@ export const orgBrandTranslation = buildOrgI18nTable(orgBrandTableName)(
 	},
 	{
 		fkKey: "brandId",
-		extraConfig: (t, tName) => [
-			index(`idx_${tName}_seo_metadata_id`).on(t.seoMetadataId),
-			index(`idx_${tName}_name`).on(t.name),
+		extraConfig: (cols, tName) => [
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.brandId],
+						foreignColumns: [orgBrand.id],
+					},
+					{
+						cols: [cols.seoMetadataId],
+						foreignColumns: [seoMetadata.id],
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.name] }],
+			}),
 		],
 	},
 );
 
+const orgBrandMetricsTableName = `${orgTableName}_brand_metrics`;
 /**
  * Brand Metrics and Performance Data
  *
  * @businessLogic Tracks metrics and usage data for brand content.
  */
 export const orgBrandMetrics = table(
-	`${orgTableName}_brand_metrics`,
+	orgBrandMetricsTableName,
 	{
 		id: textCols.id().notNull(),
 		orgBrandId: textCols
@@ -76,13 +96,25 @@ export const orgBrandMetrics = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => {
-		const base = `${orgTableName}_brand_metrics`;
+	(cols) => {
 		return [
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			uniqueIndex(`uq_${base}_org_brand`).on(t.orgBrandId),
-			index(`idx_${base}_org_brand_id`).on(t.orgBrandId),
-			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
+			...multiForeignKeys({
+				tName: orgBrandMetricsTableName,
+				fkGroups: [
+					{
+						cols: [cols.orgBrandId],
+						foreignColumns: [orgBrand.id],
+					},
+				],
+			}),
+			uniqueIndex({
+				tName: orgBrandMetricsTableName,
+				cols: [cols.orgBrandId],
+			}),
+			...multiIndexes({
+				tName: orgBrandMetricsTableName,
+				colsGrps: [{ cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }],
+			}),
 		];
 	},
 );

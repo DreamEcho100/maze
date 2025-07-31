@@ -1,56 +1,67 @@
-/**
- * @import { currency } from "#db/schema/general/locale-and-currency/schema.js";
- */
-/**
- * @typedef {typeof currency} Table
- */
+// /**
+//  * @import { currency } from "#db/schema/general/locale-and-currency/schema.js";
+//  */
+// /**
+//  * @typedef {typeof currency} Table
+//  */
 
-import { foreignKey, index } from "#db/schema/_utils/helpers.js";
-import { textCols } from "../../text";
+import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 
-const cache = new Map();
-const cacheKey = "currency";
-const defaultColKey = "currencyCode";
-const defaultColName = "currency_code";
+// import { foreignKey, index } from "#db/schema/_utils/helpers.js";
+// import { textCols } from "../../text";
 
-/**
- *
- * @param {{
- * 	name?: string;
- * }} [props]
- */
-export const currencyCodeFkCol = ({ name = defaultColName } = {}) => textCols.idFk(name); // .references(() => org.id, { onDelete: "cascade" });
+// const cache = new Map();
+// const cacheKey = "currency";
+// const defaultColKey = "currencyCode";
+// const defaultColName = "currency_code";
 
-/**
- * @template {string} TTableName
- * @template {Record<string, import("drizzle-orm/pg-core").PgColumnBuilderBase>} TColumnsMap
- * @param {{
- * 	tName: string;
- * 	onDelete?: "cascade" | "set null" | "restrict" | "no action";
- * 	cols: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>;
- * 	colKey?: keyof TColumnsMap & string;
- * }} props
- */
-export const currencyCodeExtraConfig = ({
-	onDelete = "cascade",
-	colKey = defaultColKey,
-	...props
-}) => {
-	/** @type {Table} */
-	let currency;
-	if (cache.has(cacheKey)) {
-		currency = cache.get(cacheKey);
-	} else {
-		currency = require("#db/schema/general/locale-and-currency/schema.js").currency;
-		cache.set(cacheKey, currency);
-	}
+// /**
+//  *
+//  * @param {{
+//  * 	name?: string;
+//  * }} [props]
+//  */
+// export const currencyCodeFkCol = ({ name = defaultColName } = {}) => textCols.idFk(name); // .references(() => org.id, { onDelete: "cascade" });
 
-	return [
-		foreignKey({
-			tName: props.tName,
-			cols: [props.cols[colKey]],
-			foreignColumns: [currency.code],
-		}).onDelete(onDelete),
-		index({ tName: props.tName, cols: [props.cols[colKey]] }),
-	];
-};
+// /**
+//  * @template {string} TTableName
+//  * @template {Record<string, import("drizzle-orm/pg-core").PgColumnBuilderBase>} TColumnsMap
+//  * @param {{
+//  * 	tName: string;
+//  * 	onDelete?: "cascade" | "set null" | "restrict" | "no action";
+//  * 	cols: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>;
+//  * 	colFkKey?: keyof TColumnsMap & string;
+//  * }} props
+//  */
+// export const currencyCodeExtraConfig = ({
+// 	onDelete = "cascade",
+// 	colFkKey = defaultColKey,
+// 	...props
+// }) => {
+// 	/** @type {Table} */
+// 	let currency;
+// 	if (cache.has(cacheKey)) {
+// 		currency = cache.get(cacheKey);
+// 	} else {
+// 		currency = require("#db/schema/general/locale-and-currency/schema.js").currency;
+// 		cache.set(cacheKey, currency);
+// 	}
+
+// 	return [
+// 		foreignKey({
+// 			tName: props.tName,
+// 			cols: [props.cols[colFkKey]],
+// 			foreignColumns: [currency.code],
+// 		}).onDelete(onDelete),
+// 		index({ tName: props.tName, cols: [props.cols[colFkKey]] }),
+// 	];
+// };
+
+export const { extraConfig: currencyCodeExtraConfig, fkCol: currencyCodeFkCol } = buildFkUtils({
+	cacheKey: "currency",
+	defaultColKey: "currencyCode",
+	defaultColName: "currency_code",
+	getTable: () => require("#db/schema/general/locale-and-currency/schema.js").currency,
+	getRefColumns: (table) => [table.code],
+	defaultOnDelete: "cascade",
+});

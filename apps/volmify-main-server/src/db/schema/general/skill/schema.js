@@ -1,5 +1,10 @@
-import { boolean, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema";
+import { boolean } from "drizzle-orm/pg-core";
+import { localeKeyExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
@@ -54,21 +59,40 @@ export const skill = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${skillTableName}_applied_by_org_slug`).on(t.appliedByOrgId, t.slug),
-		// Q: Can the skill have multiple parents? and why?
-		foreignKey({
-			columns: [t.parentSkillId],
-			foreignColumns: [t.id],
-			name: `fk_${skillTableName}_parent_skill_id`,
+	(cols) => [
+		...multiForeignKeys({
+			tName: skillTableName,
+			fkGroups: [
+				{
+					cols: [cols.parentSkillId],
+					foreignColumns: [cols.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.appliedByOrgId],
+					foreignColumns: [org.id],
+					afterBuild: (fk) => fk.onDelete("set null"),
+				},
+				{
+					cols: [cols.createdByOrgId],
+					foreignColumns: [org.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
 		}),
-		// index(`idx_${skillTableName}_category`).on(t.category),
-		index(`idx_${skillTableName}_parent_skill_id`).on(t.parentSkillId),
-		index(`idx_${skillTableName}_applied_by_org_id`).on(t.appliedByOrgId),
-		index(`idx_${skillTableName}_approved_at`).on(t.approvedAt),
-		index(`idx_${skillTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${skillTableName}_creator_org`).on(t.createdByOrgId),
+		uniqueIndex({
+			tName: skillTableName,
+			// Q: Does the order matter here?
+			cols: [cols.createdByOrgId, cols.slug],
+		}),
+		...multiIndexes({
+			tName: skillTableName,
+			colsGrps: [
+				{ cols: [cols.approvedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -95,15 +119,37 @@ export const skillI18n = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
-		// uniqueIndex(`uq_${skillI18nTableName}_default`)
-		// 	.on(t.skillId, t.isDefault)
-		// 	.where(eq(t.isDefault, true)),
-		index(`idx_${skillI18nTableName}_skill`).on(t.skillId),
-		index(`idx_${skillI18nTableName}_name`).on(t.name),
-		index(`idx_${skillI18nTableName}_description`).on(t.description),
-		index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
-		index(`idx_${skillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
+	(cols) => [
+		// uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
+		// // uniqueIndex(`uq_${skillI18nTableName}_default`)
+		// // 	.on(t.skillId, t.isDefault)
+		// // 	.where(eq(t.isDefault, true)),
+		// index(`idx_${skillI18nTableName}_skill`).on(t.skillId),
+		// index(`idx_${skillI18nTableName}_name`).on(t.name),
+		// index(`idx_${skillI18nTableName}_description`).on(t.description),
+		// index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
+		// index(`idx_${skillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		...localeKeyExtraConfig({
+			tName: skillI18nTableName,
+			cols,
+		}),
+		...seoMetadataIdExtraConfig({
+			tName: skillI18nTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: skillI18nTableName,
+			fkGroups: [
+				{
+					cols: [cols.skillId],
+					foreignColumns: [skill.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: skillI18nTableName,
+			cols: [cols.skillId, cols.localeKey],
+		}),
 	],
 );

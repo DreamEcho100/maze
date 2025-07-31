@@ -1,7 +1,16 @@
 import { eq } from "drizzle-orm";
-import { boolean, index, primaryKey, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { boolean, varchar } from "drizzle-orm/pg-core";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
@@ -28,11 +37,23 @@ export const orgFunnel = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
-		index(`idx_${orgFunnelTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgFunnelTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
+		// uniqueIndex(`uq_${orgFunnelTableName}_slug`).on(t.slug).where(eq(t.deletedAt, null)),
+		// index(`idx_${orgFunnelTableName}_org_id`).on(t.orgId),
+		// index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
+		// index(`idx_${orgFunnelTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		// index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
+		...orgIdExtraConfig({
+			tName: orgFunnelTableName,
+			cols: t,
+		}),
+		uniqueIndex({
+			tName: orgFunnelTableName,
+			cols: [t.orgId, t.slug],
+		}),
+		...multiIndexes({
+			tName: orgFunnelTableName,
+			colsGrps: [{ cols: [t.createdAt] }, { cols: [t.lastUpdatedAt] }, { cols: [t.deletedAt] }],
+		}),
 	],
 );
 
@@ -44,7 +65,7 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 	{
 		funnelId: textCols
 			.idFk("funnel_id")
-			.references(() => orgFunnel.id)
+			// .references(() => orgFunnel.id)
 			.notNull(),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 		name: textCols.name().notNull(),
@@ -52,7 +73,26 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 	},
 	{
 		fkKey: "funnelId",
-		extraConfig: (t, tableName) => [index(`idx_${tableName}_name`).on(t.name)],
+		extraConfig: (t, tableName) => [
+			// index(`idx_${tableName}_name`).on(t.name)
+			...multiForeignKeys({
+				tName: tableName,
+				fkGroups: [
+					{
+						cols: [t.funnelId],
+						foreignColumns: [orgFunnel.id],
+					},
+				],
+			}),
+			...seoMetadataIdExtraConfig({
+				tName: tableName,
+				cols: t,
+			}),
+			...multiIndexes({
+				tName: tableName,
+				colsGrps: [{ cols: [t.name] }],
+			}),
+		],
 	},
 );
 
@@ -66,17 +106,35 @@ export const orgFunnelRegion = table(
 	{
 		funnelId: textCols
 			.idFk("funnel_id")
-			.references(() => orgFunnel.id)
+			// .references(() => orgFunnel.id)
 			.notNull(),
 		regionId: textCols
 			.idFk("region_id")
-			.references(() => orgRegion.id)
+			// .references(() => orgRegion.id)
 			.notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.funnelId, t.regionId] }),
-		index(`idx_${orgLocaleTableName}_created_at`).on(t.createdAt),
+	(cols) => [
+		// primaryKey({ columns: [t.funnelId, t.regionId] }),
+		// index(`idx_${orgLocaleTableName}_created_at`).on(t.createdAt),
+		compositePrimaryKey({ tName: orgLocaleTableName, cols: [cols.funnelId, cols.regionId] }),
+		...multiForeignKeys({
+			tName: orgLocaleTableName,
+			fkGroups: [
+				{
+					cols: [cols.funnelId],
+					foreignColumns: [orgFunnel.id],
+				},
+				{
+					cols: [cols.regionId],
+					foreignColumns: [orgRegion.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgLocaleTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );
 
@@ -91,7 +149,7 @@ export const orgFunnelDomain = table(
 		id: textCols.id().notNull(),
 		funnelId: textCols
 			.idFk("funnel_id")
-			.references(() => orgFunnel.id)
+			// .references(() => orgFunnel.id)
 			.notNull(),
 
 		/**
@@ -116,7 +174,7 @@ export const orgFunnelDomain = table(
 		 */
 		isManagedDns: boolean("is_managed_dns").default(true).notNull(),
 
-		regionId: textCols.idFk("region_id").references(() => orgRegion.id),
+		regionId: textCols.idFk("region_id"), // .references(() => orgRegion.id),
 		// getLocaleKey: getLocaleKey("locale_key").references(() => locale.key),
 
 		IsSslEnabled: boolean("ssl_enabled").default(false).notNull(),
@@ -142,24 +200,61 @@ export const orgFunnelDomain = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		// primaryKey({ columns: [t.funnelId, t.regionId] }),
-		uniqueIndex(`uq_${orgFunnelDomainTableName}_domain`)
-			.on(t.domain)
-			.where(eq(t.deletedAt, null)),
-		index(`idx_${orgFunnelDomainTableName}_funnel_id`).on(t.funnelId),
-		index(`idx_${orgFunnelDomainTableName}_region_id`).on(t.regionId),
-		// index(`idx_${orgFunnelDomainTableName}_locale_key`).on(t.getLocaleKey),
-		index(`idx_${orgFunnelDomainTableName}_is_custom_domain`).on(t.isCustomDomain),
-		index(`idx_${orgFunnelDomainTableName}_is_subdomain`).on(t.isSubdomain),
-		index(`idx_${orgFunnelDomainTableName}_is_canonical`).on(t.isCanonical),
-		index(`idx_${orgFunnelDomainTableName}_is_managed_dns`).on(t.isManagedDns),
-		index(`idx_${orgFunnelDomainTableName}_is_ssl_enabled`).on(t.IsSslEnabled),
-		index(`idx_${orgFunnelDomainTableName}_dns_verified`).on(t.dnsVerified),
-		index(`idx_${orgFunnelDomainTableName}_is_preview`).on(t.isPreview),
-		index(`idx_${orgFunnelDomainTableName}_has_custom_404`).on(t.hasCustom404),
-		index(`idx_${orgFunnelDomainTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgFunnelDomainTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgFunnelDomainTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		// // primaryKey({ columns: [t.funnelId, t.regionId] }),
+		// uniqueIndex(`uq_${orgFunnelDomainTableName}_domain`)
+		// 	.on(cols.domain)
+		// 	.where(eq(cols.deletedAt, null)),
+		// index(`idx_${orgFunnelDomainTableName}_funnel_id`).on(cols.funnelId),
+		// index(`idx_${orgFunnelDomainTableName}_region_id`).on(cols.regionId),
+		// // index(`idx_${orgFunnelDomainTableName}_locale_key`).on(t.getLocaleKey),
+		// index(`idx_${orgFunnelDomainTableName}_is_custom_domain`).on(cols.isCustomDomain),
+		// index(`idx_${orgFunnelDomainTableName}_is_subdomain`).on(cols.isSubdomain),
+		// index(`idx_${orgFunnelDomainTableName}_is_canonical`).on(cols.isCanonical),
+		// index(`idx_${orgFunnelDomainTableName}_is_managed_dns`).on(cols.isManagedDns),
+		// index(`idx_${orgFunnelDomainTableName}_is_ssl_enabled`).on(cols.IsSslEnabled),
+		// index(`idx_${orgFunnelDomainTableName}_dns_verified`).on(cols.dnsVerified),
+		// index(`idx_${orgFunnelDomainTableName}_is_preview`).on(cols.isPreview),
+		// index(`idx_${orgFunnelDomainTableName}_has_custom_404`).on(cols.hasCustom404),
+		// index(`idx_${orgFunnelDomainTableName}_created_at`).on(cols.createdAt),
+		// index(`idx_${orgFunnelDomainTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		// index(`idx_${orgFunnelDomainTableName}_deleted_at`).on(cols.deletedAt),
+		compositePrimaryKey({ tName: orgFunnelDomainTableName, cols: [cols.funnelId, cols.domain] }),
+		uniqueIndex({
+			tName: orgFunnelDomainTableName,
+			cols: [cols.funnelId, cols.domain],
+		}).where(eq(cols.deletedAt, null)),
+		...multiForeignKeys({
+			tName: orgFunnelDomainTableName,
+			fkGroups: [
+				{
+					cols: [cols.funnelId],
+					foreignColumns: [orgFunnel.id],
+				},
+				{
+					cols: [cols.regionId],
+					foreignColumns: [orgRegion.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgFunnelDomainTableName,
+			colsGrps: [
+				{ cols: [cols.funnelId] },
+				{ cols: [cols.regionId] },
+				{ cols: [cols.isCustomDomain] },
+				{ cols: [cols.isSubdomain] },
+				{ cols: [cols.isCanonical] },
+				{ cols: [cols.isManagedDns] },
+				{ cols: [cols.IsSslEnabled] },
+				{ cols: [cols.dnsVerified] },
+				{ cols: [cols.isPreview] },
+				{ cols: [cols.hasCustom404] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+				{ cols: [cols.verificationToken] },
+			],
+		}),
 	],
 );
