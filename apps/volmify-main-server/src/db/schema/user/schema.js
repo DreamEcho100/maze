@@ -82,7 +82,6 @@ export const userSession = table(
 				{ cols: [cols.createdAt] },
 				{ cols: [cols.lastUpdatedAt] },
 				{ cols: [cols.expiresAt] },
-				{ cols: [cols.userId] },
 				{ cols: [cols.authStrategy] },
 				{ cols: [cols.revokedAt] },
 				{ cols: [cols.lastUsedAt] },
@@ -117,12 +116,7 @@ export const userEmailVerificationRequest = table(
 		}),
 		...multiIndexes({
 			tName: userEmailVerificationTableName,
-			colsGrps: [
-				{ cols: [cols.createdAt] },
-				{ cols: [cols.expiresAt] },
-				{ cols: [cols.userId] },
-				{ cols: [cols.email] },
-			],
+			colsGrps: [{ cols: [cols.createdAt] }, { cols: [cols.expiresAt] }, { cols: [cols.email] }],
 		}),
 	],
 );
@@ -155,7 +149,6 @@ export const userPasswordResetSession = table(
 				{ cols: [cols.createdAt] },
 				{ cols: [cols.expiresAt] },
 				{ cols: [cols.email] },
-				{ cols: [cols.userId] },
 				{ cols: [cols.emailVerifiedAt] },
 				{ cols: [cols.twoFactorVerifiedAt] },
 			],

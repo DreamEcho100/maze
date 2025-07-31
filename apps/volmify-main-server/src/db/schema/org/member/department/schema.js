@@ -1,6 +1,15 @@
-import { boolean, foreignKey, index, pgEnum, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { boolean, pgEnum } from "drizzle-orm/pg-core";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
@@ -180,20 +189,36 @@ const permissionPatterns = {
 
 		// metadata: jsonb("metadata"),
 	},
-	(t) => [
-		foreignKey({
-			columns: [t.parentId],
-			foreignColumns: [t.id],
-			name: `fk_${orgDepartmentTableName}_parent`,
+	(cols) => [
+		...orgIdExtraConfig({
+			tName: orgDepartmentTableName,
+			cols,
 		}),
-		uniqueIndex(`uq_${orgDepartmentTableName}_slug`).on(t.orgId, t.slug),
+		...multiForeignKeys({
+			tName: orgDepartmentTableName,
+			fkGroups: [
+				{
+					cols: [cols.parentId],
+					foreignColumns: [cols.id],
+				},
+			],
+		}),
+		uniqueIndex({
+			cols: [cols.orgId, cols.slug],
+			tName: orgDepartmentTableName,
+		}),
 		// uniqueIndex(`uq_${orgDepartmentTableName}_default`)
 		// 	.on(t.orgId, t.isDefault)
 		// 	.where(eq(t.isDefault, true)),
-		// index(`idx_${orgDepartmentTableName}_active`).on(t.isActive),
-		index(`idx_${orgDepartmentTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgDepartmentTableName}_slug`).on(t.slug),
-		index(`idx_${orgDepartmentTableName}_parent_id`).on(t.parentId),
+		...multiIndexes({
+			tName: orgDepartmentTableName,
+			colsGrps: [
+				{ cols: [cols.slug] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -212,7 +237,22 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentTableName)(
 	},
 	{
 		fkKey: "departmentId",
-		extraConfig: (cols, tableName) => [index(`idx_${tableName}_name`).on(cols.name)],
+		extraConfig: (cols, tableName) => [
+			// index(`idx_${tableName}_name`).on(cols.name)
+			...multiForeignKeys({
+				tName: tableName,
+				fkGroups: [
+					{
+						cols: [cols.departmentId],
+						foreignColumns: [orgDepartment.id],
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tableName,
+				colsGrps: [{ cols: [cols.name] }],
+			}),
+		],
 	},
 );
 
@@ -246,8 +286,11 @@ export const orgDepartmentEmployee = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.employeeId, t.departmentId] }),
+	(cols) => [
+		compositePrimaryKey({
+			tName: orgDepartmentEmployeesTableName,
+			cols: [cols.employeeId, cols.departmentId],
+		}),
 		// uniqueIndex(`uq_${orgDepartmentEmployeesTableName}`).on(
 		// 	t.employeeId,
 		// 	t.departmentId,
@@ -255,10 +298,32 @@ export const orgDepartmentEmployee = table(
 		// uniqueIndex(`uq_${orgDepartmentEmployeesTableName}_default`)
 		// 	.on(t.employeeId, t.isDefault)
 		// 	.where(eq(t.isDefault, true)),
-		index(`idx_${orgDepartmentEmployeesTableName}_status`).on(t.status),
-		index(`idx_${orgDepartmentEmployeesTableName}_joined_at`).on(t.joinedAt),
-		index(`idx_${orgDepartmentEmployeesTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgDepartmentEmployeesTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		// index(`idx_${orgDepartmentEmployeesTableName}_status`).on(t.status),
+		// index(`idx_${orgDepartmentEmployeesTableName}_joined_at`).on(t.joinedAt),
+		// index(`idx_${orgDepartmentEmployeesTableName}_created_at`).on(t.createdAt),
+		// index(`idx_${orgDepartmentEmployeesTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		...orgEmployeeIdExtraConfig({
+			tName: orgDepartmentEmployeesTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgDepartmentEmployeesTableName,
+			fkGroups: [
+				{
+					cols: [cols.departmentId],
+					foreignColumns: [orgDepartment.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgDepartmentEmployeesTableName,
+			colsGrps: [
+				{ cols: [cols.status] },
+				{ cols: [cols.joinedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -293,15 +358,35 @@ export const orgDepartmentTeam = table(
 
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => {
-		const base = `${orgTableName}_team_department`;
+	(cols) => {
+		const _base = `${orgTableName}_team_department`;
 		return [
-			primaryKey({ columns: [t.teamId, t.departmentId] }),
+			compositePrimaryKey({
+				tName: orgDepartmentTeamTableName,
+				cols: [cols.teamId, cols.departmentId],
+			}),
 			// uniqueIndex(`uq_${base}_primary`)
 			// 	.on(t.teamId, t.isPrimary)
 			// 	.where(eq(t.isPrimary, true)),
-			index(`idx_${base}_team_id`).on(t.teamId),
-			index(`idx_${base}_department_id`).on(t.departmentId),
+			// index(`idx_${base}_team_id`).on(cols.teamId),
+			// index(`idx_${base}_department_id`).on(cols.departmentId),
+			...multiForeignKeys({
+				tName: orgDepartmentTeamTableName,
+				fkGroups: [
+					{
+						cols: [cols.departmentId],
+						foreignColumns: [orgDepartment.id],
+					},
+					{
+						cols: [cols.teamId],
+						foreignColumns: [orgTeam.id],
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: orgDepartmentTeamTableName,
+				colsGrps: [{ cols: [cols.createdAt] }],
+			}),
 		];
 	},
 );

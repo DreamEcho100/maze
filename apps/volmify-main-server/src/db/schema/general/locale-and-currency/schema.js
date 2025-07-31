@@ -85,6 +85,18 @@ export const locale = table(
 	},
 	(t) => {
 		return [
+			// TODO: Needs to add a relation to the country table
+			// ...multiForeignKeys({
+			// 	tName: localeTableName,
+			// 	indexAll: true,
+			// 	fkGroups: [
+			// 		{
+			// 			cols: [t.countryCode],
+			// 			foreignColumns: [country.isoCode],
+			// 			// afterBuild: (fk) => fk.onDelete("cascade"),
+			// 		},
+			// 	],
+			// }),
 			...multiIndexes({
 				tName: localeTableName,
 				colsGrps: [

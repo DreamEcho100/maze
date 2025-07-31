@@ -101,7 +101,6 @@ export const account = table(
 			colsGrps: [
 				{ cols: [cols.name] },
 				{ cols: [cols.type] },
-				{ cols: [cols.currencyCode] },
 				// { cols: [t.isSystem] },
 				// { cols: [t.isActive] },
 				{ cols: [cols.createdAt] },
@@ -245,17 +244,18 @@ export const accountTransaction = table(
 			cols,
 			colFkKey: "createdByEmployeeId",
 		}),
+		...currencyCodeExtraConfig({
+			tName: accountTransactionTableName,
+			cols,
+		}),
 		...multiIndexes({
 			tName: accountTransactionTableName,
 			colsGrps: [
 				{ cols: [cols.createdAt] },
-				{ cols: [cols.createdByEmployeeId] },
-				// { cols: [t.businessEntityType, t.businessEntityId] },
 				{ cols: [cols.reference] },
 				{ cols: [cols.transactionNumber] },
 				{ cols: [cols.transactionDate] },
 				{ cols: [cols.totalAmount] },
-				{ cols: [cols.currencyCode] },
 			],
 		}),
 	],
@@ -420,8 +420,6 @@ export const accountTransactionUserContext = table(
 		// ...multiIndexes({
 		// 	tName: accountTransactionUserContextTableName,
 		// 	colsGrps: [
-		// 		// { cols: [t.userId] },
-		// 		// { cols: [t.contextId] },
 		// 		// { cols: [t.accessLevel] },
 		// 		// { cols: [t.accessSource] },
 		// 	],
@@ -566,8 +564,6 @@ export const accountTransactionOrgContext = table(
 		// ...multiIndexes({
 		// 	tName: accountTransactionOrgContextTableName,
 		// 	colsGrps: [
-		// 		{ cols: [t.orgId] },
-		// 		{ cols: [t.contextId] },
 		// 		// { cols: [t.orgRole] }
 		// 	],
 		// }),

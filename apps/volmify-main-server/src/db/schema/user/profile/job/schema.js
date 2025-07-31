@@ -169,7 +169,6 @@ export const userJobProfile = table(
 				{ cols: [cols.lastUpdatedAt] },
 				{ cols: [cols.verifiedAt] },
 				{ cols: [cols.deletedAt] },
-				{ cols: [cols.userProfileId] },
 			],
 		}),
 		// check(`ck_${userJobProfileTableName}_job_profile_type_enforcement`,
@@ -314,8 +313,6 @@ export const userJobProfileSkill = table(
 		...multiIndexes({
 			tName: userJobProfileSkillTableName,
 			colsGrps: [
-				// { cols: [cols.jobProfileId] },
-				// { cols: [cols.skillId] },
 				{ cols: [cols.createdAt] },
 				// { cols: [cols.lastUpdatedAt] },
 			],
@@ -459,7 +456,6 @@ export const userJobProfileMetrics = table(
 		...multiIndexes({
 			tName: userJobProfileMetricsTableName,
 			colsGrps: [
-				{ cols: [cols.jobProfileId] },
 				{ cols: [cols.createdAt] },
 				{ cols: [cols.lastUpdatedAt] },
 				{ cols: [cols.total] },

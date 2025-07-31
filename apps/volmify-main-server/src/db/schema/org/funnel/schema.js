@@ -226,8 +226,6 @@ export const orgFunnelDomain = table(
 		...multiIndexes({
 			tName: orgFunnelDomainTableName,
 			colsGrps: [
-				{ cols: [cols.funnelId] },
-				{ cols: [cols.regionId] },
 				{ cols: [cols.isCustomDomain] },
 				{ cols: [cols.isSubdomain] },
 				{ cols: [cols.isCanonical] },
