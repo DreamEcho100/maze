@@ -237,10 +237,10 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentTableName)(
 	},
 	{
 		fkKey: "departmentId",
-		extraConfig: (cols, tableName) => [
-			// index(`idx_${tableName}_name`).on(cols.name)
+		extraConfig: (cols, tName) => [
+			// index(`idx_${tName}_name`).on(cols.name)
 			...multiForeignKeys({
-				tName: tableName,
+				tName: tName,
 				fkGroups: [
 					{
 						cols: [cols.departmentId],
@@ -249,7 +249,7 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentTableName)(
 				],
 			}),
 			...multiIndexes({
-				tName: tableName,
+				tName: tName,
 				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],

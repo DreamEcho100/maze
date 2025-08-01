@@ -2,24 +2,33 @@ import { sql } from "drizzle-orm";
 import {
 	boolean,
 	check,
-	index,
 	integer,
 	jsonb,
 	pgEnum,
-	primaryKey,
 	pgTable as table,
 	text,
 	timestamp,
-	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { lmsCols } from "#db/schema/_utils/cols/lms";
 import { numericCols } from "#db/schema/_utils/cols/numeric";
+import {
+	orgMemberIdExtraConfig,
+	orgMemberIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal";
 import { textCols } from "#db/schema/_utils/cols/text";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { skill } from "#db/schema/general/skill/schema.js";
 // import { skill } from "#db/schema/general/skill/schema";
-import { orgMemberIdFkCol } from "#db/schema/org/member/_utils/fk.js";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
 import { orgLesson } from "../../../lesson/schema";
 import { orgProduct } from "../../schema";
@@ -42,7 +51,7 @@ export const orgProductCourse = table(
 		// I mean, what is the difference between a product and a product variant, how they work together, how they are related, and help in this context?
 		productId: textCols
 			.idFk("product_id")
-			.references(() => orgProduct.id)
+			// .references(() => orgProduct.id)
 			.notNull(),
 		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
 		// prerequisites ???
@@ -95,24 +104,32 @@ export const orgProductCourse = table(
 		// As it can be subscription, one-time purchase, or free
 	},
 	(cols) => [
-		index(`idx_${orgProductCourseTableName}_product`).on(cols.productId),
-		index(`idx_${orgProductCourseTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductCourseTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		index(`idx_${orgProductCourseTableName}_level`).on(cols.level),
-		index(`idx_${orgProductCourseTableName}_difficulty`).on(cols.difficulty),
-		index(`idx_${orgProductCourseTableName}_duration`).on(cols.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseTableName}_level_rating_total`).on(cols.userLevelRatingTotal),
-		index(`idx_${orgProductCourseTableName}_level_rating_count`).on(cols.userLevelRatingCount),
-		index(`idx_${orgProductCourseTableName}_level_rating_avg`).on(cols.userLevelRatingAvg),
-		index(`idx_${orgProductCourseTableName}_difficulty_rating_total`).on(
-			cols.userDifficultyRatingTotal,
-		),
-		index(`idx_${orgProductCourseTableName}_difficulty_rating_count`).on(
-			cols.userDifficultyRatingCount,
-		),
-		index(`idx_${orgProductCourseTableName}_difficulty_rating_avg`).on(
-			cols.userDifficultyRatingAvg,
-		),
+		...multiForeignKeys({
+			tName: orgProductCourseTableName,
+			fkGroups: [
+				{
+					cols: [cols.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgProductCourseTableName,
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.level] },
+				{ cols: [cols.difficulty] },
+				{ cols: [cols.estimatedDurationInMinutes] },
+				{ cols: [cols.userLevelRatingTotal] },
+				{ cols: [cols.userLevelRatingCount] },
+				{ cols: [cols.userLevelRatingAvg] },
+				{ cols: [cols.userDifficultyRatingTotal] },
+				{ cols: [cols.userDifficultyRatingCount] },
+				{ cols: [cols.userDifficultyRatingAvg] },
+			],
+		}),
 	],
 );
 
@@ -120,7 +137,7 @@ export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseTableName)
 	{
 		courseId: textCols
 			.idFk("course_id")
-			.references(() => orgProductCourse.id)
+			// .references(() => orgProductCourse.id)
 			.notNull(),
 		/**
 		 * @localizedContent Course-specific localized metadata
@@ -138,7 +155,18 @@ export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseTableName)
 	},
 	{
 		fkKey: "courseId",
-		// extraConfig: (self, tableName) => [],
+		extraConfig: (col, tName) => [
+			...multiForeignKeys({
+				tName: tName,
+				fkGroups: [
+					{
+						cols: [col.courseId],
+						foreignColumns: [orgProductCourse.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+		],
 	},
 );
 
@@ -151,11 +179,11 @@ export const orgProductCourseSkill = table(
 	{
 		courseId: textCols
 			.idFk("course_id")
-			.references(() => orgProductCourse.id)
+			// .references(() => orgProductCourse.id)
 			.notNull(),
 		skillId: textCols
 			.idFk("skill_id")
-			.references(() => skill.id)
+			// .references(() => skill.id)
 			.notNull(),
 
 		// /**
@@ -181,15 +209,35 @@ export const orgProductCourseSkill = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgProductCourseSkillTableName}`).on(cols.courseId, cols.skillId),
-		// index(`idx_${orgProductCourseSkillTableName}_outcome`).on(cols.isLearningOutcome),
-		// index(`idx_${orgProductCourseSkillTableName}_proficiency`).on(cols.proficiencyLevel),
-		index(`idx_${orgProductCourseSkillTableName}_weight`).on(cols.weight),
-		index(`idx_${orgProductCourseSkillTableName}_course_id`).on(cols.courseId),
-		index(`idx_${orgProductCourseSkillTableName}_skill_id`).on(cols.skillId),
-		index(`idx_${orgProductCourseSkillTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		index(`idx_${orgProductCourseSkillTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductCourseSkillTableName}_deleted_at`).on(cols.deletedAt),
+		...multiForeignKeys({
+			tName: orgProductCourseSkillTableName,
+			fkGroups: [
+				{
+					cols: [cols.courseId],
+					foreignColumns: [orgProductCourse.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.skillId],
+					foreignColumns: [skill.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		// TODO: change to a `compositePrimaryKey`
+		uniqueIndex({
+			tName: orgProductCourseSkillTableName,
+			cols: [cols.courseId, cols.skillId],
+		}),
+		...multiIndexes({
+			tName: orgProductCourseSkillTableName,
+			colsGrps: [
+				{ cols: [cols.weight] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 		check(
 			`ck_${orgProductCourseSkillTableName}_weight_range`,
 			sql`${cols.weight} >= 1 AND ${cols.weight} <= 10`,
@@ -213,7 +261,7 @@ export const orgMemberProductCourseChallengeRating = table(
 		id: textCols.idPk().notNull(),
 		courseId: textCols
 			.idFk("course_id")
-			.references(() => orgProductCourse.id)
+			// .references(() => orgProductCourse.id)
 			.notNull(),
 		memberId: orgMemberIdFkCol().notNull(),
 
@@ -245,48 +293,43 @@ export const orgMemberProductCourseChallengeRating = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgMemberProductCourseChallengeRatingTableName}course__member`).on(
-			cols.courseId,
-			cols.memberId,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_course_id`).on(cols.courseId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_member_id`).on(cols.memberId),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_total`).on(
-			cols.levelRatingTotal,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_count`).on(
-			cols.levelRatingCount,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_level_rating_avg`).on(
-			cols.levelRatingAvg,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_total`).on(
-			cols.difficultyRatingTotal,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_count`).on(
-			cols.difficultyRatingCount,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_avg`).on(
-			cols.difficultyRatingAvg,
-		),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgMemberProductCourseChallengeRatingTableName}_last_updated_at`).on(
-			cols.lastUpdatedAt,
-		),
-		// check(
-		// 	`ck_${orgMemberProductCourseChallengeRatingTableName}_level_rating_range`,
-		// 	sql`${cols.levelRatingTotal} >= 1 AND ${cols.levelRatingTotal} <= 10 AND ${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10`,
-		// ),
-		// check(
-		// 	`ck_${orgMemberProductCourseChallengeRatingTableName}_difficulty_rating_range`,
-		// 	sql`${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10 AND ${cols.difficultyRating} >= 1 AND ${cols.difficultyRating} <= 10`,
-		// ),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberProductCourseChallengeRatingTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgMemberProductCourseChallengeRatingTableName,
+			fkGroups: [
+				{
+					cols: [cols.courseId],
+					foreignColumns: [orgProductCourse.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgMemberProductCourseChallengeRatingTableName,
+			cols: [cols.courseId, cols.memberId],
+		}),
+		...multiIndexes({
+			tName: orgMemberProductCourseChallengeRatingTableName,
+			colsGrps: [
+				{ cols: [cols.levelRatingTotal] },
+				{ cols: [cols.levelRatingCount] },
+				{ cols: [cols.levelRatingAvg] },
+				{ cols: [cols.difficultyRatingTotal] },
+				{ cols: [cols.difficultyRatingCount] },
+				{ cols: [cols.difficultyRatingAvg] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
 const orgMemberProductCourseChallengeRatingHistoryTableName = `${orgMemberProductCourseChallengeRatingTableName}_history`;
 export const orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum = pgEnum(
-	"org_member_product_course_challenge_rating_history_reason",
+	`${orgMemberProductCourseChallengeRatingHistoryTableName}_reason`,
 	[
 		"updated", // User changed their rating (normal update)
 		// Q: Should the `"corrected"` be allowed? and when it should be used and wheere?
@@ -319,8 +362,8 @@ export const orgProductCourseModule = table(
 	{
 		id: textCols.idPk().notNull(),
 		courseId: textCols
-			.idFk("product_course_id")
-			.references(() => orgProductCourse.id)
+			.idFk("course_id")
+			// .references(() => orgProductCourse.id)
 			.notNull(),
 
 		/**
@@ -355,18 +398,36 @@ export const orgProductCourseModule = table(
 		//  settings: jsonb("settings"),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgProductCourseModuleTableName}_sort`).on(cols.courseId, cols.sortOrder),
-		index(`idx_${orgProductCourseModuleTableName}_course_id`).on(cols.courseId),
-		index(`idx_${orgProductCourseModuleTableName}_access_tier`).on(cols.requiredAccessTier),
-		index(`idx_${orgProductCourseModuleTableName}_required`).on(cols.isRequired),
-		index(`idx_${orgProductCourseModuleTableName}_duration`).on(cols.estimatedDurationInMinutes),
-		index(`idx_${orgProductCourseModuleTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductCourseModuleTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...multiForeignKeys({
+			tName: orgProductCourseModuleTableName,
+			fkGroups: [
+				{
+					cols: [cols.courseId],
+					foreignColumns: [orgProductCourse.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgProductCourseModuleTableName,
+			cols: [cols.courseId, cols.sortOrder],
+		}),
 		check(
 			`ck_${orgProductCourseModuleTableName}_required_access_tier_range`,
 			sql`${cols.requiredAccessTier} >= 0`,
 		),
 		check(`ck_${orgProductCourseModuleTableName}_sort_order_range`, sql`${cols.sortOrder} >= 0`),
+		...multiIndexes({
+			tName: orgProductCourseModuleTableName,
+			colsGrps: [
+				{ cols: [cols.sortOrder] },
+				{ cols: [cols.requiredAccessTier] },
+				{ cols: [cols.isRequired] },
+				{ cols: [cols.estimatedDurationInMinutes] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -374,7 +435,7 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModu
 	{
 		moduleId: textCols
 			.idFk("moduleId")
-			.references(() => orgProductCourseModule.id)
+			// .references(() => orgProductCourseModule.id)
 			.notNull(),
 		title: textCols.title().notNull(),
 		description: textCols.description(),
@@ -382,7 +443,27 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModu
 	},
 	{
 		fkKey: "moduleId",
-		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			// index(`idx_${tName}_title`).on(cols.title)
+			...seoMetadataIdExtraConfig({
+				tName: tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName: tName,
+				fkGroups: [
+					{
+						cols: [cols.moduleId],
+						foreignColumns: [orgProductCourseModule.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -400,7 +481,7 @@ export const orgProductCourseModuleSection = table(
 		id: textCols.idPk().notNull(),
 		moduleId: textCols
 			.idFk("module_id")
-			.references(() => orgProductCourseModule.id)
+			// .references(() => orgProductCourseModule.id)
 			.notNull(),
 
 		/**
@@ -432,20 +513,20 @@ export const orgProductCourseModuleSection = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgProductCourseModuleSectionTableName}_sort_order`).on(
-			cols.moduleId,
-			cols.sortOrder,
-		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_module_id`).on(cols.moduleId),
-		index(`idx_${orgProductCourseModuleSectionTableName}_required_access_tier`).on(
-			cols.requiredAccessTier,
-		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_is_required`).on(cols.isRequired),
-		index(`idx_${orgProductCourseModuleSectionTableName}_estimated_duration_in_minutes`).on(
-			cols.estimatedDurationInMinutes,
-		),
-		index(`idx_${orgProductCourseModuleSectionTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductCourseModuleSectionTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...multiForeignKeys({
+			tName: orgProductCourseModuleSectionTableName,
+			fkGroups: [
+				{
+					cols: [cols.moduleId],
+					foreignColumns: [orgProductCourseModule.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgProductCourseModuleSectionTableName,
+			cols: [cols.moduleId, cols.sortOrder],
+		}),
 		check(
 			`ck_${orgProductCourseModuleSectionTableName}_required_access_tier_range`,
 			sql`${cols.requiredAccessTier} >= 0`,
@@ -454,6 +535,17 @@ export const orgProductCourseModuleSection = table(
 			`ck_${orgProductCourseModuleSectionTableName}_sort_order_range`,
 			sql`${cols.sortOrder} >= 0`,
 		),
+		...multiIndexes({
+			tName: orgProductCourseModuleSectionTableName,
+			colsGrps: [
+				{ cols: [cols.sortOrder] },
+				{ cols: [cols.requiredAccessTier] },
+				{ cols: [cols.isRequired] },
+				{ cols: [cols.estimatedDurationInMinutes] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -463,7 +555,7 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	{
 		sectionId: textCols
 			.idFk("section_id")
-			.references(() => orgProductCourseModuleSection.id)
+			// .references(() => orgProductCourseModuleSection.id)
 			.notNull(),
 		title: textCols.title().notNull(),
 		description: textCols.description(),
@@ -472,8 +564,20 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	{
 		fkKey: "sectionId",
 		extraConfig: (cols, tName) => [
-			index(`idx_${tName}_title`).on(cols.title),
-			index(`idx_${tName}_seo_metadata_id`).on(cols.seoMetadataId),
+			...seoMetadataIdExtraConfig({
+				tName: tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName: tName,
+				fkGroups: [
+					{
+						cols: [cols.sectionId],
+						foreignColumns: [orgProductCourseModuleSection.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
 		],
 	},
 );
@@ -500,11 +604,11 @@ export const orgProductCourseModuleSectionLesson = table(
 
 		sectionId: textCols
 			.idFk("section_id")
-			.references(() => orgProductCourseModuleSection.id)
+			// .references(() => orgProductCourseModuleSection.id)
 			.notNull(),
 		lessonId: textCols
 			.idFk("lesson_id")
-			.references(() => orgLesson.id)
+			// .references(() => orgLesson.id)
 			.notNull(),
 
 		/**
@@ -543,23 +647,30 @@ export const orgProductCourseModuleSectionLesson = table(
 		//  settings
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}_sort`).on(
-			cols.sectionId,
-			cols.sortOrder,
-		),
-		uniqueIndex(`uq_${orgProductCourseModuleSectionLessonTableName}`).on(
-			cols.sectionId,
-			cols.lessonId,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_section_id`).on(cols.sectionId),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_lesson_id`).on(cols.lessonId),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_access_tier`).on(
-			cols.requiredAccessTier,
-		),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductCourseModuleSectionLessonTableName}_last_updated_at`).on(
-			cols.lastUpdatedAt,
-		),
+		...multiForeignKeys({
+			tName: orgProductCourseModuleSectionLessonTableName,
+			fkGroups: [
+				{
+					cols: [cols.sectionId],
+					foreignColumns: [orgProductCourseModuleSection.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.lessonId],
+					foreignColumns: [orgLesson.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		// Q: should this be unique or composite primary key or none at all?
+		uniqueIndex({
+			tName: orgProductCourseModuleSectionLessonTableName,
+			cols: [cols.sectionId, cols.lessonId],
+		}),
+		uniqueIndex({
+			tName: orgProductCourseModuleSectionLessonTableName,
+			cols: [cols.sectionId, cols.sortOrder],
+		}),
 		check(
 			`ck_${orgProductCourseModuleSectionLessonTableName}_required_access_tier_range`,
 			sql`${cols.requiredAccessTier} >= 0`,
@@ -568,6 +679,15 @@ export const orgProductCourseModuleSectionLesson = table(
 			`ck_${orgProductCourseModuleSectionLessonTableName}_sort_order_range`,
 			sql`${cols.sortOrder} >= 0`,
 		),
+		...multiIndexes({
+			tName: orgProductCourseModuleSectionLessonTableName,
+			colsGrps: [
+				{ cols: [cols.sortOrder] },
+				{ cols: [cols.requiredAccessTier] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -578,7 +698,7 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	{
 		lessonId: textCols
 			.idFk("lesson_id")
-			.references(() => orgProductCourseModuleSectionLesson.id)
+			// .references(() => orgProductCourseModuleSectionLesson.id)
 			.notNull(), // TODO: Since this table is for the i18n of the course module section lesson,
 		// And it reference a lesson, and the lesson already have a an optional seo metadata, maybe add a seo metadata override behavior _(merge, override, etc...)_
 		seoMetadataId: seoMetadataIdFkCol(),
@@ -588,8 +708,24 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	{
 		fkKey: "lessonId",
 		extraConfig: (cols, tName) => [
-			index(`idx_${tName}_seo_metadata_id`).on(cols.seoMetadataId),
-			index(`idx_${tName}_title`).on(cols.title),
+			...seoMetadataIdExtraConfig({
+				tName: tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName: tName,
+				fkGroups: [
+					{
+						cols: [cols.lessonId],
+						foreignColumns: [orgProductCourseModuleSectionLesson.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
 		],
 	},
 );
@@ -618,7 +754,7 @@ export const orgMemberProductCourseEnrollment = table(
 		memberId: orgMemberIdFkCol().notNull(),
 		courseId: textCols
 			.idFk("course_id")
-			.references(() => orgProductCourse.id)
+			// .references(() => orgProductCourse.id)
 			.notNull(),
 		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
 		progressPercentage: lmsCols.progressPercentage(),
@@ -649,22 +785,36 @@ export const orgMemberProductCourseEnrollment = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		primaryKey({ columns: [cols.memberId, cols.courseId] }),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_member_id`).on(cols.memberId),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_course_id`).on(cols.courseId),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_status`).on(cols.status),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_progress_percentage`).on(
-			cols.progressPercentage,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_completed_at`).on(cols.completedAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_enrolled_at`).on(cols.enrolledAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_access_at`).on(
-			cols.lastAccessedAt,
-		),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgMemberProductCourseEnrollmentTableName}_last_updated_at`).on(
-			cols.lastUpdatedAt,
-		),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberProductCourseEnrollmentTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgMemberProductCourseEnrollmentTableName,
+			fkGroups: [
+				{
+					cols: [cols.courseId],
+					foreignColumns: [orgProductCourse.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		compositePrimaryKey({
+			tName: orgMemberProductCourseEnrollmentTableName,
+			cols: [cols.memberId, cols.courseId],
+		}),
+		...multiIndexes({
+			tName: orgMemberProductCourseEnrollmentTableName,
+			colsGrps: [
+				{ cols: [cols.status] },
+				{ cols: [cols.progressPercentage] },
+				{ cols: [cols.completedAt] },
+				{ cols: [cols.enrolledAt] },
+				{ cols: [cols.lastAccessedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -706,20 +856,20 @@ export const orgMemberLearningProfile = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		index(`idx_${orgMemberLearningProfileTableName}_member_id`).on(cols.memberId),
-
-		index(`idx_${orgMemberLearningProfileTableName}_total_courses_completed`).on(
-			cols.totalCoursesCompleted,
-		),
-		index(`idx_${orgMemberLearningProfileTableName}_total_learning_in_minutes`).on(
-			cols.totalLearningInMinutes,
-		),
-		index(`idx_${orgMemberLearningProfileTableName}_total_certificates_earned`).on(
-			cols.totalCertificatesEarned,
-		),
-
-		index(`idx_${orgMemberLearningProfileTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgMemberLearningProfileTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberLearningProfileTableName,
+			cols,
+		}),
+		...multiIndexes({
+			tName: orgMemberLearningProfileTableName,
+			colsGrps: [
+				{ cols: [cols.totalCoursesCompleted] },
+				{ cols: [cols.totalLearningInMinutes] },
+				{ cols: [cols.totalCertificatesEarned] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 

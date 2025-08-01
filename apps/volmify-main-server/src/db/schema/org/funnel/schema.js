@@ -77,10 +77,10 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 	},
 	{
 		fkKey: "funnelId",
-		extraConfig: (cols, tableName) => [
-			// index(`idx_${tableName}_name`).on(t.name)
+		extraConfig: (cols, tName) => [
+			// index(`idx_${tName}_name`).on(t.name)
 			...multiForeignKeys({
-				tName: tableName,
+				tName: tName,
 				fkGroups: [
 					{
 						cols: [cols.funnelId],
@@ -89,11 +89,11 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 				],
 			}),
 			...seoMetadataIdExtraConfig({
-				tName: tableName,
+				tName: tName,
 				cols,
 			}),
 			...multiIndexes({
-				tName: tableName,
+				tName: tName,
 				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],

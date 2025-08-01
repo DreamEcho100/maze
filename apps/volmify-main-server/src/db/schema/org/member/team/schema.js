@@ -1,6 +1,13 @@
-import { boolean, index, pgEnum, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { boolean, pgEnum, text } from "drizzle-orm/pg-core";
+import { orgEmployeeIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { userIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
@@ -48,13 +55,25 @@ export const orgTeam = table(
 
 		// metadata: jsonb("metadata"),
 	},
-	(table) => [
-		uniqueIndex(`uq_${orgTeamTableName}_slug_org`).on(table.slug, table.orgId),
-		index(`idx_${orgTeamTableName}_created_at`).on(table.createdAt),
-		index(`idx_${orgTeamTableName}_last_updated_at`).on(table.lastUpdatedAt),
-		index(`idx_${orgTeamTableName}_slug`).on(table.slug),
-		index(`idx_${orgTeamTableName}_org`).on(table.orgId),
-		index(`idx_${orgTeamTableName}_created_by_id`).on(table.createdById),
+	(cols) => [
+		...orgIdExtraConfig({
+			tName: orgTeamTableName,
+			cols,
+		}),
+		...userIdExtraConfig({
+			tName: orgTeamTableName,
+			cols,
+			colFkKey: "createdById",
+			onDelete: "set null",
+		}),
+		uniqueIndex({
+			tName: orgTeamTableName,
+			cols: [cols.slug, cols.orgId],
+		}),
+		...multiIndexes({
+			tName: orgTeamTableName,
+			colsGrps: [{ cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }, { cols: [cols.slug] }],
+		}),
 	],
 );
 
@@ -69,7 +88,23 @@ export const orgTeamI18n = buildOrgI18nTable(orgTeamTableName)(
 	},
 	{
 		fkKey: "teamId",
-		extraConfig: (cols, tableName) => [index(`idx_${tableName}_name`).on(cols.name)],
+		extraConfig: (cols, tName) => [
+			...multiForeignKeys({
+				tName: tName,
+				indexAll: true,
+				fkGroups: [
+					{
+						cols: [cols.teamId],
+						foreignColumns: [orgTeam.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tName,
+				colsGrps: [{ cols: [cols.teamId, cols.name] }],
+			}),
+		],
 	},
 );
 
@@ -110,11 +145,18 @@ export const orgTeamEmployee = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgTeamEmployeeTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgTeamEmployeeTableName}_status`).on(t.status),
-		index(`idx_${orgTeamEmployeeTableName}_role`).on(t.role),
-		index(`idx_${orgTeamEmployeeTableName}_joined_at`).on(t.joinedAt),
-		primaryKey({ columns: [t.employeeId, t.teamId] }),
+	(cols) => [
+		compositePrimaryKey({ tName: orgTeamEmployeeTableName, cols: [cols.teamId, cols.employeeId] }),
+		...multiIndexes({
+			tName: orgTeamEmployeeTableName,
+			colsGrps: [
+				{ cols: [cols.teamId, cols.employeeId] },
+				{ cols: [cols.teamId, cols.status] },
+				{ cols: [cols.teamId, cols.role] },
+				{ cols: [cols.joinedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );

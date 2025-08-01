@@ -1,19 +1,20 @@
 import { eq, sql } from "drizzle-orm";
+import { boolean, check, integer, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
-	boolean,
-	check,
-	index,
-	integer,
-	jsonb,
-	pgEnum,
-	text,
-	timestamp,
-	uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { userIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/user.js";
-import { multiForeignKeys } from "#db/schema/_utils/helpers.js";
-import { currencyCodeFkCol } from "#db/schema/general/locale-and-currency/schema.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+	currencyCodeExtraConfig,
+	currencyCodeFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
+import {
+	orgMemberIdExtraConfig,
+	orgMemberIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { seoMetadataIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
+	userIdExtraConfig,
+	userIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
+import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { sharedCols } from "../../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
@@ -21,8 +22,6 @@ import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
-import { orgMemberIdFkCol } from "../../member/_utils/fk.js";
-import { orgTaxCategory } from "../../tax/schema.js";
 import { orgProductVariant } from "../schema.js";
 
 // -------------------------------------
@@ -157,10 +156,8 @@ export const orgProductVariantPaymentPlan = table(
 		 * @integrationContext Binds plan to specific purchasable entity
 		 * @businessRule Multiple payment strategies per variant enable pricing tier flexibility
 		 */
-		variantId: textCols
-			.idFk("variant_id")
-			.notNull()
-			.references(() => orgProductVariant.id),
+		variantId: textCols.idFk("variant_id").notNull(),
+		// .references(() => orgProductVariant.id),
 
 		/**
 		 * @abacRole Plan creation/update restricted to org owners/managers
@@ -171,7 +168,7 @@ export const orgProductVariantPaymentPlan = table(
 		/**
 		 * This is an optional tax category connection that overrides the one on the `orgProductVariant`
 		 */
-		taxCategoryId: textCols.idFk("tax_category_id").references(() => orgTaxCategory.id),
+		taxCategoryId: textCols.idFk("tax_category_id"), // .references(() => orgTaxCategory.id),
 
 		/**
 		 * @ctiDiscriminator Payment type determines specialized table for type-specific features
@@ -291,39 +288,77 @@ export const orgProductVariantPaymentPlan = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		// Business Constraints
-		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_slug`).on(cols.variantId, cols.slug),
-		uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_default`)
-			.on(cols.variantId, cols.isDefault)
-			.where(eq(cols.isDefault, true)),
+		// // Business Constraints
+		// uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_slug`).on(cols.variantId, cols.slug),
+		// uniqueIndex(`uq_${orgProductVariantPaymentPlanTableName}_default`)
+		// 	.on(cols.variantId, cols.isDefault)
+		// 	.where(eq(cols.isDefault, true)),
 
-		// Performance Indexes
-		index(`idx_${orgProductVariantPaymentPlanTableName}_type`).on(cols.type), // CTI performance critical
-		index(`idx_${orgProductVariantPaymentPlanTableName}_variant_id`).on(cols.variantId),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_org_id`).on(cols.orgId),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_tax_category_id`).on(cols.taxCategoryId),
-		// index(`idx_${orgProductVariantPaymentPlanTableName}_currency`).on(
-		// 	cols.currencyCode,
-		// ),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_active`).on(cols.isActive),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(cols.isFeatured),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(cols.validFrom, cols.validTo),
-		// index(`idx_${orgProductVariantPaymentPlanTableName}_price`).on(cols.price), // Revenue analytics
-		// index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
-		// 	cols.compareAtPrice,
-		// ),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_is_transferable`).on(cols.isTransferable),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_allow_gifting`).on(cols.allowGifting),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(cols.accessTier),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_sort_order`).on(cols.sortOrder),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(cols.features),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(cols.deletedAt),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductVariantPaymentPlanTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		// // Performance Indexes
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_type`).on(cols.type), // CTI performance critical
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_variant_id`).on(cols.variantId),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_org_id`).on(cols.orgId),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_tax_category_id`).on(cols.taxCategoryId),
+		// // index(`idx_${orgProductVariantPaymentPlanTableName}_currency`).on(
+		// // 	cols.currencyCode,
+		// // ),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_active`).on(cols.isActive),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_featured`).on(cols.isFeatured),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_dates`).on(cols.validFrom, cols.validTo),
+		// // index(`idx_${orgProductVariantPaymentPlanTableName}_price`).on(cols.price), // Revenue analytics
+		// // index(`idx_${orgProductVariantPaymentPlanTableName}_compare_at_price`).on(
+		// // 	cols.compareAtPrice,
+		// // ),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_is_transferable`).on(cols.isTransferable),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_allow_gifting`).on(cols.allowGifting),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_access_tier`).on(cols.accessTier),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_sort_order`).on(cols.sortOrder),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_features`).on(cols.features),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(cols.deletedAt),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(cols.createdAt),
+		// index(`idx_${orgProductVariantPaymentPlanTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...orgIdExtraConfig({
+			tName: orgProductVariantPaymentPlanTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgProductVariantPaymentPlanTableName,
+			fkGroups: [
+				{
+					cols: [cols.variantId],
+					foreignColumns: [orgProductVariant.id],
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgProductVariantPaymentPlanTableName,
+			cols: [cols.variantId, cols.slug],
+		}),
+		uniqueIndex({
+			tName: orgProductVariantPaymentPlanTableName,
+			cols: [cols.variantId, cols.isDefault],
+		}).where(eq(cols.isDefault, true)),
 		check(
 			`ck_${orgProductVariantPaymentPlanTableName}_access_tier_range`,
 			sql`${cols.accessTier} >= 0`,
 		),
+		...multiIndexes({
+			tName: orgProductVariantPaymentPlanTableName,
+			colsGrps: [
+				{ cols: [cols.type] },
+				{ cols: [cols.isActive] },
+				{ cols: [cols.isFeatured] },
+				{ cols: [cols.validFrom, cols.validTo] },
+				{ cols: [cols.isTransferable] },
+				{ cols: [cols.allowGifting] },
+				{ cols: [cols.accessTier] },
+				{ cols: [cols.sortOrder] },
+				// { cols: [cols.features] },
+				{ cols: [cols.deletedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -384,9 +419,24 @@ export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
 	},
 	{
 		fkKey: "planId",
-		extraConfig: (cols, tableName) => [
-			index(`idx_${tableName}_seo_metadata_id`).on(cols.seoMetadataId),
-			index(`idx_${tableName}_name`).on(cols.name),
+		extraConfig: (cols, tName) => [
+			...seoMetadataIdExtraConfig({
+				tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.planId],
+						foreignColumns: [orgProductVariantPaymentPlan.id],
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.name] }],
+			}),
 		],
 	},
 );
@@ -423,10 +473,8 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
-		planId: textCols
-			.idFk("plan_id")
-			.primaryKey()
-			.references(() => orgProductVariantPaymentPlan.id),
+		planId: textCols.idFk("plan_id").primaryKey(),
+		// .references(() => orgProductVariantPaymentPlan.id),
 
 		/**
 		 * @currencySupport Currency for this payment plan instance
@@ -469,20 +517,27 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		// Performance indexes for one-time payment management
-		// index(
-		// 	`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_lifetime_access`,
-		// ).on(cols.isLifetimeAccess),
-		// index(
-		// 	`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_access_duration_days`,
-		// ).on(cols.accessDurationDays),
-		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_max_purchases`).on(
-			cols.maxPurchasesPerUser,
-		),
-		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgProductVariantPaymentPlanOneTimeTypeTableName}_last_updated_at`).on(
-			cols.lastUpdatedAt,
-		),
+		...currencyCodeExtraConfig({
+			tName: orgProductVariantPaymentPlanOneTimeTypeTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgProductVariantPaymentPlanOneTimeTypeTableName,
+			fkGroups: [
+				{
+					cols: [cols.planId],
+					foreignColumns: [orgProductVariantPaymentPlan.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgProductVariantPaymentPlanOneTimeTypeTableName,
+			colsGrps: [
+				{ cols: [cols.maxPurchasesPerUser] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -519,10 +574,8 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		/**
 		 * @ctiReference Links to base payment plan for common attributes and pricing
 		 */
-		planId: textCols
-			.idFk("plan_id")
-			.primaryKey()
-			.references(() => orgProductVariantPaymentPlan.id),
+		planId: textCols.idFk("plan_id").primaryKey(),
+		// .references(() => orgProductVariantPaymentPlan.id),
 
 		/**
 		 * @currencySupport Currency for this payment plan instance
@@ -579,29 +632,31 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		// Performance indexes for subscription management
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_billing_interval`).on(
-			cols.billingInterval,
-		),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_count`,
-		).on(cols.customBillingIntervalCount),
-		index(
-			`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_custom_billing_interval_unit`,
-		).on(cols.customBillingIntervalUnit),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_trial`).on(
-			cols.trialPeriodDays,
-		),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_setup_fee`).on(
-			cols.setupFee,
-		),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_created_at`).on(
-			cols.createdAt,
-		),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_last_updated_at`).on(
-			cols.lastUpdatedAt,
-		),
-		index(`idx_${orgProductVariantPaymentPlanSubscriptionTypeTableName}_plan_id`).on(cols.planId),
+		...currencyCodeExtraConfig({
+			tName: orgProductVariantPaymentPlanSubscriptionTypeTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgProductVariantPaymentPlanSubscriptionTypeTableName,
+			fkGroups: [
+				{
+					cols: [cols.planId],
+					foreignColumns: [orgProductVariantPaymentPlan.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgProductVariantPaymentPlanSubscriptionTypeTableName,
+			colsGrps: [
+				{ cols: [cols.billingInterval] },
+				{ cols: [cols.customBillingIntervalCount] },
+				{ cols: [cols.customBillingIntervalUnit] },
+				{ cols: [cols.trialPeriodDays] },
+				{ cols: [cols.setupFee] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 /**
@@ -723,10 +778,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 * @paymentPlanReference Org's payment plan this subscription follows
 		 * @businessRule Determines pricing, billing cycle, features, and access permissions
 		 */
-		planId: textCols
-			.idFk("plan_id")
-			.notNull()
-			.references(() => orgProductVariantPaymentPlan.id),
+		planId: textCols.idFk("plan_id").notNull(),
+		// .references(() => orgProductVariantPaymentPlan.id),
 
 		/**
 		 * @orgScope Org context for this subscription
@@ -799,36 +852,38 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		// Performance indexes for subscription management
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_user_id`).on(cols.userId),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_plan_id`).on(cols.planId),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_org_id`).on(cols.orgId),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_status`).on(cols.status),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_member_id`).on(
-			cols.orgMemberId,
-		),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_access`).on(
-			cols.accessExpiresAt,
-		),
-		index(
-			`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_external_subscription_id`,
-		).on(cols.externalSubscriptionId),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_external_customer_id`).on(
-			cols.externalCustomerId,
-		),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_currency`).on(
-			cols.currencyCode,
-		),
-
-		// Revenue Analytics Indexes
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_revenue`).on(
-			cols.totalPaid,
-			cols.currencyCode,
-		),
-		index(`idx_${orgMemberProductVariantPaymentPlanSubscriptionTableName}_org_revenue`).on(
-			cols.orgId,
-			cols.totalPaid,
-		),
+		...orgIdExtraConfig({
+			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
+			cols,
+		}),
+		...userIdExtraConfig({
+			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
+			cols,
+		}),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
+			fkGroups: [
+				{
+					cols: [cols.planId],
+					foreignColumns: [orgProductVariantPaymentPlan.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
+			colsGrps: [
+				{ cols: [cols.status] },
+				{ cols: [cols.accessExpiresAt] },
+				{ cols: [cols.externalSubscriptionId] },
+				{ cols: [cols.externalCustomerId] },
+				{ cols: [cols.currencyCode] },
+				{ cols: [cols.totalPaid, cols.currencyCode] }, // Revenue analytics
+			],
+		}),
 	],
 );
 
@@ -975,8 +1030,8 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 // 	},
 // 	{
 // 		fkKey: "planId",
-// 		extraConfig: (cols, tableName) => [
-// 			index(`idx_${tableName}_plan_id`).on(cols.planId),
+// 		extraConfig: (cols, tName) => [
+// 			index(`idx_${tName}_plan_id`).on(cols.planId),
 // 		],
 // 	},
 // );

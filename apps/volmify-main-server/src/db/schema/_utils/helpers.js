@@ -206,12 +206,12 @@ const toCamelCase = (str) => {
 
 /**
  * @param {string} prefix
- * @param {string} tableName
+ * @param {string} tName
  * @param {FkPropsParameter['columns']} columns
  * @returns {string}
  */
-const buildConstraintName = (prefix, tableName, columns) => {
-	const cleanTableName = toCamelCase(createAbbreviation(tableName));
+const buildConstraintName = (prefix, tName, columns) => {
+	const cleanTableName = toCamelCase(createAbbreviation(tName));
 	const cleanColumnNames = columns
 		.map((col) => toCamelCase(createAbbreviation(col.name)))
 		.join("_");
@@ -219,9 +219,9 @@ const buildConstraintName = (prefix, tableName, columns) => {
 };
 
 /*
-const buildConstraintName = (prefix, tableName, columns, debug = false) => {
+const buildConstraintName = (prefix, tName, columns, debug = false) => {
   if (debug || process.env.NODE_ENV === 'development') {
-    return `${prefix}_${tableName}_${columns.map(c => c.name).join('_')}`;
+    return `${prefix}_${tName}_${columns.map(c => c.name).join('_')}`;
   }
   // Your current logic
 };
@@ -366,7 +366,7 @@ export const compositePrimaryKey = (props) => {
 		columns: props.cols,
 		name: shortenConstraintName(
 			// `pk_${toCamelCase(props.tName)}_${props.columns.map((col) => toCamelCase(col.name)).join("_")}`,
-			buildConstraintName("pk", props.tName, props.cols),
+			buildConstraintName("cpk", props.tName, props.cols),
 		),
 	});
 };

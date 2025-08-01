@@ -20,7 +20,7 @@ export const buildOrgI18nTable =
 	 * @param {TColumnsMap} columns
 	 * @param {{
 	 * 	fkKey: keyof TColumnsMap & string;
-	 * 	extraConfig?: (self: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>, tableName: `${TTableName}_i18n`) => import("drizzle-orm/pg-core").PgTableExtraConfigValue[];
+	 * 	extraConfig?: (self: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>, tName: `${TTableName}_i18n`) => import("drizzle-orm/pg-core").PgTableExtraConfigValue[];
 	 * }} options
 	 */
 	(columns, options) => {
@@ -62,9 +62,11 @@ export const buildOrgI18nTable =
 						},
 					],
 				}),
-				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(eq(cols.isDefault, true)),
-				// index(shortenConstraintName(`idx_${tableName}_org_id`)).on(t.orgId),
-				// index(shortenConstraintName(`idx_${tableName}_${t[options.fkKey].name}`)).on(
+				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
+					eq(cols.isDefault, true),
+				),
+				// index(shortenConstraintName(`idx_${tName}_org_id`)).on(t.orgId),
+				// index(shortenConstraintName(`idx_${tName}_${t[options.fkKey].name}`)).on(
 				// 	t[options.fkKey],
 				// ),
 				// index(shortenConstraintName(`idx_${tName}_org_locale_key`)).on(t.localeKey),

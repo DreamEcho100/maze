@@ -1,10 +1,10 @@
-import { index, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { text } from "drizzle-orm/pg-core";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { compositePrimaryKey, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { orgProduct } from "../schema.js";
 
 const orgProductCollectionTableName = `${orgTableName}_product_collection`;
 /**
@@ -70,13 +70,24 @@ export const orgProductCollection = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgProductCollectionTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductCollectionTableName}_name`).on(t.title),
-		uniqueIndex(`uq_${orgProductCollectionTableName}_slug_org`).on(t.orgId, t.slug),
-		index(`idx_${orgProductCollectionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductCollectionTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductCollectionTableName}_deleted_at`).on(t.deletedAt),
+	(cols) => [
+		...orgIdExtraConfig({
+			tName: orgProductCollectionTableName,
+			cols,
+		}),
+		uniqueIndex({
+			tName: orgProductCollectionTableName,
+			cols: [cols.slug, cols.orgId],
+		}),
+		...multiIndexes({
+			tName: orgProductCollectionTableName,
+			colsGrps: [
+				{ cols: [cols.title] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -95,22 +106,30 @@ export const orgProductCollectionProduct = table(
 		/**
 		 * @abacLink Product being associated
 		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @abacLink Collection it is part of
 		 */
-		collectionId: textCols
-			.idFk("collection_id")
-			.notNull()
-			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
+		collectionId: textCols.idFk("collection_id").notNull(),
+		// .references(() => orgProductCollection.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		primaryKey({ columns: [t.productId, t.collectionId] }),
-		index(`idx_${orgProductCollectionProductTableName}_created_at`).on(t.createdAt),
+	(cols) => [
+		// primaryKey({ columns: [t.productId, t.collectionId] }),
+		// index(`idx_${orgProductCollectionProductTableName}_created_at`).on(t.createdAt),
+		uniqueIndex({
+			tName: orgProductCollectionProductTableName,
+			cols: [cols.productId, cols.collectionId],
+		}),
+		compositePrimaryKey({
+			tName: orgProductCollectionProductTableName,
+			cols: [cols.productId, cols.collectionId],
+		}),
+		...multiIndexes({
+			tName: orgProductCollectionProductTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );

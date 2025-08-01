@@ -35,19 +35,22 @@
  */
 
 import { eq, sql } from "drizzle-orm";
+import { boolean, check, decimal, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import {
-	boolean,
-	check,
-	decimal,
-	index,
-	jsonb,
-	pgEnum,
-	primaryKey,
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
 	uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { seoMetadataIdFkCol } from "#db/schema/general/seo/schema";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+} from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -108,23 +111,59 @@ export const orgProductApprovalStatusEnum = pgEnum(`${orgProductApprovalTableNam
  *
  * @description Supports course drafts, rejection comments, and admin flow.
  */
-export const orgProductApproval = table(orgProductApprovalTableName, {
-	id: textCols.idPk().notNull(),
+export const orgProductApproval = table(
+	orgProductApprovalTableName,
+	{
+		id: textCols.idPk().notNull(),
 
-	productId: textCols
-		.idFk("product_id")
-		.notNull()
-		.references(() => orgProduct.id),
-	submittedByEmployeeId: orgEmployeeIdFkCol("submitted_by_employee_id").notNull(),
-	reviewedByEmployeeId: orgEmployeeIdFkCol("reviewed_by_employee_id"),
+		productId: textCols
+			.idFk("product_id")
+			.notNull()
+			.references(() => orgProduct.id),
+		submittedByEmployeeId: orgEmployeeIdFkCol({ name: "submitted_by_employee_id" }).notNull(),
+		reviewedByEmployeeId: orgEmployeeIdFkCol({ name: "reviewed_by_employee_id" }),
 
-	status: orgProductApprovalStatusEnum("status").default("pending"),
+		status: orgProductApprovalStatusEnum("status").default("pending"),
 
-	notes: textCols.description("notes"), // Reviewer comments or feedback
-	reviewedAt: temporalCols.business.reviewedAt("reviewed_at").notNull(),
-	createdAt: temporalCols.audit.createdAt(),
-	lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
-});
+		notes: textCols.description("notes"), // Reviewer comments or feedback
+		reviewedAt: temporalCols.business.reviewedAt("reviewed_at").notNull(),
+		createdAt: temporalCols.audit.createdAt(),
+		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
+	},
+	(cols) => [
+		...orgEmployeeIdExtraConfig({
+			tName: orgProductApprovalTableName,
+			cols,
+			colFkKey: "submittedByEmployeeId",
+		}),
+		...orgEmployeeIdExtraConfig({
+			tName: orgProductApprovalTableName,
+			cols,
+			colFkKey: "reviewedByEmployeeId",
+		}),
+		...multiForeignKeys({
+			tName: orgProductApprovalTableName,
+			fkGroups: [
+				{
+					cols: [cols.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgProductApprovalTableName,
+			colsGrps: [
+				{ cols: [cols.productId, cols.status] },
+				{ cols: [cols.submittedByEmployeeId, cols.status] },
+				{ cols: [cols.reviewedByEmployeeId, cols.status] },
+				{ cols: [cols.reviewedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
+	],
+);
 
 // -------------------------------------
 // CORE PRODUCT CATALOG
@@ -210,21 +249,26 @@ export const orgProduct = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
-		// Business Constraints
-		uniqueIndex(`uq_${orgProductTableName}_slug_org`).on(t.orgId, t.slug),
-
-		// Performance Indexes
-		index(`idx_${orgProductTableName}_org_id`).on(t.orgId),
-		index(`idx_${orgProductTableName}_status`).on(t.status),
-		index(`idx_${orgProductTableName}_type`).on(t.type),
-		index(`idx_${orgProductTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductTableName}_deleted_at`).on(t.deletedAt),
-
-		// Composite Indexes for Common Queries
-		index(`idx_${orgProductTableName}_status_type`).on(t.status, t.type),
-		index(`idx_${orgProductTableName}_org_status`).on(t.orgId, t.status),
-		index(`idx_${orgProductTableName}_org_type`).on(t.orgId, t.type),
+		...orgIdExtraConfig({
+			tName: orgProductTableName,
+			cols: t,
+		}),
+		uniqueIndex({
+			tName: orgProductTableName,
+			cols: [t.orgId, t.slug],
+		}),
+		...multiIndexes({
+			tName: orgProductTableName,
+			colsGrps: [
+				{ cols: [t.orgId, t.status] },
+				{ cols: [t.orgId, t.type] },
+				{ cols: [t.status] },
+				{ cols: [t.type] },
+				{ cols: [t.createdAt] },
+				{ cols: [t.lastUpdatedAt] },
+				{ cols: [t.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -249,10 +293,8 @@ export const orgProduct = table(
  */
 export const orgProductI18n = buildOrgI18nTable(orgProductTableName)(
 	{
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "cascade" }),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 
 		title: textCols.title().notNull(),
@@ -260,7 +302,27 @@ export const orgProductI18n = buildOrgI18nTable(orgProductTableName)(
 	},
 	{
 		fkKey: "productId",
-		extraConfig: (cols, tableName) => [index(`idx_${tableName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			...seoMetadataIdExtraConfig({
+				tName: tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName: tName,
+				indexAll: true,
+				fkGroups: [
+					{
+						cols: [cols.productId],
+						foreignColumns: [orgProduct.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -306,10 +368,8 @@ export const orgProductVariant = table(
 		 * @businessContext Variants provide purchasable variations of core product content
 		 * @contentSeparation Product handles content/marketing, variant handles commerce/pricing
 		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		/**
 		 * @businessRule URL-safe identifier unique within product
@@ -385,7 +445,7 @@ export const orgProductVariant = table(
 		// Q: Should the `tax_category_id` be here or in the `orgProductVariantPaymentPlan`
 		taxCategoryId: textCols
 			.idFk("tax_category_id")
-			.references(() => orgTaxCategory.id)
+			// .references(() => orgTaxCategory.id)
 			.notNull(),
 
 		// /**
@@ -427,35 +487,54 @@ export const orgProductVariant = table(
 		// metadata: jsonb("metadata"),
 	},
 	(t) => [
-		// Business Constraints
-		uniqueIndex(`uq_${orgProductVariantTable}_slug`).on(t.productId, t.slug),
-		uniqueIndex(`uq_${orgProductVariantTable}_default`)
-			.on(t.productId, t.isDefault)
-			.where(eq(t.isDefault, true)),
-
-		// Performance Indexes
-		index(`idx_${orgProductVariantTable}_product_id`).on(t.productId),
-		index(`idx_${orgProductVariantTable}_active`).on(t.isActive),
-		index(`idx_${orgProductVariantTable}_sort`).on(t.sortOrder),
-		index(`idx_${orgProductVariantTable}_default`).on(t.isDefault),
-		index(`idx_${orgProductVariantTable}_featured`).on(t.isFeatured),
-		index(`idx_${orgProductVariantTable}_type`).on(t.type),
-		// index(`idx_${orgProductVariantTable}_currency_code`).on(t.currencyCode),
-		index(`idx_${orgProductVariantTable}_starts_at`).on(t.startsAt),
-		index(`idx_${orgProductVariantTable}_ends_at`).on(t.endsAt),
-		index(`idx_${orgProductVariantTable}_created_at`).on(t.createdAt),
-		index(`idx_${orgProductVariantTable}_last_updated_at`).on(t.lastUpdatedAt),
-		index(`idx_${orgProductVariantTable}_deleted_at`).on(t.deletedAt),
-		index(`idx_${orgProductVariantTable}_tax_category_id`).on(t.taxCategoryId),
+		...multiForeignKeys({
+			tName: orgProductVariantTable,
+			indexAll: true,
+			fkGroups: [
+				{
+					cols: [t.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [t.taxCategoryId],
+					foreignColumns: [orgTaxCategory.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgProductVariantTable,
+			cols: [t.productId, t.slug],
+		}),
+		uniqueIndex({
+			tName: orgProductVariantTable,
+			cols: [t.productId, t.isDefault],
+		}).where(eq(t.isDefault, true)),
+		...multiIndexes({
+			tName: orgProductVariantTable,
+			colsGrps: [
+				{ cols: [t.productId, t.isActive] },
+				{ cols: [t.productId, t.type] },
+				{ cols: [t.isActive] },
+				{ cols: [t.type] },
+				{ cols: [t.isDefault] },
+				{ cols: [t.isFeatured] },
+				{ cols: [t.sortOrder] },
+				{ cols: [t.startsAt] },
+				{ cols: [t.endsAt] },
+				{ cols: [t.createdAt] },
+				{ cols: [t.lastUpdatedAt] },
+				{ cols: [t.deletedAt] },
+			],
+		}),
 	],
 );
 
 export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantTable)(
 	{
-		variantId: textCols
-			.idFk("variant_id")
-			.notNull()
-			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
+		variantId: textCols.idFk("variant_id").notNull(),
+		// .references(() => orgProductVariant.id, { onDelete: "cascade" }),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 
 		title: textCols.title().notNull(),
@@ -463,7 +542,27 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantTable)(
 	},
 	{
 		fkKey: "variantId",
-		extraConfig: (cols, tableName) => [index(`idx_${tableName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			...seoMetadataIdExtraConfig({
+				tName: tName,
+				cols,
+			}),
+			...multiForeignKeys({
+				tName: tName,
+				indexAll: true,
+				fkGroups: [
+					{
+						cols: [cols.variantId],
+						foreignColumns: [orgProductVariant.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName: tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -496,20 +595,16 @@ export const orgProductBrandAttribution = table(
 		 * @businessRule Links product presentation to specific org brand identity
 		 * @marketingStrategy Enables consistent brand presentation across product catalog
 		 */
-		brandId: textCols
-			.idFk("brand_id")
-			.notNull()
-			.references(() => orgBrand.id),
+		brandId: textCols.idFk("brand_id").notNull(),
+		// .references(() => orgBrand.id),
 
 		/**
 		 * @productAttribution Product this brand attribution applies to
 		 * @businessRule Links brand identity to specific product for marketing consistency
 		 * @customerExperience Ensures consistent brand presentation in product discovery
 		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "cascade" }),
 
 		// /**
 		//  * @brandHierarchy Primary brand attribution for main brand presentation
@@ -520,15 +615,28 @@ export const orgProductBrandAttribution = table(
 
 		createdAt: temporalCols.audit.createdAt(),
 	},
-	(t) => [
-		// Business Constraints
-		primaryKey({ columns: [t.brandId, t.productId] }),
-		// uniqueIndex("uq_product_brand_primary")
-		// 	.on(t.productId, t.isPrimary)
-		// 	.where(eq(t.isPrimary, true)),
-
-		// Performance Indexes
-		index(`idx_${orgProductBrandTableName}_created_at`).on(t.createdAt),
+	(cols) => [
+		compositePrimaryKey({ tName: orgProductBrandTableName, cols: [cols.brandId, cols.productId] }),
+		...multiForeignKeys({
+			tName: orgProductBrandTableName,
+			indexAll: true,
+			fkGroups: [
+				{
+					cols: [cols.brandId],
+					foreignColumns: [orgBrand.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgProductBrandTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );
 
@@ -541,7 +649,7 @@ export const orgProductRevenuePool = table(
 		productId: textCols
 			.idFk("product_id")
 			.primaryKey()
-			.references(() => orgProduct.id)
+			// .references(() => orgProduct.id)
 			.notNull(),
 		totalAllocatedPercentage: decimal("total_allocated_percentage", {
 			precision: 5,
@@ -553,13 +661,29 @@ export const orgProductRevenuePool = table(
 
 		// Revenue allocation tracking
 		allocationHistory: jsonb("allocation_history"), // Track changes for audit
-		lastAllocationByEmployeeId: orgEmployeeIdFkCol("last_allocation_by_employee_id"),
+		lastAllocationByEmployeeId: orgEmployeeIdFkCol({ name: "last_allocation_by_employee_id" }),
 		lastAllocationAt: temporalCols.audit.lastUpdatedAt(),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
+		...orgEmployeeIdExtraConfig({
+			tName: orgProductRevenuePoolTableName,
+			cols: t,
+			colFkKey: "lastAllocationByEmployeeId",
+		}),
+		...multiForeignKeys({
+			tName: orgProductRevenuePoolTableName,
+			indexAll: true,
+			fkGroups: [
+				{
+					cols: [t.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
 		check(
 			`ck_${orgProductRevenuePoolTableName}_valid_percentages`,
 			sql`${t.totalAllocatedPercentage} + ${t.remainingPercentage} = 100`,
@@ -572,5 +696,15 @@ export const orgProductRevenuePool = table(
 			"ck_orgProductRevenuePoolTableName}_valid_allocated_range",
 			sql`${t.totalAllocatedPercentage} >= 0 AND ${t.totalAllocatedPercentage} <= 100`,
 		),
+		...multiIndexes({
+			tName: orgProductRevenuePoolTableName,
+			colsGrps: [
+				{ cols: [t.totalAllocatedPercentage] },
+				{ cols: [t.remainingPercentage] },
+				{ cols: [t.lastAllocationAt] },
+				{ cols: [t.createdAt] },
+				{ cols: [t.lastUpdatedAt] },
+			],
+		}),
 	],
 );

@@ -57,10 +57,10 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 	},
 	{
 		fkKey: "categoryId",
-		extraConfig: (cols, tableName) => [
-			// index(`idx_${tableName}_name`).on(cols.name)
+		extraConfig: (cols, tName) => [
+			// index(`idx_${tName}_name`).on(cols.name)
 			...multiForeignKeys({
-				tName: tableName,
+				tName: tName,
 				fkGroups: [
 					{
 						cols: [cols.categoryId],
@@ -69,11 +69,11 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 				],
 			}),
 			...seoMetadataIdExtraConfig({
-				tName: tableName,
+				tName: tName,
 				cols,
 			}),
 			...multiIndexes({
-				tName: tableName,
+				tName: tName,
 				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],
@@ -224,9 +224,9 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 	},
 	{
 		fkKey: "rateId",
-		extraConfig: (cols, tableName) => [
+		extraConfig: (cols, tName) => [
 			...multiForeignKeys({
-				tName: tableName,
+				tName: tName,
 				fkGroups: [
 					{
 						cols: [cols.rateId],
@@ -236,11 +236,11 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 				],
 			}),
 			...seoMetadataIdExtraConfig({
-				tName: tableName,
+				tName: tName,
 				cols,
 			}),
 			...multiIndexes({
-				tName: tableName,
+				tName: tName,
 				colsGrps: [{ cols: [cols.name] }],
 			}),
 		],

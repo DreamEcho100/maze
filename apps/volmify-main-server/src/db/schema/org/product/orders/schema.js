@@ -1,13 +1,17 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, jsonb, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
-import { currencyCodeFkCol } from "#db/schema/general/locale-and-currency/schema.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { check, integer, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { currencyCodeFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
+import {
+	orgMemberIdExtraConfig,
+	orgMemberIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
 import { orgTableName } from "../../_utils/helpers.js";
-import { orgMemberIdFkCol } from "../../member/_utils/fk.js";
 import { orgTaxRateSnapshot } from "../../tax/schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard } from "../offers/schema.js";
 import { orgProductVariantPaymentPlan } from "../payment/schema.js";
@@ -85,7 +89,6 @@ export const orgMemberOrder = table(
 		memberId: orgMemberIdFkCol().notNull(),
 
 		// Q: Should it connect to the country table?
-
 		/**
 		 * @orderLifecycle Current order processing status
 		 * @businessRule Determines order workflow and customer communication
@@ -178,48 +181,52 @@ export const orgMemberOrder = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
-	(t) => [
-		// Business Constraints
-		uniqueIndex(`uq_${orgMemberOrderTableName}_order_number_org`).on(t.orgId, t.displayId),
+	(cols) => [
+		...orgIdExtraConfig({
+			tName: orgMemberOrderTableName,
+			cols,
+		}),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberOrderTableName,
+			cols,
+		}),
+		uniqueIndex({
+			tName: orgMemberOrderTableName,
+			cols: [cols.orgId, cols.displayId],
+		}),
+		...multiIndexes({
+			tName: orgMemberOrderTableName,
+			colsGrps: [
+				{ cols: [cols.orgId, cols.status] },
+				{ cols: [cols.memberId, cols.status] },
+				{ cols: [cols.orgId, cols.totalAmount] },
+				{ cols: [cols.orgId, cols.currencyCode] },
+				{ cols: [cols.orgId, cols.orderedAt] },
+				{ cols: [cols.orgId, cols.paidAt] },
+				{ cols: [cols.orgId, cols.fulfilledAt] },
+				{ cols: [cols.orgId, cols.externalPaymentId] },
+				{ cols: [cols.orgId, cols.paymentMethod] },
+				{ cols: [cols.orgId, cols.createdAt] },
+				{ cols: [cols.orgId, cols.lastUpdatedAt] },
+				{ cols: [cols.orgId, cols.deletedAt] },
+			],
+		}),
 
-		// Performance Indexes - Multi-tenant queries
-		index(`idx_${orgMemberOrderTableName}_org_status`).on(t.orgId, t.status),
-		index(`idx_${orgMemberOrderTableName}_member_status`).on(t.memberId, t.status),
-
-		// Financial reporting indexes
-		// index(`idx_${orgMemberOrderTableName}_current_payment_status`).on(t.paymentStatus),
-		index(`idx_${orgMemberOrderTableName}_total_amount`).on(t.totalAmount),
-		index(`idx_${orgMemberOrderTableName}_currency`).on(t.currencyCode),
-
-		// Time-based analytics indexes
-		index(`idx_${orgMemberOrderTableName}_ordered_at`).on(t.orderedAt),
-		index(`idx_${orgMemberOrderTableName}_paid_at`).on(t.paidAt),
-		index(`idx_${orgMemberOrderTableName}_fulfilled_at`).on(t.fulfilledAt),
-
-		// Customer service indexes
-		index(`idx_${orgMemberOrderTableName}_external_payment`).on(t.externalPaymentId),
-		index(`idx_${orgMemberOrderTableName}_payment_method`).on(t.paymentMethod),
-
-		// Audit indexes
-		index(`idx_${orgMemberOrderTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberOrderTableName}_last_updated_at`).on(t.lastUpdatedAt),
-
-		// Business logic constraints
 		check(
 			`ck_${orgMemberOrderTableName}_total_amount_calculation`,
-			sql`${t.totalAmount} = ${t.subtotalAmount} - ${t.totalDiscountAmount} + ${t.totalTaxAmount}`,
+			sql`${cols.totalAmount} = ${cols.subtotalAmount} - ${cols.totalDiscountAmount} + ${cols.totalTaxAmount}`,
 		),
 		check(
 			`ck_${orgMemberOrderTableName}_positive_amounts`,
-			sql`${t.subtotalAmount} >= 0 AND ${t.totalDiscountAmount} >= 0 AND ${t.totalTaxAmount} >= 0`,
+			sql`${cols.subtotalAmount} >= 0 AND ${cols.totalDiscountAmount} >= 0 AND ${cols.totalTaxAmount} >= 0`,
 		),
 		check(
 			`ck_${orgMemberOrderTableName}_valid_payment_timing`,
-			sql`${t.paidAt} IS NULL OR ${t.paidAt} >= ${t.orderedAt}`,
+			sql`${cols.paidAt} IS NULL OR ${cols.paidAt} >= ${cols.orderedAt}`,
 		),
 		check(
 			`ck_${orgMemberOrderTableName}_valid_fulfillment_timing`,
-			sql`${t.fulfilledAt} IS NULL OR ${t.fulfilledAt} >= ${t.orderedAt}`,
+			sql`${cols.fulfilledAt} IS NULL OR ${cols.fulfilledAt} >= ${cols.orderedAt}`,
 		),
 	],
 );
@@ -240,34 +247,26 @@ export const orgMemberOrderItem = table(
 		/**
 		 * @orderRelation Parent order this item belongs to
 		 */
-		orderId: textCols
-			.idFk("order_id")
-			.notNull()
-			.references(() => orgMemberOrder.id, { onDelete: "cascade" }),
+		orderId: textCols.idFk("order_id").notNull(),
+		// .references(() => orgMemberOrder.id, { onDelete: "cascade" }),
 
 		/**
 		 * @productDetails Product and variant for this line item
 		 */
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "restrict" }),
-		variantId: textCols
-			.idFk("variant_id")
-			.notNull()
-			.references(() => orgProductVariant.id, { onDelete: "restrict" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "restrict" }),
+		variantId: textCols.idFk("variant_id").notNull(),
+		// .references(() => orgProductVariant.id, { onDelete: "restrict" }),
 
 		/**
 		 * @paymentStrategy Payment plan selected for purchase
 		 * @accessControl Payment plan determines content access level and billing
 		 * @businessRule Payment plan must be available for the selected variant
 		 */
-		paymentPlanId: textCols
-			.idFk("payment_plan_id")
-			.notNull()
-			.references(() => orgProductVariantPaymentPlan.id, {
-				onDelete: "restrict",
-			}),
+		paymentPlanId: textCols.idFk("payment_plan_id").notNull(),
+		// .references(() => orgProductVariantPaymentPlan.id, {
+		// 	onDelete: "restrict",
+		// }),
 		/**
 		 * @tierSelection Customer-selected access tier provided by payment plan limits
 		 * @contentGating Determines which content customer can access
@@ -293,9 +292,40 @@ export const orgMemberOrderItem = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberOrderItemTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberOrderItemTableName}_product_id_variant_id`).on(t.productId, t.variantId),
-		index(`idx_${orgMemberOrderItemTableName}_payment_plan_id`).on(t.paymentPlanId),
+		...multiForeignKeys({
+			tName: orgMemberOrderItemTableName,
+			fkGroups: [
+				{
+					cols: [t.orderId],
+					foreignColumns: [orgMemberOrder.id],
+				},
+				{
+					cols: [t.productId],
+					foreignColumns: [orgProduct.id],
+				},
+				{
+					cols: [t.variantId],
+					foreignColumns: [orgProductVariant.id],
+				},
+				{
+					cols: [t.paymentPlanId],
+					foreignColumns: [orgProductVariantPaymentPlan.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgMemberOrderItemTableName,
+			colsGrps: [
+				{ cols: [t.productId, t.variantId] },
+				{ cols: [t.paymentPlanId] },
+				{ cols: [t.selectedAccessTier] },
+				{ cols: [t.unitPrice] },
+				{ cols: [t.quantity] },
+				{ cols: [t.subtotal] },
+				{ cols: [t.totalPrice] },
+				{ cols: [t.createdAt] },
+			],
+		}),
 
 		// Business constraints
 		check(`ck_${orgMemberOrderItemTableName}_positive_quantity`, sql`${t.quantity} > 0`),
@@ -321,21 +351,17 @@ export const orgMemberOrderDiscount = table(
 	{
 		id: textCols.idPk().notNull(),
 
-		orderId: textCols
-			.idFk("order_id")
-			.notNull()
-			.references(() => orgMemberOrder.id, { onDelete: "cascade" }),
+		orderId: textCols.idFk("order_id").notNull(),
+		// .references(() => orgMemberOrder.id, { onDelete: "cascade" }),
 
 		/**
 		 * @discountSources Multiple discount types can be applied
 		 */
-		discountId: textCols
-			.idFk("discount_id")
-			.references(() => orgDiscount.id, { onDelete: "set null" }),
-		couponId: textCols.idFk("coupon_id").references(() => orgCoupon.id, { onDelete: "set null" }),
-		giftCardId: textCols
-			.idFk("gift_card_id")
-			.references(() => orgGiftCard.id, { onDelete: "set null" }),
+		discountId: textCols.idFk("discount_id"),
+		// .references(() => orgDiscount.id, { onDelete: "set null" }),
+		couponId: textCols.idFk("coupon_id"), // .references(() => orgCoupon.id, { onDelete: "set null" }),
+		giftCardId: textCols.idFk("gift_card_id"),
+		// .references(() => orgGiftCard.id, { onDelete: "set null" }),
 
 		/**
 		 * @discountImpact Amount discounted by this application
@@ -346,10 +372,31 @@ export const orgMemberOrderDiscount = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberOrderDiscountTableName}_order_item_id`).on(t.orderId),
-		index(`idx_${orgMemberOrderDiscountTableName}_discount_id`).on(t.discountId),
-		index(`idx_${orgMemberOrderDiscountTableName}_coupon_id`).on(t.couponId),
-		index(`idx_${orgMemberOrderDiscountTableName}_gift_card_id`).on(t.giftCardId),
+		...multiForeignKeys({
+			tName: orgMemberOrderDiscountTableName,
+			fkGroups: [
+				{
+					cols: [t.orderId],
+					foreignColumns: [orgMemberOrder.id],
+				},
+				{
+					cols: [t.discountId],
+					foreignColumns: [orgDiscount.id],
+				},
+				{
+					cols: [t.couponId],
+					foreignColumns: [orgCoupon.id],
+				},
+				{
+					cols: [t.giftCardId],
+					foreignColumns: [orgGiftCard.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgMemberOrderDiscountTableName,
+			colsGrps: [{ cols: [t.discountAmount] }, { cols: [t.discountType] }, { cols: [t.createdAt] }],
+		}),
 
 		// Business constraints
 		check(`ck_${orgMemberOrderDiscountTableName}_positive_discount`, sql`${t.discountAmount} >= 0`),
@@ -384,14 +431,11 @@ export const orgMemberOrderTaxCalculation = table(
 		/**
 		 * @orderRelation Parent order this tax calculation belongs to
 		 */
-		orderId: textCols
-			.idFk("order_id")
-			.notNull()
-			.references(() => orgMemberOrder.id, { onDelete: "cascade" }),
+		orderId: textCols.idFk("order_id").notNull(),
+		// .references(() => orgMemberOrder.id, { onDelete: "cascade" }),
 
-		taxRateSnapshotId: textCols
-			.idFk("tax_rate_snapshot_id")
-			.references(() => orgTaxRateSnapshot.id, { onDelete: "set null" }),
+		taxRateSnapshotId: textCols.idFk("tax_rate_snapshot_id"),
+		// .references(() => orgTaxRateSnapshot.id, { onDelete: "set null" }),
 
 		taxableAmount: numericCols.currency.amount("taxable_amount").notNull(), // Amount subject to tax (pre-tax)
 		calculatedTaxAmount: numericCols.currency.amount("calculated_tax_amount").notNull(), // Actual tax calculated for this order
@@ -407,15 +451,31 @@ export const orgMemberOrderTaxCalculation = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberOrderTaxCalculationTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberOrderTaxCalculationTableName}_tax_rate_snapshot_id`).on(
-			t.taxRateSnapshotId,
-		),
-		// index(`idx_${orgMemberOrderTaxCalculationTableName}_rate`).on(t.taxRate),
-		// index(`idx_${orgMemberOrderTaxCalculationTableName}_jurisdiction`).on(t.taxJurisdiction),
+		...multiForeignKeys({
+			tName: orgMemberOrderTaxCalculationTableName,
+			fkGroups: [
+				{
+					cols: [t.orderId],
+					foreignColumns: [orgMemberOrder.id],
+				},
+				{
+					cols: [t.taxRateSnapshotId],
+					foreignColumns: [orgTaxRateSnapshot.id],
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgMemberOrderTaxCalculationTableName,
+			colsGrps: [
+				{ cols: [t.taxableAmount] },
+				{ cols: [t.calculatedTaxAmount] },
+				{ cols: [t.calculationMethod] },
+				{ cols: [t.appliedRate] },
+				{ cols: [t.createdAt] },
+			],
+		}),
 
-		// // Business constraints
-		// // check("positive_amounts", sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`),
+		// check("positive_amounts", sql`${t.taxableAmount} >= 0 AND ${t.calculatedTaxAmount} >= 0`),
 	],
 );
 
@@ -468,10 +528,8 @@ export const orgMemberOrderPayment = table(
 	{
 		id: textCols.idPk().notNull(),
 
-		orderId: textCols
-			.idFk("order_id")
-			.notNull()
-			.references(() => orgMemberOrder.id, { onDelete: "cascade" }),
+		orderId: textCols.idFk("order_id").notNull(),
+		// .references(() => orgMemberOrder.id, { onDelete: "cascade" }),
 
 		/**
 		 * @paymentGateway Payment processor used
@@ -519,23 +577,19 @@ export const orgMemberOrderPayment = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		index(`idx_${orgMemberOrderPaymentTableName}_order_id`).on(t.orderId),
-		index(`idx_${orgMemberOrderPaymentTableName}_gateway_transaction`).on(t.gatewayTransactionId),
-		index(`idx_${orgMemberOrderPaymentTableName}_status`).on(t.status),
-		index(`idx_${orgMemberOrderPaymentTableName}_payment_gateway`).on(t.paymentGateway),
-		index(`idx_${orgMemberOrderPaymentTableName}_payment_method`).on(t.paymentMethod),
-		index(`idx_${orgMemberOrderPaymentTableName}_authorized_at`).on(t.authorizedAt),
-		index(`idx_${orgMemberOrderPaymentTableName}_captured_at`).on(t.capturedAt),
-		index(`idx_${orgMemberOrderPaymentTableName}_settled_at`).on(t.settledAt),
-		index(`idx_${orgMemberOrderPaymentTableName}_disputed_at`).on(t.disputedAt),
-		index(`idx_${orgMemberOrderPaymentTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgMemberOrderPaymentTableName}_last_updated_at`).on(t.lastUpdatedAt),
-
-		// TODO: unique for order id
-		uniqueIndex(`uq_${orgMemberOrderPaymentTableName}_order_gateway_transaction`).on(
-			t.orderId,
-			t.gatewayTransactionId,
-		),
+		...multiForeignKeys({
+			tName: orgMemberOrderPaymentTableName,
+			fkGroups: [
+				{
+					cols: [t.orderId],
+					foreignColumns: [orgMemberOrder.id],
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgMemberOrderPaymentTableName,
+			cols: [t.orderId, t.gatewayTransactionId],
+		}),
 		// Business constraints
 		check(
 			`ck_${orgMemberOrderPaymentTableName}_amount_calculation`,
@@ -545,6 +599,20 @@ export const orgMemberOrderPayment = table(
 			`ck_${orgMemberOrderPaymentTableName}_positive_amounts`,
 			sql`${t.grossAmount} >= 0 AND ${t.processingFee} >= 0`,
 		),
+		...multiIndexes({
+			tName: orgMemberOrderPaymentTableName,
+			colsGrps: [
+				{ cols: [t.status] },
+				{ cols: [t.paymentGateway] },
+				{ cols: [t.paymentMethod] },
+				{ cols: [t.authorizedAt] },
+				{ cols: [t.capturedAt] },
+				{ cols: [t.settledAt] },
+				{ cols: [t.disputedAt] },
+				{ cols: [t.createdAt] },
+				{ cols: [t.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 

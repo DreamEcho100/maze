@@ -1,13 +1,18 @@
-import { index, pgEnum, uniqueIndex, varchar } from "drizzle-orm/pg-core";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { pgEnum, varchar } from "drizzle-orm/pg-core";
+import {
+	orgMemberIdExtraConfig,
+	orgMemberIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
-import { orgMemberIdFkCol } from "../_utils/fk.js";
 import { orgMemberTableName } from "../_utils/index.js";
 import { orgMemberBaseRoleEnum } from "../schema.js";
 
-export const orgMemberInvitationStatusEnum = pgEnum(`${orgMemberTableName}_invitation_status`, [
+const orgMemberInvitationTableName = `${orgMemberTableName}_invitation`;
+export const orgMemberInvitationStatusEnum = pgEnum(`${orgMemberInvitationTableName}_status`, [
 	"pending", // Awaiting response
 	"accepted", // Member joined org
 	"declined", // Invitee declined
@@ -15,7 +20,7 @@ export const orgMemberInvitationStatusEnum = pgEnum(`${orgMemberTableName}_invit
 	"revoked", // Revoked access before action
 ]);
 
-export const invitationTypeEnum = pgEnum("invitation_type", [
+export const invitationTypeEnum = pgEnum(`${orgMemberInvitationTableName}_type`, [
 	"learner",
 	"customer",
 	"community_member",
@@ -28,7 +33,7 @@ export const invitationTypeEnum = pgEnum("invitation_type", [
  * Handles invitation issuance and acceptance into the ABAC org model.
  */
 export const orgMemberInvitation = table(
-	`${orgMemberTableName}_invitation`,
+	orgMemberInvitationTableName,
 	{
 		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
@@ -42,7 +47,7 @@ export const orgMemberInvitation = table(
 		// // Course/product access (optional)
 		// grantedCourseAccess: text("granted_course_access").array(),
 
-		invitedByMemberId: orgMemberIdFkCol("invited_by_member_id").notNull(), // Any member can invite customers
+		invitedByMemberId: orgMemberIdFkCol({ name: "invited_by_member_id" }).notNull(), // Any member can invite customers
 		status: orgMemberInvitationStatusEnum("status").default("pending"),
 		expiresAt: temporalCols.business.expiresAt().notNull(),
 
@@ -57,17 +62,42 @@ export const orgMemberInvitation = table(
 		// userId: textCols.idFk("user_id").references(() => user.id),
 		// invitedByEmployeeId: orgEmployeeIdFkCol("invited_by_employee_id")
 	},
-	(t) => {
-		const base = `${orgMemberTableName}_invitation`;
-		return [
-			index(`idx_${base}_created_at`).on(t.createdAt),
-			index(`idx_${base}_last_updated_at`).on(t.lastUpdatedAt),
-			index(`idx_${base}_status`).on(t.status),
-			index(`idx_${base}_expires_at`).on(t.expiresAt),
-			index(`idx_${base}_email`).on(t.email),
-			index(`idx_${base}_invited_by_member_id`).on(t.invitedByMemberId),
-			index(`idx_${base}_org_id`).on(t.orgId),
-			uniqueIndex(`uq_${base}_email_org`).on(t.email, t.orgId),
-		];
-	},
+	(cols) => [
+		// index(`idx_${orgMemberInvitationTableName}_created_at`).on(t.createdAt),
+		// index(`idx_${orgMemberInvitationTableName}_last_updated_at`).on(t.lastUpdatedAt),
+		// index(`idx_${orgMemberInvitationTableName}_status`).on(t.status),
+		// index(`idx_${orgMemberInvitationTableName}_expires_at`).on(t.expiresAt),
+		// index(`idx_${orgMemberInvitationTableName}_email`).on(t.email),
+		// index(`idx_${orgMemberInvitationTableName}_invited_by_member_id`).on(t.invitedByMemberId),
+		// index(`idx_${orgMemberInvitationTableName}_org_id`).on(t.orgId),
+		// uniqueIndex(`uq_${orgMemberInvitationTableName}_email_org`).on(t.email, t.orgId),
+		uniqueIndex({
+			tName: orgMemberInvitationTableName,
+			cols: [cols.email, cols.orgId],
+		}),
+		...orgIdExtraConfig({
+			tName: orgMemberInvitationTableName,
+			cols,
+		}),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberInvitationTableName,
+			cols,
+			colFkKey: "invitedByMemberId",
+		}),
+		...multiIndexes({
+			tName: orgMemberInvitationTableName,
+			colsGrps: [
+				{ cols: [cols.orgId, cols.email] },
+				{ cols: [cols.orgId, cols.status] },
+				{ cols: [cols.orgId, cols.invitedByMemberId, cols.status] },
+				{ cols: [cols.orgId, cols.role] },
+				{ cols: [cols.orgId, cols.invitationType] },
+				{ cols: [cols.orgId, cols.createdAt] },
+				{ cols: [cols.orgId, cols.lastUpdatedAt] },
+				{ cols: [cols.orgId, cols.expiresAt] },
+				{ cols: [cols.orgId, cols.acceptedAt] },
+				{ cols: [cols.orgId, cols.declinedAt] },
+			],
+		}),
+	],
 );

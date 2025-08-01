@@ -1,23 +1,29 @@
+import { decimal, integer, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
-	decimal,
-	index,
-	integer,
-	pgEnum,
-	primaryKey,
-	text,
-	timestamp,
+	currencyCodeExtraConfig,
+	currencyCodeFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import {
+	orgMemberIdExtraConfig,
+	orgMemberIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
 	uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { currencyCodeFkCol } from "#db/schema/general/locale-and-currency/schema.js";
-import { orgEmployeeIdFkCol } from "#db/schema/org/member/employee/_utils/fk.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+} from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { sharedCols } from "../../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
-import { orgMemberIdFkCol } from "../../member/_utils/fk.js";
 import { orgProductCollection } from "../collection/schema.js";
 import { orgMemberOrder } from "../orders/schema.js";
 import { orgProduct, orgProductVariant } from "../schema.js";
@@ -77,13 +83,24 @@ export const orgDiscount = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		index(`idx_${orgDiscountTableName}_org_id`).on(cols.orgId),
-		index(`idx_${orgDiscountTableName}_type`).on(cols.type),
-		index(`idx_${orgDiscountTableName}_active`).on(cols.isActive),
-		index(`idx_${orgDiscountTableName}_applies_to`).on(cols.appliesTo),
-		index(`idx_${orgDiscountTableName}_dates`).on(cols.startsAt, cols.endsAt),
-		index(`idx_${orgDiscountTableName}_active_dates`).on(cols.isActive, cols.startsAt, cols.endsAt),
-		index(`idx_${orgDiscountTableName}_currency_code`).on(cols.currencyCode),
+		...orgIdExtraConfig({
+			tName: orgDiscountTableName,
+			cols,
+		}),
+		...currencyCodeExtraConfig({
+			tName: orgDiscountTableName,
+			cols,
+		}),
+		...multiIndexes({
+			tName: orgDiscountTableName,
+			colsGrps: [
+				{ cols: [cols.orgId, cols.type] },
+				{ cols: [cols.orgId, cols.isActive] },
+				{ cols: [cols.orgId, cols.appliesTo] },
+				{ cols: [cols.orgId, cols.startsAt, cols.endsAt] },
+				{ cols: [cols.orgId, cols.currencyCode] },
+			],
+		}),
 	],
 );
 
@@ -94,10 +111,8 @@ export const orgDiscount = table(
  */
 export const orgDiscountI18n = buildOrgI18nTable(orgDiscountTableName)(
 	{
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
 		description: textCols.shortDescription("description"),
 
@@ -107,7 +122,23 @@ export const orgDiscountI18n = buildOrgI18nTable(orgDiscountTableName)(
 	},
 	{
 		fkKey: "discountId",
-		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			// index(`idx_${tName}_title`).on(cols.title)
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.discountId],
+						foreignColumns: [orgDiscount.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -127,19 +158,36 @@ const orgDiscountProductTableName = `${orgDiscountTableName}_product`;
 export const orgDiscountProduct = table(
 	orgDiscountProductTableName,
 	{
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		primaryKey({ columns: [cols.discountId, cols.productId] }),
-		index(`idx_${orgDiscountProductTableName}_createdAt`).on(cols.createdAt),
+		compositePrimaryKey({
+			tName: orgDiscountProductTableName,
+			cols: [cols.discountId, cols.productId],
+		}),
+		...multiForeignKeys({
+			tName: orgDiscountProductTableName,
+			fkGroups: [
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgDiscountProductTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );
 
@@ -159,19 +207,36 @@ const orgDiscountProductVariantTableName = `${orgDiscountTableName}_product_vari
 export const orgDiscountProductVariant = table(
 	orgDiscountProductVariantTableName,
 	{
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
-		variantId: textCols
-			.idFk("variant_id")
-			.notNull()
-			.references(() => orgProductVariant.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
+		variantId: textCols.idFk("variant_id").notNull(),
+		// .references(() => orgProductVariant.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		primaryKey({ columns: [cols.discountId, cols.variantId] }),
-		index(`idx_${orgDiscountProductVariantTableName}_createdAt`).on(cols.createdAt),
+		compositePrimaryKey({
+			tName: orgDiscountProductVariantTableName,
+			cols: [cols.discountId, cols.variantId],
+		}),
+		...multiForeignKeys({
+			tName: orgDiscountProductVariantTableName,
+			fkGroups: [
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.variantId],
+					foreignColumns: [orgProductVariant.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgDiscountProductVariantTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );
 
@@ -190,23 +255,40 @@ export const orgDiscountProductCollection = table(
 		/**
 		 * @discountLink Discount campaign being applied
 		 */
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
 
 		/**
 		 * @collectionLink Target collection receiving the discount
 		 */
-		collectionId: textCols
-			.idFk("collection_id")
-			.notNull()
-			.references(() => orgProductCollection.id, { onDelete: "cascade" }),
+		collectionId: textCols.idFk("collection_id").notNull(),
+		// .references(() => orgProductCollection.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		primaryKey({ columns: [cols.discountId, cols.collectionId] }),
-		index(`idx_${orgDiscountCollectionTableName}_createdAt`).on(cols.createdAt),
+		compositePrimaryKey({
+			tName: orgDiscountCollectionTableName,
+			cols: [cols.discountId, cols.collectionId],
+		}),
+		...multiForeignKeys({
+			tName: orgDiscountCollectionTableName,
+			fkGroups: [
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.collectionId],
+					foreignColumns: [orgProductCollection.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgDiscountCollectionTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );
 
@@ -221,21 +303,43 @@ export const orgMemberOrderDiscountUsage = table(
 	{
 		id: textCols.idPk().notNull(),
 		memberId: orgMemberIdFkCol().notNull(),
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
-		orderId: textCols.idFk("order_id").references(() => orgMemberOrder.id),
+		orderId: textCols.idFk("order_id"), // .references(() => orgMemberOrder.id),
 		amountDiscounted: decimal("amount_discounted", { precision: 10, scale: 2 }),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		index(`idx_${orgDiscountUsageTableName}_member_discount`).on(cols.memberId, cols.discountId),
-		index(`idx_${orgDiscountUsageTableName}_used_at`).on(cols.usedAt),
-		index(`idx_${orgDiscountUsageTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgDiscountUsageTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...orgMemberIdExtraConfig({
+			tName: orgDiscountUsageTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgDiscountUsageTableName,
+			fkGroups: [
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.orderId],
+					foreignColumns: [orgMemberOrder.id],
+					afterBuild: (fk) => fk.onDelete("set null"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgDiscountUsageTableName,
+			colsGrps: [
+				{ cols: [cols.memberId, cols.discountId] },
+				{ cols: [cols.usedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
 
@@ -251,10 +355,8 @@ export const orgCoupon = table(
 	{
 		id: textCols.idPk().notNull(),
 		orgId: orgIdFkCol().notNull(),
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
 
 		code: textCols.code().notNull(),
 		usageLimit: integer("usage_limit"),
@@ -268,15 +370,34 @@ export const orgCoupon = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgCouponTableName}_code_org`).on(cols.orgId, cols.code),
-		index(`idx_${orgCouponTableName}_org_id`).on(cols.orgId),
-		index(`idx_${orgCouponTableName}_discount_id`).on(cols.discountId),
-		index(`idx_${orgCouponTableName}_active`).on(cols.isActive),
-		index(`idx_${orgCouponTableName}_dates`).on(cols.startsAt, cols.endsAt),
-		index(`idx_${orgCouponTableName}_active_dates`).on(cols.isActive, cols.startsAt, cols.endsAt),
-		index(`idx_${orgCouponTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgCouponTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		index(`idx_${orgCouponTableName}_deleted_at`).on(cols.deletedAt),
+		...orgIdExtraConfig({
+			tName: orgCouponTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgCouponTableName,
+			fkGroups: [
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgCouponTableName,
+			cols: [cols.orgId, cols.code],
+		}),
+		...multiIndexes({
+			tName: orgCouponTableName,
+			colsGrps: [
+				{ cols: [cols.isActive] },
+				{ cols: [cols.startsAt, cols.endsAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -286,10 +407,8 @@ export const orgCoupon = table(
  */
 export const orgCouponI18n = buildOrgI18nTable(orgCouponTableName)(
 	{
-		couponId: textCols
-			.idFk("coupon_id")
-			.notNull()
-			.references(() => orgCoupon.id, { onDelete: "cascade" }),
+		couponId: textCols.idFk("coupon_id").notNull(),
+		// .references(() => orgCoupon.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
 		description: textCols.shortDescription("description"),
 
@@ -299,7 +418,22 @@ export const orgCouponI18n = buildOrgI18nTable(orgCouponTableName)(
 	},
 	{
 		fkKey: "couponId",
-		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.couponId],
+						foreignColumns: [orgCoupon.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -321,9 +455,9 @@ export const orgGiftCard = table(
 		currencyCode: currencyCodeFkCol().notNull(),
 		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
 		// Who created/issued the gift card
-		issuedByEmployeeId: orgEmployeeIdFkCol("issued_by_employee_id").notNull(),
+		issuedByEmployeeId: orgEmployeeIdFkCol({ name: "issued_by_employee_id" }).notNull(),
 		// Who receives it
-		issuedToMemberId: orgMemberIdFkCol("issued_to_member_id"),
+		issuedToMemberId: orgMemberIdFkCol({ name: "issued_to_member_id" }),
 		issuedToEmail: text("issued_to_email"),
 		issuedAt: timestamp("issued_at").defaultNow().notNull(),
 		expiresAt: temporalCols.business.expiresAt(),
@@ -334,18 +468,41 @@ export const orgGiftCard = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_${orgGiftCardTableName}_code_org`).on(cols.orgId, cols.code),
-		index(`idx_${orgGiftCardTableName}_org`).on(cols.orgId),
-		index(`idx_${orgGiftCardTableName}_currency`).on(cols.currencyCode),
-		index(`idx_${orgGiftCardTableName}_member_id`).on(cols.issuedByEmployeeId),
-		index(`idx_${orgGiftCardTableName}_email`).on(cols.issuedToEmail),
-		index(`idx_${orgGiftCardTableName}_active`).on(cols.isActive),
-		index(`idx_${orgGiftCardTableName}_expires`).on(cols.expiresAt),
-		index(`idx_${orgGiftCardTableName}_balance`).on(cols.remainingBalance),
-		index(`idx_${orgGiftCardTableName}_issued_at`).on(cols.issuedAt),
-		index(`idx_${orgGiftCardTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgGiftCardTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		index(`idx_${orgGiftCardTableName}_deleted_at`).on(cols.deletedAt),
+		...orgIdExtraConfig({
+			tName: orgGiftCardTableName,
+			cols,
+		}),
+		...currencyCodeExtraConfig({
+			tName: orgGiftCardTableName,
+			cols,
+		}),
+		...orgEmployeeIdExtraConfig({
+			tName: orgGiftCardTableName,
+			cols,
+			colFkKey: "issuedByEmployeeId",
+		}),
+		...orgMemberIdExtraConfig({
+			tName: orgGiftCardTableName,
+			cols,
+			colFkKey: "issuedToMemberId",
+		}),
+		uniqueIndex({
+			tName: orgGiftCardTableName,
+			cols: [cols.orgId, cols.code],
+		}),
+		...multiIndexes({
+			tName: orgGiftCardTableName,
+			colsGrps: [
+				{ cols: [cols.issuedToEmail] },
+				{ cols: [cols.isActive] },
+				{ cols: [cols.expiresAt] },
+				{ cols: [cols.remainingBalance] },
+				{ cols: [cols.issuedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -356,16 +513,29 @@ export const orgGiftCard = table(
  */
 export const orgGiftCardI18n = buildOrgI18nTable(orgGiftCardTableName)(
 	{
-		giftCardId: textCols
-			.idFk("gift_card_id")
-			.notNull()
-			.references(() => orgGiftCard.id, { onDelete: "cascade" }),
+		giftCardId: textCols.idFk("gift_card_id").notNull(),
+		// .references(() => orgGiftCard.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
 		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "giftCardId",
-		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.giftCardId],
+						foreignColumns: [orgGiftCard.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -379,10 +549,8 @@ export const orgMemberGiftCardUsage = table(
 	{
 		id: textCols.idPk().notNull(),
 		memberId: orgMemberIdFkCol().notNull(),
-		giftCardId: textCols
-			.idFk("gift_card_id")
-			.notNull()
-			.references(() => orgGiftCard.id),
+		giftCardId: textCols.idFk("gift_card_id").notNull(),
+		// .references(() => orgGiftCard.id),
 		usedAt: timestamp("used_at").defaultNow().notNull(),
 		amountUsed: decimal("amount_used", { precision: 10, scale: 2 }).notNull(),
 		orderId: textCols.idFk("order_id"),
@@ -390,11 +558,34 @@ export const orgMemberGiftCardUsage = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		index(`idx_${orgMemberGiftCardUsageTableName}_member_id`).on(cols.memberId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_gift_card_id`).on(cols.giftCardId),
-		index(`idx_${orgMemberGiftCardUsageTableName}_used_at`).on(cols.usedAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgMemberGiftCardUsageTableName}_last_updated_at`).on(cols.lastUpdatedAt),
+		...orgMemberIdExtraConfig({
+			tName: orgMemberGiftCardUsageTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgMemberGiftCardUsageTableName,
+			fkGroups: [
+				{
+					cols: [cols.giftCardId],
+					foreignColumns: [orgGiftCard.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.orderId],
+					foreignColumns: [orgMemberOrder.id],
+					afterBuild: (fk) => fk.onDelete("set null"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgMemberGiftCardUsageTableName,
+			colsGrps: [
+				{ cols: [cols.usedAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.memberId, cols.giftCardId] },
+			],
+		}),
 	],
 );
 
@@ -420,18 +611,25 @@ export const orgPromotion = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		uniqueIndex(`uq_p${orgPromotionTableName}_slug_org`).on(cols.orgId, cols.slug),
-		index(`idx_${orgPromotionTableName}n_org`).on(cols.orgId),
-		index(`idx_${orgPromotionTableName}n_active`).on(cols.isActive),
-		index(`idx_${orgPromotionTableName}n_dates`).on(cols.startsAt, cols.endsAt),
-		index(`idx_${orgPromotionTableName}n_active_dates`).on(
-			cols.isActive,
-			cols.startsAt,
-			cols.endsAt,
-		),
-		index(`idx_${orgPromotionTableName}_created_at`).on(cols.createdAt),
-		index(`idx_${orgPromotionTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		index(`idx_${orgPromotionTableName}_deleted_at`).on(cols.deletedAt),
+		...orgIdExtraConfig({
+			tName: orgPromotionTableName,
+			cols,
+		}),
+		uniqueIndex({
+			tName: orgPromotionTableName,
+			cols: [cols.orgId, cols.slug],
+		}),
+		...multiIndexes({
+			tName: orgPromotionTableName,
+			colsGrps: [
+				{ cols: [cols.isActive] },
+				{ cols: [cols.startsAt, cols.endsAt] },
+				{ cols: [cols.isActive, cols.startsAt, cols.endsAt] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+			],
+		}),
 	],
 );
 
@@ -441,16 +639,29 @@ export const orgPromotion = table(
  */
 export const orgPromotionI18n = buildOrgI18nTable(orgPromotionTableName)(
 	{
-		promotionId: textCols
-			.idFk("promotion_id")
-			.notNull()
-			.references(() => orgPromotion.id, { onDelete: "cascade" }),
+		promotionId: textCols.idFk("promotion_id").notNull(),
+		// .references(() => orgPromotion.id, { onDelete: "cascade" }),
 		title: textCols.title().notNull(),
 		description: textCols.shortDescription("description"),
 	},
 	{
 		fkKey: "promotionId",
-		extraConfig: (cols, tName) => [index(`idx_${tName}_title`).on(cols.title)],
+		extraConfig: (cols, tName) => [
+			...multiForeignKeys({
+				tName,
+				fkGroups: [
+					{
+						cols: [cols.promotionId],
+						foreignColumns: [orgPromotion.id],
+						afterBuild: (fk) => fk.onDelete("cascade"),
+					},
+				],
+			}),
+			...multiIndexes({
+				tName,
+				colsGrps: [{ cols: [cols.title] }],
+			}),
+		],
 	},
 );
 
@@ -463,18 +674,35 @@ const orgPromotionDiscountTableName = `${orgPromotionTableName}_discount`;
 export const orgPromotionDiscount = table(
 	orgPromotionDiscountTableName,
 	{
-		promotionId: textCols
-			.idFk("promotion_id")
-			.notNull()
-			.references(() => orgPromotion.id, { onDelete: "cascade" }),
-		discountId: textCols
-			.idFk("discount_id")
-			.notNull()
-			.references(() => orgDiscount.id, { onDelete: "cascade" }),
+		promotionId: textCols.idFk("promotion_id").notNull(),
+		// .references(() => orgPromotion.id, { onDelete: "cascade" }),
+		discountId: textCols.idFk("discount_id").notNull(),
+		// .references(() => orgDiscount.id, { onDelete: "cascade" }),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		primaryKey({ columns: [cols.promotionId, cols.discountId] }),
-		index(`idx_${orgPromotionDiscountTableName}_createdAt`).on(cols.createdAt),
+		compositePrimaryKey({
+			tName: orgPromotionDiscountTableName,
+			cols: [cols.promotionId, cols.discountId],
+		}),
+		...multiForeignKeys({
+			tName: orgPromotionDiscountTableName,
+			fkGroups: [
+				{
+					cols: [cols.promotionId],
+					foreignColumns: [orgPromotion.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.discountId],
+					foreignColumns: [orgDiscount.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		...multiIndexes({
+			tName: orgPromotionDiscountTableName,
+			colsGrps: [{ cols: [cols.createdAt] }],
+		}),
 	],
 );

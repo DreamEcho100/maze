@@ -20,7 +20,7 @@ export const buildUserI18nTable =
 	 * @param {TColumnsMap} columns
 	 * @param {{
 	 * 	fkKey: keyof TColumnsMap;
-	 * 	extraConfig?: (self: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>, tableName: `${TTableName}_i18n`) => import("drizzle-orm/pg-core").PgTableExtraConfigValue[];
+	 * 	extraConfig?: (self: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>, tName: `${TTableName}_i18n`) => import("drizzle-orm/pg-core").PgTableExtraConfigValue[];
 	 * }} options
 	 */
 	(columns, options) => {
@@ -62,8 +62,8 @@ export const buildUserI18nTable =
 				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
 					eq(cols.isDefault, true),
 				),
-				// index(shortenConstraintName(`idx_${tableName}_user_id`)).on(t.userId),
-				// index(shortenConstraintName(`idx_${tableName}_${t[options.fkKey].name}`)).on(
+				// index(shortenConstraintName(`idx_${tName}_user_id`)).on(t.userId),
+				// index(shortenConstraintName(`idx_${tName}_${t[options.fkKey].name}`)).on(
 				// 	t[options.fkKey],
 				// ),
 				...multiIndexes({

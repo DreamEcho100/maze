@@ -1,15 +1,23 @@
 import { sql } from "drizzle-orm";
-import { check, index, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, pgEnum } from "drizzle-orm/pg-core";
 import { numericCols } from "#db/schema/_utils/cols/numeric.js";
+import {
+	currencyCodeExtraConfig,
+	currencyCodeFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
-import { currencyCodeFkCol } from "#db/schema/general/locale-and-currency/schema.js";
-import { orgIdFkCol } from "#db/schema/org/schema.js";
+import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { table } from "../../../../_utils/tables.js";
 import { orgMemberOrderItem } from "../../../product/orders/schema.js";
 import { orgProduct } from "../../../product/schema.js";
-import { orgEmployeeIdFkCol } from "../_utils/fk.js";
 import { orgEmployeeTableName } from "../_utils/index.js";
+import { orgEmployee } from "../schema.js";
 
 // -------------------------------------
 // PROFESSIONAL ATTRIBUTION (CREATOR ECONOMY)
@@ -46,10 +54,8 @@ export const orgEmployeeProductAttribution = table(
 		// NOTE: The relationship between org, employee, and product will be enforced at the API level
 		// Q: connect with `employeeId` field or with a compound primary key of `userProfileId` and `orgEmployeeId`?
 		employeeId: orgEmployeeIdFkCol().notNull(),
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id),
 		orgId: orgIdFkCol().notNull(),
 		// // Connect to order/transaction tables when implemented
 		// orderId: textCols
@@ -88,39 +94,20 @@ export const orgEmployeeProductAttribution = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		uniqueIndex(`uq_${orgEmployeeProductAttributionTableName}`).on(t.employeeId, t.productId),
+	(cols) => [
 		// Revenue share validation
 		check(
 			`ck_${orgEmployeeProductAttributionTableName}_valid_revenue_share`,
-			sql`${t.revenueSharePercentage} IS NULL OR (${t.revenueSharePercentage} >= 0 AND ${t.revenueSharePercentage} <= 100)`,
+			sql`${cols.revenueSharePercentage} IS NULL OR (${cols.revenueSharePercentage} >= 0 AND ${cols.revenueSharePercentage} <= 100)`,
 		),
 		// Compensation type consistency
 		check(
 			`ck_${orgEmployeeProductAttributionTableName}_compensation_consistency`,
 			sql`
-        (${t.compensationType} = 'revenue_share' AND ${t.revenueSharePercentage} IS NOT NULL) OR
-        (${t.compensationType} != 'revenue_share' AND ${t.compensationAmount} IS NOT NULL)
-      `,
+        (${cols.compensationType} = 'revenue_share' AND ${cols.revenueSharePercentage} IS NOT NULL) OR
+        (${cols.compensationType} != 'revenue_share' AND ${cols.compensationAmount} IS NOT NULL)
+				`,
 		),
-		index(`idx_${orgEmployeeProductAttributionTableName}_employee_id`).on(t.employeeId),
-		index(`idx_${orgEmployeeProductAttributionTableName}_product_id`).on(t.productId),
-		index(`idx_${orgEmployeeProductAttributionTableName}_org_id`).on(t.orgId),
-		// index(
-		// 	`idx_${orgEmployeeProductAttributionTableName}_order_id`,
-		// ).on(t.orderId),
-		index(`idx_${orgEmployeeProductAttributionTableName}_compensation_type`).on(t.compensationType),
-		index(`idx_${orgEmployeeProductAttributionTableName}_compensation_amount`).on(
-			t.compensationAmount,
-		),
-		index(`idx_${orgEmployeeProductAttributionTableName}_revenue_share_percentage`).on(
-			t.revenueSharePercentage,
-		),
-		index(`idx_${orgEmployeeProductAttributionTableName}_revenue_amount`).on(t.revenueAmount),
-		index(`idx_${orgEmployeeProductAttributionTableName}_share_percentage`).on(t.sharePercentage),
-		index(`idx_${orgEmployeeProductAttributionTableName}_last_paid_at`).on(t.lastPaidAt),
-		index(`idx_${orgEmployeeProductAttributionTableName}_created_at`).on(t.createdAt),
-		index(`idx_${orgEmployeeProductAttributionTableName}_last_updated_at`).on(t.lastUpdatedAt),
 
 		// NOTE: The relationship between org, employee, and product will be enforced at the API level
 		// // ✅ CONSTRAINT: Ensure employee and product belong to same org
@@ -145,6 +132,32 @@ export const orgEmployeeProductAttribution = table(
 		//     AND m.left_at IS NULL
 		//   )`
 		// ),
+		...orgEmployeeIdExtraConfig({
+			tName: orgEmployeeProductAttributionTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgEmployeeProductAttributionTableName,
+			fkGroups: [
+				{
+					cols: [cols.productId],
+					foreignColumns: [orgProduct.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
+		uniqueIndex({
+			tName: orgEmployeeProductAttributionTableName,
+			cols: [cols.employeeId, cols.productId],
+		}),
+		...multiIndexes({
+			tName: orgEmployeeProductAttributionTableName,
+			colsGrps: [
+				{ cols: [cols.compensationType] },
+				{ cols: [cols.revenueSharePercentage] },
+				{ cols: [cols.sharePercentage] },
+			],
+		}),
 	],
 );
 
@@ -176,10 +189,8 @@ export const orgEmployeeProductAttributionRevenue = table(
 	{
 		id: textCols.idPk().notNull(),
 
-		orderItemId: textCols
-			.idFk("order_item_id")
-			.notNull()
-			.references(() => orgMemberOrderItem.id, { onDelete: "cascade" }),
+		orderItemId: textCols.idFk("order_item_id").notNull(),
+		// .references(() => orgMemberOrderItem.id, { onDelete: "cascade" }),
 
 		/**
 		 * @revenueRecipient Who receives this revenue portion
@@ -189,7 +200,7 @@ export const orgEmployeeProductAttributionRevenue = table(
 		// orgId: textCols.idFk("org_id").references(() => org.id),
 		attributedEmployeeId: textCols
 			.idFk("attributed_employee_id")
-			.references(() => orgEmployeeProductAttribution.id)
+			// .references(() => orgEmployeeProductAttribution.id)
 			.notNull(),
 		platformRecipient: textCols.category("platform_recipient"), // "platform_fee", "processing_fee"
 
@@ -212,30 +223,50 @@ export const orgEmployeeProductAttributionRevenue = table(
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
-	(t) => [
-		index(`idx_${orgEmployeeProductAttributionRevenueTableName}_order_item_id`).on(t.orderItemId),
-		index(`idx_${orgEmployeeProductAttributionRevenueTableName}_recipient_type`).on(
-			t.recipientType,
-		),
-		// index(
-		// 	`idx_${orgEmployeeProductAttributionRevenueTableName}_org_id`,
-		// ).on(t.orgId),
-		index(`idx_${orgEmployeeProductAttributionRevenueTableName}_attributed_employee_id`).on(
-			t.attributedEmployeeId,
-		),
-
-		// Business constraints
+	(cols) => [
+		...currencyCodeExtraConfig({
+			tName: orgEmployeeProductAttributionRevenueTableName,
+			cols: cols,
+		}),
+		...multiForeignKeys({
+			tName: orgEmployeeProductAttributionRevenueTableName,
+			indexAll: true,
+			fkGroups: [
+				{
+					cols: [cols.orderItemId],
+					foreignColumns: [orgMemberOrderItem.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.attributedEmployeeId],
+					foreignColumns: [orgEmployee.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
 		check(
 			`ck_${orgEmployeeProductAttributionRevenueTableName}_positive_revenue`,
-			sql`${t.revenueAmount} >= 0`,
+			sql`${cols.revenueAmount} >= 0`,
 		),
 		check(
 			`ck_${orgEmployeeProductAttributionRevenueTableName}_valid_percentage`,
-			sql`${t.revenuePercentage} IS NULL OR (${t.revenuePercentage} >= 0 AND ${t.revenuePercentage} <= 100)`,
+			sql`${cols.revenuePercentage} IS NULL OR (${cols.revenuePercentage} >= 0 AND ${cols.revenuePercentage} <= 100)`,
 		),
 		// check(
 		// 	`ck_${orgEmployeeProductAttributionRevenueTableName}_single_recipient`,
 		// 	sql`(${t.orgId} IS NOT NULL)::int + (${t.attributedEmployeeId} IS NOT NULL)::int + (${t.platformRecipient} IS NOT NULL)::int = 1`,
 		// ),
+		...multiIndexes({
+			tName: orgEmployeeProductAttributionRevenueTableName,
+			colsGrps: [
+				{ cols: [cols.recipientType] },
+				{ cols: [cols.platformRecipient] },
+				{ cols: [cols.revenueAmount] },
+				{ cols: [cols.revenuePercentage] },
+				{ cols: [cols.attributionBasis] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
+		}),
 	],
 );
