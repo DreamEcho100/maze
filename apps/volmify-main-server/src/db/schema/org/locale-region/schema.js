@@ -139,7 +139,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 	{
 		regionId: textCols
 			.idFk("org_region_id")
-			.references(() => orgRegion.id)
+			// .references(() => orgRegion.id)
 			.notNull(),
 		seoMetadataId: seoMetadataIdFkCol().notNull(),
 		name: textCols.name().notNull(),

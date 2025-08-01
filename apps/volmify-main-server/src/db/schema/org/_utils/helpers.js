@@ -1,8 +1,14 @@
 import { eq, sql } from "drizzle-orm";
-import { boolean, primaryKey } from "drizzle-orm/pg-core";
+import { boolean } from "drizzle-orm/pg-core";
+import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#db/schema/_utils/helpers.js";
 import { table } from "#db/schema/_utils/tables.js";
 import { locale } from "#db/schema/general/locale-and-currency/schema.js";
 
@@ -36,9 +42,7 @@ export const buildOrgI18nTable =
 			tName,
 			{
 				...columns,
-				// orgId: fk(`${orgTableName}_id`)
-				// 	.references(() => org.id)
-				// 	.notNull(),
+				orgId: orgIdFkCol().notNull(),
 				localeKey: textCols.localeKey().notNull(),
 				isDefault: boolean("is_default").default(false),
 				createdAt: temporalCols.audit.createdAt(),
@@ -47,41 +51,32 @@ export const buildOrgI18nTable =
 			},
 			(cols) => [
 				// TODO: Correct the `relations` `fields`
-				primaryKey({ columns: [cols[options.fkKey], cols.localeKey] }),
-				// uniqueIndex(`uq_${tName}_default`)
-				// 	.on(t[options.fkKey], t.isDefault)
-				// 	.where(eq(t.isDefault, true)),
+				// Q: Should `orgId` be added to the composite primary key too?
+				compositePrimaryKey({ tName, cols: [cols[options.fkKey], cols.localeKey] }),
+				...orgIdExtraConfig({
+					tName,
+					cols,
+				}),
 				...multiForeignKeys({
 					tName,
-					indexAll: true,
 					fkGroups: [
 						{
 							cols: [cols.localeKey],
 							foreignColumns: [locale.key],
-							// afterBuild: (fk) => fk.onDelete("cascade"),
 						},
 					],
 				}),
 				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
 					eq(cols.isDefault, sql`TRUE`),
 				),
-				// index(shortenConstraintName(`idx_${tName}_org_id`)).on(t.orgId),
-				// index(shortenConstraintName(`idx_${tName}_${t[options.fkKey].name}`)).on(
-				// 	t[options.fkKey],
-				// ),
-				// index(shortenConstraintName(`idx_${tName}_org_locale_key`)).on(t.localeKey),
-				// index(shortenConstraintName(`idx_${tName}_default`)).on(t.isDefault),
-				// index(shortenConstraintName(`idx_${tName}_created_at`)).on(t.createdAt),
-				// index(shortenConstraintName(`idx_${tName}_last_updated_at`)).on(t.lastUpdatedAt),
-				// index(shortenConstraintName(`idx_${tName}_deleted_at`)).on(t.deletedAt),
 				...multiIndexes({
 					tName,
 					colsGrps: [
-						// { cols: [t[options.fkKey]] },
-						{ cols: [cols.isDefault] },
-						{ cols: [cols.createdAt] },
-						{ cols: [cols.lastUpdatedAt] },
-						{ cols: [cols.deletedAt] },
+						{ cols: [cols.orgId, cols.localeKey] },
+						{ cols: [cols.orgId, cols.isDefault] },
+						{ cols: [cols.orgId, cols.createdAt] },
+						{ cols: [cols.orgId, cols.lastUpdatedAt] },
+						{ cols: [cols.orgId, cols.deletedAt] },
 					],
 				}),
 				...(options.extraConfig ? options.extraConfig(cols, tName) : []),

@@ -226,7 +226,7 @@ export const orgDepartmentI18n = buildOrgI18nTable(orgDepartmentTableName)(
 	{
 		departmentId: textCols
 			.idFk("department_id")
-			.references(() => orgDepartment.id)
+			// .references(() => orgDepartment.id)
 			.notNull(),
 		/**
 		 * @domain
@@ -342,14 +342,10 @@ export const orgDepartmentTeamRelationshipTypeEnum = pgEnum(
 export const orgDepartmentTeam = table(
 	orgDepartmentTeamTableName,
 	{
-		departmentId: textCols
-			.idFk("department_id")
-			.notNull()
-			.references(() => orgDepartment.id, { onDelete: "cascade" }),
-		teamId: textCols
-			.idFk("team_id")
-			.notNull()
-			.references(() => orgTeam.id, { onDelete: "cascade" }),
+		departmentId: textCols.idFk("department_id").notNull(),
+		// .references(() => orgDepartment.id, { onDelete: "cascade" }),
+		teamId: textCols.idFk("team_id").notNull(),
+		// .references(() => orgTeam.id, { onDelete: "cascade" }),
 
 		// isPrimary: boolean("is_primary").default(false), // Single primary department per team
 		relationshipType: orgDepartmentTeamRelationshipTypeEnum("relationship_type")

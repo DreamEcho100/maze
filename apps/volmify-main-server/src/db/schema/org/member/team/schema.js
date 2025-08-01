@@ -1,5 +1,8 @@
 import { boolean, pgEnum, text } from "drizzle-orm/pg-core";
-import { orgEmployeeIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
+import {
+	orgEmployeeIdExtraConfig,
+	orgEmployeeIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
 import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { userIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import {
@@ -11,7 +14,6 @@ import {
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";
-import { user } from "../../../user/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 
 const orgTeamTableName = `${orgTableName}_team`;
@@ -35,7 +37,7 @@ export const orgTeam = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 		createdById: textCols
 			.idFk("created_by_id")
-			.references(() => user.id)
+			// .references(() => user.id)
 			.notNull(),
 
 		slug: textCols.slug().notNull(),
@@ -64,7 +66,7 @@ export const orgTeam = table(
 			tName: orgTeamTableName,
 			cols,
 			colFkKey: "createdById",
-			onDelete: "set null",
+			// onDelete: "set null",
 		}),
 		uniqueIndex({
 			tName: orgTeamTableName,
@@ -81,7 +83,7 @@ export const orgTeamI18n = buildOrgI18nTable(orgTeamTableName)(
 	{
 		teamId: textCols
 			.idFk("team_id")
-			.references(() => orgTeam.id)
+			// .references(() => orgTeam.id)
 			.notNull(),
 		name: textCols.name().notNull(),
 		description: textCols.shortDescription("description"),
@@ -135,10 +137,8 @@ export const orgTeamEmployee = table(
 	orgTeamEmployeeTableName,
 	{
 		employeeId: orgEmployeeIdFkCol().notNull(),
-		teamId: textCols
-			.idFk("team_id")
-			.notNull()
-			.references(() => orgTeam.id, { onDelete: "cascade" }),
+		teamId: textCols.idFk("team_id").notNull(),
+		// .references(() => orgTeam.id, { onDelete: "cascade" }),
 		status: orgTeamEmployeeStatusEnum("status").notNull().default("pending"),
 		role: orgTeamEmployeeRoleEnum("role").notNull().default("employee"),
 		joinedAt: temporalCols.activity.joinedAt(),
@@ -147,10 +147,23 @@ export const orgTeamEmployee = table(
 	},
 	(cols) => [
 		compositePrimaryKey({ tName: orgTeamEmployeeTableName, cols: [cols.teamId, cols.employeeId] }),
+		...orgEmployeeIdExtraConfig({
+			tName: orgTeamEmployeeTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgTeamEmployeeTableName,
+			fkGroups: [
+				{
+					cols: [cols.teamId],
+					foreignColumns: [orgTeam.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
+		}),
 		...multiIndexes({
 			tName: orgTeamEmployeeTableName,
 			colsGrps: [
-				{ cols: [cols.teamId, cols.employeeId] },
 				{ cols: [cols.teamId, cols.status] },
 				{ cols: [cols.teamId, cols.role] },
 				{ cols: [cols.joinedAt] },

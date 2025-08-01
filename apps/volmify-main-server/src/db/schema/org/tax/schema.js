@@ -314,20 +314,33 @@ export const orgTaxRateTaxCategory = table(
 	{
 		rateId: textCols
 			.idFk("rate_id")
-			.references(() => orgTaxRate.id)
+			// .references(() => orgTaxRate.id)
 			.notNull(),
 		categoryId: textCols
 			.idFk("category_id")
-			.references(() => orgTaxCategory.id)
+			// .references(() => orgTaxCategory.id)
 			.notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		// uniqueIndex(`uq_${orgTaxRateTaxCategoryTableName}_category_id_rate`).on(cols.rateId, cols.categoryId),
-		// index(`idx_${orgTaxRateTaxCategoryTableName}_created_at`).on(cols.createdAt),
 		compositePrimaryKey({
 			tName: orgTaxRateTaxCategoryTableName,
 			cols: [cols.rateId, cols.categoryId],
+		}),
+		...multiForeignKeys({
+			tName: orgTaxRateTaxCategoryTableName,
+			fkGroups: [
+				{
+					cols: [cols.rateId],
+					foreignColumns: [orgTaxRate.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+				{
+					cols: [cols.categoryId],
+					foreignColumns: [orgTaxCategory.id],
+					afterBuild: (fk) => fk.onDelete("cascade"),
+				},
+			],
 		}),
 		...multiIndexes({
 			tName: orgTaxRateTaxCategoryTableName,

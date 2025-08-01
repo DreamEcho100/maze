@@ -1,5 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean, primaryKey } from "drizzle-orm/pg-core";
+import {
+	userIdExtraConfig,
+	userIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
@@ -36,9 +40,7 @@ export const buildUserI18nTable =
 			tName,
 			{
 				...columns,
-				// userId: fk(`${userTableName}_id`)
-				// 	.references(() => user.id)
-				// 	.notNull(),
+				userId: userIdFkCol().notNull(),
 				localeKey: textCols.localeKey().notNull(),
 				isDefault: boolean("is_default").default(false),
 				createdAt: temporalCols.audit.createdAt(),
@@ -48,33 +50,30 @@ export const buildUserI18nTable =
 			(cols) => [
 				// TODO: Correct the `relations` `fields`
 				primaryKey({ columns: [cols[options.fkKey], cols.localeKey] }),
+				...userIdExtraConfig({
+					tName,
+					cols,
+				}),
 				...multiForeignKeys({
 					tName,
-					indexAll: true,
 					fkGroups: [
 						{
 							cols: [cols.localeKey],
 							foreignColumns: [locale.key],
-							// afterBuild: (fk) => fk.onDelete("cascade"),
 						},
 					],
 				}),
 				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
 					eq(cols.isDefault, sql`TRUE`),
 				),
-				// index(shortenConstraintName(`idx_${tName}_user_id`)).on(t.userId),
-				// index(shortenConstraintName(`idx_${tName}_${t[options.fkKey].name}`)).on(
-				// 	t[options.fkKey],
-				// ),
 				...multiIndexes({
 					tName,
 					colsGrps: [
-						// { cols: [t[options.fkKey]] },
-						// { cols: [t.localeKey] },
-						{ cols: [cols.isDefault] },
-						{ cols: [cols.createdAt] },
-						{ cols: [cols.lastUpdatedAt] },
-						{ cols: [cols.deletedAt] },
+						{ cols: [cols.userId, cols.localeKey] },
+						{ cols: [cols.userId, cols.isDefault] },
+						{ cols: [cols.userId, cols.createdAt] },
+						{ cols: [cols.userId, cols.lastUpdatedAt] },
+						{ cols: [cols.userId, cols.deletedAt] },
 					],
 				}),
 				...(options.extraConfig ? options.extraConfig(cols, tName) : []),

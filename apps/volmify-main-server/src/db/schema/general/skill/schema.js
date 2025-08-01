@@ -1,5 +1,6 @@
 import { boolean } from "drizzle-orm/pg-core";
 import { localeKeyExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
+import { orgIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdExtraConfig,
 	seoMetadataIdFkCol,
@@ -9,8 +10,6 @@ import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
-import { org } from "../../org/schema";
-import { locale } from "../locale-and-currency/schema";
 
 const skillTableName = "skill";
 // Q: Should the skill table be scoped to the org level or platform-wide to enable cross-org skill tracking and recommendations?
@@ -50,32 +49,34 @@ export const skill = table(
 		 */
 		approvedAt: boolean("approved_at").default(false),
 
-		appliedByOrgId: textCols.idFk("applied_by_org_id").references(() => org.id),
+		appliedByOrgId: textCols.idFk("applied_by_org_id"), //.references(() => org.id),
 		createdByOrgId: textCols
 			.idFk("created_by_org_id")
-			.references(() => org.id)
+			// .references(() => org.id)
 			.notNull(),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
+		...orgIdExtraConfig({
+			tName: skillTableName,
+			cols,
+			colFkKey: "appliedByOrgId",
+			onDelete: "set null",
+		}),
+		...orgIdExtraConfig({
+			tName: skillTableName,
+			cols,
+			colFkKey: "createdByOrgId",
+			onDelete: "cascade",
+		}),
 		...multiForeignKeys({
 			tName: skillTableName,
 			fkGroups: [
 				{
 					cols: [cols.parentSkillId],
 					foreignColumns: [cols.id],
-					afterBuild: (fk) => fk.onDelete("cascade"),
-				},
-				{
-					cols: [cols.appliedByOrgId],
-					foreignColumns: [org.id],
-					afterBuild: (fk) => fk.onDelete("set null"),
-				},
-				{
-					cols: [cols.createdByOrgId],
-					foreignColumns: [org.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],
@@ -103,12 +104,10 @@ export const skillI18n = table(
 		id: textCols.idPk().notNull(),
 		skillId: textCols
 			.idFk("skill_id")
-			.references(() => skill.id)
+			// .references(() => skill.id)
 			.notNull(),
-		localeKey: textCols
-			.localeKey("locale_key")
-			.notNull()
-			.references(() => locale.key, { onDelete: "cascade" }),
+		localeKey: textCols.localeKey("locale_key").notNull(),
+		// .references(() => locale.key, { onDelete: "cascade" }),
 		isDefault: sharedCols.isDefault(),
 
 		name: textCols.name().notNull(),
@@ -120,15 +119,6 @@ export const skillI18n = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		// uniqueIndex(`uq_${skillI18nTableName}`).on(t.skillId, t.localeKey),
-		// // uniqueIndex(`uq_${skillI18nTableName}_default`)
-		// // 	.on(t.skillId, t.isDefault)
-		// // 	.where(eq(t.isDefault, true)),
-		// index(`idx_${skillI18nTableName}_skill`).on(t.skillId),
-		// index(`idx_${skillI18nTableName}_name`).on(t.name),
-		// index(`idx_${skillI18nTableName}_description`).on(t.description),
-		// index(`idx_${skillI18nTableName}_created_at`).on(t.createdAt),
-		// index(`idx_${skillI18nTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		...localeKeyExtraConfig({
 			tName: skillI18nTableName,
 			cols,
@@ -150,6 +140,10 @@ export const skillI18n = table(
 		uniqueIndex({
 			tName: skillI18nTableName,
 			cols: [cols.skillId, cols.localeKey],
+		}),
+		...multiIndexes({
+			tName: skillI18nTableName,
+			colsGrps: [{ cols: [cols.name] }, { cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }],
 		}),
 	],
 );

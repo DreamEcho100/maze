@@ -101,9 +101,6 @@ export const seoMetadata = table(
 				{ cols: [cols.lastUpdatedAt] },
 			],
 		}),
-		// index("idx_seo_locale").on(t.locale),
-		// index("idx_seo_performance").on(t.clickThroughRate, t.averagePosition),
-		// index("idx_seo_score").on(t.seoScore),
 	],
 );
 

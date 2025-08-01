@@ -1,7 +1,9 @@
 import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { seoMetadataIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
+	seoMetadataIdExtraConfig,
+	seoMetadataIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
-import { seoMetadata } from "#db/schema/general/seo/schema.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
@@ -48,7 +50,7 @@ export const orgBrandTranslation = buildOrgI18nTable(orgBrandTableName)(
 	{
 		brandId: textCols
 			.idFk("brand_id")
-			.references(() => orgBrand.id, { onDelete: "cascade" })
+			// .references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		name: textCols.name().notNull(),
 		description: textCols.description(),
@@ -58,16 +60,16 @@ export const orgBrandTranslation = buildOrgI18nTable(orgBrandTableName)(
 	{
 		fkKey: "brandId",
 		extraConfig: (cols, tName) => [
+			...seoMetadataIdExtraConfig({
+				tName,
+				cols,
+			}),
 			...multiForeignKeys({
 				tName,
 				fkGroups: [
 					{
 						cols: [cols.brandId],
 						foreignColumns: [orgBrand.id],
-					},
-					{
-						cols: [cols.seoMetadataId],
-						foreignColumns: [seoMetadata.id],
 					},
 				],
 			}),
@@ -89,9 +91,9 @@ export const orgBrandMetrics = table(
 	orgBrandMetricsTableName,
 	{
 		id: textCols.idPk().notNull(),
-		orgBrandId: textCols
-			.idFk("vendor_brand_id")
-			.references(() => orgBrand.id, { onDelete: "cascade" })
+		brandId: textCols
+			.idFk("brand_id")
+			// .references(() => orgBrand.id, { onDelete: "cascade" })
 			.notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -102,14 +104,10 @@ export const orgBrandMetrics = table(
 				tName: orgBrandMetricsTableName,
 				fkGroups: [
 					{
-						cols: [cols.orgBrandId],
+						cols: [cols.brandId],
 						foreignColumns: [orgBrand.id],
 					},
 				],
-			}),
-			uniqueIndex({
-				tName: orgBrandMetricsTableName,
-				cols: [cols.orgBrandId],
 			}),
 			...multiIndexes({
 				tName: orgBrandMetricsTableName,

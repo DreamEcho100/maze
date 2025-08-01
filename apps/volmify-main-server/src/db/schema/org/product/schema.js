@@ -116,10 +116,8 @@ export const orgProductApproval = table(
 	{
 		id: textCols.idPk().notNull(),
 
-		productId: textCols
-			.idFk("product_id")
-			.notNull()
-			.references(() => orgProduct.id),
+		productId: textCols.idFk("product_id").notNull(),
+		// .references(() => orgProduct.id),
 		submittedByEmployeeId: orgEmployeeIdFkCol({ name: "submitted_by_employee_id" }).notNull(),
 		reviewedByEmployeeId: orgEmployeeIdFkCol({ name: "reviewed_by_employee_id" }),
 
@@ -135,11 +133,6 @@ export const orgProductApproval = table(
 			tName: orgProductApprovalTableName,
 			cols,
 			colFkKey: "submittedByEmployeeId",
-		}),
-		...orgEmployeeIdExtraConfig({
-			tName: orgProductApprovalTableName,
-			cols,
-			colFkKey: "reviewedByEmployeeId",
 		}),
 		...multiForeignKeys({
 			tName: orgProductApprovalTableName,
