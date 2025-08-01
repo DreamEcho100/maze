@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { boolean, primaryKey } from "drizzle-orm/pg-core";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
@@ -60,7 +60,7 @@ export const buildUserI18nTable =
 					],
 				}),
 				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
-					eq(cols.isDefault, true),
+					eq(cols.isDefault, sql`TRUE`),
 				),
 				// index(shortenConstraintName(`idx_${tName}_user_id`)).on(t.userId),
 				// index(shortenConstraintName(`idx_${tName}_${t[options.fkKey].name}`)).on(

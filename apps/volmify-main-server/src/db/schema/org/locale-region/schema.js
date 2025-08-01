@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { boolean, text } from "drizzle-orm/pg-core";
 import {
 	currencyCodeExtraConfig,
@@ -74,7 +74,7 @@ export const orgLocale = table(
 		uniqueIndex({
 			tName: orgLocaleTableName,
 			cols: [cols.orgId, cols.isDefault],
-		}).where(eq(cols.isDefault, true)),
+		}).where(eq(cols.isDefault, sql`TRUE`)),
 		...multiIndexes({
 			tName: orgLocaleTableName,
 			colsGrps: [
@@ -124,7 +124,7 @@ export const orgRegion = table(
 		uniqueIndex({
 			tName: orgRegionTableName,
 			cols: [cols.orgId, cols.currencyCode],
-		}).where(eq(cols.deletedAt, null)),
+		}).where(isNull(cols.deletedAt)),
 		...multiIndexes({
 			tName: orgRegionTableName,
 			colsGrps: [

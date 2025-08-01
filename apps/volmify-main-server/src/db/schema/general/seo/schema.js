@@ -339,7 +339,6 @@ export const seoMetadataAlternateUrl = table(
 		...multiIndexes({
 			tName: seoMetadataAlternateUrlTableName,
 			colsGrps: [
-				{ cols: [cols.localeKey] },
 				{ cols: [cols.hreflang] },
 				{ cols: [cols.isDefault] },
 				{ cols: [cols.createdAt] },

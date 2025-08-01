@@ -36,7 +36,7 @@ export const userJobProfile = table(
 	userJobProfileTableName,
 	{
 		// id: textCols.idPk().notNull(),
-		userProfileId: userProfileIdFkCol().notNull(),
+		userProfileId: userProfileIdFkCol().primaryKey().notNull(),
 		// userId: userIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
 		verifiedAt: temporalCols.business.verifiedAt(),
@@ -299,6 +299,7 @@ export const userJobProfileSkill = table(
 		...userJobProfileIdExtraConfig({
 			tName: userJobProfileSkillTableName,
 			cols,
+			colFkKey: "jobProfileId",
 		}),
 		...multiForeignKeys({
 			tName: userJobProfileSkillTableName,
@@ -448,6 +449,7 @@ export const userJobProfileMetrics = table(
 		...userJobProfileIdExtraConfig({
 			tName: userJobProfileMetricsTableName,
 			cols,
+			colFkKey: "jobProfileId",
 		}),
 		// uniqueIndex({
 		// 	tName: userJobProfileMetricsTableName,

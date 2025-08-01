@@ -203,12 +203,8 @@ export const orgTaxRate = table(
 		// Q: Is the following will be translated correctly to SQL?
 		// check(
 		// 	`ck_${orgTaxRateTableName}_valid_rate_amount`,
-		// 	sql`(${cols.type} = '${orgTaxRateTypeEnum.enumValues[1]}' AND ${cols.amount} IS NOT NULL AND ${cols.rate} IS NULL) OR (${cols.type} = '${orgTaxRateTypeEnum.enumValues[0]}' AND ${cols.amount} IS NULL AND ${cols.rate} IS NOT NULL)`,
+		// 	sql`(${cols.type} = 'fixed' AND ${cols.amount} IS NOT NULL AND ${cols.rate} IS NULL) OR (${cols.type} = 'percent' AND ${cols.amount} IS NULL AND ${cols.rate} IS NOT NULL)`,
 		// ),
-		check(
-			`ck_${orgTaxRateTableName}_valid_rate_amount`,
-			sql`(${cols.type} = 'fixed' AND ${cols.amount} IS NOT NULL AND ${cols.rate} IS NULL) OR (${cols.type} = 'percent' AND ${cols.amount} IS NULL AND ${cols.rate} IS NOT NULL)`,
-		),
 	],
 );
 export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(

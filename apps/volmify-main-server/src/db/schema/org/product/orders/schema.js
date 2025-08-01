@@ -317,7 +317,6 @@ export const orgMemberOrderItem = table(
 			tName: orgMemberOrderItemTableName,
 			colsGrps: [
 				{ cols: [t.productId, t.variantId] },
-				{ cols: [t.paymentPlanId] },
 				{ cols: [t.selectedAccessTier] },
 				{ cols: [t.unitPrice] },
 				{ cols: [t.quantity] },

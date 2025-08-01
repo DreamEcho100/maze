@@ -5,7 +5,7 @@
 //  * @typedef {typeof currency} Table
 //  */
 
-import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
+import { buildCodeFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 
 // import { foreignKey, index } from "#db/schema/_utils/helpers.js";
 // import { textCols } from "../../text";
@@ -57,7 +57,7 @@ import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 // 	];
 // };
 
-export const { extraConfig: currencyCodeExtraConfig, fkCol: currencyCodeFkCol } = buildFkUtils({
+export const { extraConfig: currencyCodeExtraConfig, fkCol: currencyCodeFkCol } = buildCodeFkUtils({
 	cacheKey: "currency",
 	defaultColKey: "currencyCode",
 	defaultColName: "currency_code",

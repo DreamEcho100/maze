@@ -4,7 +4,10 @@ import {
 	orgEmployeeIdFkCol,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
 import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { userJobProfileIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
+import {
+	userJobProfileIdExtraConfig,
+	userJobProfileIdFkCol,
+} from "#db/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
 import { multiIndexes } from "#db/schema/_utils/helpers.js";
@@ -33,7 +36,7 @@ export const orgEmployeeInvitation = table(
 		// Professional invitation context
 		// TODO
 		// proposedRole: orgEmployeeRoleEnum("proposed_role").notNull(), // "instructor", "admin", "manager"
-		jobProfileId: textCols.idFk("job_profile_id"), // .references(() => userJobProfile.userProfileId),
+		jobProfileId: userJobProfileIdFkCol(), // .references(() => userJobProfile.userProfileId),
 
 		// Employment details
 		// TODO:
@@ -72,15 +75,15 @@ export const orgEmployeeInvitation = table(
 		...userJobProfileIdExtraConfig({
 			tName: orgEmployeeInvitationTableName,
 			cols,
+			colFkKey: "jobProfileId",
 		}),
 		...multiIndexes({
 			tName: orgEmployeeInvitationTableName,
 			colsGrps: [
 				{ cols: [cols.orgId, cols.email] },
 				{ cols: [cols.orgId, cols.status] },
-				{ cols: [cols.orgId, cols.invitedBy, cols.status] },
 				{ cols: [cols.orgId, cols.jobProfileId] },
-				{ cols: [cols.orgId, cols.status, cols.expiresAt] },
+				{ cols: [cols.orgId, cols.expiresAt] },
 			],
 		}),
 	],

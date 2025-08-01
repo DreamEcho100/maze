@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { isNull } from "drizzle-orm";
 import { boolean, varchar } from "drizzle-orm/pg-core";
 import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
@@ -205,11 +205,14 @@ export const orgFunnelDomain = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		compositePrimaryKey({ tName: orgFunnelDomainTableName, cols: [cols.funnelId, cols.domain] }),
+		uniqueIndex({
+			tName: orgFunnelDomainTableName,
+			cols: [cols.funnelId, cols.domain],
+		}),
 		uniqueIndex({
 			tName: orgFunnelDomainTableName,
 			cols: [cols.domain],
-		}).where(eq(cols.deletedAt, null)),
+		}).where(isNull(cols.deletedAt)),
 		...multiForeignKeys({
 			tName: orgFunnelDomainTableName,
 			fkGroups: [

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { jsonb, text, varchar } from "drizzle-orm/pg-core";
 import { numericCols } from "../_utils/cols/numeric.js";
 import {
@@ -133,7 +133,7 @@ export const orgCurrencySettings = table(
 			cols,
 		}),
 		uniqueIndex({ tName: orgCurrencySettingsTableName, cols: [cols.orgId, cols.isDefault] }).where(
-			eq(cols.isDefault, true),
+			eq(cols.isDefault, sql`TRUE`),
 		),
 	],
 );

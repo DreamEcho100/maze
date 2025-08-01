@@ -366,7 +366,7 @@ export const compositePrimaryKey = (props) => {
 		columns: props.cols,
 		name: shortenConstraintName(
 			// `pk_${toCamelCase(props.tName)}_${props.columns.map((col) => toCamelCase(col.name)).join("_")}`,
-			buildConstraintName("cpk", props.tName, props.cols),
+			buildConstraintName("pk", props.tName, props.cols),
 		),
 	});
 };

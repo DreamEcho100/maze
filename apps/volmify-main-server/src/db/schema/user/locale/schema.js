@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { text } from "drizzle-orm/pg-core";
 import {
 	localeKeyExtraConfig,
@@ -62,7 +62,7 @@ export const userLocale = table(
 		uniqueIndex({
 			tName: userLocaleTableName,
 			cols: [cols.userId, cols.isDefault],
-		}).where(eq(cols.isDefault, true)),
+		}).where(eq(cols.isDefault, sql`TRUE`)),
 		...multiIndexes({
 			tName: userLocaleTableName,
 			colsGrps: [
@@ -70,7 +70,6 @@ export const userLocale = table(
 				{ cols: [cols.createdAt] },
 				{ cols: [cols.lastUpdatedAt] },
 				{ cols: [cols.isDefault] },
-				{ cols: [cols.localeKey] },
 			],
 		}),
 	],

@@ -456,10 +456,6 @@ export const accountTransactionEmployeeContext = table(
 			tName: accountTransactionEmployeeContextTableName,
 			cols,
 		}),
-		...orgEmployeeIdExtraConfig({
-			tName: accountTransactionEmployeeContextTableName,
-			cols,
-		}),
 		...multiForeignKeys({
 			tName: accountTransactionEmployeeContextTableName,
 			fkGroups: [

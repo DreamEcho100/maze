@@ -59,7 +59,7 @@ import { table } from "../../_utils/tables.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { orgBrand } from "../brand/schema.js";
 import { orgTaxCategory } from "../tax/schema.js";
-import { orgProductVariantPaymentTypeEnum } from "./payment/schema.js";
+import { orgProductVariantPaymentTypeEnum } from "./payment/_utils/shared-enums.js";
 
 const orgProductTableName = `${orgTableName}_product`;
 // -------------------------------------
@@ -309,7 +309,6 @@ export const orgProductI18n = buildOrgI18nTable(orgProductTableName)(
 			}),
 			...multiForeignKeys({
 				tName: tName,
-				indexAll: true,
 				fkGroups: [
 					{
 						cols: [cols.productId],
@@ -489,7 +488,6 @@ export const orgProductVariant = table(
 	(t) => [
 		...multiForeignKeys({
 			tName: orgProductVariantTable,
-			indexAll: true,
 			fkGroups: [
 				{
 					cols: [t.productId],
@@ -510,7 +508,7 @@ export const orgProductVariant = table(
 		uniqueIndex({
 			tName: orgProductVariantTable,
 			cols: [t.productId, t.isDefault],
-		}).where(eq(t.isDefault, true)),
+		}).where(eq(t.isDefault, sql`TRUE`)),
 		...multiIndexes({
 			tName: orgProductVariantTable,
 			colsGrps: [
@@ -549,7 +547,6 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantTable)(
 			}),
 			...multiForeignKeys({
 				tName: tName,
-				indexAll: true,
 				fkGroups: [
 					{
 						cols: [cols.variantId],
@@ -619,7 +616,6 @@ export const orgProductBrandAttribution = table(
 		compositePrimaryKey({ tName: orgProductBrandTableName, cols: [cols.brandId, cols.productId] }),
 		...multiForeignKeys({
 			tName: orgProductBrandTableName,
-			indexAll: true,
 			fkGroups: [
 				{
 					cols: [cols.brandId],
@@ -662,7 +658,7 @@ export const orgProductRevenuePool = table(
 		// Revenue allocation tracking
 		allocationHistory: jsonb("allocation_history"), // Track changes for audit
 		lastAllocationByEmployeeId: orgEmployeeIdFkCol({ name: "last_allocation_by_employee_id" }),
-		lastAllocationAt: temporalCols.audit.lastUpdatedAt(),
+		lastAllocationAt: temporalCols.audit.lastUpdatedAt("last_allocation_at"),
 
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -675,7 +671,6 @@ export const orgProductRevenuePool = table(
 		}),
 		...multiForeignKeys({
 			tName: orgProductRevenuePoolTableName,
-			indexAll: true,
 			fkGroups: [
 				{
 					cols: [t.productId],

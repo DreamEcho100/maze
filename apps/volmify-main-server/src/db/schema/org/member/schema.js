@@ -44,7 +44,7 @@ export const orgMember = table(
 
 		orgId: orgIdFkCol().notNull(),
 
-		userProfileId: userProfileIdFkCol().notNull().primaryKey(),
+		userProfileId: userProfileIdFkCol().notNull(),
 
 		// Q: displayName vs customerDisplayName/memberDisplayName
 		displayName: textCols.displayName(),

@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { boolean, check, integer, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
 	currencyCodeExtraConfig,
 	currencyCodeFkCol,
@@ -23,24 +23,13 @@ import { table } from "../../../_utils/tables.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../_utils/helpers.js";
 import { orgProductVariant } from "../schema.js";
+import { orgProductVariantPaymentTypeEnum } from "./_utils/shared-enums.js";
+
+export { orgProductVariantPaymentTypeEnum } from "./_utils/shared-enums.js";
 
 // -------------------------------------
 // PAYMENT PLAN ENUMS
 // -------------------------------------
-
-/**
- * Payment Plan Types - E-commerce Monetization Strategies
- *
- * @businessLogic Orgs can offer different payment approaches for their product variants:
- * - one_time: Traditional e-commerce purchase with immediate access (courses, digital products)
- * - subscription: Recurring billing for continued access (SaaS, premium memberships)
- * - usage_based: Pay-per-consumption billing (API calls, content downloads, processing time)
- */
-export const orgProductVariantPaymentTypeEnum = pgEnum(`${orgTableName}_payment_plan_type`, [
-	"one_time",
-	"subscription",
-	"usage_based",
-]);
 
 /**
  * Billing Intervals - Recurring Payment Frequency
@@ -337,11 +326,11 @@ export const orgProductVariantPaymentPlan = table(
 		uniqueIndex({
 			tName: orgProductVariantPaymentPlanTableName,
 			cols: [cols.variantId, cols.isDefault],
-		}).where(eq(cols.isDefault, true)),
-		check(
-			`ck_${orgProductVariantPaymentPlanTableName}_access_tier_range`,
-			sql`${cols.accessTier} >= 0`,
-		),
+		}).where(eq(cols.isDefault, sql`TRUE`)),
+		// check(
+		// 	`ck_${orgProductVariantPaymentPlanTableName}_access_tier_range`,
+		// 	sql`${cols.accessTier} >= 0`,
+		// ),
 		...multiIndexes({
 			tName: orgProductVariantPaymentPlanTableName,
 			colsGrps: [
@@ -863,6 +852,7 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		...orgMemberIdExtraConfig({
 			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
 			cols,
+			colFkKey: "orgMemberId",
 		}),
 		...multiForeignKeys({
 			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { boolean, jsonb, text } from "drizzle-orm/pg-core";
 import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -136,7 +136,7 @@ export const contactInfo = table(
 		uniqueIndex({
 			tName: contactInfoTableName,
 			cols: [cols.entityType, cols.entityId, cols.isPrimary],
-		}).where(eq(cols.isPrimary, true)),
+		}).where(eq(cols.isPrimary, sql`TRUE`)),
 		uniqueIndex({
 			tName: contactInfoTableName,
 			cols: [cols.entityType, cols.entityId, cols.email],
@@ -147,7 +147,6 @@ export const contactInfo = table(
 				{ cols: [cols.entityType, cols.entityId] },
 				{ cols: [cols.email] },
 				{ cols: [cols.contactType] },
-				{ cols: [cols.verifiedAt] },
 				{ cols: [cols.createdAt] },
 				{ cols: [cols.lastUpdatedAt] },
 				{ cols: [cols.deletedAt] },

@@ -140,7 +140,7 @@ export const userProfileContactInfo = table(
 		uniqueIndex({
 			tName: userProfileContactInfoTableName,
 			cols: [cols.userProfileId, cols.isDefault],
-		}).where(eq(cols.isDefault, true)),
+		}).where(eq(cols.isDefault, sql`TRUE`)),
 		...multiIndexes({
 			tName: userProfileContactInfoTableName,
 			colsGrps: [
@@ -211,6 +211,7 @@ export const userProfileOrgMembership = table(
 		...orgMemberIdExtraConfig({
 			tName: userProfileOrgMembershipTableName,
 			cols,
+			colFkKey: "orgMemberId",
 		}),
 		uniqueIndex({
 			tName: userProfileOrgMembershipTableName,

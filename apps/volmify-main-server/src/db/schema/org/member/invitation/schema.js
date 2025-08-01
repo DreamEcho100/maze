@@ -89,7 +89,6 @@ export const orgMemberInvitation = table(
 			colsGrps: [
 				{ cols: [cols.orgId, cols.email] },
 				{ cols: [cols.orgId, cols.status] },
-				{ cols: [cols.orgId, cols.invitedByMemberId, cols.status] },
 				{ cols: [cols.orgId, cols.role] },
 				{ cols: [cols.orgId, cols.invitationType] },
 				{ cols: [cols.orgId, cols.createdAt] },

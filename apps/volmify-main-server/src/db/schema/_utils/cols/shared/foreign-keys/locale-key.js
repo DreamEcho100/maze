@@ -5,7 +5,7 @@
 //  * @typedef {typeof locale} Table
 //  */
 
-import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
+import { buildLocaleKeyFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 
 // import { foreignKey, index } from "#db/schema/_utils/helpers.js";
 // import { textCols } from "../../text";
@@ -56,7 +56,7 @@ import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 // 	];
 // };
 
-// export const { extraConfig: currencyCodeExtraConfig, fkCol: currencyCodeFkCol } = buildFkUtils({
+// export const { extraConfig: currencyCodeExtraConfig, fkCol: currencyCodeFkCol } = buildLocaleKeyFkUtils({
 // 	cacheKey: "currency",
 // 	defaultColKey: "currencyCode",
 // 	defaultColName: "currency_code",
@@ -64,7 +64,7 @@ import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 // 	getRefColumns: (table) => [table.code],
 // 	defaultOnDelete: "cascade",
 // });
-export const { extraConfig: localeKeyExtraConfig, fkCol: localeKeyFkCol } = buildFkUtils({
+export const { extraConfig: localeKeyExtraConfig, fkCol: localeKeyFkCol } = buildLocaleKeyFkUtils({
 	cacheKey: "locale",
 	defaultColKey: "localeKey",
 	defaultColName: "locale_key",
