@@ -21,7 +21,6 @@ import { userLocale } from "../../user/locale/schema.js";
 // import { userJobProfileI18n } from "../../user/profile/job/schema.js";
 import { userProfileI18n } from "../../user/profile/schema.js";
 import { seoMetadataAlternateUrl } from "../seo/schema.js";
-import { skillI18n } from "../skill/schema.js";
 import { country, currency, exchangeRate, locale } from "./schema.js";
 
 /**
@@ -83,7 +82,6 @@ export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
 
 export const localeRelations = relations(locale, ({ many }) => ({
 	seoAlternateUrls: many(seoMetadataAlternateUrl),
-	skillsI18n: many(skillI18n),
 	usersProfilesI18n: many(userProfileI18n),
 	usersLocales: many(userLocale),
 	// usersJobProfilesI18n: many(userJobProfileI18n),

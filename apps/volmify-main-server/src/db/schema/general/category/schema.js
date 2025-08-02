@@ -88,22 +88,24 @@ export const orgCategoryScopeEnum = pgEnum(`${orgCategoryTableName}_scope`, [
 	"org_product_tag", // Flexible tagging system
 	"org_product_payment_plan_access_tier_category", // Access control categorization
 	"org_skill", // Organization-specific skill taxonomy
+	"org_brand_category", // Brand-specific categorization
+	"org_product_course_skill", // Course skill categorization
 ]);
 export const userCategoryScopeEnum = pgEnum(`${userCategoryTableName}_scope`, [
-	"user_skill", // User-specific skill categorization
+	"user_job_profile_skill", // User-specific job profile skill categorization
 ]);
 
-/**
- * Category type enumeration supporting various taxonomy use cases
- */
-export const categoryScopeEnum = pgEnum("category_scope", [
-	orgCategoryScopeEnum.enumName[0],
-	orgCategoryScopeEnum.enumName[1],
-	orgCategoryScopeEnum.enumName[2],
-	orgCategoryScopeEnum.enumName[3],
-	orgCategoryScopeEnum.enumName[4],
-	userCategoryScopeEnum.enumName[0],
-]);
+// /**
+//  * Category type enumeration supporting various taxonomy use cases
+//  */
+// export const categoryScopeEnum = pgEnum("category_scope", [
+// 	orgCategoryScopeEnum.enumName[0],
+// 	orgCategoryScopeEnum.enumName[1],
+// 	orgCategoryScopeEnum.enumName[2],
+// 	orgCategoryScopeEnum.enumName[3],
+// 	orgCategoryScopeEnum.enumName[4],
+// 	userCategoryScopeEnum.enumName[0],
+// ]);
 
 /**
  * Relationship type for multi-parent DAG structures
@@ -247,7 +249,8 @@ export const categoryMetrics = table(
 export const orgCategory = table(
 	orgCategoryTableName,
 	{
-		// id: textCols.idPk().notNull(),
+		// id primary key, will be mostly used for relations outside this file and it's correct _scope_ per relation should be enforced on the API level
+		id: textCols.idPk().notNull(),
 		/** Organization identifier for multi-tenant isolation */
 		orgId: orgIdFkCol().notNull(),
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
@@ -263,8 +266,8 @@ export const orgCategory = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt().notNull(),
 	},
 	(cols) => [
-		// Composite primary key ensuring unique org+slug combinations
-		compositePrimaryKey({
+		// Composite unique index key ensuring unique org+slug+scope combinations, will too be mostly used on relations on this file
+		uniqueIndex({
 			tName: orgCategoryTableName,
 			cols: [cols.orgId, cols.slugRef, cols.scope],
 		}),
@@ -377,10 +380,10 @@ export const orgCategoryAssociation = table(
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
 		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
 
-		/** Child category in the relationship */
-		childSlugRef: textCols.slug("child_slug_ref").notNull(),
-		/** Parent category in the relationship */
-		parentSlugRef: textCols.slug("parent_slug_ref").notNull(),
+		childId: textCols.idFk("child_id").notNull(),
+		parentId: textCols.idFk("parent_id").notNull(),
+
+		// Scope for business logic validation
 		scope: orgCategoryScopeEnum("scope").notNull(),
 
 		// Relationship metadata/** Type of relationship (hierarchical, related, etc.) */
@@ -402,13 +405,13 @@ export const orgCategoryAssociation = table(
 		// Composite primary key prevents duplicate relationships
 		compositePrimaryKey({
 			tName: orgCategoryAssociationTableName,
-			cols: [cols.orgId, cols.childSlugRef, cols.parentSlugRef, cols.scope],
+			cols: [cols.orgId, cols.childId, cols.parentId, cols.scope],
 		}),
 
 		// Prevent self-referential relationships
 		check(
 			`${orgCategoryAssociationTableName}_no_self_reference`,
-			sql`${cols.childSlugRef} != ${cols.parentSlugRef}`,
+			sql`${cols.childId} != ${cols.parentId}`,
 		),
 
 		// Foreign key constraints
@@ -430,13 +433,13 @@ export const orgCategoryAssociation = table(
 			tName: orgCategoryAssociationTableName,
 			fkGroups: [
 				{
-					cols: [cols.orgId, cols.childSlugRef, cols.scope],
-					foreignColumns: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+					cols: [cols.childId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 				{
-					cols: [cols.orgId, cols.parentSlugRef, cols.scope],
-					foreignColumns: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+					cols: [cols.parentId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],
@@ -446,6 +449,9 @@ export const orgCategoryAssociation = table(
 		...multiIndexes({
 			tName: orgCategoryAssociationTableName,
 			colsGrps: [
+				{ cols: [cols.orgId, cols.childId] }, // Child category lookups
+				{ cols: [cols.orgId, cols.parentId] }, // Parent category lookups
+				{ cols: [cols.orgId, cols.scope] }, // Scope-based queries
 				{ cols: [cols.relationshipType, cols.weight] }, // Relationship analysis
 				{ cols: [cols.isPrimary] }, // Primary relationship queries
 				{ cols: [cols.createdAt] }, // Creation timeline
@@ -471,10 +477,10 @@ export const orgCategoryClosureAncestorPath = table(
 		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
 
 		/** Ancestor category in the path */
-		mainSlugRef: textCols.slug("main_slug_ref").notNull(),
+		mainId: textCols.idFk("main_id").notNull(),
 		/** Type of category (org-specific) */
 		scope: orgCategoryScopeEnum("scope").notNull(),
-		titleSlugRef: textCols.slug("title_slug_ref").notNull(),
+		titleId: textCols.idFk("title_id").notNull(),
 		depth: numericCols.depth().notNull(),
 		usageCount: numericCols.count("usage_count").default(0),
 		createdAt: temporalCols.audit.createdAt().notNull(),
@@ -484,7 +490,7 @@ export const orgCategoryClosureAncestorPath = table(
 		// Composite primary key for unique ancestor paths
 		uniqueIndex({
 			tName: orgCategoryClosureAncestorPathTableName,
-			cols: [cols.orgId, cols.mainSlugRef, cols.scope],
+			cols: [cols.orgId, cols.mainId, cols.scope],
 		}),
 		// Foreign key constraints
 		...orgIdFkExtraConfig({
@@ -505,13 +511,13 @@ export const orgCategoryClosureAncestorPath = table(
 			tName: orgCategoryClosureAncestorPathTableName,
 			fkGroups: [
 				{
-					cols: [cols.orgId, cols.mainSlugRef, cols.scope],
-					foreignColumns: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+					cols: [cols.mainId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 				{
-					cols: [cols.titleSlugRef],
-					foreignColumns: [category.slug],
+					cols: [cols.titleId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("restrict"), // Prevent deletion of global category
 				},
 			],
@@ -520,7 +526,8 @@ export const orgCategoryClosureAncestorPath = table(
 		...multiIndexes({
 			tName: orgCategoryClosureAncestorPathTableName,
 			colsGrps: [
-				{ cols: [cols.orgId, cols.mainSlugRef] }, // Primary lookup
+				{ cols: [cols.orgId, cols.scope, cols.depth] }, // Scope-aware depth analysis
+				{ cols: [cols.orgId, cols.mainId] }, // Primary lookup
 				{ cols: [cols.orgId, cols.depth] }, // Length analysis
 				{ cols: [cols.createdAt] }, // Creation timeline
 				{ cols: [cols.lastUpdatedAt] }, // Closure freshness
@@ -546,11 +553,11 @@ export const orgCategoryClosure = table(
 
 		/** Ancestor category in the path */
 		ancestorPathId: textCols.idFk("ancestor_path_id").notNull(),
-		ancestorSlugRef: textCols.slug("ancestor_slug_ref").notNull(),
+		ancestorId: textCols.idFk("ancestor_id").notNull(),
 		/** Type of category (org-specific) */
 		scope: orgCategoryScopeEnum("scope").notNull(),
 		/** Descendant category in the path */
-		descendantSlugRef: textCols.slug("descendant_slug_ref").notNull(),
+		descendantId: textCols.idFk("descendant_id").notNull(),
 		/** Depth of relationship (0 = self, 1 = direct child, etc.) */
 		depth: numericCols.depth().notNull(),
 		// Q: is this needed?
@@ -566,7 +573,7 @@ export const orgCategoryClosure = table(
 		// Composite primary key for unique closure relationships
 		compositePrimaryKey({
 			tName: orgCategoryClosureTableName,
-			cols: [cols.orgId, cols.ancestorPathId, cols.descendantSlugRef, cols.scope],
+			cols: [cols.orgId, cols.ancestorPathId, cols.descendantId, cols.scope],
 		}),
 		// Foreign key constraints
 		...orgIdFkExtraConfig({
@@ -592,13 +599,13 @@ export const orgCategoryClosure = table(
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 				{
-					cols: [cols.orgId, cols.ancestorSlugRef, cols.scope],
-					foreignColumns: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+					cols: [cols.ancestorId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 				{
-					cols: [cols.orgId, cols.descendantSlugRef, cols.scope],
-					foreignColumns: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+					cols: [cols.descendantId],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],
@@ -607,12 +614,11 @@ export const orgCategoryClosure = table(
 		...multiIndexes({
 			tName: orgCategoryClosureTableName,
 			colsGrps: [
-				{ cols: [cols.orgId, cols.ancestorPathId, cols.descendantSlugRef, cols.scope] },
-				{ cols: [cols.orgId, cols.ancestorPathId] }, // Ancestor queries
-				{ cols: [cols.orgId, cols.ancestorSlugRef] }, // Descendant queries
-				{ cols: [cols.orgId, cols.descendantSlugRef] }, // Descendant queries
-				{ cols: [cols.orgId, cols.scope] }, // Descendant queries
-				{ cols: [cols.orgId, cols.depth] }, // Depth analysis
+				{ cols: [cols.orgId, cols.ancestorPathId] }, // Path lookups
+				{ cols: [cols.orgId, cols.ancestorId] }, // Ancestor queries
+				{ cols: [cols.orgId, cols.descendantId] }, // Descendant queries
+				{ cols: [cols.orgId, cols.scope, cols.depth] }, // Scope-aware depth
+				{ cols: [cols.ancestorPathId, cols.depth] }, // Path depth analysis
 				// { cols: [cols.pathCount] }, // Path count analysis
 				{ cols: [cols.createdAt] }, // Closure creation timeline
 				{ cols: [cols.lastUpdatedAt] }, // Closure freshness
@@ -623,8 +629,8 @@ export const orgCategoryClosure = table(
 		// Prevent circular references in closures
 		check(
 			`${orgCategoryClosureTableName}_self_reference_logic`,
-			sql`(${cols.ancestorSlugRef} = ${cols.descendantSlugRef} AND ${cols.depth} = 0) OR 
-      (${cols.ancestorSlugRef} != ${cols.descendantSlugRef} AND ${cols.depth} > 0)`,
+			sql`(${cols.ancestorId} = ${cols.descendantId} AND ${cols.depth} = 0) OR 
+      (${cols.ancestorId} != ${cols.descendantId} AND ${cols.depth} > 0)`,
 		),
 		// Ensure depth is non-negative
 		check(`${orgCategoryClosureTableName}_depth_non_negative`, sql`${cols.depth} >= 0`),
@@ -647,7 +653,8 @@ export const orgCategoryClosure = table(
 export const userCategory = table(
 	userCategoryTableName,
 	{
-		// id: textCols.idPk().notNull(),
+		// id primary key, will be mostly used for relations outside this file and it's correct _scope_ per relation should be enforced on the API level
+		id: textCols.idPk().notNull(),
 		/** User identifier for multi-tenant isolation */
 		userId: userIdFkCol().notNull(),
 		/** Reference to global category slug */
@@ -660,8 +667,8 @@ export const userCategory = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt().notNull(),
 	},
 	(cols) => [
-		// Composite primary key ensuring unique user+slug combinations
-		compositePrimaryKey({
+		// Composite unique index key ensuring unique user+slug+scope combinations, will too be mostly used on relations on this file
+		uniqueIndex({
 			tName: userCategoryTableName,
 			cols: [cols.userId, cols.slugRef, cols.scope],
 		}),

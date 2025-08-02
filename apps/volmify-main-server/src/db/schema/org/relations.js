@@ -1,7 +1,6 @@
 import { relations } from "drizzle-orm";
 import { account, accountTransaction, accountTransactionOrgContext } from "../account/schema.js";
 import { currency } from "../general/locale-and-currency/schema.js";
-import { skill } from "../general/skill/schema.js";
 import { orgBrand } from "./brand/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
 import { orgLesson } from "./lesson/schema.js";
@@ -13,7 +12,6 @@ import { orgEmployee } from "./member/employee/schema.js";
 import { orgMemberInvitation } from "./member/invitation/schema.js";
 import { orgMember } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
-// import { orgLesson, skill } from "./product/by-type/course/schema.js";
 import { orgCoupon, orgDiscount, orgGiftCard, orgPromotion } from "./product/offers/schema.js";
 import {
 	orgMemberProductVariantPaymentPlanSubscription,
@@ -49,7 +47,6 @@ export const orgRelations = relations(org, ({ many }) => ({
 	// permissionGroups: many(orgPermissionsGroup),
 	currencySettings: many(orgCurrencySettings),
 	brands: many(orgBrand),
-	skillsCreated: many(skill),
 	lessons: many(orgLesson),
 
 	locales: many(orgLocale),

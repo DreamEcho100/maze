@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { seoMetadata } from "#db/schema/general/seo/schema.js";
 import { orgBrand, orgBrandTranslation } from "../brand/schema.js";
 import { orgLocale } from "../locale-region/schema.js";
 import { orgProductBrandAttribution } from "../product/schema.js";
-// import { orgLesson, skill } from "../product/by-type/course/schema.js";
 import { org } from "../schema.js";
 
 /**
@@ -17,6 +17,10 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
 	}),
 	productAttributions: many(orgProductBrandAttribution),
 	translations: many(orgBrandTranslation),
+	category: one(orgCategory, {
+		fields: [orgBrand.categoryId],
+		references: [orgCategory.id],
+	}),
 }));
 
 /**

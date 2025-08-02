@@ -112,12 +112,13 @@ export const contactInfo = table(
 		contactHours: text("contact_hours"),
 		notes: text("notes"),
 
-		/**
-		 * Optional tags for custom classification or filtering.
-		 *
-		 * @example ["legal", "franchise", "partner"]
-		 */
-		tags: text("tags").array(),
+		// Contact info will be for the users and orgs, but how to consolidate the category as tags relations
+		// /**
+		//  * Optional tags for custom classification or filtering.
+		//  *
+		//  * @example ["legal", "franchise", "partner"]
+		//  */
+		// tags: text("tags").array(),
 
 		/**
 		 * When this contact was last verified (e.g., email confirmed, phone validated).

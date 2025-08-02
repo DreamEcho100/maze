@@ -16,7 +16,6 @@ import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
 import { userProfileI18n } from "../../user/profile/schema.js";
 import { orgCategoryI18n, userCategoryI18n } from "../category/schema.js";
 import { locale } from "../locale-and-currency/schema.js";
-import { skillI18n } from "../skill/schema.js";
 import {
 	seoMetadata,
 	seoMetadataAlternateUrl,
@@ -138,11 +137,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	orgLessonI18n: one(orgLessonI18n, {
 		fields: [seoMetadata.id],
 		references: [orgLessonI18n.seoMetadataId],
-	}),
-
-	skillI18n: one(skillI18n, {
-		fields: [seoMetadata.id],
-		references: [skillI18n.seoMetadataId],
 	}),
 }));
 

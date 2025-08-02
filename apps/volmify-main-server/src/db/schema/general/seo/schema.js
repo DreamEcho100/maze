@@ -36,6 +36,9 @@ export const changeFreqEnum = pgEnum("change_freq", [
 	"never",
 ]);
 
+// Q:
+// How it's benificial to store the SEO like this and not just as a json fields?
+
 // -------------------------------------
 // MAIN SEO METADATA TABLE (No entityId/entityType)
 // -------------------------------------

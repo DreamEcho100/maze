@@ -1,13 +1,11 @@
 import { relations } from "drizzle-orm";
-import { skill } from "#db/schema/general/skill/schema.js";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { seoMetadata } from "../../../../general/seo/schema";
 import { orgLesson } from "../../../lesson/schema";
 import { orgLocale } from "../../../locale-region/schema";
 import { orgMember } from "../../../member/schema";
 import { orgProduct } from "../../schema";
 import {
-	// orgLesson,
-	// orgLessonI18n,
 	orgMemberLearningProfile,
 	orgMemberProductCourseChallengeRating,
 	orgMemberProductCourseEnrollment,
@@ -20,8 +18,6 @@ import {
 	orgProductCourseModuleSectionLesson,
 	orgProductCourseModuleSectionLessonI18n,
 	orgProductCourseSkill,
-	// skill,
-	// skillI18n,
 } from "./schema";
 
 export const orgProductCourseRelations = relations(orgProductCourse, ({ many, one }) => ({
@@ -55,9 +51,9 @@ export const orgProductCourseSkillRelations = relations(orgProductCourseSkill, (
 		references: [orgProductCourse.id],
 	}),
 
-	skill: one(skill, {
+	skill: one(orgCategory, {
 		fields: [orgProductCourseSkill.skillId],
-		references: [skill.id],
+		references: [orgCategory.id],
 	}),
 }));
 export const orgMemberProductCourseChallengeRatingRelations = relations(

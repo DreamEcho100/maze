@@ -27,8 +27,7 @@ import {
 	multiIndexes,
 	uniqueIndex,
 } from "#db/schema/_utils/helpers.js";
-import { skill } from "#db/schema/general/skill/schema.js";
-// import { skill } from "#db/schema/general/skill/schema";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { buildOrgI18nTable, orgTableName } from "../../../_utils/helpers";
 import { orgLesson } from "../../../lesson/schema";
 import { orgProduct } from "../../schema";
@@ -177,14 +176,8 @@ const orgProductCourseSkillTableName = `${orgProductCourseTableName}_skill`;
 export const orgProductCourseSkill = table(
 	orgProductCourseSkillTableName,
 	{
-		courseId: textCols
-			.idFk("course_id")
-			// .references(() => orgProductCourse.id)
-			.notNull(),
-		skillId: textCols
-			.idFk("skill_id")
-			// .references(() => skill.id)
-			.notNull(),
+		courseId: textCols.idFk("course_id").notNull(),
+		skillId: textCols.idFk("skill_id").notNull(),
 
 		// /**
 		//  * @skillRole Whether skill is taught or prerequisite
@@ -219,7 +212,7 @@ export const orgProductCourseSkill = table(
 				},
 				{
 					cols: [cols.skillId],
-					foreignColumns: [skill.id],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],

@@ -11,9 +11,9 @@ import {
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
+import { userCategory } from "#db/schema/general/category/schema.js";
 // Assuming these tables exist in your schema
 import { table } from "../../../_utils/tables.js";
-import { skill } from "../../../general/skill/schema";
 import { userTableName } from "../../_utils/helpers";
 
 // refs
@@ -221,10 +221,7 @@ export const userJobProfileSkill = table(
 	{
 		id: textCols.idPk().notNull(),
 		jobProfileId: userJobProfileIdFkCol().notNull(),
-		skillId: textCols
-			.idFk("skill_id")
-			// .references(() => skill.id, { onDelete: "cascade" })
-			.notNull(),
+		skillId: textCols.idFk("skill_id").notNull(),
 
 		// proficiency: varchar('proficiency', { length: 50 }).checkIn(['beginner', 'intermediate', 'expert']),
 
@@ -306,7 +303,7 @@ export const userJobProfileSkill = table(
 			fkGroups: [
 				{
 					cols: [cols.skillId],
-					foreignColumns: [skill.id],
+					foreignColumns: [userCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],

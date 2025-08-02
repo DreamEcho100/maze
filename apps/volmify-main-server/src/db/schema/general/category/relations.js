@@ -1,8 +1,11 @@
 import { relations } from "drizzle-orm";
+import { orgBrand } from "#db/schema/org/brand/schema.js";
 import { orgLocale } from "#db/schema/org/locale-region/schema.js";
 import { orgEmployee } from "#db/schema/org/member/employee/schema.js";
+import { orgProductCourseSkill } from "#db/schema/org/product/by-type/course/schema.js";
 import { org } from "#db/schema/org/schema.js";
 import { userLocale } from "#db/schema/user/locale/schema.js";
+import { userJobProfileSkill } from "#db/schema/user/profile/job/schema.js";
 import { user } from "#db/schema/user/schema.js";
 import { seoMetadata } from "../seo/schema.js";
 import {
@@ -53,9 +56,6 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
 
 	// I18n content for users
 	userI18nEntries: many(userCategoryI18n),
-
-	// Ancestor path title references
-	ancestorPathTitles: many(orgCategoryClosureAncestorPath),
 }));
 
 /**
@@ -123,6 +123,12 @@ export const orgCategoryRelations = relations(orgCategory, ({ one, many }) => ({
 	closureAsDescendant: many(orgCategoryClosure, {
 		relationName: "closureDescendant",
 	}),
+
+	// Ancestor path title references
+	ancestorPathTitles: many(orgCategoryClosureAncestorPath),
+
+	orgsBrands: many(orgBrand),
+	orgsProductsCoursesSkills: many(orgProductCourseSkill),
 }));
 
 /**
@@ -180,23 +186,15 @@ export const orgCategoryAssociationRelations = relations(orgCategoryAssociation,
 
 	// Parent category in the relationship
 	parentCategory: one(orgCategory, {
-		fields: [
-			orgCategoryAssociation.orgId,
-			orgCategoryAssociation.parentSlugRef,
-			orgCategoryAssociation.scope,
-		],
-		references: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+		fields: [orgCategoryAssociation.parentId],
+		references: [orgCategory.id],
 		relationName: "categoryParent",
 	}),
 
 	// Child category in the relationship
 	childCategory: one(orgCategory, {
-		fields: [
-			orgCategoryAssociation.orgId,
-			orgCategoryAssociation.childSlugRef,
-			orgCategoryAssociation.scope,
-		],
-		references: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+		fields: [orgCategoryAssociation.childId],
+		references: [orgCategory.id],
 		relationName: "categoryChild",
 	}),
 }));
@@ -225,18 +223,14 @@ export const orgCategoryClosureAncestorPathRelations = relations(
 
 		// Main category this path represents
 		mainCategory: one(orgCategory, {
-			fields: [
-				orgCategoryClosureAncestorPath.orgId,
-				orgCategoryClosureAncestorPath.mainSlugRef,
-				orgCategoryClosureAncestorPath.scope,
-			],
-			references: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+			fields: [orgCategoryClosureAncestorPath.mainId],
+			references: [orgCategory.id],
 		}),
 
 		// Title category for display
-		titleCategory: one(category, {
-			fields: [orgCategoryClosureAncestorPath.titleSlugRef],
-			references: [category.slug],
+		titleCategory: one(orgCategory, {
+			fields: [orgCategoryClosureAncestorPath.titleId],
+			references: [orgCategory.id],
 		}),
 
 		// Closure entries using this path
@@ -272,23 +266,15 @@ export const orgCategoryClosureRelations = relations(orgCategoryClosure, ({ one 
 
 	// Ancestor category
 	ancestorCategory: one(orgCategory, {
-		fields: [
-			orgCategoryClosure.orgId,
-			orgCategoryClosure.ancestorSlugRef,
-			orgCategoryClosure.scope,
-		],
-		references: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+		fields: [orgCategoryClosure.ancestorId],
+		references: [orgCategory.id],
 		relationName: "closureAncestor",
 	}),
 
 	// Descendant category
 	descendantCategory: one(orgCategory, {
-		fields: [
-			orgCategoryClosure.orgId,
-			orgCategoryClosure.descendantSlugRef,
-			orgCategoryClosure.scope,
-		],
-		references: [orgCategory.orgId, orgCategory.slugRef, orgCategory.scope],
+		fields: [orgCategoryClosure.descendantId],
+		references: [orgCategory.id],
 		relationName: "closureDescendant",
 	}),
 }));
@@ -315,6 +301,8 @@ export const userCategoryRelations = relations(userCategory, ({ one, many }) => 
 
 	// I18n content for this user category
 	translations: many(userCategoryI18n),
+
+	usersJobsProfilesSkills: many(userJobProfileSkill),
 }));
 
 /**

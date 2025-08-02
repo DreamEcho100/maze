@@ -1,9 +1,13 @@
-import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
@@ -23,20 +27,38 @@ export const orgBrand = table(
 		orgId: orgIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
 		logoUrl: textCols.url("logo_url"),
-		brandCategory: textCols.category("brand_category"), // e.g., "education", "technology", "healthcare"
+		categoryId: textCols.idFk("category_id"), // e.g., "education", "technology", "healthcare"
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.audit.createdAt(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
+		...orgIdFkExtraConfig({
+			tName: orgBrandTableName,
+			cols,
+		}),
+		...multiForeignKeys({
+			tName: orgBrandTableName,
+			fkGroups: [
+				{
+					cols: [cols.categoryId],
+					foreignColumns: [orgCategory.id],
+				},
+			],
+		}),
 		uniqueIndex({
 			tName: orgBrandTableName,
 			cols: [cols.orgId, cols.slug],
 		}),
 		multiIndexes({
 			tName: orgBrandTableName,
-			colsGrps: [{ cols: [cols.brandCategory] }],
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.deletedAt] },
+				{ cols: [cols.slug] },
+			],
 		}),
 	],
 );

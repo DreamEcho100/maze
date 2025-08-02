@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { skill } from "../../../general/skill/schema.js";
+import { userCategory } from "#db/schema/general/category/schema.js";
 import { orgEmployee } from "../../../org/member/employee/schema.js";
 import { userProfile } from "../schema.js";
 import {
@@ -74,9 +74,9 @@ export const userJobProfileSkillRelations = relations(userJobProfileSkill, ({ on
 	// 	fields: [userJobProfileSkill.skillId],
 	// 	references: [userJobProfile.id],
 	// }),
-	skill: one(skill, {
+	skill: one(userCategory, {
 		fields: [userJobProfileSkill.skillId],
-		references: [skill.id],
+		references: [userCategory.id],
 	}),
 	/**
 	 * @jobProfileLink Links skill to the main job profile
