@@ -1,18 +1,21 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean, integer, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { seoMetadataIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
-	userIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { seoMetadataIdFkExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
+import {
 	userIdFkCol,
+	userIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
@@ -306,7 +309,7 @@ export const orgProductVariantPaymentPlan = table(
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_deleted_at`).on(cols.deletedAt),
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_created_at`).on(cols.createdAt),
 		// index(`idx_${orgProductVariantPaymentPlanTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgProductVariantPaymentPlanTableName,
 			cols,
 		}),
@@ -409,7 +412,7 @@ export const orgProductVariantPaymentPlanI18n = buildOrgI18nTable(
 	{
 		fkKey: "planId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName,
 				cols,
 			}),
@@ -506,7 +509,7 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgProductVariantPaymentPlanOneTimeTypeTableName,
 			cols,
 		}),
@@ -621,7 +624,7 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgProductVariantPaymentPlanSubscriptionTypeTableName,
 			cols,
 		}),
@@ -841,15 +844,15 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
 			cols,
 		}),
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberProductVariantPaymentPlanSubscriptionTableName,
 			cols,
 			colFkKey: "orgMemberId",

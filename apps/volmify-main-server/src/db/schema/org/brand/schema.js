@@ -1,7 +1,7 @@
 import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -60,7 +60,7 @@ export const orgBrandTranslation = buildOrgI18nTable(orgBrandTableName)(
 	{
 		fkKey: "brandId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName,
 				cols,
 			}),

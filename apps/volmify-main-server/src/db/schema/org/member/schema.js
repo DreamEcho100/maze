@@ -1,8 +1,11 @@
 import { pgEnum } from "drizzle-orm/pg-core";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	userProfileIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	userProfileIdFkCol,
+	userProfileIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-profile-id.js";
 import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -62,11 +65,11 @@ export const orgMember = table(
 		lastActiveAt: temporalCols.activity.lastActiveAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgMemberTableName,
 			cols,
 		}),
-		...userProfileIdExtraConfig({
+		...userProfileIdFkExtraConfig({
 			tName: orgMemberTableName,
 			cols,
 		}),

@@ -1,17 +1,20 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, integer, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
 	compositePrimaryKey,
@@ -68,7 +71,7 @@ export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
 					},
 				],
 			}),
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -158,11 +161,11 @@ export const orgTaxRate = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgTaxRateTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgTaxRateTableName,
 			cols,
 		}),
@@ -231,7 +234,7 @@ export const orgTaxRateI18n = buildOrgI18nTable(orgTaxRateTableName)(
 					},
 				],
 			}),
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -278,7 +281,7 @@ export const orgTaxRateSnapshot = table(
 		byEmployeeId: orgEmployeeIdFkCol({ name: "by_employee_id" }).notNull(),
 	},
 	(cols) => [
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgTaxRateSnapshotTableName,
 			cols,
 			colFkKey: "byEmployeeId",

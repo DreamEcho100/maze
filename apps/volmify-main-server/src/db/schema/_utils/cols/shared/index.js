@@ -5,6 +5,8 @@ export const sharedCols = {
 
 	// Business status columns
 	isActive: () => boolean("is_active").default(true),
+	isPrimary: () => boolean("is_primary").default(false), // Primary entity flag
+	isPublic: () => boolean("is_public").default(true), // Public visibility
 	isSystem: () => boolean("is_system").default(false), // System vs custom entities
 	isFeatured: () => boolean("is_featured").default(false), // Marketing prominence
 

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { accountTransactionUserContext } from "../account/schema.js";
+import { userCategory, userCategoryI18n } from "../general/category/schema.js";
 import { orgTeam } from "../org/member/team/schema.js";
 import {
 	orgMemberLearningProfile,
@@ -32,6 +33,9 @@ export const userRelations = relations(user, ({ many }) => ({
 	locales: many(userLocale),
 
 	accountTransactions: many(accountTransactionUserContext),
+
+	categories: many(userCategory),
+	categoriesI18n: many(userCategoryI18n),
 }));
 export const userSessionRelations = relations(userSession, ({ one }) => ({
 	user: one(user, {

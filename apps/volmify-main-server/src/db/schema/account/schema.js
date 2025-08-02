@@ -2,19 +2,19 @@ import { sql } from "drizzle-orm";
 import { jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { numericCols } from "../_utils/cols/numeric.js";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/employee-id.js";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "../_utils/cols/shared/foreign-keys/org-id.js";
-import { userIdExtraConfig, userIdFkCol } from "../_utils/cols/shared/foreign-keys/user-id.js";
+import { orgIdFkCol, orgIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/org-id.js";
+import { userIdFkCol, userIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/user-id.js";
 import { sharedCols } from "../_utils/cols/shared/index.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
@@ -84,15 +84,15 @@ export const account = table(
 		isActive: sharedCols.isActive(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: accountTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: accountTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: accountTableName,
 			cols,
 		}),
@@ -235,16 +235,16 @@ export const accountTransaction = table(
 		// 	t.referenceType,
 		// 	t.referenceId,
 		// ),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: accountTransactionTableName,
 			cols,
 		}),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: accountTransactionTableName,
 			cols,
 			colFkKey: "createdByEmployeeId",
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: accountTransactionTableName,
 			cols,
 		}),
@@ -399,11 +399,11 @@ export const accountTransactionUserContext = table(
 		accessSource: textCols.tagline("access_source"), // "member_activity", "employee_role", "admin_grant"
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: accountTransactionUserContextTableName,
 			cols,
 		}),
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: accountTransactionUserContextTableName,
 			cols,
 		}),
@@ -452,7 +452,7 @@ export const accountTransactionEmployeeContext = table(
 		attributionPercentage: numericCols.percentage._("attribution_percentage"),
 	},
 	(cols) => [
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: accountTransactionEmployeeContextTableName,
 			cols,
 		}),
@@ -498,7 +498,7 @@ export const accountTransactionMemberContext = table(
 		memberRole: accountTransactionMemberRoleEnum("member_role").notNull(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: accountTransactionMemberContextTableName,
 			cols,
 		}),
@@ -543,7 +543,7 @@ export const accountTransactionOrgContext = table(
 		orgRole: accountTransactionOrgRoleEnum("org_role").notNull(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: accountTransactionOrgContextTableName,
 			cols,
 		}),

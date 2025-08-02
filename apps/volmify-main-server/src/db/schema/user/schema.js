@@ -1,7 +1,7 @@
 /** @import { UserAgent } from "@de100/auth/types" */
 
 import { jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
-import { userIdExtraConfig, userIdFkCol } from "../_utils/cols/shared/foreign-keys/user-id.js";
+import { userIdFkCol, userIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
 import { bytea } from "../_utils/custom-fields.js";
@@ -72,7 +72,7 @@ export const userSession = table(
 		// ),
 	},
 	(cols) => [
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: userSessionTableName,
 			cols,
 		}),
@@ -106,7 +106,7 @@ export const userEmailVerificationRequest = table(
 		userId: userIdFkCol().notNull(),
 	},
 	(cols) => [
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: userEmailVerificationTableName,
 			cols: cols,
 		}),
@@ -135,7 +135,7 @@ export const userPasswordResetSession = table(
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 	},
 	(cols) => [
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: userPasswordResetTableName,
 			cols: cols,
 		}),

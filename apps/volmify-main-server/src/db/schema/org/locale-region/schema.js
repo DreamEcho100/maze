@@ -1,17 +1,20 @@
 import { eq, isNull, sql } from "drizzle-orm";
 import { boolean, text } from "drizzle-orm/pg-core";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	localeKeyExtraConfig,
 	localeKeyFkCol,
+	localeKeyFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
@@ -59,11 +62,11 @@ export const orgLocale = table(
 		// 	.where(eq(t.isDefault, true)),
 		// index(`idx_${orgLocaleTableName}_is_active`).on(t.isActive),
 		// // index(`idx_${orgLocaleTableName}_priority`).on(t.priority),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgLocaleTableName,
 			cols,
 		}),
-		...localeKeyExtraConfig({
+		...localeKeyFkExtraConfig({
 			tName: orgLocaleTableName,
 			cols,
 		}),
@@ -113,11 +116,11 @@ export const orgRegion = table(
 		// // "operational", "strategic", "full_autonomous"
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgRegionTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgRegionTableName,
 			cols,
 		}),
@@ -148,7 +151,7 @@ export const orgRegionI18n = buildOrgI18nTable(orgRegionTableName)(
 	{
 		fkKey: "regionId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName,
 				cols,
 			}),

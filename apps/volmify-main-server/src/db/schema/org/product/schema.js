@@ -37,13 +37,16 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean, check, decimal, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
 	compositePrimaryKey,
@@ -129,7 +132,7 @@ export const orgProductApproval = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgProductApprovalTableName,
 			cols,
 			colFkKey: "submittedByEmployeeId",
@@ -242,7 +245,7 @@ export const orgProduct = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(t) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgProductTableName,
 			cols: t,
 		}),
@@ -296,7 +299,7 @@ export const orgProductI18n = buildOrgI18nTable(orgProductTableName)(
 	{
 		fkKey: "productId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -534,7 +537,7 @@ export const orgProductVariantI18n = buildOrgI18nTable(orgProductVariantTable)(
 	{
 		fkKey: "variantId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -657,7 +660,7 @@ export const orgProductRevenuePool = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgProductRevenuePoolTableName,
 			cols: t,
 			colFkKey: "lastAllocationByEmployeeId",

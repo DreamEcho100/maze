@@ -1,9 +1,9 @@
 import { boolean } from "drizzle-orm/pg-core";
-import { localeKeyExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
-import { orgIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { localeKeyFkExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
+import { orgIdFkExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
@@ -59,13 +59,13 @@ export const skill = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: skillTableName,
 			cols,
 			colFkKey: "appliedByOrgId",
 			onDelete: "set null",
 		}),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: skillTableName,
 			cols,
 			colFkKey: "createdByOrgId",
@@ -119,11 +119,11 @@ export const skillI18n = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...localeKeyExtraConfig({
+		...localeKeyFkExtraConfig({
 			tName: skillI18nTableName,
 			cols,
 		}),
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: skillI18nTableName,
 			cols,
 		}),

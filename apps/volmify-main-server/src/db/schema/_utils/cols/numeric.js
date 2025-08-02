@@ -2,15 +2,18 @@ import { decimal, integer } from "drizzle-orm/pg-core";
 
 export const numericCols = {
 	// IDs and Counters
-	sortOrder: () => integer("sort_order").default(0), // Course module ordering
+	sortOrder: (name = "sort_order") => integer(name).default(0), // Course module ordering
 	version: () => integer("version").default(1), // Content versioning
 
 	// Financial (precision-critical)
 	revenueShare: () => decimal("revenue_share", { precision: 5, scale: 2 }), // Creator splits
 
 	// Metrics & Analytics
-	count: () => integer("count").default(0), // Enrollment counts
-	duration: () => integer("duration_minutes"), // Time in minutes
+	count: (name = "count") => integer(name).default(0), // Enrollment counts
+	/** @param {string} name */
+	duration: (name) => integer(name),
+	depth: () => integer("depth").default(0), // Hierarchical depth
+	weight: (name = "weight") => decimal(name, { precision: 5, scale: 2 }).default("1.0"), // Relationship strength
 
 	// Access Control
 	/** @param {string} [name] */

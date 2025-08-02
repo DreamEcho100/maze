@@ -1,12 +1,12 @@
 import { eq, sql } from "drizzle-orm";
 import { text } from "drizzle-orm/pg-core";
 import {
-	localeKeyExtraConfig,
 	localeKeyFkCol,
+	localeKeyFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/locale-key.js";
 import {
-	userIdExtraConfig,
 	userIdFkCol,
+	userIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
@@ -47,11 +47,11 @@ export const userLocale = table(
 		// 	.where(eq(t.isDefault, true)),
 		// index(`idx_${userLocaleTableName}_is_active`).on(t.isActive),
 		// // index(`idx_${userLocaleTableName}_priority`).on(t.priority),
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: userLocaleTableName,
 			cols,
 		}),
-		...localeKeyExtraConfig({
+		...localeKeyFkExtraConfig({
 			tName: userLocaleTableName,
 			cols,
 		}),

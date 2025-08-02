@@ -2,10 +2,10 @@ import { eq, sql } from "drizzle-orm";
 import { jsonb, text, varchar } from "drizzle-orm/pg-core";
 import { numericCols } from "../_utils/cols/numeric.js";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/currency-code.js";
-import { orgIdExtraConfig, orgIdFkCol } from "../_utils/cols/shared/foreign-keys/org-id.js";
+import { orgIdFkCol, orgIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/org-id.js";
 import { sharedCols } from "../_utils/cols/shared/index.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
@@ -124,11 +124,11 @@ export const orgCurrencySettings = table(
 			tName: orgCurrencySettingsTableName,
 			cols: [cols.orgId, cols.currencyCode],
 		}),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgCurrencySettingsTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgCurrencySettingsTableName,
 			cols,
 		}),

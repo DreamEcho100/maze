@@ -1,9 +1,12 @@
 import { isNull } from "drizzle-orm";
 import { boolean, varchar } from "drizzle-orm/pg-core";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
 	compositePrimaryKey,
@@ -42,7 +45,7 @@ export const orgFunnel = table(
 		// index(`idx_${orgFunnelTableName}_created_at`).on(t.createdAt),
 		// index(`idx_${orgFunnelTableName}_last_updated_at`).on(t.lastUpdatedAt),
 		// index(`idx_${orgFunnelTableName}_deleted_at`).on(t.deletedAt),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgFunnelTableName,
 			cols,
 		}),
@@ -88,7 +91,7 @@ export const orgFunnelI18n = buildOrgI18nTable(orgFunnelTableName)(
 					},
 				],
 			}),
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),

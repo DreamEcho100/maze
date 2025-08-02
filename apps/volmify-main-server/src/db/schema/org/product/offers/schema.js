@@ -1,17 +1,20 @@
 import { decimal, integer, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	compositePrimaryKey,
 	multiForeignKeys,
@@ -83,11 +86,11 @@ export const orgDiscount = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgDiscountTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgDiscountTableName,
 			cols,
 		}),
@@ -312,7 +315,7 @@ export const orgMemberOrderDiscountUsage = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgDiscountUsageTableName,
 			cols,
 		}),
@@ -370,7 +373,7 @@ export const orgCoupon = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgCouponTableName,
 			cols,
 		}),
@@ -468,20 +471,20 @@ export const orgGiftCard = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgGiftCardTableName,
 			cols,
 		}),
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgGiftCardTableName,
 			cols,
 		}),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgGiftCardTableName,
 			cols,
 			colFkKey: "issuedByEmployeeId",
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgGiftCardTableName,
 			cols,
 			colFkKey: "issuedToMemberId",
@@ -560,7 +563,7 @@ export const orgMemberGiftCardUsage = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberGiftCardUsageTableName,
 			cols,
 		}),
@@ -613,7 +616,7 @@ export const orgPromotion = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgPromotionTableName,
 			cols,
 		}),

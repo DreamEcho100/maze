@@ -1,12 +1,12 @@
 import { integer } from "drizzle-orm/pg-core";
 import { numericCols } from "#db/schema/_utils/cols/numeric.js";
 import {
-	userJobProfileIdExtraConfig,
 	userJobProfileIdFkCol,
+	userJobProfileIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
 import {
-	userProfileIdExtraConfig,
 	userProfileIdFkCol,
+	userProfileIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-profile-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
@@ -150,7 +150,7 @@ export const userJobProfile = table(
 	},
 	(cols) => [
 		// // uniqueIndex("uq_job_user").on(cols.userId),
-		...userProfileIdExtraConfig({
+		...userProfileIdFkExtraConfig({
 			tName: userJobProfileTableName,
 			cols,
 		}),
@@ -296,7 +296,7 @@ export const userJobProfileSkill = table(
 		// index(`idx_${userJobProfileSkillTableName}_job_profile_id`).on(cols.jobProfileId),
 		// index(`idx_${userJobProfileSkillTableName}_created_at`).on(cols.createdAt),
 		// // index(`idx_${userJobProfileSkillTableName}_last_updated_at`).on(cols.lastUpdatedAt),
-		...userJobProfileIdExtraConfig({
+		...userJobProfileIdFkExtraConfig({
 			tName: userJobProfileSkillTableName,
 			cols,
 			colFkKey: "jobProfileId",
@@ -446,7 +446,7 @@ export const userJobProfileMetrics = table(
 	(cols) => [
 		// index(`idx_${userJobProfileMetricsTableName}_created_at`).on(cols.createdAt),
 		// index(`idx_${userJobProfileMetricsTableName}_last_updated`).on(cols.lastUpdatedAt),
-		...userJobProfileIdExtraConfig({
+		...userJobProfileIdFkExtraConfig({
 			tName: userJobProfileMetricsTableName,
 			cols,
 			colFkKey: "jobProfileId",
