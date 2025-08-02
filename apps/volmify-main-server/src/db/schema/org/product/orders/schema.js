@@ -2,10 +2,13 @@ import { sql } from "drizzle-orm";
 import { check, integer, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { currencyCodeFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
@@ -182,11 +185,11 @@ export const orgMemberOrder = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgMemberOrderTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberOrderTableName,
 			cols,
 		}),

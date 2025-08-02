@@ -8,6 +8,7 @@ export const temporalCols = {
 
 	// User activity (minute precision for analytics)
 	lastAccessedAt: () => timestamp("last_accessed_at", { precision: 3, withTimezone: true }),
+	lastUsedAt: () => timestamp("last_used_at", { precision: 3, withTimezone: true }),
 	completedAt: () => timestamp("completed_at", { precision: 3, withTimezone: true }),
 
 	// ✅ AUDIT TRAIL: High precision for compliance
@@ -17,6 +18,7 @@ export const temporalCols = {
 		lastUpdatedAt: (name = "last_updated_at") =>
 			timestamp(name, { precision: 3, withTimezone: true }).defaultNow(),
 		deletedAt: (name = "deleted_at") => timestamp(name, { precision: 3, withTimezone: true }),
+		deprecatedAt: (name = "deprecated_at") => timestamp(name, { precision: 3, withTimezone: true }),
 	},
 
 	// ✅ BUSINESS EVENTS: Second precision sufficient

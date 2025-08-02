@@ -1,9 +1,12 @@
 import { pgEnum, varchar } from "drizzle-orm/pg-core";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
@@ -75,11 +78,11 @@ export const orgMemberInvitation = table(
 			tName: orgMemberInvitationTableName,
 			cols: [cols.email, cols.orgId],
 		}),
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgMemberInvitationTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberInvitationTableName,
 			cols,
 			colFkKey: "invitedByMemberId",

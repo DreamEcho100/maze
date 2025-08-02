@@ -1,9 +1,12 @@
 import { boolean, pgEnum } from "drizzle-orm/pg-core";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { userJobProfileIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
@@ -96,11 +99,11 @@ export const orgEmployee = table(
 		isSalaried: boolean("is_salaried").default(false),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgEmployeeTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgEmployeeTableName,
 			cols,
 		}),

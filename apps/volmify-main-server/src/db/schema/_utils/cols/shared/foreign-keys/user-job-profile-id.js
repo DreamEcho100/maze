@@ -1,6 +1,6 @@
 import { buildFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 
-export const { extraConfig: userJobProfileIdExtraConfig, fkCol: userJobProfileIdFkCol } =
+export const { extraConfig: userJobProfileIdFkExtraConfig, fkCol: userJobProfileIdFkCol } =
 	buildFkUtils({
 		cacheKey: "userJobProfile",
 		defaultColKey: "userJobProfileId",

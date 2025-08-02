@@ -1,20 +1,20 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
 import {
-	seoMetadataIdExtraConfig,
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
-	userIdExtraConfig,
 	userIdFkCol,
+	userIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import {
-	userProfileIdExtraConfig,
 	userProfileIdFkCol,
+	userProfileIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-profile-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
@@ -57,7 +57,7 @@ export const userProfile = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: userProfileTableName,
 			cols,
 		}),
@@ -96,11 +96,11 @@ export const userProfileI18n = buildUserI18nTable(userProfileTableName)(
 	{
 		fkKey: "userProfileId",
 		extraConfig: (cols, tName) => [
-			...userProfileIdExtraConfig({
+			...userProfileIdFkExtraConfig({
 				tName,
 				cols,
 			}),
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName,
 				cols,
 			}),
@@ -122,7 +122,7 @@ export const userProfileContactInfo = table(
 		deletedAt: temporalCols.audit.deletedAt(),
 	},
 	(cols) => [
-		...userProfileIdExtraConfig({
+		...userProfileIdFkExtraConfig({
 			tName: userProfileContactInfoTableName,
 			cols,
 		}),
@@ -204,11 +204,11 @@ export const userProfileOrgMembership = table(
 		updatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...userProfileIdExtraConfig({
+		...userProfileIdFkExtraConfig({
 			tName: userProfileOrgMembershipTableName,
 			cols,
 		}),
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: userProfileOrgMembershipTableName,
 			cols,
 			colFkKey: "orgMemberId",

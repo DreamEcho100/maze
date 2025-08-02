@@ -25,6 +25,8 @@ export * from "./account/relations.js";
 export * from "./account/schema.js";
 export * from "./general/contact-info/relations.js";
 export * from "./general/contact-info/schema.js";
+export * from "./general/category/relations.js";
+export * from "./general/category/schema.js";
 export * from "./general/skill/relations.js";
 export * from "./general/skill/schema.js";
 export * from "./org/brand/relations.js";

@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { orgCategoryI18n } from "#db/schema/general/category/schema.js";
 import { currency } from "../../general/locale-and-currency/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgFunnelI18n } from "../funnel/schema";
@@ -56,6 +57,7 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsProductsCoursesModulesSectionsLessonsI18n: many(orgProductCourseModuleSectionLessonI18n),
 	orgsDepartmentsI18n: many(orgDepartmentI18n),
 	orgsTeamsI18n: many(orgTeamI18n),
+	orgsCategoriesI18n: many(orgCategoryI18n),
 }));
 
 export const orgRegionRelations = relations(orgRegion, ({ many, one }) => ({

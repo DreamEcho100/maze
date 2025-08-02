@@ -1,8 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean, primaryKey } from "drizzle-orm/pg-core";
 import {
-	userIdExtraConfig,
 	userIdFkCol,
+	userIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
@@ -50,7 +50,7 @@ export const buildUserI18nTable =
 			(cols) => [
 				// TODO: Correct the `relations` `fields`
 				primaryKey({ columns: [cols[options.fkKey], cols.localeKey] }),
-				...userIdExtraConfig({
+				...userIdFkExtraConfig({
 					tName,
 					cols,
 				}),

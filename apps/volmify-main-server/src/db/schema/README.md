@@ -606,7 +606,7 @@ export const seoMetadataOpenGraph = table("seo_metadata_open_graph", {
 Automated FK helper generation for consistency:
 ```javascript
 // buildFkUtils creates consistent FK column and constraint helpers
-export const { fkCol: orgIdFkCol, extraConfig: orgIdExtraConfig } = buildFkUtils({
+export const { fkCol: orgIdFkCol, extraConfig: orgIdFkExtraConfig } = buildFkUtils({
   cacheKey: "org",
   defaultColKey: "orgId",
   defaultColName: "org_id",
@@ -621,7 +621,7 @@ export const orgProduct = table("org_product", {
   orgId: orgIdFkCol().notNull(),
   // ... other columns
 }, (cols) => [
-  ...orgIdExtraConfig({ tName: "org_product", cols }),
+  ...orgIdFkExtraConfig({ tName: "org_product", cols }),
   // ... other constraints
 ]);
 ```
@@ -859,7 +859,7 @@ graph TD
    // Use FK helpers for consistency
    orgId: orgIdFkCol().notNull(),
    // Apply FK constraints via extraConfig
-   ...orgIdExtraConfig({ tName: tableName, cols }),
+   ...orgIdFkExtraConfig({ tName: tableName, cols }),
    ```
 
 4. **Revenue Attribution Logic**
@@ -879,8 +879,8 @@ export const orgProduct = table("org_product", {
   // ... other columns
 }, (cols) => [
   // Apply FK constraints and indexes
-  ...orgIdExtraConfig({ tName: "org_product", cols }),
-  ...seoMetadataIdExtraConfig({ tName: "org_product", cols }),
+  ...orgIdFkExtraConfig({ tName: "org_product", cols }),
+  ...seoMetadataIdFkExtraConfig({ tName: "org_product", cols }),
   
   // Add custom constraints
   uniqueIndex({ tName: "org_product", cols: [cols.orgId, cols.slug] }),

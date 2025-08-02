@@ -12,12 +12,12 @@ import {
 import { lmsCols } from "#db/schema/_utils/cols/lms";
 import { numericCols } from "#db/schema/_utils/cols/numeric";
 import {
-	orgMemberIdExtraConfig,
 	orgMemberIdFkCol,
+	orgMemberIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/member-id.js";
 import {
-	seoMetadataIdExtraConfig,
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal";
 import { textCols } from "#db/schema/_utils/cols/text";
@@ -293,7 +293,7 @@ export const orgMemberProductCourseChallengeRating = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberProductCourseChallengeRatingTableName,
 			cols,
 		}),
@@ -445,7 +445,7 @@ export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModu
 		fkKey: "moduleId",
 		extraConfig: (cols, tName) => [
 			// index(`idx_${tName}_title`).on(cols.title)
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -564,7 +564,7 @@ export const orgProductCourseModuleSectionI18n = buildOrgI18nTable(
 	{
 		fkKey: "sectionId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -708,7 +708,7 @@ export const orgProductCourseModuleSectionLessonI18n = buildOrgI18nTable(
 	{
 		fkKey: "lessonId",
 		extraConfig: (cols, tName) => [
-			...seoMetadataIdExtraConfig({
+			...seoMetadataIdFkExtraConfig({
 				tName: tName,
 				cols,
 			}),
@@ -785,7 +785,7 @@ export const orgMemberProductCourseEnrollment = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberProductCourseEnrollmentTableName,
 			cols,
 		}),
@@ -856,7 +856,7 @@ export const orgMemberLearningProfile = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgMemberIdExtraConfig({
+		...orgMemberIdFkExtraConfig({
 			tName: orgMemberLearningProfileTableName,
 			cols,
 		}),

@@ -1,5 +1,11 @@
 // 📁 apps/volmify/src/server/libs/db/schema/org/member/employee/relations.js
 import { relations } from "drizzle-orm";
+import {
+	orgCategory,
+	orgCategoryAssociation,
+	orgCategoryClosure,
+	orgCategoryClosureAncestorPath,
+} from "#db/schema/general/category/schema.js";
 import { accountTransaction, accountTransactionEmployeeContext } from "../../../account/schema.js";
 import { userJobProfile } from "../../../user/profile/job/schema.js";
 import { orgGiftCard } from "../../product/offers/schema.js";
@@ -56,12 +62,32 @@ export const orgEmployeeRelations = relations(orgEmployee, ({ one, many }) => ({
 	}),
 	lastAllocatedRevenuePools: many(orgProductRevenuePool),
 	// revenuePoolsManaged: many(orgProductRevenuePool),
-	taxRateSnapshotsCreated: many(orgTaxRateSnapshot, {
-		relationName: "org_employee_tax_rate_snapshot_created",
-	}),
+	taxRateSnapshotsCreated: many(orgTaxRateSnapshot),
 	payoutTransactions: many(accountTransaction, {
 		relationName: "org_employee_payout_transactions",
 	}),
 
 	accountTransactions: many(accountTransactionEmployeeContext),
+
+	//
+	orgsCategoriesCreated: many(orgCategory, { relationName: "orgsCategoriesCreated" }),
+	orgsCategoriesLastUpdated: many(orgCategory, { relationName: "orgsCategoriesLastUpdated" }),
+	orgsCategoriesAssociationsCreated: many(orgCategoryAssociation, {
+		relationName: "orgsCategoriesAssociationsCreated",
+	}),
+	orgsCategoriesAssociationsLastUpdated: many(orgCategoryAssociation, {
+		relationName: "orgsCategoriesAssociationsLastUpdated",
+	}),
+	orgsCategoriesClosuresAncestorsPathsCreated: many(orgCategoryClosureAncestorPath, {
+		relationName: "orgsCategoriesClosuresAncestorsPathsCreated",
+	}),
+	orgsCategoriesClosuresAncestorsPathsLastUpdated: many(orgCategoryClosureAncestorPath, {
+		relationName: "orgsCategoriesClosuresAncestorsPathsLastUpdated",
+	}),
+	orgsCategoriesClosuresCreated: many(orgCategoryClosure, {
+		relationName: "orgsCategoriesClosuresCreated",
+	}),
+	orgsCategoriesClosuresLastUpdated: many(orgCategoryClosure, {
+		relationName: "orgsCategoriesClosuresLastUpdated",
+	}),
 }));

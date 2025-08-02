@@ -1,10 +1,13 @@
 import { boolean, pgEnum, text } from "drizzle-orm/pg-core";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { userIdExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import { userIdFkExtraConfig } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import {
 	compositePrimaryKey,
 	multiForeignKeys,
@@ -58,11 +61,11 @@ export const orgTeam = table(
 		// metadata: jsonb("metadata"),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgTeamTableName,
 			cols,
 		}),
-		...userIdExtraConfig({
+		...userIdFkExtraConfig({
 			tName: orgTeamTableName,
 			cols,
 			colFkKey: "createdById",
@@ -147,7 +150,7 @@ export const orgTeamEmployee = table(
 	},
 	(cols) => [
 		compositePrimaryKey({ tName: orgTeamEmployeeTableName, cols: [cols.teamId, cols.employeeId] }),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgTeamEmployeeTableName,
 			cols,
 		}),

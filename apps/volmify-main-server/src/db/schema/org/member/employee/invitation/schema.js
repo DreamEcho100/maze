@@ -1,12 +1,15 @@
 import { date, pgEnum } from "drizzle-orm/pg-core";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	userJobProfileIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	userJobProfileIdFkCol,
+	userJobProfileIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
 import { textCols } from "#db/schema/_utils/cols/text.js";
@@ -58,21 +61,21 @@ export const orgEmployeeInvitation = table(
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgEmployeeInvitationTableName,
 			cols,
 		}),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgEmployeeInvitationTableName,
 			cols,
 			colFkKey: "invitedBy",
 		}),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgEmployeeInvitationTableName,
 			cols,
 			colFkKey: "approvedBy",
 		}),
-		...userJobProfileIdExtraConfig({
+		...userJobProfileIdFkExtraConfig({
 			tName: orgEmployeeInvitationTableName,
 			cols,
 			colFkKey: "jobProfileId",

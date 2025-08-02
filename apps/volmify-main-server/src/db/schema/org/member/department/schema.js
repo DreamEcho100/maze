@@ -1,9 +1,12 @@
 import { boolean, pgEnum } from "drizzle-orm/pg-core";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	compositePrimaryKey,
 	multiForeignKeys,
@@ -190,7 +193,7 @@ const permissionPatterns = {
 		// metadata: jsonb("metadata"),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: orgDepartmentTableName,
 			cols,
 		}),
@@ -302,7 +305,7 @@ export const orgDepartmentEmployee = table(
 		// index(`idx_${orgDepartmentEmployeesTableName}_joined_at`).on(t.joinedAt),
 		// index(`idx_${orgDepartmentEmployeesTableName}_created_at`).on(t.createdAt),
 		// index(`idx_${orgDepartmentEmployeesTableName}_last_updated_at`).on(t.lastUpdatedAt),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgDepartmentEmployeesTableName,
 			cols,
 		}),

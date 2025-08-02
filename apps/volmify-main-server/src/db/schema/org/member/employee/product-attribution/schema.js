@@ -2,12 +2,12 @@ import { sql } from "drizzle-orm";
 import { check, pgEnum } from "drizzle-orm/pg-core";
 import { numericCols } from "#db/schema/_utils/cols/numeric.js";
 import {
-	currencyCodeExtraConfig,
 	currencyCodeFkCol,
+	currencyCodeFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/currency-code.js";
 import {
-	orgEmployeeIdExtraConfig,
 	orgEmployeeIdFkCol,
+	orgEmployeeIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/employee-id.js";
 import { orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { temporalCols } from "#db/schema/_utils/cols/temporal.js";
@@ -132,7 +132,7 @@ export const orgEmployeeProductAttribution = table(
 		//     AND m.left_at IS NULL
 		//   )`
 		// ),
-		...orgEmployeeIdExtraConfig({
+		...orgEmployeeIdFkExtraConfig({
 			tName: orgEmployeeProductAttributionTableName,
 			cols,
 		}),
@@ -224,7 +224,7 @@ export const orgEmployeeProductAttributionRevenue = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...currencyCodeExtraConfig({
+		...currencyCodeFkExtraConfig({
 			tName: orgEmployeeProductAttributionRevenueTableName,
 			cols: cols,
 		}),

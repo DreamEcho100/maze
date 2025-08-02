@@ -1,8 +1,11 @@
 import { boolean, decimal, integer, jsonb, pgEnum, text } from "drizzle-orm/pg-core";
-import { orgIdExtraConfig, orgIdFkCol } from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
-	seoMetadataIdExtraConfig,
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#db/schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
 	seoMetadataIdFkCol,
+	seoMetadataIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import { multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
@@ -88,7 +91,7 @@ export const seoMetadata = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...orgIdExtraConfig({
+		...orgIdFkExtraConfig({
 			tName: seoMetadataTableName,
 			cols,
 		}),
@@ -173,7 +176,7 @@ export const seoMetadataOpenGraph = table(
 	(cols) => [
 		// // GIN index for searching type-specific data
 		// index("idx_seo_og_type_data").using("gin", cols.typeSpecificData),
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: seoMetadataOpenGraphTableName,
 			cols,
 		}),
@@ -242,7 +245,7 @@ export const seoMetadataTwitterCard = table(
 
 		// // GIN index for searching card-specific data
 		// index("idx_seo_twitter_card_data").using("gin", t.cardSpecificData),
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: seoMetadataTwitterCardTableName,
 			cols,
 		}),
@@ -281,7 +284,7 @@ export const seoMetadataStructuredData = table(
 	(cols) => [
 		// // GIN index for searching within JSON data
 		// index("idx_seo_structured_data").using("gin", t.data),
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: seoMetadataStructuredDataTableName,
 			cols,
 		}),
@@ -321,7 +324,7 @@ export const seoMetadataAlternateUrl = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: seoMetadataAlternateUrlTableName,
 			cols,
 		}),
@@ -371,7 +374,7 @@ export const seoMetadataCustomMeta = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		...seoMetadataIdExtraConfig({
+		...seoMetadataIdFkExtraConfig({
 			tName: seoMetadataCustomMetaTableName,
 			cols,
 		}),

@@ -1,6 +1,6 @@
 import { buildLocaleKeyFkUtils } from "#db/schema/_utils/build-fk-utils.js";
 
-export const { extraConfig: userLocaleKeyExtraConfig, fkCol: userLocaleKeyFkCol } =
+export const { extraConfig: userLocaleKeyFkExtraConfig, fkCol: userLocaleKeyFkCol } =
 	buildLocaleKeyFkUtils({
 		cacheKey: "userLocale",
 		defaultColKey: "localeKey",
