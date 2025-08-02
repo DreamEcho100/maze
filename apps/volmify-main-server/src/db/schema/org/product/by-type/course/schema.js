@@ -177,6 +177,7 @@ export const orgProductCourseSkill = table(
 	orgProductCourseSkillTableName,
 	{
 		courseId: textCols.idFk("course_id").notNull(),
+		// IMP: Add an API level category scope validation _(of value `org_product_course_skill`)_ instead of a DB check constraint
 		skillId: textCols.idFk("skill_id").notNull(),
 
 		// /**

@@ -1,34 +1,10 @@
 import { relations } from "drizzle-orm";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { currency } from "../../general/locale-and-currency/schema";
 import { seoMetadata } from "../../general/seo/schema";
 import { orgLocale, orgRegion } from "../locale-region/schema";
 import { orgEmployee } from "../member/employee/schema";
-import { orgProductVariantPaymentPlan } from "../product/payment/schema";
-import { orgProductVariant } from "../product/schema";
-import {
-	orgTaxCategory,
-	orgTaxCategoryI18n,
-	orgTaxRate,
-	orgTaxRateI18n,
-	orgTaxRateSnapshot,
-	orgTaxRateTaxCategory,
-} from "./schema";
-
-export const orgTaxCategoryRelations = relations(orgTaxCategory, ({ many }) => ({
-	translations: many(orgTaxCategoryI18n),
-	productsVariants: many(orgProductVariant),
-	productsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
-}));
-export const orgTaxCategoryI18nRelations = relations(orgTaxCategoryI18n, ({ one }) => ({
-	category: one(orgTaxCategory, {
-		fields: [orgTaxCategoryI18n.categoryId],
-		references: [orgTaxCategory.id],
-	}),
-	seoMetadata: one(seoMetadata, {
-		fields: [orgTaxCategoryI18n.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-}));
+import { orgTaxRate, orgTaxRateCategory, orgTaxRateI18n, orgTaxRateSnapshot } from "./schema";
 
 export const orgTaxRateRelations = relations(orgTaxRate, ({ many, one }) => ({
 	region: one(orgRegion, {
@@ -56,14 +32,14 @@ export const orgTaxRateI18nRelations = relations(orgTaxRateI18n, ({ one }) => ({
 	}),
 }));
 
-export const orgTaxRateTaxCategoryRelations = relations(orgTaxRateTaxCategory, ({ one }) => ({
+export const orgTaxRateTaxCategoryRelations = relations(orgTaxRateCategory, ({ one }) => ({
 	taxRate: one(orgTaxRate, {
-		fields: [orgTaxRateTaxCategory.rateId],
+		fields: [orgTaxRateCategory.rateId],
 		references: [orgTaxRate.id],
 	}),
-	category: one(orgTaxCategory, {
-		fields: [orgTaxRateTaxCategory.categoryId],
-		references: [orgTaxCategory.id],
+	category: one(orgCategory, {
+		fields: [orgTaxRateCategory.categoryId],
+		references: [orgCategory.id],
 	}),
 }));
 

@@ -27,6 +27,7 @@ export const orgBrand = table(
 		orgId: orgIdFkCol().notNull(),
 		slug: textCols.slug().notNull(),
 		logoUrl: textCols.url("logo_url"),
+		// IMP: Add an API level category scope validation _(of value `org_brand_category`)_ instead of a DB check constraint
 		categoryId: textCols.idFk("category_id"), // e.g., "education", "technology", "healthcare"
 		// metadata: jsonb("metadata"),
 		createdAt: temporalCols.audit.createdAt(),

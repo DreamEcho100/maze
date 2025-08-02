@@ -29,13 +29,13 @@
  */
 
 import { relations } from "drizzle-orm";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { currency } from "../../../general/locale-and-currency/schema.js";
 import { seoMetadata } from "../../../general/seo/schema.js";
 import { user } from "../../../user/schema.js";
 import { orgLocale } from "../../locale-region/schema.js";
 import { orgMember } from "../../member/schema.js";
 import { org } from "../../schema.js";
-import { orgTaxCategory } from "../../tax/schema.js";
 import { orgProductVariant } from "../schema.js";
 import {
 	orgMemberProductVariantPaymentPlanSubscription,
@@ -58,9 +58,9 @@ export const orgProductVariantPaymentPlanRelations = relations(
 			fields: [orgProductVariantPaymentPlan.orgId],
 			references: [org.id],
 		}),
-		taxCategory: one(orgTaxCategory, {
+		taxCategory: one(orgCategory, {
 			fields: [orgProductVariantPaymentPlan.taxCategoryId],
-			references: [orgTaxCategory.id],
+			references: [orgCategory.id],
 		}),
 		translations: many(orgProductVariantPaymentPlanI18n),
 		subscriptions: many(orgMemberProductVariantPaymentPlanSubscription),

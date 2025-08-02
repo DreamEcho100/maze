@@ -22,66 +22,13 @@ import {
 	multiIndexes,
 	uniqueIndex,
 } from "#db/schema/_utils/helpers.js";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers";
 import { orgRegion } from "../locale-region/schema";
-
-const orgTaxCategoryTableName = `${orgTableName}_tax_category`;
-/**
- * @domain Taxation
- * @description Logical tax category for grouping products by tax behavior.
- */
-export const orgTaxCategory = table(
-	orgTaxCategoryTableName,
-	{
-		id: textCols.idPk().notNull(),
-		code: textCols.code().notNull(),
-	},
-	(cols) => [
-		...multiIndexes({
-			tName: orgTaxCategoryTableName,
-			colsGrps: [{ cols: [cols.code] }],
-		}),
-	],
-);
-export const orgTaxCategoryI18n = buildOrgI18nTable(orgTaxCategoryTableName)(
-	{
-		categoryId: textCols
-			.idFk("category_id")
-			// .references(() => orgTaxCategory.id)
-			.notNull(),
-		seoMetadataId: seoMetadataIdFkCol().notNull(),
-
-		name: textCols.name().notNull(),
-		description: textCols.shortDescription("description"),
-	},
-	{
-		fkKey: "categoryId",
-		extraConfig: (cols, tName) => [
-			// index(`idx_${tName}_name`).on(cols.name)
-			...multiForeignKeys({
-				tName: tName,
-				fkGroups: [
-					{
-						cols: [cols.categoryId],
-						foreignColumns: [orgTaxCategory.id],
-					},
-				],
-			}),
-			...seoMetadataIdFkExtraConfig({
-				tName: tName,
-				cols,
-			}),
-			...multiIndexes({
-				tName: tName,
-				colsGrps: [{ cols: [cols.name] }],
-			}),
-		],
-	},
-);
 
 export const orgTaxRateTypeEnum = pgEnum("org_tax_rates_type", [
 	"percent", // Percentage of the price, e.g., VAT, sales tax
@@ -307,31 +254,29 @@ export const orgTaxRateSnapshot = table(
 	],
 );
 
-const orgTaxRateTaxCategoryTableName = `${orgTaxRateTableName}_tax_category`;
+const orgTaxRateCategoryTableName = `${orgTaxRateTableName}_tax_category`;
 /**
  * @domain Taxation
  * @description Many-to-many relation of tax categories to rates.
  */
-export const orgTaxRateTaxCategory = table(
-	orgTaxRateTaxCategoryTableName,
+export const orgTaxRateCategory = table(
+	orgTaxRateCategoryTableName,
 	{
 		rateId: textCols
 			.idFk("rate_id")
 			// .references(() => orgTaxRate.id)
 			.notNull(),
-		categoryId: textCols
-			.idFk("category_id")
-			// .references(() => orgTaxCategory.id)
-			.notNull(),
+		// IMP: Add an API level category scope validation _(of value `org_tax_category`)_ instead of a DB check constraint
+		categoryId: textCols.idFk("category_id").notNull(),
 		createdAt: temporalCols.audit.createdAt(),
 	},
 	(cols) => [
 		compositePrimaryKey({
-			tName: orgTaxRateTaxCategoryTableName,
+			tName: orgTaxRateCategoryTableName,
 			cols: [cols.rateId, cols.categoryId],
 		}),
 		...multiForeignKeys({
-			tName: orgTaxRateTaxCategoryTableName,
+			tName: orgTaxRateCategoryTableName,
 			fkGroups: [
 				{
 					cols: [cols.rateId],
@@ -340,13 +285,13 @@ export const orgTaxRateTaxCategory = table(
 				},
 				{
 					cols: [cols.categoryId],
-					foreignColumns: [orgTaxCategory.id],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],
 		}),
 		...multiIndexes({
-			tName: orgTaxRateTaxCategoryTableName,
+			tName: orgTaxRateCategoryTableName,
 			colsGrps: [{ cols: [cols.createdAt] }],
 		}),
 	],

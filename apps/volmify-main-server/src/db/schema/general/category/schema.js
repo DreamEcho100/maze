@@ -83,13 +83,14 @@ import { sharedCols } from "../../_utils/cols/shared";
 const orgCategoryTableName = "org_category";
 const userCategoryTableName = "user_category";
 export const orgCategoryScopeEnum = pgEnum(`${orgCategoryTableName}_scope`, [
-	"org_product_category", // Traditional product taxonomy
-	"org_product_collection", // Marketing collections
-	"org_product_tag", // Flexible tagging system
-	"org_product_payment_plan_access_tier_category", // Access control categorization
-	"org_skill", // Organization-specific skill taxonomy
+	// "org_product_category", // Traditional product taxonomy
+	// "org_product_collection", // Marketing collections
+	// "org_product_tag", // Flexible tagging system
+	// "org_product_payment_plan_access_tier_category", // Access control categorization
+	// "org_skill", // Organization-specific skill taxonomy
 	"org_brand_category", // Brand-specific categorization
 	"org_product_course_skill", // Course skill categorization
+	"org_tax_category", // Tax-related categorization
 ]);
 export const userCategoryScopeEnum = pgEnum(`${userCategoryTableName}_scope`, [
 	"user_job_profile_skill", // User-specific job profile skill categorization

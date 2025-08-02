@@ -54,6 +54,7 @@ import {
 	multiIndexes,
 	uniqueIndex,
 } from "#db/schema/_utils/helpers.js";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -61,7 +62,6 @@ import { textCols } from "../../_utils/cols/text.js";
 import { table } from "../../_utils/tables.js";
 import { buildOrgI18nTable, orgTableName } from "../_utils/helpers.js";
 import { orgBrand } from "../brand/schema.js";
-import { orgTaxCategory } from "../tax/schema.js";
 import { orgProductVariantPaymentTypeEnum } from "./payment/_utils/shared-enums.js";
 
 const orgProductTableName = `${orgTableName}_product`;
@@ -437,11 +437,9 @@ export const orgProductVariant = table(
 		// 	scale: 2,
 		// }),
 
+		// IMP: Add an API level category scope validation _(of value `org_tax_category`)_ instead of a DB check constraint
 		// Q: Should the `tax_category_id` be here or in the `orgProductVariantPaymentPlan`
-		taxCategoryId: textCols
-			.idFk("tax_category_id")
-			// .references(() => orgTaxCategory.id)
-			.notNull(),
+		taxCategoryId: textCols.idFk("tax_category_id").notNull(),
 
 		// /**
 		//  * @taxation Tax rate for this payment plan region/market
@@ -491,8 +489,9 @@ export const orgProductVariant = table(
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 				{
+					// IMP: Add an API level category scope validation _(of value `org_brand_category`)_ instead of a DB check constraint
 					cols: [t.taxCategoryId],
-					foreignColumns: [orgTaxCategory.id],
+					foreignColumns: [orgCategory.id],
 					afterBuild: (fk) => fk.onDelete("cascade"),
 				},
 			],

@@ -18,6 +18,7 @@ import {
 	userIdFkExtraConfig,
 } from "#db/schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { multiForeignKeys, multiIndexes, uniqueIndex } from "#db/schema/_utils/helpers.js";
+import { orgCategory } from "#db/schema/general/category/schema.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { sharedCols } from "../../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
@@ -157,6 +158,7 @@ export const orgProductVariantPaymentPlan = table(
 		 */
 		orgId: orgIdFkCol().notNull(),
 
+		// IMP: Add an API level category scope validation _(of value `org_tax_category`)_ instead of a DB check constraint
 		/**
 		 * This is an optional tax category connection that overrides the one on the `orgProductVariant`
 		 */
@@ -319,6 +321,10 @@ export const orgProductVariantPaymentPlan = table(
 				{
 					cols: [cols.variantId],
 					foreignColumns: [orgProductVariant.id],
+				},
+				{
+					cols: [cols.taxCategoryId],
+					foreignColumns: [orgCategory.id], // Updated to use orgCategory
 				},
 			],
 		}),

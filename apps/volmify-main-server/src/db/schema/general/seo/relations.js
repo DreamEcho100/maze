@@ -11,7 +11,7 @@ import {
 import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
 import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
 import { org } from "../../org/schema.js";
-import { orgTaxCategoryI18n, orgTaxRateI18n } from "../../org/tax/schema.js";
+import { orgTaxRateI18n } from "../../org/tax/schema.js";
 // import { userJobProfileI18n } from "../../user/profile/job/schema.js";
 import { userProfileI18n } from "../../user/profile/schema.js";
 import { orgCategoryI18n, userCategoryI18n } from "../category/schema.js";
@@ -100,10 +100,6 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 	orgFunnelI18n: one(orgFunnelI18n, {
 		fields: [seoMetadata.id],
 		references: [orgFunnelI18n.seoMetadataId],
-	}),
-	orgTaxCategoryI18n: one(orgTaxCategoryI18n, {
-		fields: [seoMetadata.id],
-		references: [orgTaxCategoryI18n.seoMetadataId],
 	}),
 	orgRegionI18n: one(orgRegionI18n, {
 		fields: [seoMetadata.id],

@@ -4,6 +4,7 @@ import { orgLocale } from "#db/schema/org/locale-region/schema.js";
 import { orgEmployee } from "#db/schema/org/member/employee/schema.js";
 import { orgProductCourseSkill } from "#db/schema/org/product/by-type/course/schema.js";
 import { org } from "#db/schema/org/schema.js";
+import { orgTaxRateCategory } from "#db/schema/org/tax/schema.js";
 import { userLocale } from "#db/schema/user/locale/schema.js";
 import { userJobProfileSkill } from "#db/schema/user/profile/job/schema.js";
 import { user } from "#db/schema/user/schema.js";
@@ -129,6 +130,7 @@ export const orgCategoryRelations = relations(orgCategory, ({ one, many }) => ({
 
 	orgsBrands: many(orgBrand),
 	orgsProductsCoursesSkills: many(orgProductCourseSkill),
+	orgsTaxesCategories: many(orgTaxRateCategory),
 }));
 
 /**
