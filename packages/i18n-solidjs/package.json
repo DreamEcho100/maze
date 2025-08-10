@@ -1,0 +1,30 @@
+{
+	"name": "@de100/i18n-solidjs",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"imports": {
+		"#*": "./src/*"
+	},
+	"exports": {
+		".": "./src/index.tsx"
+	},
+	"license": "MIT",
+	"scripts": {
+		"build": "tsc",
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "tsc",
+		"format": "biome format ./src ",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/tsconfig": "workspace:*",
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"@de100/i18n": "workspace:*",
+		"solid-js": "catalog:"
+	}
+}

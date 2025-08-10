@@ -202,11 +202,11 @@ export const categoryMetrics = table(
 		/** Last time this category was actively used */
 		lastUsedAt: temporalCols.lastUsedAt(),
 		// Type-specific counts for detailed analytics
-		orgProductCategoriesCount: numericCols.count("org_product_categories_count").default(0),
-		orgProductCollectionsCount: numericCols.count("org_product_collections_count").default(0),
-		orgProductTagsCount: numericCols.count("org_product_tags_count").default(0),
-		orgSkillsCount: numericCols.count("org_skills_count").default(0),
-		userSkillsCount: numericCols.count("user_skills_count").default(0),
+		orgBrandCategoryCount: numericCols.count("org_brand_category_count").default(0),
+		orgProductCourseSkillCount: numericCols.count("org_product_course_skill_count").default(0),
+		orgTaxCategoryCount: numericCols.count("org_tax_category_count").default(0),
+		userJobProfileSkillCount: numericCols.count("user_job_profile_skill_count").default(0),
+
 		// Audit fields
 		createdAt: temporalCols.audit.createdAt().notNull(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt().notNull(),

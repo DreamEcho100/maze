@@ -1,0 +1,49 @@
+{
+	"name": "@de100/i18n-solid-startjs",
+	"private": true,
+	"version": "0.1.0",
+	"imports": {
+		"#*": "./src/*"
+	},
+	"type": "module",
+	"exports": {
+		"./client/index": {
+			"types": "./dist/src/client/index.d.ts",
+			"default": "./src/client/index.ts"
+		},
+		"./client/components/Link": {
+			"types": "./dist/src/client/components/Link.d.ts",
+			"default": "./src/client/components/Link.tsx"
+		},
+		"./server/init": {
+			"types": "./dist/src/server/init.d.ts",
+			"default": "./src/server/init.ts"
+		}
+	},
+	"license": "MIT",
+	"scripts": {
+		"build": "tsc",
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "tsc",
+		"format": "biome format ./src ",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/tsconfig": "workspace:*",
+		"@types/negotiator": "^0.6.4",
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"@de100/i18n": "workspace:*",
+		"@de100/i18n-solidjs": "workspace:*",
+		"@formatjs/intl-localematcher": "^0.6.1",
+		"@solidjs/meta": "catalog:",
+		"@solidjs/router": "catalog:",
+		"@solidjs/start": "catalog:",
+		"negotiator": "^1.0.0",
+		"solid-js": "catalog:",
+		"vinxi": "catalog:"
+	}
+}

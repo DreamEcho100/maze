@@ -286,6 +286,8 @@ export async function resolveAuthSession(props) {
 				verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
 			},
 		},
+		ipAddress: props.ipAddress ?? null,
+		userAgent: props.userAgent ?? null,
 	});
 	if (!validatedRefreshToken) {
 		return { session: null, user: null, metadata: null };

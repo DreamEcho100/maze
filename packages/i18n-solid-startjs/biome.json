@@ -5,7 +5,7 @@
 	},
 	"linter": {
 		"domains": {
-			"react": "recommended"
+			"solid": "recommended"
 		}
 	}
 }
