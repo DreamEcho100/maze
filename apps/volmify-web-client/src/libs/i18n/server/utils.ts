@@ -1,20 +1,11 @@
-import {
-	type InitI18nSolidStartReturns,
-	initI18nSolidStart,
-} from "@de100/i18n-solid-startjs/server/init";
+import { initI18nSolidStart } from "@de100/i18n-solid-startjs/server/init";
 import { allowedLocales, defaultLocale } from "../constants";
 
-/** @type {InitI18nSolidStartReturns} */
-const {
-	getCurrentRequestConfig,
-	getRequestLocale,
-	permanentRedirect,
-	redirect,
-	setRequestLocale,
-}: InitI18nSolidStartReturns = initI18nSolidStart({
-	allowedLocales: allowedLocales,
-	defaultLocale: defaultLocale,
-}) as InitI18nSolidStartReturns;
+const { getCurrentRequestConfig, getRequestLocale, permanentRedirect, redirect, setRequestLocale } =
+	initI18nSolidStart({
+		allowedLocales: allowedLocales,
+		defaultLocale: defaultLocale,
+	});
 
 export { getCurrentRequestConfig, getRequestLocale, permanentRedirect, redirect, setRequestLocale };
 
