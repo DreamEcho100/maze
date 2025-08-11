@@ -11,18 +11,25 @@
 		"#*": "./src/*"
 	},
 	"dependencies": {
+		"@de100/auth-core": "workspace:*",
+		"@de100/db": "workspace:*",
 		"@de100/i18n": "workspace:*",
-		"@de100/i18n-solidjs": "workspace:*",
 		"@de100/i18n-solid-startjs": "workspace:*",
+		"@de100/i18n-solidjs": "workspace:*",
 		"@solidjs/meta": "catalog:",
 		"@solidjs/router": "catalog:",
 		"@solidjs/start": "catalog:",
+		"@tanstack/solid-query": "^5.83.1",
+		"@tanstack/solid-query-devtools": "^5.83.1",
 		"solid-js": "catalog:",
 		"tailwindcss": "catalog:",
+		"ua-parser-js": "^2.0.4",
 		"vinxi": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@de100/tsconfig": "workspace:*",
+		"drizzle-kit": "^0.30.5",
 		"typescript": "catalog:"
 	},
 	"engines": {

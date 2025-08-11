@@ -19,7 +19,7 @@
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
-		"@de100/auth": "workspace:*",
+		"@de100/auth-core": "workspace:*",
 		"@de100/db": "workspace:*",
 		"@de100/validators": "workspace:*",
 		"@trpc/server": "catalog:",

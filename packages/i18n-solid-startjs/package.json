@@ -7,7 +7,7 @@
 	},
 	"type": "module",
 	"exports": {
-		"./client/index": {
+		"./client": {
 			"types": "./dist/src/client/index.d.ts",
 			"default": "./src/client/index.ts"
 		},

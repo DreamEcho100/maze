@@ -3,18 +3,51 @@
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
+	"imports": {
+		"#*": "./src/*"
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"default": "./src/index.ts"
+			"default": "./src/index.js",
+			"require": "./src/index.js",
+			"import": "./src/index.js"
+		},
+		"./auth/init": {
+			"types": "./dist/auth/init.d.ts",
+			"default": "./src/auth/init.js",
+			"require": "./src/auth/init.js",
+			"import": "./src/auth/init.js"
+		},
+		"./auth/def": {
+			"types": "./dist/auth/def.d.ts",
+			"default": "./src/auth/def.ts",
+			"require": "./src/auth/def.ts",
+			"import": "./src/auth/def.ts"
 		},
 		"./client": {
 			"types": "./dist/client.d.ts",
-			"default": "./src/client.ts"
+			"default": "./src/client.js",
+			"require": "./src/client.js",
+			"import": "./src/client.js"
 		},
 		"./schema": {
-			"types": "./dist/schema.d.ts",
-			"default": "./src/schema.ts"
+			"types": "./dist/schema/index.d.ts",
+			"default": "./src/schema/index.js",
+			"require": "./src/schema/index.js",
+			"import": "./src/schema/index.js"
+		},
+		"./src/client": {
+			"types": "./dist/client.d.ts",
+			"default": "./src/client.js"
+		},
+		"./src/schema/index": {
+			"types": "./dist/schema/index.d.ts",
+			"default": "./src/schema/index.js"
+		},
+		"./src/auth/init": {
+			"types": "./dist/auth/init.d.ts",
+			"default": "./src/auth/init.js"
 		}
 	},
 	"license": "MIT",
@@ -27,17 +60,23 @@
 		"push": "pnpm with-env drizzle-kit push",
 		"studio": "pnpm with-env drizzle-kit studio",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
-		"with-env": "dotenv -e ../../.env --"
+		"with-env": "dotenv -e ../../.env --",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
-		"@vercel/postgres": "^0.10.0",
+		"@de100/auth-core": "workspace:^",
 		"drizzle-orm": "catalog:",
 		"drizzle-zod": "^0.6.1",
+		"pg": "^8.14.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
+		"@types/pg": "^8.11.11",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "catalog:",
 		"typescript": "catalog:"

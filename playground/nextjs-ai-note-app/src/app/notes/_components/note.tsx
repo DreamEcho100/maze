@@ -1,8 +1,5 @@
 "use client";
 
-import type { Note } from "@prisma/client";
-import { useState } from "react";
-
 import {
 	Card,
 	CardContent,
@@ -10,6 +7,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@de100/ui/components/card";
+import type { Note } from "@prisma/client";
+import { useState } from "react";
 
 import AddEditNoteDialog from "./add-edit-note-dialog";
 
@@ -20,10 +19,10 @@ interface NoteProps {
 export default function Note(props: NoteProps) {
 	const [showEditDialog, setShowEditDialog] = useState(false);
 
-	const wasUpdated = props.note.updatedAt > props.note.createdAt;
+	const wasUpdated = props.note.lastUpdatedAt > props.note.createdAt;
 
 	const createdUpdatedAtTimestamp = (
-		wasUpdated ? props.note.updatedAt : props.note.createdAt
+		wasUpdated ? props.note.lastUpdatedAt : props.note.createdAt
 	).toDateString();
 
 	return (
@@ -40,7 +39,7 @@ export default function Note(props: NoteProps) {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<p className="max-h-[10.5lh] overflow-y-auto break-all whitespace-pre-line">
+					<p className="max-h-[10.5lh] overflow-y-auto whitespace-pre-line break-all">
 						{props.note.content}
 					</p>
 				</CardContent>

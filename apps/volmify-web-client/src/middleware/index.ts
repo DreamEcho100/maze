@@ -1,5 +1,5 @@
 import { createMiddleware } from "@solidjs/start/middleware";
-import { createI18nMiddlewareOnRequest } from "#libs/i18n/server.ts";
+import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
 
 export default createMiddleware({
 	onRequest: (event) => {

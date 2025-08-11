@@ -276,6 +276,7 @@ type BaseTranslationState = ReturnType<typeof initI18n>;
 
 interface I18nState {
 	locale: string;
+	localeDirMap: Record<string, "ltr" | "rtl">;
 	defaultLocale: string;
 	allowedLocales: string[] | readonly string[];
 	fallbackLocale: string | string[];
@@ -292,13 +293,18 @@ interface I18nState {
 
 interface I18nActions {
 	setLocale: (locale: string) => Promise<void>;
-	init: (props: {
-		locale: string;
-		defaultLocale: string;
-		allowedLocales: string[] | readonly string[];
-		fallbackLocale: string | string[];
-		translations: Record<Lowercase<string>, LanguageMessages>;
-	}) => void;
+	init: (
+		props: Pick<
+			I18nState,
+			| "locale"
+			| "localeDirMap"
+			| "defaultLocale"
+			| "allowedLocales"
+			| "fallbackLocale"
+			| "translations"
+			| "loadTranslations"
+		>,
+	) => void;
 	setIsLoadingTranslations: (isLoading: boolean) => void;
 }
 
@@ -312,11 +318,10 @@ function createI18nStore() {
 		t: (key: string) => key, // Safe fallback
 		clearCache: () => void 0, // Safe fallback
 		loadTranslations: async () => {
-			throw new Error(
-				"Translations not loaded. Please initialize translations first.",
-			);
+			throw new Error("Translations not loaded. Please initialize translations first.");
 		},
 		isLoadingTranslations: false,
+		localeDirMap: {},
 	});
 
 	const callInterrupt = {
@@ -356,6 +361,22 @@ function createI18nStore() {
 			translations = { ...translations, ...newTranslations };
 		}
 
+		const localeDir = state.localeDirMap[locale];
+		// document query select all elements with `data-i18n-lang-access` and `data-i18n-dir-access` and set them accordingly
+		for (const el of document.querySelectorAll<HTMLElement>(
+			"[data-i18n-lang-access], [data-i18n-dir-access]",
+		)) {
+			if (el.hasAttribute("data-i18n-lang-access")) {
+				el.setAttribute("lang", locale);
+			}
+
+			if (localeDir) {
+				if (el.hasAttribute("data-i18n-dir-access")) {
+					el.setAttribute("dir", localeDir);
+				}
+			}
+		}
+
 		init({
 			locale: locale,
 			defaultLocale: state.defaultLocale,
@@ -363,21 +384,22 @@ function createI18nStore() {
 			translations,
 			fallbackLocale: state.fallbackLocale,
 			loadTranslations: state.loadTranslations,
+			localeDirMap: state.localeDirMap,
 		});
 	};
 
-	const init = (props: {
-		locale: string;
-		defaultLocale: string;
-		allowedLocales: string[] | readonly string[];
-		fallbackLocale: string | string[];
-		translations: Record<Lowercase<string>, LanguageMessages>;
-		loadTranslations?: (props: {
-			locale: string;
-		}) =>
-			| Record<Lowercase<string>, LanguageMessages>
-			| Promise<Record<Lowercase<string>, LanguageMessages>>;
-	}) => {
+	const init = (
+		props: Pick<
+			I18nState,
+			| "locale"
+			| "localeDirMap"
+			| "defaultLocale"
+			| "allowedLocales"
+			| "fallbackLocale"
+			| "translations"
+			| "loadTranslations"
+		>,
+	) => {
 		const initRes = initI18n({
 			locale: props.locale,
 			fallbackLocale: props.fallbackLocale,
@@ -394,6 +416,7 @@ function createI18nStore() {
 			clearCache: initRes.clearCache,
 			loadTranslations: props.loadTranslations,
 			isLoadingTranslations: false,
+			localeDirMap: props.localeDirMap,
 		});
 	};
 
@@ -411,19 +434,20 @@ const globalI18nStore = createI18nStore();
 
 const I18nContext = createContext<{ state: I18nState; actions: I18nActions }>();
 
-export const I18nProvider: ParentComponent<{
-	locale: string;
-	defaultLocale: string;
-	allowedLocales: string[] | readonly string[];
-	translations: Record<Lowercase<string>, LanguageMessages>;
-	fallbackLocale: string | string[];
-	isNew?: boolean;
-	loadTranslations?: (props: {
-		locale: string;
-	}) =>
-		| Record<Lowercase<string>, LanguageMessages>
-		| Promise<Record<Lowercase<string>, LanguageMessages>>;
-}> = (props) => {
+export const I18nProvider: ParentComponent<
+	Pick<
+		I18nState,
+		| "locale"
+		| "localeDirMap"
+		| "defaultLocale"
+		| "allowedLocales"
+		| "translations"
+		| "fallbackLocale"
+		| "loadTranslations"
+	> & {
+		isNew?: boolean;
+	}
+> = (props) => {
 	const store = props.isNew ? createI18nStore() : globalI18nStore;
 
 	// Initialize store
@@ -434,12 +458,11 @@ export const I18nProvider: ParentComponent<{
 		fallbackLocale: props.fallbackLocale,
 		translations: props.translations,
 		loadTranslations: props.loadTranslations,
+		localeDirMap: props.localeDirMap,
 	});
 
 	return (
-		<I18nContext.Provider
-			value={{ state: store.state, actions: store.actions }}
-		>
+		<I18nContext.Provider value={{ state: store.state, actions: store.actions }}>
 			{props.children}
 		</I18nContext.Provider>
 	);
@@ -465,8 +488,18 @@ export function useGetLocale() {
 	return () => useI18nStore().state.locale;
 }
 
+// export function useTranslations() {
+// 	return () => useI18nStore().state.t;
+// }
 export function useTranslations() {
-	return useI18nStore().state.t;
+	const { state } = useI18nStore();
+
+	// return state.t; // Gets the function reference NOW, not later, losses reactivity
+
+	// Return a function that reactively accesses state.t each time it's called
+	return ((key, params) => {
+		return state.t(key, params); // ✅ Reactive access on each call
+	}) as I18nState["t"] satisfies I18nState["t"];
 }
 
 export function useIsLoadingTranslations() {
@@ -489,7 +522,9 @@ export function useI18n(): UseTranslationReturn {
 	const { state, actions } = useI18nStore();
 
 	return {
-		t: state.t,
+		t: ((key, params) => {
+			return state.t(key, params); // ✅ Reactive access on each call
+		}) as I18nState["t"] satisfies I18nState["t"],
 		locale: () => state.locale,
 		defaultLocale: () => state.defaultLocale,
 		allowedLocales: () => state.allowedLocales,
@@ -521,9 +556,7 @@ export function LocaleChooser(props: {
 			<For each={props.locales}>
 				{(localeItem) => (
 					<option value={localeItem}>
-						{new Intl.DisplayNames([localeItem], { type: "language" }).of(
-							localeItem,
-						) ?? localeItem}
+						{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ?? localeItem}
 					</option>
 				)}
 			</For>

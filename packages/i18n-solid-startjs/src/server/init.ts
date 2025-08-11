@@ -20,3 +20,5 @@ export function initI18nSolidStart(_props: Parameters<typeof updateLocaleConfigC
 		permanentRedirect,
 	};
 }
+
+export type InitI18nSolidStartReturns = ReturnType<typeof initI18nSolidStart>;
