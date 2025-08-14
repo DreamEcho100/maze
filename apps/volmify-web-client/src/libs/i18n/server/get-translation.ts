@@ -41,6 +41,7 @@ export const getTranslationQuery = async (props: { locale?: AllowedLocale; direc
 		_build: true,
 		assets: true,
 		api: true,
+		rpc: true,
 	};
 	// Skip middleware for static files and API routes
 	if (

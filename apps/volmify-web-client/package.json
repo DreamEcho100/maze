@@ -17,8 +17,10 @@
 		"@de100/i18n-solid-startjs": "workspace:*",
 		"@de100/i18n-solidjs": "workspace:*",
 		"@orpc/client": "catalog:",
+		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
 		"@orpc/tanstack-query": "catalog:",
+		"@orpc/zod": "catalog:",
 		"@solidjs/meta": "catalog:",
 		"@solidjs/router": "catalog:",
 		"@solidjs/start": "catalog:",
@@ -32,7 +34,8 @@
 	},
 	"devDependencies": {
 		"@de100/tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vite-plugin-top-level-await": "^1.6.0"
 	},
 	"engines": {
 		"node": ">=22"

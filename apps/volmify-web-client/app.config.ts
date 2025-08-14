@@ -3,10 +3,11 @@
 
 import commonjs from "@rollup/plugin-commonjs";
 import { defineConfig } from "@solidjs/start/config";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
 	vite: {
-		plugins: [commonjs()],
+		plugins: [/** @type {any} */ (topLevelAwait()), commonjs()],
 
 		// ✅ Don't prebundle server-only packages
 		optimizeDeps: {

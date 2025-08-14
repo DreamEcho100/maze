@@ -30,7 +30,7 @@ export async function forgotPasswordAction(input) {
 
 	if (!authProps?.session) {
 		await redirect(AUTH_URLS.LOGIN);
-		return AUTHENTICATION_REQUIRED};
+		return AUTHENTICATION_REQUIRED;
 	}
 
 	const result = await db.transaction(async (tx) =>
