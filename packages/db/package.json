@@ -69,14 +69,16 @@
 	"dependencies": {
 		"@de100/auth-core": "workspace:^",
 		"drizzle-orm": "catalog:",
-		"drizzle-zod": "^0.6.1",
-		"pg": "^8.14.1",
+		"drizzle-zod": "catalog:",
+		"id128": "catalog:",
+		"pg": "catalog:",
+		"ulid": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@de100/tsconfig": "workspace:*",
-		"@types/pg": "^8.11.11",
+		"@types/pg": "catalog:",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "catalog:",
 		"typescript": "catalog:"

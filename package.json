@@ -25,9 +25,9 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
-		"@turbo/gen": "^2.3.4",
+		"@turbo/gen": "^2.5.5",
 		"tailwindcss": "catalog:",
-		"turbo": "^2.3.4",
+		"turbo": "^2.5.5",
 		"typescript": "catalog:"
 	}
 }
