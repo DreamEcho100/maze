@@ -4,7 +4,6 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import "./app.css";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
-import Providers from "./components/providers";
 
 export default function App() {
 	return (
@@ -12,12 +11,10 @@ export default function App() {
 			root={(props) => {
 				return (
 					<MetaProvider>
-						<Providers>
-							<Title>SolidStart - Basic</Title>
-							<Link href="/">Index</Link>
-							<Link href="/about">About</Link>
-							<Suspense>{props.children}</Suspense>
-						</Providers>
+						<Title>SolidStart - Basic</Title>
+						<Link href="/">Index</Link>
+						<Link href="/about">About</Link>
+						<Suspense>{props.children}</Suspense>
 					</MetaProvider>
 				);
 			}}

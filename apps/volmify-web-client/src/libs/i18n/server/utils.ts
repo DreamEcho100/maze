@@ -35,6 +35,11 @@ function getLocaleFromCookies(nativeEvent: HTTPEvent) {
 	const cookieXLocale = getCookie(nativeEvent, "x-locale");
 	return [cookieLocale, cookieXLocale] as const;
 }
+
+function getForcedLocaleFromCookies(nativeEvent: HTTPEvent) {
+	const cookieLocale = getCookie(nativeEvent, "forced-locale");
+	return cookieLocale;
+}
 export function setLocaleInCookies(nativeEvent: HTTPEvent, locale: AllowedLocale) {
 	const [cookieLocale, cookieXLocale] = getLocaleFromCookies(nativeEvent);
 	if (cookieLocale !== locale) {
@@ -81,7 +86,13 @@ export function getServerLocale({
 	let foundLocale: AllowedLocale | undefined;
 	let localeSource: "pathname" | "cookies" | "headers" | "accept-language" | undefined;
 
-	if (pathname) {
+	const forcedLocaleFromCookies = getForcedLocaleFromCookies(nativeEvent);
+	if (forcedLocaleFromCookies && isAllowedLocale(forcedLocaleFromCookies)) {
+		localeSource = "cookies";
+		foundLocale = forcedLocaleFromCookies;
+	}
+
+	if (!foundLocale && pathname) {
 		const pathLocale = pathname.split("/")[1] as AllowedLocale;
 		if (isAllowedLocale(pathLocale)) {
 			localeSource = "pathname";

@@ -14,12 +14,12 @@ import {
 	localeDirMap,
 } from "#libs/i18n/constants.ts";
 import { isAllowedLocale } from "#libs/i18n/is-allowed-locale.ts";
-import { getTranslationQuery } from "#libs/i18n/server/get-translation.ts";
+import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
 import { cookieManager } from "#libs/js-cookies/index.ts";
 
 function I18nProviderWrapper(props: ParentProps) {
 	// TODO: use react query instead???
-	const localeTranslationsRecourse = createAsync(() => getTranslationQuery({ direct: true }));
+	const localeTranslationsRecourse = createAsync(() => getTranslationByLocal({ direct: true }));
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
@@ -41,7 +41,7 @@ function I18nProviderWrapper(props: ParentProps) {
 									throw new Error(`props \`props.locale\` "${props.locale}" is not allowed.`);
 								}
 
-								const result = await getTranslationQuery({ locale: props.locale, direct: true });
+								const result = await getTranslationByLocal({ locale: props.locale, direct: true });
 
 								if (!result) {
 									throw new Error("Failed to get the `getTranslationQuery` result");

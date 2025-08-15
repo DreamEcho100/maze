@@ -2,6 +2,7 @@ import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useI18n, useTranslations } from "@de100/i18n-solidjs";
 import { Title } from "@solidjs/meta";
+import { revalidate } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { createEffect, createSignal, For, type ParentProps, resetErrorBoundaries } from "solid-js";
 import Counter from "#components/Counter";
@@ -10,6 +11,8 @@ import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
 import ForgotPasswordPage from "#libs/auth/client/components/forgot-password/page.jsx";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { allowedLocales } from "#libs/i18n/constants.ts";
+import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
+import { cookieManager } from "#libs/js-cookies/index.ts";
 
 // async function testFn() {
 // 	"use server";
@@ -65,10 +68,40 @@ export default function Home() {
 				<p>{t("greetings", { lastLoginDate: new Date(), name: "John" })}</p>
 				<p>Current locale: {locale()}</p>
 
-				<Link href="/" locale="en">
+				<Link
+					href="/"
+					locale="en"
+					onMouseEnter={() => {
+						cookieManager.setCookie("forced-locale", "en", {
+							path: "/",
+							sameSite: "lax",
+						});
+					}}
+					onMouseLeave={() => {
+						cookieManager.deleteCookie("forced-locale", {
+							path: "/",
+							sameSite: "lax",
+						});
+					}}
+				>
 					Switch to English
 				</Link>
-				<Link href="/" locale="ar">
+				<Link
+					href="/"
+					locale="ar"
+					onMouseEnter={() => {
+						cookieManager.setCookie("forced-locale", "ar", {
+							path: "/",
+							sameSite: "lax",
+						});
+					}}
+					onMouseLeave={() => {
+						cookieManager.deleteCookie("forced-locale", {
+							path: "/",
+							sameSite: "lax",
+						});
+					}}
+				>
 					Switch to Arabic
 				</Link>
 				<select

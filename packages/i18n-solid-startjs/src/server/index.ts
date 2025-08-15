@@ -114,8 +114,6 @@ export async function redirect(
 		return solidRedirect(path, init);
 	}
 
-	console.log("___ initializeLocaleConfigCache()", await initializeLocaleConfigCache());
-
 	const {
 		// countryCode: currentCountryCode,
 		locale: currentLocale,

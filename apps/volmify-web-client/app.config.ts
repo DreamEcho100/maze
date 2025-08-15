@@ -7,7 +7,7 @@ import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
 	vite: {
-		plugins: [/** @type {any} */ (topLevelAwait()), commonjs()],
+		plugins: [/** @type {any} */ (topLevelAwait() as any), commonjs()],
 
 		// ✅ Don't prebundle server-only packages
 		optimizeDeps: {
@@ -28,6 +28,11 @@ export default defineConfig({
 		// 	},
 		// 	sourcemap: true,
 		// },
+	},
+	server: {
+		prerender: {
+			crawlLinks: true,
+		},
 	},
 	middleware: "src/middleware/index.ts",
 	// server: {

@@ -2,6 +2,7 @@ import { useI18n } from "@de100/i18n-solidjs";
 import { A, useLocation } from "@solidjs/router";
 import type { ComponentProps } from "solid-js";
 import { createMemo } from "solid-js";
+import { setCookie } from "vinxi/http";
 import { parsePathname } from "#utils";
 
 type LinkProps = ComponentProps<typeof A>;
@@ -101,7 +102,7 @@ export function Link(
 			{...props}
 			href={computedHref().href}
 			onClick={(e) => {
-				// @ts-ignore
+				// @ts-expect-error
 				props.onClick?.(e);
 				const targetLocale = computedHref().targetLocale;
 				if (targetLocale && currentLocale() !== targetLocale) {
