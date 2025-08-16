@@ -5,7 +5,10 @@ import {
 } from "@de100/db/auth/init";
 import { getCookiesManager } from "#libs/auth/server/utils.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";
+import {
+	PasswordResetRecoveryCodeForm,
+	PasswordResetTOTPForm,
+} from "./components";
 
 export default async function AuthPasswordReset2FAVerificationPage() {
 	const { session, user } = await validatePasswordResetSessionRequest({
@@ -26,7 +29,11 @@ export default async function AuthPasswordReset2FAVerificationPage() {
 		return redirect("/auth/reset-password/verify-email");
 	}
 
-	if (!user.twoFactorEnabledAt || !user.twoFactorRegisteredAt || session.twoFactorVerifiedAt) {
+	if (
+		!user.twoFactorEnabledAt ||
+		!user.twoFactorRegisteredAt ||
+		session.twoFactorVerifiedAt
+	) {
 		return redirect("/auth/reset-password");
 	}
 

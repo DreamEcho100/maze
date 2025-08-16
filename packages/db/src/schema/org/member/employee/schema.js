@@ -3,7 +3,10 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { userJobProfileIdFkCol } from "#schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";

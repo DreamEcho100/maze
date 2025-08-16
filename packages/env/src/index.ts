@@ -5,7 +5,9 @@ type ErrorMessage<T extends string> = T;
 type TExtendsItem = Record<string, any>;
 
 type MergeUnion<T> = {
-	[K in T extends unknown ? keyof T : never]: T extends Record<K, infer V> ? V : never;
+	[K in T extends unknown ? keyof T : never]: T extends Record<K, infer V>
+		? V
+		: never;
 };
 type CompositeRecord<
 	TClient = unknown,
@@ -26,7 +28,9 @@ type CompositeRecord<
 
 type CreateEnvOutput<
 	TClientPrefix extends string,
-	TClient extends Record<`${TClientPrefix}${string}`, StandardSchemaV1> | undefined = undefined,
+	TClient extends
+		| Record<`${TClientPrefix}${string}`, StandardSchemaV1>
+		| undefined = undefined,
 	TServer extends Record<string, StandardSchemaV1> | undefined = undefined,
 	TShared extends Record<string, StandardSchemaV1> | undefined = undefined,
 	TExtends extends TExtendsItem[] | undefined = undefined,
@@ -44,7 +48,9 @@ type CreateEnvOutput<
 		: never,
 	TExtends extends TExtendsItem[]
 		? {
-				[K in keyof MergeUnion<TExtends[number]>]: MergeUnion<TExtends[number]>[K];
+				[K in keyof MergeUnion<TExtends[number]>]: MergeUnion<
+					TExtends[number]
+				>[K];
 			}
 		: never
 >;
@@ -68,7 +74,9 @@ function parseWithDictionary(
 		const prop = value[key];
 		const propResult = schema["~standard"].validate(prop);
 		if (propResult instanceof Promise) {
-			throw new Error(`Validation must be synchronous, but ${key} returned a Promise.`);
+			throw new Error(
+				`Validation must be synchronous, but ${key} returned a Promise.`,
+			);
 		}
 		if (propResult.issues) {
 			issues.push(
@@ -93,7 +101,9 @@ function parseWithDictionary(
 
 export function createEnv<
 	TClientPrefix extends string,
-	TClient extends Record<`${TClientPrefix}${string}`, StandardSchemaV1> | undefined = undefined,
+	TClient extends
+		| Record<`${TClientPrefix}${string}`, StandardSchemaV1>
+		| undefined = undefined,
 	TServer extends Record<string, StandardSchemaV1> | undefined = undefined,
 	TShared extends Record<string, StandardSchemaV1> | undefined = undefined,
 	TExtends extends TExtendsItem[] | undefined = undefined,
@@ -119,7 +129,9 @@ export function createEnv<
 	 */
 	runtimeEnv?: Record<
 		| {
-				[TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}` ? TKey : never;
+				[TKey in keyof TClient]: TKey extends `${TClientPrefix}${string}`
+					? TKey
+					: never;
 		  }[keyof TClient]
 		| {
 				[TKey in keyof TShared]: TKey extends string ? TKey : never;
@@ -127,7 +139,13 @@ export function createEnv<
 		string | boolean | number | undefined
 	>;
 }): CreateEnvOutput<TClientPrefix, TClient, TServer, TShared, TExtends> {
-	type EnvOutput = CreateEnvOutput<TClientPrefix, TClient, TServer, TShared, TExtends>;
+	type EnvOutput = CreateEnvOutput<
+		TClientPrefix,
+		TClient,
+		TServer,
+		TShared,
+		TExtends
+	>;
 
 	const runtimeEnv = process.env; // opts.runtimeEnvStrict ?? opts.runtimeEnv ??
 
@@ -147,7 +165,8 @@ export function createEnv<
 	const _server = typeof options.server === "object" ? options.server : {};
 	const _shared = typeof options.shared === "object" ? options.shared : {};
 
-	const isServer = options.isServer ?? (typeof window === "undefined" || "Deno" in window);
+	const isServer =
+		options.isServer ?? (typeof window === "undefined" || "Deno" in window);
 
 	const finalSchema = isServer
 		? {
@@ -170,7 +189,9 @@ export function createEnv<
 	const onInvalidAccess =
 		options.onInvalidAccess ??
 		(() => {
-			throw new Error("❌ Attempted to access a server-side environment variable on the client");
+			throw new Error(
+				"❌ Attempted to access a server-side environment variable on the client",
+			);
 		});
 
 	if (parsed.issues) {

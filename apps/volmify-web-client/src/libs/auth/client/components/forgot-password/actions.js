@@ -1,7 +1,10 @@
 "use server";
 
 import { forgotPasswordService } from "@de100/auth-core/services/forgot-password";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	createOnePasswordResetSession,
 	deleteAllPasswordResetSessionsByUserId,

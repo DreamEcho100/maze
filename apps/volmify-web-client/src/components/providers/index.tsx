@@ -1,5 +1,5 @@
 import { I18nProvider } from "@de100/i18n-solidjs";
-import { createAsync } from "@solidjs/router";
+import { createAsync, useParams } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import type { ParentProps } from "solid-js";
@@ -15,11 +15,13 @@ import {
 } from "#libs/i18n/constants.ts";
 import { isAllowedLocale } from "#libs/i18n/is-allowed-locale.ts";
 import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
-import { cookieManager } from "#libs/js-cookies/index.ts";
 
 function I18nProviderWrapper(props: ParentProps) {
 	// TODO: use react query instead???
-	const localeTranslationsRecourse = createAsync(() => getTranslationByLocal({ direct: true }));
+	const localeTranslationsRecourse = createAsync(() =>
+		getTranslationByLocal({ direct: true }),
+	);
+	const params = useParams();
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
@@ -38,29 +40,38 @@ function I18nProviderWrapper(props: ParentProps) {
 							locale={locale}
 							loadTranslations={async (props) => {
 								if (!isAllowedLocale(props.locale)) {
-									throw new Error(`props \`props.locale\` "${props.locale}" is not allowed.`);
+									throw new Error(
+										`props \`props.locale\` "${props.locale}" is not allowed.`,
+									);
 								}
 
-								const result = await getTranslationByLocal({ locale: props.locale, direct: true });
+								const result = await getTranslationByLocal({
+									locale: props.locale,
+									direct: true,
+								});
 
 								if (!result) {
-									throw new Error("Failed to get the `getTranslationQuery` result");
+									throw new Error(
+										"Failed to get the `getTranslationQuery` result",
+									);
 								}
 								// set cookie on the client
-								cookieManager.setCookie("locale", props.locale, {
-									path: "/",
-									maxAge: 31536000, // 1 year
-									sameSite: "lax",
-								});
-								cookieManager.setCookie("x-locale", props.locale, {
-									path: "/",
-									maxAge: 31536000, // 1 year
-									sameSite: "lax",
-								});
+								// cookieManager.setCookie("locale", props.locale, {
+								// 	path: "/",
+								// 	maxAge: 31536000, // 1 year
+								// 	sameSite: "lax",
+								// });
+								// cookieManager.setCookie("x-locale", props.locale, {
+								// 	path: "/",
+								// 	maxAge: 31536000, // 1 year
+								// 	sameSite: "lax",
+								// });
 
 								return { [props.locale]: result.translation };
 							}}
+							localeParam={params.locale}
 						>
+							{Math.random()}
 							{props.children}
 						</I18nProvider>
 					);
@@ -70,7 +81,9 @@ function I18nProviderWrapper(props: ParentProps) {
 	);
 }
 
-export default function Providers(props: ParentProps<{ locale?: AllowedLocale }>) {
+export default function Providers(
+	props: ParentProps<{ locale?: AllowedLocale }>,
+) {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<I18nProviderWrapper>{props.children}</I18nProviderWrapper>

@@ -13,23 +13,28 @@ export const numericCols = {
 	/** @param {string} name */
 	duration: (name) => integer(name),
 	depth: () => integer("depth").default(0), // Hierarchical depth
-	weight: (name = "weight") => decimal(name, { precision: 5, scale: 2 }).default("1.0"), // Relationship strength
+	weight: (name = "weight") =>
+		decimal(name, { precision: 5, scale: 2 }).default("1.0"), // Relationship strength
 
 	// Access Control
 	/** @param {string} [name] */
 	accessTier: (name) => integer(name ?? "access_tier").default(1), // 1-10 tier levels
-	priority: ({ name = "priority", default: defaultVal = 0 }) => integer(name).default(defaultVal), // Rule priority
+	priority: ({ name = "priority", default: defaultVal = 0 }) =>
+		integer(name).default(defaultVal), // Rule priority
 	//
 	// ✅ FINANCIAL: High-precision currency amounts
 	currency: {
 		// Standard currency amounts (supports micro-currencies)
 		amount: (name = "amount") => decimal(name, { precision: 12, scale: 4 }),
 		price: (name = "price") => decimal(name, { precision: 12, scale: 4 }),
-		basePrice: (name = "base_price") => decimal(name, { precision: 12, scale: 4 }),
-		finalPrice: (name = "final_price") => decimal(name, { precision: 12, scale: 4 }),
+		basePrice: (name = "base_price") =>
+			decimal(name, { precision: 12, scale: 4 }),
+		finalPrice: (name = "final_price") =>
+			decimal(name, { precision: 12, scale: 4 }),
 
 		// Discount/coupon values
-		discountValue: (name = "value") => decimal(name, { precision: 12, scale: 4 }),
+		discountValue: (name = "value") =>
+			decimal(name, { precision: 12, scale: 4 }),
 		couponValue: (name = "value") => decimal(name, { precision: 12, scale: 4 }),
 
 		// Balances and credits
@@ -43,14 +48,16 @@ export const numericCols = {
 		rate: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
 		taxRate: (name = "rate") => decimal(name, { precision: 5, scale: 4 }), // Higher precision for tax
 		_: (name = "percentage") => decimal(name, { precision: 5, scale: 2 }),
-		revenueShare: (name = "revenue_share") => decimal(name, { precision: 5, scale: 4 }),
+		revenueShare: (name = "revenue_share") =>
+			decimal(name, { precision: 5, scale: 4 }),
 		vatRate: (name = "vat_rate") => decimal(name, { precision: 5, scale: 4 }),
 	},
 
 	// ✅ EXCHANGE RATES: Ultra-high precision
 	exchangeRate: {
 		rate: (name = "rate") => decimal(name, { precision: 16, scale: 8 }), // Exchange rate precision
-		roundingIncrement: (name = "rounding_increment") => decimal(name, { precision: 10, scale: 6 }),
+		roundingIncrement: (name = "rounding_increment") =>
+			decimal(name, { precision: 10, scale: 6 }),
 	},
 
 	// ✅ RATINGS & METRICS: User-facing metrics
@@ -64,8 +71,11 @@ export const numericCols = {
 	// ✅ ANALYTICS: Performance metrics
 	analytics: {
 		// Click-through rates, conversion rates
-		conversionRate: (name = "conversion_rate") => decimal(name, { precision: 5, scale: 4 }),
-		clickThroughRate: (name = "click_through_rate") => decimal(name, { precision: 5, scale: 4 }),
-		averagePosition: (name = "average_position") => decimal(name, { precision: 5, scale: 2 }),
+		conversionRate: (name = "conversion_rate") =>
+			decimal(name, { precision: 5, scale: 4 }),
+		clickThroughRate: (name = "click_through_rate") =>
+			decimal(name, { precision: 5, scale: 4 }),
+		averagePosition: (name = "average_position") =>
+			decimal(name, { precision: 5, scale: 2 }),
 	},
 };

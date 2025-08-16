@@ -1,6 +1,13 @@
 import { text } from "drizzle-orm/pg-core";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { compositePrimaryKey, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	compositePrimaryKey,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
 import { table } from "../../../_utils/tables.js";

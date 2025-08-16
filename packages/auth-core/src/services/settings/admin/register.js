@@ -42,7 +42,9 @@ export async function adminRegisterService(props) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await props.authProviders.users.findOneByEmail(input.data.email);
+	const emailAvailable = await props.authProviders.users.findOneByEmail(
+		input.data.email,
+	);
 
 	if (emailAvailable) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -54,9 +56,16 @@ export async function adminRegisterService(props) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 	}
 
-	const user = await createUser(input.data.email, input.data.name, input.data.password, {
-		authProviders: { users: { createOne: props.authProviders.users.createOne } },
-	});
+	const user = await createUser(
+		input.data.email,
+		input.data.name,
+		input.data.password,
+		{
+			authProviders: {
+				users: { createOne: props.authProviders.users.createOne },
+			},
+		},
+	);
 
 	const userEmailVerificationRequests = await createEmailVerificationRequest(
 		{
@@ -65,8 +74,10 @@ export async function adminRegisterService(props) {
 		{
 			authProviders: {
 				userEmailVerificationRequests: {
-					createOne: props.authProviders.userEmailVerificationRequests.createOne,
-					deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+					createOne:
+						props.authProviders.userEmailVerificationRequests.createOne,
+					deleteOneByUserId:
+						props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 				},
 			},
 		},

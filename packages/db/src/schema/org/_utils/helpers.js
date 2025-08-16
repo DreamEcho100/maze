@@ -1,6 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 import { boolean } from "drizzle-orm/pg-core";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";
 import {
@@ -52,7 +55,10 @@ export const buildOrgI18nTable =
 			(cols) => [
 				// TODO: Correct the `relations` `fields`
 				// Q: Should `orgId` be added to the composite primary key too?
-				compositePrimaryKey({ tName, cols: [cols[options.fkKey], cols.localeKey] }),
+				compositePrimaryKey({
+					tName,
+					cols: [cols[options.fkKey], cols.localeKey],
+				}),
 				...orgIdFkExtraConfig({
 					tName,
 					cols,
@@ -66,9 +72,10 @@ export const buildOrgI18nTable =
 						},
 					],
 				}),
-				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
-					eq(cols.isDefault, sql`TRUE`),
-				),
+				uniqueIndex({
+					tName,
+					cols: [cols[options.fkKey], cols.isDefault],
+				}).where(eq(cols.isDefault, sql`TRUE`)),
 				...multiIndexes({
 					tName,
 					colsGrps: [

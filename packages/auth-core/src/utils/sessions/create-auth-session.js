@@ -68,7 +68,9 @@ export async function createOneAuthSession(props) {
 			// For session authStrategy, we return the session and user data
 			const data = /** @type {const} */ ({
 				strategy: props.authStrategy,
-				data: /** @type {typeof result & { session: { strategy: "session"; } }} */ (result),
+				data: /** @type {typeof result & { session: { strategy: "session"; } }} */ (
+					result
+				),
 			});
 
 			if (props.userAgent && !checkIsDeviceMobileOrTablet(props.userAgent)) {

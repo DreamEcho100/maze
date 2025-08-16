@@ -63,12 +63,15 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
  * Category metrics relations
  * Links analytics back to the global category
  */
-export const categoryMetricsRelations = relations(categoryMetrics, ({ one }) => ({
-	category: one(category, {
-		fields: [categoryMetrics.slugRef],
-		references: [category.slug],
+export const categoryMetricsRelations = relations(
+	categoryMetrics,
+	({ one }) => ({
+		category: one(category, {
+			fields: [categoryMetrics.slugRef],
+			references: [category.slug],
+		}),
 	}),
-}));
+);
 
 // =====================================
 //  ORG CATEGORY RELATIONS
@@ -137,30 +140,33 @@ export const orgCategoryRelations = relations(orgCategory, ({ one, many }) => ({
  * Organization category I18n relations
  * Connects translated content to global categories
  */
-export const orgCategoryI18nRelations = relations(orgCategoryI18n, ({ one }) => ({
-	org: one(org, {
-		fields: [orgCategoryI18n.orgId],
-		references: [org.id],
-	}),
+export const orgCategoryI18nRelations = relations(
+	orgCategoryI18n,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgCategoryI18n.orgId],
+			references: [org.id],
+		}),
 
-	// Link to global category
-	globalCategory: one(category, {
-		fields: [orgCategoryI18n.slugRef],
-		references: [category.slug],
-	}),
+		// Link to global category
+		globalCategory: one(category, {
+			fields: [orgCategoryI18n.slugRef],
+			references: [category.slug],
+		}),
 
-	seoMetadata: one(seoMetadata, {
-		fields: [orgCategoryI18n.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-	locale: one(orgLocale, {
-		fields: [orgCategoryI18n.localeKey],
-		references: [orgLocale.localeKey],
-	}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgCategoryI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgCategoryI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 
-	// Note: orgCategory relationship would need composite key support
-	// This is handled through slugRef → globalCategory → orgAdoptions pattern
-}));
+		// Note: orgCategory relationship would need composite key support
+		// This is handled through slugRef → globalCategory → orgAdoptions pattern
+	}),
+);
 
 // =====================================
 //  ORG CATEGORY DAG RELATIONS
@@ -170,36 +176,39 @@ export const orgCategoryI18nRelations = relations(orgCategoryI18n, ({ one }) => 
  * Organization category association relations
  * Defines parent-child relationships in the DAG
  */
-export const orgCategoryAssociationRelations = relations(orgCategoryAssociation, ({ one }) => ({
-	org: one(org, {
-		fields: [orgCategoryAssociation.orgId],
-		references: [org.id],
-	}),
-	createdByEmployee: one(orgEmployee, {
-		fields: [orgCategoryAssociation.createdByEmployeeId],
-		references: [orgEmployee.id],
-		relationName: "createdByEmployee",
-	}),
-	lastUpdatedByEmployee: one(orgEmployee, {
-		fields: [orgCategoryAssociation.lastUpdatedByEmployeeId],
-		references: [orgEmployee.id],
-		relationName: "lastUpdatedByEmployee",
-	}),
+export const orgCategoryAssociationRelations = relations(
+	orgCategoryAssociation,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgCategoryAssociation.orgId],
+			references: [org.id],
+		}),
+		createdByEmployee: one(orgEmployee, {
+			fields: [orgCategoryAssociation.createdByEmployeeId],
+			references: [orgEmployee.id],
+			relationName: "createdByEmployee",
+		}),
+		lastUpdatedByEmployee: one(orgEmployee, {
+			fields: [orgCategoryAssociation.lastUpdatedByEmployeeId],
+			references: [orgEmployee.id],
+			relationName: "lastUpdatedByEmployee",
+		}),
 
-	// Parent category in the relationship
-	parentCategory: one(orgCategory, {
-		fields: [orgCategoryAssociation.parentId],
-		references: [orgCategory.id],
-		relationName: "categoryParent",
-	}),
+		// Parent category in the relationship
+		parentCategory: one(orgCategory, {
+			fields: [orgCategoryAssociation.parentId],
+			references: [orgCategory.id],
+			relationName: "categoryParent",
+		}),
 
-	// Child category in the relationship
-	childCategory: one(orgCategory, {
-		fields: [orgCategoryAssociation.childId],
-		references: [orgCategory.id],
-		relationName: "categoryChild",
+		// Child category in the relationship
+		childCategory: one(orgCategory, {
+			fields: [orgCategoryAssociation.childId],
+			references: [orgCategory.id],
+			relationName: "categoryChild",
+		}),
 	}),
-}));
+);
 
 /**
  * Ancestor path closure relations
@@ -244,42 +253,45 @@ export const orgCategoryClosureAncestorPathRelations = relations(
  * Category closure relations
  * Links materialized paths to ancestor paths and categories
  */
-export const orgCategoryClosureRelations = relations(orgCategoryClosure, ({ one }) => ({
-	org: one(org, {
-		fields: [orgCategoryClosure.orgId],
-		references: [org.id],
-	}),
-	createdByEmployee: one(orgEmployee, {
-		fields: [orgCategoryClosure.createdByEmployeeId],
-		references: [orgEmployee.id],
-		relationName: "createdByEmployee",
-	}),
-	lastUpdatedByEmployee: one(orgEmployee, {
-		fields: [orgCategoryClosure.lastUpdatedByEmployeeId],
-		references: [orgEmployee.id],
-		relationName: "lastUpdatedByEmployee",
-	}),
+export const orgCategoryClosureRelations = relations(
+	orgCategoryClosure,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgCategoryClosure.orgId],
+			references: [org.id],
+		}),
+		createdByEmployee: one(orgEmployee, {
+			fields: [orgCategoryClosure.createdByEmployeeId],
+			references: [orgEmployee.id],
+			relationName: "createdByEmployee",
+		}),
+		lastUpdatedByEmployee: one(orgEmployee, {
+			fields: [orgCategoryClosure.lastUpdatedByEmployeeId],
+			references: [orgEmployee.id],
+			relationName: "lastUpdatedByEmployee",
+		}),
 
-	// Ancestor path definition
-	ancestorPath: one(orgCategoryClosureAncestorPath, {
-		fields: [orgCategoryClosure.ancestorPathId],
-		references: [orgCategoryClosureAncestorPath.id],
-	}),
+		// Ancestor path definition
+		ancestorPath: one(orgCategoryClosureAncestorPath, {
+			fields: [orgCategoryClosure.ancestorPathId],
+			references: [orgCategoryClosureAncestorPath.id],
+		}),
 
-	// Ancestor category
-	ancestorCategory: one(orgCategory, {
-		fields: [orgCategoryClosure.ancestorId],
-		references: [orgCategory.id],
-		relationName: "closureAncestor",
-	}),
+		// Ancestor category
+		ancestorCategory: one(orgCategory, {
+			fields: [orgCategoryClosure.ancestorId],
+			references: [orgCategory.id],
+			relationName: "closureAncestor",
+		}),
 
-	// Descendant category
-	descendantCategory: one(orgCategory, {
-		fields: [orgCategoryClosure.descendantId],
-		references: [orgCategory.id],
-		relationName: "closureDescendant",
+		// Descendant category
+		descendantCategory: one(orgCategory, {
+			fields: [orgCategoryClosure.descendantId],
+			references: [orgCategory.id],
+			relationName: "closureDescendant",
+		}),
 	}),
-}));
+);
 
 // =====================================
 //  USER CATEGORY RELATIONS
@@ -289,49 +301,55 @@ export const orgCategoryClosureRelations = relations(orgCategoryClosure, ({ one 
  * User category relations
  * Links user-specific categories to global registry
  */
-export const userCategoryRelations = relations(userCategory, ({ one, many }) => ({
-	user: one(user, {
-		fields: [userCategory.userId],
-		references: [user.id],
+export const userCategoryRelations = relations(
+	userCategory,
+	({ one, many }) => ({
+		user: one(user, {
+			fields: [userCategory.userId],
+			references: [user.id],
+		}),
+
+		// Link to global category registry
+		globalCategory: one(category, {
+			fields: [userCategory.slugRef],
+			references: [category.slug],
+		}),
+
+		// I18n content for this user category
+		translations: many(userCategoryI18n),
+
+		usersJobsProfilesSkills: many(userJobProfileSkill),
 	}),
-
-	// Link to global category registry
-	globalCategory: one(category, {
-		fields: [userCategory.slugRef],
-		references: [category.slug],
-	}),
-
-	// I18n content for this user category
-	translations: many(userCategoryI18n),
-
-	usersJobsProfilesSkills: many(userJobProfileSkill),
-}));
+);
 
 /**
  * User category I18n relations
  * Connects user-translated content to global categories
  */
-export const userCategoryI18nRelations = relations(userCategoryI18n, ({ one }) => ({
-	user: one(user, {
-		fields: [userCategoryI18n.userId],
-		references: [user.id],
-	}),
+export const userCategoryI18nRelations = relations(
+	userCategoryI18n,
+	({ one }) => ({
+		user: one(user, {
+			fields: [userCategoryI18n.userId],
+			references: [user.id],
+		}),
 
-	// Link to global category
-	globalCategory: one(category, {
-		fields: [userCategoryI18n.slugRef],
-		references: [category.slug],
-	}),
+		// Link to global category
+		globalCategory: one(category, {
+			fields: [userCategoryI18n.slugRef],
+			references: [category.slug],
+		}),
 
-	seoMetadata: one(seoMetadata, {
-		fields: [userCategoryI18n.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-	locale: one(userLocale, {
-		fields: [userCategoryI18n.localeKey],
-		references: [userLocale.localeKey],
-	}),
+		seoMetadata: one(seoMetadata, {
+			fields: [userCategoryI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(userLocale, {
+			fields: [userCategoryI18n.localeKey],
+			references: [userLocale.localeKey],
+		}),
 
-	// Note: userCategory relationship would need composite key support
-	// This is handled through slugRef → globalCategory → userAdoptions pattern
-}));
+		// Note: userCategory relationship would need composite key support
+		// This is handled through slugRef → globalCategory → userAdoptions pattern
+	}),
+);

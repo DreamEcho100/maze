@@ -25,21 +25,24 @@ export const orgLessonRelations = relations(orgLesson, ({ many, one }) => ({
 	 */
 	translations: many(orgLessonI18n),
 }));
-export const orgLessonI18nRelations = relations(orgLessonI18n, ({ many, one }) => ({
-	/**
-	 * @localizationTarget Lesson being translated for international delivery
-	 * @businessContext Enables localized lesson content and global course delivery
-	 */
-	lesson: one(orgLesson, {
-		fields: [orgLessonI18n.lessonId],
-		references: [orgLesson.id],
+export const orgLessonI18nRelations = relations(
+	orgLessonI18n,
+	({ many, one }) => ({
+		/**
+		 * @localizationTarget Lesson being translated for international delivery
+		 * @businessContext Enables localized lesson content and global course delivery
+		 */
+		lesson: one(orgLesson, {
+			fields: [orgLessonI18n.lessonId],
+			references: [orgLesson.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgLessonI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgLessonI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	seoMetadata: one(seoMetadata, {
-		fields: [orgLessonI18n.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-	locale: one(orgLocale, {
-		fields: [orgLessonI18n.localeKey],
-		references: [orgLocale.localeKey],
-	}),
-}));
+);

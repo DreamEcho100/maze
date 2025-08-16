@@ -57,7 +57,10 @@ export const systemPermissionCategory = table(
 		 * @businessRule snake_case, represents functional domain
 		 * @abacContext Used for attribute namespace org
 		 */
-		name: textCols.name().notNull().unique("uq_system_permission_category_name"),
+		name: textCols
+			.name()
+			.notNull()
+			.unique("uq_system_permission_category_name"),
 		description: textCols.shortDescription("description"),
 		createdAt: temporalCols.audit.createdAt().notNull(),
 	},

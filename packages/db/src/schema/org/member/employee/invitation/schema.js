@@ -3,7 +3,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	userJobProfileIdFkCol,
 	userJobProfileIdFkExtraConfig,
@@ -15,16 +18,19 @@ import { table } from "../../../../_utils/tables.js";
 import { orgEmployeeTableName } from "../_utils/index.js";
 
 const orgEmployeeInvitationTableName = `${orgEmployeeTableName}_invitation`;
-export const orgEmployeeInvitationStatusEnum = pgEnum(`${orgEmployeeInvitationTableName}_status`, [
-	"pending", // Awaiting response
-	"under_review",
-	"declined", // Invitee declined
-	"cancelled", // Invite cancelled by sender
-	"revoked", // Revoked access before action
-	// Q: What does it mean for an invitation to be approved or accepted?
-	"approved", //
-	"accepted", // Employee joined org
-]);
+export const orgEmployeeInvitationStatusEnum = pgEnum(
+	`${orgEmployeeInvitationTableName}_status`,
+	[
+		"pending", // Awaiting response
+		"under_review",
+		"declined", // Invitee declined
+		"cancelled", // Invite cancelled by sender
+		"revoked", // Revoked access before action
+		// Q: What does it mean for an invitation to be approved or accepted?
+		"approved", //
+		"accepted", // Employee joined org
+	],
+);
 
 export const orgEmployeeInvitation = table(
 	orgEmployeeInvitationTableName,

@@ -20,42 +20,51 @@ import {
 	orgProductCourseSkill,
 } from "./schema.js";
 
-export const orgProductCourseRelations = relations(orgProductCourse, ({ many, one }) => ({
-	product: one(orgProduct, {
-		fields: [orgProductCourse.productId],
-		references: [orgProduct.id],
+export const orgProductCourseRelations = relations(
+	orgProductCourse,
+	({ many, one }) => ({
+		product: one(orgProduct, {
+			fields: [orgProductCourse.productId],
+			references: [orgProduct.id],
+		}),
+		translations: many(orgProductCourseI18n),
+		skills: many(orgProductCourseSkill),
+		modules: many(orgProductCourseModule),
+		challengeRatings: many(orgMemberProductCourseChallengeRating),
+		enrollments: many(orgMemberProductCourseEnrollment),
 	}),
-	translations: many(orgProductCourseI18n),
-	skills: many(orgProductCourseSkill),
-	modules: many(orgProductCourseModule),
-	challengeRatings: many(orgMemberProductCourseChallengeRating),
-	enrollments: many(orgMemberProductCourseEnrollment),
-}));
-export const orgProductCourseI18nRelations = relations(orgProductCourseI18n, ({ one }) => ({
-	/**
-	 * @localizationTarget Course being translated for international markets
-	 * @businessContext Enables region-specific course marketing and positioning
-	 */
-	course: one(orgProductCourse, {
-		fields: [orgProductCourseI18n.courseId],
-		references: [orgProductCourse.id],
+);
+export const orgProductCourseI18nRelations = relations(
+	orgProductCourseI18n,
+	({ one }) => ({
+		/**
+		 * @localizationTarget Course being translated for international markets
+		 * @businessContext Enables region-specific course marketing and positioning
+		 */
+		course: one(orgProductCourse, {
+			fields: [orgProductCourseI18n.courseId],
+			references: [orgProductCourse.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgProductCourseI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	locale: one(orgLocale, {
-		fields: [orgProductCourseI18n.localeKey],
-		references: [orgLocale.localeKey],
-	}),
-}));
-export const orgProductCourseSkillRelations = relations(orgProductCourseSkill, ({ one }) => ({
-	course: one(orgProductCourse, {
-		fields: [orgProductCourseSkill.courseId],
-		references: [orgProductCourse.id],
-	}),
+);
+export const orgProductCourseSkillRelations = relations(
+	orgProductCourseSkill,
+	({ one }) => ({
+		course: one(orgProductCourse, {
+			fields: [orgProductCourseSkill.courseId],
+			references: [orgProductCourse.id],
+		}),
 
-	skill: one(orgCategory, {
-		fields: [orgProductCourseSkill.skillId],
-		references: [orgCategory.id],
+		skill: one(orgCategory, {
+			fields: [orgProductCourseSkill.skillId],
+			references: [orgCategory.id],
+		}),
 	}),
-}));
+);
 export const orgMemberProductCourseChallengeRatingRelations = relations(
 	orgMemberProductCourseChallengeRating,
 	({ one }) => ({
@@ -170,12 +179,15 @@ export const orgMemberProductCourseEnrollmentRelations = relations(
 		}),
 	}),
 );
-export const orgMemberLearningProfileRelations = relations(orgMemberLearningProfile, ({ one }) => ({
-	member: one(orgMember, {
-		fields: [orgMemberLearningProfile.memberId],
-		references: [orgMember.id],
+export const orgMemberLearningProfileRelations = relations(
+	orgMemberLearningProfile,
+	({ one }) => ({
+		member: one(orgMember, {
+			fields: [orgMemberLearningProfile.memberId],
+			references: [orgMember.id],
+		}),
 	}),
-}));
+);
 
 // // export const productCourseModuleLessonProgressRelations = relations(
 // //   productCourseModuleLessonProgress,

@@ -1,3 +1,5 @@
+import { query } from "@solidjs/router";
+
 interface PostData {
 	userId: number;
 	id: number;
@@ -7,37 +9,40 @@ interface PostData {
 
 const doSleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export const fetchPost = async ({
-	postId,
-	simulateError,
-	sleep,
-}: {
-	postId: number;
-	simulateError?: boolean;
-	sleep?: number;
-}) => {
-	console.info("[api] fetchPost.start", { postId, sleep, simulateError });
+export const fetchPost = query(
+	async ({
+		postId,
+		simulateError,
+		sleep,
+	}: {
+		postId: number;
+		simulateError?: boolean;
+		sleep?: number;
+	}) => {
+		console.info("[api] fetchPost.start", { postId, sleep, simulateError });
 
-	let response;
-	if (!simulateError) {
-		response = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`).then((res) =>
-			res.json(),
-		);
-	}
+		let response;
+		if (!simulateError) {
+			response = await fetch(
+				`https://jsonplaceholder.typicode.com/posts/${postId}`,
+			).then((res) => res.json());
+		}
 
-	// simulate extra latency to make things like streaming behavior more clear
-	if (sleep) {
-		await doSleep(sleep);
-	}
+		// simulate extra latency to make things like streaming behavior more clear
+		if (sleep) {
+			await doSleep(sleep);
+		}
 
-	console.info("[api] fetchPost.done", { postId, sleep, simulateError });
+		console.info("[api] fetchPost.done", { postId, sleep, simulateError });
 
-	if (simulateError) {
-		throw new Error("API request to get post was not OK");
-	}
+		if (simulateError) {
+			throw new Error("API request to get post was not OK");
+		}
 
-	return [response] as PostData[];
-};
+		return [response] as PostData[];
+	},
+	"post",
+);
 
 export const fetchUser = async ({
 	sleep,

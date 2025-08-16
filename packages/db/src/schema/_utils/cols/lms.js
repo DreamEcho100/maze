@@ -14,7 +14,8 @@ export const lmsCols = {
 	// Ratings and feedback (community quality)
 	levelRating: () => integer("level_rating"), // 1-10 prerequisite level
 	difficultyRating: () => integer("difficulty_rating"), // 1-10 complexity
-	avgRating: () => decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"), // 0.00-10.00
+	avgRating: () =>
+		decimal("avg_rating", { precision: 3, scale: 2 }).default("0.00"), // 0.00-10.00
 
 	// Access control
 	requiredAccessTier: () => integer("required_access_tier").default(1),

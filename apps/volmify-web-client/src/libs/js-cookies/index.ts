@@ -109,7 +109,9 @@ export const cookieManager = {
 			// Add expiration - prioritize expires over maxAge
 			if (options.expires) {
 				const expiresDate =
-					typeof options.expires === "string" ? new Date(options.expires) : options.expires;
+					typeof options.expires === "string"
+						? new Date(options.expires)
+						: options.expires;
 
 				if (Number.isNaN(expiresDate.getTime())) {
 					throw new CookieManagerError({
@@ -145,7 +147,8 @@ export const cookieManager = {
 
 			// Add Secure flag
 			const isProduction = process.env.NODE_ENV === "production";
-			const isHttps = typeof location !== "undefined" && location.protocol === "https:";
+			const isHttps =
+				typeof location !== "undefined" && location.protocol === "https:";
 			const shouldBeSecure = options.secure ?? (isProduction && isHttps);
 
 			if (shouldBeSecure) {
@@ -227,7 +230,9 @@ export const cookieManager = {
 			setTimeout(() => {
 				const stillExists = this.getCookie(name);
 				if (stillExists !== undefined) {
-					console.warn(`Cookie "${name}" may not have been deleted. Check domain/path options.`);
+					console.warn(
+						`Cookie "${name}" may not have been deleted. Check domain/path options.`,
+					);
 				}
 			}, 10);
 		} catch (error) {
@@ -356,7 +361,8 @@ export const safeCookieManager = {
 	delete: (name: string, options?: CookieOptions) =>
 		cookieManager.safely(() => cookieManager.deleteCookie(name, options)),
 
-	has: (name: string) => cookieManager.safely(() => cookieManager.hasCookie(name), false),
+	has: (name: string) =>
+		cookieManager.safely(() => cookieManager.hasCookie(name), false),
 };
 
 // Example usage with error handling:

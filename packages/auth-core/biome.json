@@ -1,8 +1,7 @@
 {
-	"extends": [
-		"../../biome.json"
-	],
+	"root": false,
+	"extends": ["@de100/biome-config/base.json"],
 	"files": {
-		"includes": ["!./src/drizzle/**"]
+		"includes": ["!./src/drizzle"]
 	}
 }

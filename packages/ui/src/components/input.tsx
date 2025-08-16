@@ -2,7 +2,10 @@ import type { DetailedHTMLProps, InputHTMLAttributes } from "react";
 
 import { cn } from "#libs/utils";
 
-export type InputProps = DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+export type InputProps = DetailedHTMLProps<
+	InputHTMLAttributes<HTMLInputElement>,
+	HTMLInputElement
+>;
 
 function Input({ className, type, ...props }: InputProps) {
 	return (

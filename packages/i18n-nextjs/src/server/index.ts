@@ -14,7 +14,9 @@ import { parsePathname } from "#utils";
 import type { Locale } from "./config";
 import { initializeLocaleConfigCache, updateLocaleConfigCache } from "./config";
 
-export function isPromise<Value>(value: Value | Promise<Value>): value is Promise<Value> {
+export function isPromise<Value>(
+	value: Value | Promise<Value>,
+): value is Promise<Value> {
 	// https://github.com/amannn/next-intl/issues/1711
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 	return typeof (value as any)?.then === "function";
@@ -44,7 +46,10 @@ async function getLocaleFromHeaderImpl(): Promise<Locale | undefined> {
 		if (locale) updateLocaleConfigCache({ locale });
 	} catch (error) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		if (error instanceof Error && (error as any).digest === "DYNAMIC_SERVER_USAGE") {
+		if (
+			error instanceof Error &&
+			(error as any).digest === "DYNAMIC_SERVER_USAGE"
+		) {
 			const wrappedError = new Error(
 				"Usage of @de100/i18n APIs in Server Components currently opts into dynamic rendering. This limitation will eventually be lifted, but as a stopgap solution, you can use the `setRequestLocale` API to enable static rendering, see https://next-intl.dev/docs/getting-started/app-router/with-i18n-routing#static-rendering",
 				{ cause: error },
@@ -65,11 +70,14 @@ export async function getRequestLocale() {
 }
 
 export async function getCurrentRequestConfig(
-	loadLocaleMessages: (locale: Locale) => Promise<Record<string, LanguageMessages>>,
+	loadLocaleMessages: (
+		locale: Locale,
+	) => Promise<Record<string, LanguageMessages>>,
 ) {
 	// This typically corresponds to the `[locale]` segment
 	const store = initializeLocaleConfigCache();
-	const locale: Locale | undefined = (await getRequestLocale()) ?? store.defaultLocale;
+	const locale: Locale | undefined =
+		(await getRequestLocale()) ?? store.defaultLocale;
 
 	// Ensure that a valid locale is used
 	if (!locale || !store.allowedLocales?.includes(locale)) {

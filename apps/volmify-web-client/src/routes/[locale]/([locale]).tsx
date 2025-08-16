@@ -4,14 +4,19 @@ import { useI18n, useTranslations } from "@de100/i18n-solidjs";
 import { Title } from "@solidjs/meta";
 import { revalidate } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
-import { createEffect, createSignal, For, type ParentProps, resetErrorBoundaries } from "solid-js";
+import {
+	createEffect,
+	createSignal,
+	For,
+	type ParentProps,
+	resetErrorBoundaries,
+} from "solid-js";
 import Counter from "#components/Counter";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
 import ForgotPasswordPage from "#libs/auth/client/components/forgot-password/page.jsx";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { allowedLocales } from "#libs/i18n/constants.ts";
-import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
 import { cookieManager } from "#libs/js-cookies/index.ts";
 
 // async function testFn() {
@@ -34,17 +39,6 @@ export default function Home() {
 	const { locale } = useI18n();
 	// const t = useTranslations();
 	const router = useRouter();
-
-	const _testQuery = useQuery(() => ({
-		queryKey: ["test"],
-		queryFn: () => {
-			return getCurrentSession();
-		},
-	}));
-
-	createEffect(() => {
-		console.log("____ _testQuery.data: ", _testQuery.data);
-	});
 
 	return (
 		<main>
@@ -125,8 +119,9 @@ export default function Home() {
 					<For each={allowedLocales}>
 						{(localeItem) => (
 							<option value={localeItem}>
-								{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ??
-									localeItem}
+								{new Intl.DisplayNames([localeItem], { type: "language" }).of(
+									localeItem,
+								) ?? localeItem}
 							</option>
 						)}
 					</For>
@@ -135,7 +130,20 @@ export default function Home() {
 			<br />
 			<hr />
 			<br />
-			<PostViewer deferStream sleep={1000} simulateError={false} />
+			<h2>Example - Post Viewer</h2>
+			<PostViewer sleep={1000} simulateError={false} />
+			<hr />
+			<h2>Example - Post Viewer with deferStream</h2>
+			<PostViewer
+				deferStream
+				sleep={1000}
+				simulateError={false}
+				initialPage={2}
+			/>
+			<hr />
+			<h2>Example - Post Viewer with deferStream and simulateError</h2>
+			<PostViewer deferStream sleep={1000} simulateError initialPage={2} />
+			<hr />
 		</main>
 	);
 }
@@ -272,6 +280,7 @@ interface PostViewerProps {
 	deferStream?: boolean;
 	sleep?: number;
 	simulateError?: boolean;
+	initialPage?: number;
 }
 
 interface ExampleProps {
@@ -286,7 +295,9 @@ function Example(props: ParentProps<ExampleProps>) {
 			<div class="example__header">
 				<div class="example__title">{props.title}</div>
 				<div>[deferStream={String(props.deferStream || false)}]</div>
-				<div style={{ "margin-left": "10px" }}>[simulated sleep: {props.sleep || 0}ms]</div>
+				<div style={{ "margin-left": "10px" }}>
+					[simulated sleep: {props.sleep || 0}ms]
+				</div>
 			</div>
 
 			{props.children}
@@ -296,22 +307,34 @@ function Example(props: ParentProps<ExampleProps>) {
 
 function PostViewer(props: ParentProps<PostViewerProps>) {
 	const [simulateError, setSimulateError] = createSignal(props.simulateError);
-	const [postId, setPostId] = createSignal(1);
+	const [postId, setPostId] = createSignal(props.initialPage ?? 1);
 
 	const query = useQuery(() => ({
-		queryKey: ["posts", postId()],
-		queryFn: () =>
-			fetchPost({
-				postId: postId(),
+		queryKey: [
+			"posts",
+			postId(),
+			{
 				sleep: props.sleep,
-				simulateError: simulateError() || (simulateError() !== false && postId() === 5),
+				simulateError:
+					simulateError() || (simulateError() !== false && postId() === 5),
+			},
+		] as const,
+		queryFn: ({ queryKey }) =>
+			fetchPost({
+				postId: queryKey[1],
+				sleep: queryKey[2].sleep,
+				simulateError: queryKey[2].simulateError,
 			}),
 		deferStream: props.deferStream,
 		throwOnError: true,
 	}));
 
 	return (
-		<Example title="Post Query" deferStream={props.deferStream} sleep={props.sleep}>
+		<Example
+			title="Post Query"
+			deferStream={props.deferStream}
+			sleep={props.sleep}
+		>
 			<div style={{ "margin-top": "20px" }}>
 				<button
 					type="button"
@@ -333,40 +356,38 @@ function PostViewer(props: ParentProps<PostViewerProps>) {
 				</button>
 			</div>
 
-			{/* NOTE: without this extra wrapping div, for some reason solid ends up printing two errors... feels like a bug in solid. */}
-			<div>
-				<QueryBoundary
-					query={query}
-					loadingFallback={<div class="loader">loading post...</div>}
-					errorFallback={(err, retry) => (
-						<div>
-							<div class="error">{err.message}</div>
-							<button
-								type="button"
-								onClick={() => {
-									setSimulateError(false);
-									retry();
-								}}
-							>
-								retry
-							</button>
-						</div>
-					)}
-				>
-					{(posts) => (
-						<For each={posts}>
-							{(post) => (
-								<div style={{ "margin-top": "20px" }}>
-									<b>
-										[post {postId()}] {post.title}
-									</b>
-									<p>{post.body}</p>
-								</div>
-							)}
-						</For>
-					)}
-				</QueryBoundary>
-			</div>
+			<QueryBoundary
+				query={query}
+				loadingFallback={<div class="loader">loading post...</div>}
+				errorFallback={(err, retry) => (
+					<div>
+						<div class="error">{err.message}</div>
+						<button
+							type="button"
+							disabled={query.isRefetching || query.isSuccess}
+							onClick={() => {
+								setSimulateError(false);
+								retry();
+							}}
+						>
+							retry
+						</button>
+					</div>
+				)}
+			>
+				{(posts) => (
+					<For each={posts}>
+						{(post) => (
+							<div style={{ "margin-top": "20px" }}>
+								<b>
+									[post {postId()}] {post.title}
+								</b>
+								<p>{post.body}</p>
+							</div>
+						)}
+					</For>
+				)}
+			</QueryBoundary>
 		</Example>
 	);
 }
@@ -393,10 +414,16 @@ export function userInfoQueryOpts(props?: UserInfoProps) {
 export function UserInfo(props: UserInfoProps) {
 	const [simulateError, setSimulateError] = createSignal(props.simulateError);
 
-	const query = useQuery(() => userInfoQueryOpts({ ...props, simulateError: simulateError() }));
+	const query = useQuery(() =>
+		userInfoQueryOpts({ ...props, simulateError: simulateError() }),
+	);
 
 	return (
-		<Example title="User Query" deferStream={props.deferStream} sleep={props.sleep}>
+		<Example
+			title="User Query"
+			deferStream={props.deferStream}
+			sleep={props.sleep}
+		>
 			<QueryBoundary
 				query={query}
 				loadingFallback={<div class="loader">loading user...</div>}
@@ -405,6 +432,7 @@ export function UserInfo(props: UserInfoProps) {
 						<div class="error">{err.message}</div>
 						<button
 							type="button"
+							disabled={query.isRefetching || query.isSuccess}
 							onClick={() => {
 								setSimulateError(false);
 								retry();

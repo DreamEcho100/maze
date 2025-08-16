@@ -34,12 +34,10 @@ import { orgProduct } from "../../schema.js";
 
 const orgProductCourseTableName = `${orgTableName}_product_course`;
 // Should it be a level, difficulty, or consider both? what is the difference between a level and a difficulty in this context? why? pros and cons?
-export const orgProductCourseLevelEnum = pgEnum(`${orgProductCourseTableName}_level`, [
-	"beginner",
-	"intermediate",
-	"advanced",
-	"expert",
-]);
+export const orgProductCourseLevelEnum = pgEnum(
+	`${orgProductCourseTableName}_level`,
+	["beginner", "intermediate", "advanced", "expert"],
+);
 
 export const orgProductCourse = table(
 	orgProductCourseTableName,
@@ -52,7 +50,9 @@ export const orgProductCourse = table(
 			.idFk("product_id")
 			// .references(() => orgProduct.id)
 			.notNull(),
-		estimatedDurationInMinutes: integer("estimated_duration_in_minutes").default(0).notNull(),
+		estimatedDurationInMinutes: integer("estimated_duration_in_minutes")
+			.default(0)
+			.notNull(),
 		// prerequisites ???
 		//  targetAudience ???
 		// completionCriteria ???
@@ -74,23 +74,35 @@ export const orgProductCourse = table(
 		 */
 		difficulty: integer("difficulty").default(5), // 1-10 scale
 
-		userLevelRatingTotal: numericCols.ratingTotal("user_level_rating_total").default(0),
-		userLevelRatingCount: numericCols.ratingCount("user_level_rating_count").default(0),
+		userLevelRatingTotal: numericCols
+			.ratingTotal("user_level_rating_total")
+			.default(0),
+		userLevelRatingCount: numericCols
+			.ratingCount("user_level_rating_count")
+			.default(0),
 		/**
 		 * @userFeedback Average user rating for course level appropriateness
 		 * @qualityAssurance Community-validated level accuracy for creator credibility
 		 * @recommendationEngine Data for improving course discovery algorithms
 		 */
-		userLevelRatingAvg: numericCols.ratingAgg("user_level_rating_avg").default("0.00"),
+		userLevelRatingAvg: numericCols
+			.ratingAgg("user_level_rating_avg")
+			.default("0.00"),
 
-		userDifficultyRatingTotal: numericCols.ratingTotal("user_difficulty_rating_total").default(0),
-		userDifficultyRatingCount: numericCols.ratingCount("user_difficulty_rating_count").default(0),
+		userDifficultyRatingTotal: numericCols
+			.ratingTotal("user_difficulty_rating_total")
+			.default(0),
+		userDifficultyRatingCount: numericCols
+			.ratingCount("user_difficulty_rating_count")
+			.default(0),
 		/**
 		 * @userFeedback Average user rating for course difficulty assessment
 		 * @learningOptimization Community feedback for course improvement and positioning
 		 * @platformIntelligence Aggregate data for marketplace recommendation systems
 		 */
-		userDifficultyRatingAvg: numericCols.ratingAgg("user_difficulty_rating_avg").default("0.00"),
+		userDifficultyRatingAvg: numericCols
+			.ratingAgg("user_difficulty_rating_avg")
+			.default("0.00"),
 
 		createdAt: temporalCols.audit.createdAt().notNull(),
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
@@ -132,7 +144,9 @@ export const orgProductCourse = table(
 	],
 );
 
-export const orgProductCourseI18n = buildOrgI18nTable(orgProductCourseTableName)(
+export const orgProductCourseI18n = buildOrgI18nTable(
+	orgProductCourseTableName,
+)(
 	{
 		courseId: textCols
 			.idFk("course_id")
@@ -273,7 +287,9 @@ export const orgMemberProductCourseChallengeRating = table(
 		 */
 		difficultyRatingTotal: integer("difficulty_rating_total").default(0),
 		difficultyRatingCount: integer("difficulty_rating_count").default(0),
-		difficultyRatingAvg: numericCols.ratingAgg("difficulty_rating_avg").default("0.00"),
+		difficultyRatingAvg: numericCols
+			.ratingAgg("difficulty_rating_avg")
+			.default("0.00"),
 
 		/**
 		 * @qualitativeFeedback Optional explanation for ratings
@@ -322,30 +338,33 @@ export const orgMemberProductCourseChallengeRating = table(
 );
 
 const orgMemberProductCourseChallengeRatingHistoryTableName = `${orgMemberProductCourseChallengeRatingTableName}_history`;
-export const orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum = pgEnum(
-	`${orgMemberProductCourseChallengeRatingHistoryTableName}_reason`,
-	[
+export const orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum =
+	pgEnum(`${orgMemberProductCourseChallengeRatingHistoryTableName}_reason`, [
 		"updated", // User changed their rating (normal update)
 		// Q: Should the `"corrected"` be allowed? and when it should be used and wheere?
 		"corrected", // Admin or user fixed an error or mistake in the rating
 		"initial", // The original/first rating entry
-	],
-);
+	]);
 
 export const orgMemberProductCourseChallengeRatingHistory = table(
 	orgMemberProductCourseChallengeRatingHistoryTableName,
 	{
 		id: textCols.idPk().notNull(),
-		ratingId: textCols.idFk("rating_id").references(() => orgMemberProductCourseChallengeRating.id),
+		ratingId: textCols
+			.idFk("rating_id")
+			.references(() => orgMemberProductCourseChallengeRating.id),
 
 		// Historical values
 		previousLevelRating: numericCols.ratingTotal("previous_level_rating"),
-		previousDifficultyRating: numericCols.ratingTotal("previous_difficulty_rating"),
+		previousDifficultyRating: numericCols.ratingTotal(
+			"previous_difficulty_rating",
+		),
 		previousFeedback: text("previous_feedback"),
 
 		// Change metadata
 		changedAt: temporalCols.audit.createdAt().notNull(),
-		reason: orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum("reason"),
+		reason:
+			orgMemberProductCourseChallengeRatingHistoryChangeReasonEnum("reason"),
 	},
 );
 
@@ -410,7 +429,10 @@ export const orgProductCourseModule = table(
 			`ck_${orgProductCourseModuleTableName}_required_access_tier_range`,
 			sql`${cols.requiredAccessTier} >= 0`,
 		),
-		check(`ck_${orgProductCourseModuleTableName}_sort_order_range`, sql`${cols.sortOrder} >= 0`),
+		check(
+			`ck_${orgProductCourseModuleTableName}_sort_order_range`,
+			sql`${cols.sortOrder} >= 0`,
+		),
 		...multiIndexes({
 			tName: orgProductCourseModuleTableName,
 			colsGrps: [
@@ -425,7 +447,9 @@ export const orgProductCourseModule = table(
 	],
 );
 
-export const orgProductCourseModuleI18n = buildOrgI18nTable(orgProductCourseModuleTableName)(
+export const orgProductCourseModuleI18n = buildOrgI18nTable(
+	orgProductCourseModuleTableName,
+)(
 	{
 		moduleId: textCols
 			.idFk("moduleId")
@@ -750,7 +774,9 @@ export const orgMemberProductCourseEnrollment = table(
 			.idFk("course_id")
 			// .references(() => orgProductCourse.id)
 			.notNull(),
-		status: orgMemberProductCourseEnrollmentStatusEnum("status").default("not_started").notNull(),
+		status: orgMemberProductCourseEnrollmentStatusEnum("status")
+			.default("not_started")
+			.notNull(),
 		progressPercentage: lmsCols.progressPercentage(),
 		completedAt: temporalCols.activity.completedAt(),
 

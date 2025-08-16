@@ -9,7 +9,10 @@ import {
 	orgProductCourseModuleSectionLessonI18n,
 } from "../../org/product/by-type/course/schema.js";
 import { orgProductVariantPaymentPlanI18n } from "../../org/product/payment/schema.js";
-import { orgProductI18n, orgProductVariantI18n } from "../../org/product/schema.js";
+import {
+	orgProductI18n,
+	orgProductVariantI18n,
+} from "../../org/product/schema.js";
 import { org } from "../../org/schema.js";
 import { orgTaxRateI18n } from "../../org/tax/schema.js";
 // import { userJobProfileI18n } from "../../user/profile/job/schema.js";
@@ -125,10 +128,13 @@ export const seoMetadataRelations = relations(seoMetadata, ({ one, many }) => ({
 		fields: [seoMetadata.id],
 		references: [orgProductCourseModuleSectionI18n.seoMetadataId],
 	}),
-	orgProductCourseModuleSectionLessonI18n: one(orgProductCourseModuleSectionLessonI18n, {
-		fields: [seoMetadata.id],
-		references: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
-	}),
+	orgProductCourseModuleSectionLessonI18n: one(
+		orgProductCourseModuleSectionLessonI18n,
+		{
+			fields: [seoMetadata.id],
+			references: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
+		},
+	),
 
 	orgLessonI18n: one(orgLessonI18n, {
 		fields: [seoMetadata.id],
@@ -147,58 +153,73 @@ export const orgSeoRelations = relations(org, ({ many }) => ({
 // -------------------------------------
 // OPEN GRAPH RELATIONS
 // -------------------------------------
-export const seoOpenGraphRelations = relations(seoMetadataOpenGraph, ({ one }) => ({
-	// Many-to-one: Open Graph belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoMetadataOpenGraph.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoOpenGraphRelations = relations(
+	seoMetadataOpenGraph,
+	({ one }) => ({
+		// Many-to-one: Open Graph belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoMetadataOpenGraph.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // TWITTER CARD RELATIONS
 // -------------------------------------
-export const seoTwitterCardRelations = relations(seoMetadataTwitterCard, ({ one }) => ({
-	// Many-to-one: Twitter Card belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoMetadataTwitterCard.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoTwitterCardRelations = relations(
+	seoMetadataTwitterCard,
+	({ one }) => ({
+		// Many-to-one: Twitter Card belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoMetadataTwitterCard.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // STRUCTURED DATA RELATIONS
 // -------------------------------------
-export const seoStructuredDataRelations = relations(seoMetadataStructuredData, ({ one }) => ({
-	// Many-to-one: Structured data belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoMetadataStructuredData.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoStructuredDataRelations = relations(
+	seoMetadataStructuredData,
+	({ one }) => ({
+		// Many-to-one: Structured data belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoMetadataStructuredData.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);
 
 // -------------------------------------
 // ALTERNATE URL RELATIONS
 // -------------------------------------
-export const seoAlternateUrlRelations = relations(seoMetadataAlternateUrl, ({ one }) => ({
-	// Many-to-one: Alternate URL belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoMetadataAlternateUrl.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoAlternateUrlRelations = relations(
+	seoMetadataAlternateUrl,
+	({ one }) => ({
+		// Many-to-one: Alternate URL belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoMetadataAlternateUrl.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(locale, {
+			fields: [seoMetadataAlternateUrl.localeKey],
+			references: [locale.key],
+		}),
 	}),
-	locale: one(locale, {
-		fields: [seoMetadataAlternateUrl.localeKey],
-		references: [locale.key],
-	}),
-}));
+);
 
 // -------------------------------------
 // CUSTOM META RELATIONS
 // -------------------------------------
-export const seoCustomMetaRelations = relations(seoMetadataCustomMeta, ({ one }) => ({
-	// Many-to-one: Custom meta belongs to SEO metadata
-	seoMetadata: one(seoMetadata, {
-		fields: [seoMetadataCustomMeta.seoMetadataId],
-		references: [seoMetadata.id],
+export const seoCustomMetaRelations = relations(
+	seoMetadataCustomMeta,
+	({ one }) => ({
+		// Many-to-one: Custom meta belongs to SEO metadata
+		seoMetadata: one(seoMetadata, {
+			fields: [seoMetadataCustomMeta.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 	}),
-}));
+);

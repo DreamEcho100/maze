@@ -40,26 +40,32 @@ export const orgDiscountRelations = relations(orgDiscount, ({ one, many }) => ({
 	coupons: many(orgCoupon),
 	orders: many(orgMemberOrder),
 }));
-export const orgDiscountI18nRelations = relations(orgDiscountI18n, ({ one }) => ({
-	discount: one(orgDiscount, {
-		fields: [orgDiscountI18n.discountId],
-		references: [orgDiscount.id],
+export const orgDiscountI18nRelations = relations(
+	orgDiscountI18n,
+	({ one }) => ({
+		discount: one(orgDiscount, {
+			fields: [orgDiscountI18n.discountId],
+			references: [orgDiscount.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgDiscountI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	locale: one(orgLocale, {
-		fields: [orgDiscountI18n.localeKey],
-		references: [orgLocale.localeKey],
+);
+export const orgDiscountProductRelations = relations(
+	orgDiscountProduct,
+	({ one }) => ({
+		discount: one(orgDiscount, {
+			fields: [orgDiscountProduct.discountId],
+			references: [orgDiscount.id],
+		}),
+		product: one(orgProduct, {
+			fields: [orgDiscountProduct.productId],
+			references: [orgProduct.id],
+		}),
 	}),
-}));
-export const orgDiscountProductRelations = relations(orgDiscountProduct, ({ one }) => ({
-	discount: one(orgDiscount, {
-		fields: [orgDiscountProduct.discountId],
-		references: [orgDiscount.id],
-	}),
-	product: one(orgProduct, {
-		fields: [orgDiscountProduct.productId],
-		references: [orgProduct.id],
-	}),
-}));
+);
 export const orgDiscountProductVariantRelations = relations(
 	orgDiscountProductVariant,
 	({ one }) => ({
@@ -141,49 +147,61 @@ export const orgGiftCardRelations = relations(orgGiftCard, ({ one }) => ({
 		references: [orgMember.id],
 	}),
 }));
-export const orgGiftCardI18nRelations = relations(orgGiftCardI18n, ({ one }) => ({
-	giftCard: one(orgGiftCard, {
-		fields: [orgGiftCardI18n.giftCardId],
-		references: [orgGiftCard.id],
+export const orgGiftCardI18nRelations = relations(
+	orgGiftCardI18n,
+	({ one }) => ({
+		giftCard: one(orgGiftCard, {
+			fields: [orgGiftCardI18n.giftCardId],
+			references: [orgGiftCard.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgGiftCardI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	locale: one(orgLocale, {
-		fields: [orgGiftCardI18n.localeKey],
-		references: [orgLocale.localeKey],
+);
+export const orgMemberGiftCardUsageRelations = relations(
+	orgMemberGiftCardUsage,
+	({ one }) => ({
+		member: one(orgMember, {
+			fields: [orgMemberGiftCardUsage.memberId],
+			references: [orgMember.id],
+		}),
+		giftCard: one(orgGiftCard, {
+			fields: [orgMemberGiftCardUsage.giftCardId],
+			references: [orgGiftCard.id],
+		}),
 	}),
-}));
-export const orgMemberGiftCardUsageRelations = relations(orgMemberGiftCardUsage, ({ one }) => ({
-	member: one(orgMember, {
-		fields: [orgMemberGiftCardUsage.memberId],
-		references: [orgMember.id],
-	}),
-	giftCard: one(orgGiftCard, {
-		fields: [orgMemberGiftCardUsage.giftCardId],
-		references: [orgGiftCard.id],
-	}),
-}));
+);
 export const orgPromotionRelations = relations(orgPromotion, ({ one }) => ({
 	org: one(org, {
 		fields: [orgPromotion.orgId],
 		references: [org.id],
 	}),
 }));
-export const orgPromotionI18nRelations = relations(orgPromotionI18n, ({ one }) => ({
-	promotion: one(orgPromotion, {
-		fields: [orgPromotionI18n.promotionId],
-		references: [orgPromotion.id],
+export const orgPromotionI18nRelations = relations(
+	orgPromotionI18n,
+	({ one }) => ({
+		promotion: one(orgPromotion, {
+			fields: [orgPromotionI18n.promotionId],
+			references: [orgPromotion.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgPromotionI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	locale: one(orgLocale, {
-		fields: [orgPromotionI18n.localeKey],
-		references: [orgLocale.localeKey],
+);
+export const orgPromotionDiscountRelations = relations(
+	orgPromotionDiscount,
+	({ one }) => ({
+		promotion: one(orgPromotion, {
+			fields: [orgPromotionDiscount.promotionId],
+			references: [orgPromotion.id],
+		}),
+		discount: one(orgDiscount, {
+			fields: [orgPromotionDiscount.discountId],
+			references: [orgDiscount.id],
+		}),
 	}),
-}));
-export const orgPromotionDiscountRelations = relations(orgPromotionDiscount, ({ one }) => ({
-	promotion: one(orgPromotion, {
-		fields: [orgPromotionDiscount.promotionId],
-		references: [orgPromotion.id],
-	}),
-	discount: one(orgDiscount, {
-		fields: [orgPromotionDiscount.discountId],
-		references: [orgDiscount.id],
-	}),
-}));
+);

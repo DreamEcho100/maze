@@ -28,7 +28,8 @@ export function CreatePlanetMutationForm() {
 					const form = new FormData(e.target as HTMLFormElement);
 
 					const name = form.get("name") as string;
-					const description = (form.get("description") as string | null) ?? undefined;
+					const description =
+						(form.get("description") as string | null) ?? undefined;
 					const image = form.get("image") as File;
 
 					mutation.mutate({

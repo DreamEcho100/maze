@@ -2,7 +2,10 @@
 
 import { verifyPasswordReset2FAViaRecoveryCodeService } from "@de100/auth-core/services/reset-password/verify/2fa/recovery-code";
 import { verifyPasswordReset2FAViaTOTPService } from "@de100/auth-core/services/reset-password/verify/2fa/totp";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,
@@ -28,7 +31,8 @@ export async function verifyPasswordReset2FAWithTOTPAction(input) {
 			passwordResetSession: {
 				deleteOne: deleteOnePasswordResetSession,
 				findOneWithUser: findOnePasswordResetSessionWithUser,
-				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+				markOneTwoFactorAsVerified:
+					markOnePasswordResetSessionTwoFactorAsVerified,
 			},
 			users: {
 				getOneTOTPKey: getOneUserTOTPKey,
@@ -61,7 +65,8 @@ export async function verifyPasswordReset2FAWithRecoveryCodeAction(input) {
 			passwordResetSession: {
 				deleteOne: deleteOnePasswordResetSession,
 				findOneWithUser: findOnePasswordResetSessionWithUser,
-				markOneTwoFactorAsVerified: markOnePasswordResetSessionTwoFactorAsVerified,
+				markOneTwoFactorAsVerified:
+					markOnePasswordResetSessionTwoFactorAsVerified,
 			},
 			sessions: {
 				unMarkOne2FAForUser: unMarkOneSession2FAForUser,

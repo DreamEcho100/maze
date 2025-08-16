@@ -10,6 +10,9 @@ import { getCookies } from "./get-cookies";
  * @param {Headers} [reqHeaders] - Optional request headers object.
  */
 export async function getCookiesAndHeaders(reqHeaders) {
-	const [cookies, headers] = await Promise.all([getCookies(), reqHeaders ?? (await _headers())]);
+	const [cookies, headers] = await Promise.all([
+		getCookies(),
+		reqHeaders ?? (await _headers()),
+	]);
 	return { cookies, headers };
 }

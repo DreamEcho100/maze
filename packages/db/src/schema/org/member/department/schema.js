@@ -3,7 +3,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	compositePrimaryKey,
 	multiForeignKeys,
@@ -85,7 +88,9 @@ export const orgDepartment = table(
 		 * @branchLike
 		 * Project teams with departmental support
 		 */
-		allowsCrossDepartmentEmployees: boolean("allows_cross_department_employees").default(false),
+		allowsCrossDepartmentEmployees: boolean(
+			"allows_cross_department_employees",
+		).default(false),
 
 		// /**
 		//  * @branchLike Enhanced department capabilities
@@ -279,7 +284,9 @@ export const orgDepartmentEmployee = table(
 			.notNull()
 			.references(() => orgDepartment.id, { onDelete: "cascade" }),
 
-		status: orgDepartmentEmployeesStatusEnum("status").notNull().default("active"),
+		status: orgDepartmentEmployeesStatusEnum("status")
+			.notNull()
+			.default("active"),
 		// role: departmentEmployeesRoleEnum("role"), // "manager", "employee", "lead"
 		joinedAt: temporalCols.activity.joinedAt().defaultNow(),
 

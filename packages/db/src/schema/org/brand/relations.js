@@ -27,17 +27,20 @@ export const orgBrandRelations = relations(orgBrand, ({ one, many }) => ({
  * @localizationBridge Brand Translation
  * @seoIntegration SEO metadata per brand locale
  */
-export const orgBrandTranslationRelations = relations(orgBrandTranslation, ({ one }) => ({
-	brand: one(orgBrand, {
-		fields: [orgBrandTranslation.brandId],
-		references: [orgBrand.id],
+export const orgBrandTranslationRelations = relations(
+	orgBrandTranslation,
+	({ one }) => ({
+		brand: one(orgBrand, {
+			fields: [orgBrandTranslation.brandId],
+			references: [orgBrand.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgBrandTranslation.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgBrandTranslation.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	seoMetadata: one(seoMetadata, {
-		fields: [orgBrandTranslation.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-	locale: one(orgLocale, {
-		fields: [orgBrandTranslation.localeKey],
-		references: [orgLocale.localeKey],
-	}),
-}));
+);

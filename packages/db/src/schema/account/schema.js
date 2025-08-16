@@ -13,8 +13,14 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/org-id.js";
-import { userIdFkCol, userIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/user-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "../_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	userIdFkCol,
+	userIdFkExtraConfig,
+} from "../_utils/cols/shared/foreign-keys/user-id.js";
 import { sharedCols } from "../_utils/cols/shared/index.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
@@ -27,13 +33,16 @@ import { table } from "../_utils/tables.js";
 
 const accountTableName = "account";
 
-export const orgAccountingLedgerAccountTypeEnum = pgEnum(`${accountTableName}_type`, [
-	"asset", // `asset`: is "cash", "accounts_receivable", cash equivalents, can be used to pay liabilities
-	"liability", // `liability`: is "accounts_payable", "credit_card", "loan", obligations to pay
-	"equity", // `equity`: is "retained_earnings", "owner's_equity", residual interest in the assets
-	"revenue", // `revenue`: is "sales", "service_income", inflows from primary business activities
-	"expense", // `expense`: is "cost_of_goods_sold", "operating_expenses", outflows from primary business activities
-]);
+export const orgAccountingLedgerAccountTypeEnum = pgEnum(
+	`${accountTableName}_type`,
+	[
+		"asset", // `asset`: is "cash", "accounts_receivable", cash equivalents, can be used to pay liabilities
+		"liability", // `liability`: is "accounts_payable", "credit_card", "loan", obligations to pay
+		"equity", // `equity`: is "retained_earnings", "owner's_equity", residual interest in the assets
+		"revenue", // `revenue`: is "sales", "service_income", inflows from primary business activities
+		"expense", // `expense`: is "cost_of_goods_sold", "operating_expenses", outflows from primary business activities
+	],
+);
 export const OrgAccountingLedgerNormalBalanceTypeEnum = pgEnum("balance_type", [
 	"debit", // Normal balance for assets and expenses
 	"credit", // Normal balance for liabilities, equity, and revenue
@@ -73,8 +82,11 @@ export const account = table(
 		type: orgAccountingLedgerAccountTypeEnum("type").notNull(), // e.g. 'asset', 'liability', 'equity', 'revenue', 'expense'
 
 		// Balance tracking
-		currentBalance: numericCols.currency.amount("current_balance").default("0.00"),
-		normalBalance: OrgAccountingLedgerNormalBalanceTypeEnum("normal_balance").notNull(), // e.g. 'debit', 'credit'
+		currentBalance: numericCols.currency
+			.amount("current_balance")
+			.default("0.00"),
+		normalBalance:
+			OrgAccountingLedgerNormalBalanceTypeEnum("normal_balance").notNull(), // e.g. 'debit', 'credit'
 
 		orgId: orgIdFkCol(), // Nullable to allow system/global accounts
 		memberId: orgMemberIdFkCol(), // Optional: if account is user/member-specific
@@ -126,7 +138,9 @@ export const accountBalanceSnapshot = table(
 		id: textCols.idPk().notNull(),
 		accountId: textCols.idFk("account_id").notNull(),
 		// Q: snapshotDate vs createdAt? Should we use createdAt for the snapshot date? consistency vs clarity vs accuracy?
-		snapshotDate: temporalCols.business.transactionDate("snapshot_date").notNull(),
+		snapshotDate: temporalCols.business
+			.transactionDate("snapshot_date")
+			.notNull(),
 		balance: numericCols.currency.amount("balance").notNull(), // Balance at the snapshot date
 		// currency: currencyCodeFkCol().notNull(), // Currency for the snapshot
 
@@ -227,7 +241,9 @@ export const accountTransaction = table(
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
 
 		// Business entity reference (enhances your existing reference system)
-		businessEntityType: accountTransactionBusinessEntityTypeEnum("business_entity_type"),
+		businessEntityType: accountTransactionBusinessEntityTypeEnum(
+			"business_entity_type",
+		),
 		businessEntityId: textCols.idFk("business_entity_id"), // Points to order, payout, etc.
 	},
 	(cols) => [
@@ -274,7 +290,8 @@ export const accountTransactionLine = table(
 		accountId: textCols.idFk("account_id").notNull(),
 		transactionId: textCols.idFk("transaction_id").notNull(),
 
-		normalBalance: OrgAccountingLedgerNormalBalanceTypeEnum("normal_balance").notNull(), // e.g. 'debit', 'credit'
+		normalBalance:
+			OrgAccountingLedgerNormalBalanceTypeEnum("normal_balance").notNull(), // e.g. 'debit', 'credit'
 		amount: numericCols.currency.amount("amount").notNull(), // Positive for debits, negative for credits
 		currency: currencyCodeFkCol().notNull(), // Currency for the line item
 
@@ -308,7 +325,11 @@ export const accountTransactionLine = table(
 		}),
 		...multiIndexes({
 			tName: accountTransactionLineTableName,
-			colsGrps: [{ cols: [t.normalBalance] }, { cols: [t.amount] }, { cols: [t.currency] }],
+			colsGrps: [
+				{ cols: [t.normalBalance] },
+				{ cols: [t.amount] },
+				{ cols: [t.currency] },
+			],
 		}),
 	],
 );
@@ -341,7 +362,10 @@ export const accountTransactionContext = table(
 		contextType: accountTransactionContextTypeEnum("context_type").notNull(),
 
 		/** @businessRule How this entity relates to the transaction */
-		relationshipType: accountTransactionContextRelationshipTypeEnum("relationship_type").notNull(),
+		relationshipType:
+			accountTransactionContextRelationshipTypeEnum(
+				"relationship_type",
+			).notNull(),
 
 		/** @auditTrail When context access was established */
 		grantedAt: temporalCols.audit.createdAt().notNull(),
@@ -393,7 +417,9 @@ export const accountTransactionUserContext = table(
 		orgId: orgIdFkCol(),
 
 		/** @businessRule User's access level to this transaction */
-		accessLevel: accountTransactionUserAccessLevelEnum("access_level").notNull().default("viewer"),
+		accessLevel: accountTransactionUserAccessLevelEnum("access_level")
+			.notNull()
+			.default("viewer"),
 
 		/** @auditTrail Source of this access grant */
 		accessSource: textCols.tagline("access_source"), // "member_activity", "employee_role", "admin_grant"

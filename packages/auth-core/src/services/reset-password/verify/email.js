@@ -41,7 +41,10 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
  * >}
  */
 export async function verifyPasswordResetEmailVerificationService(props) {
-	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(props.input);
+	const input =
+		verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(
+			props.input,
+		);
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
@@ -52,7 +55,8 @@ export async function verifyPasswordResetEmailVerificationService(props) {
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,
-				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
+				findOneWithUser:
+					props.authProviders.passwordResetSession.findOneWithUser,
 			},
 		},
 	});

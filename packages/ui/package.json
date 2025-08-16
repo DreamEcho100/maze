@@ -61,7 +61,8 @@
 	"license": "MIT",
 	"scripts": {
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"format": "biome format ./src ",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src",
 		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
 		"lint:fix": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src --check --fix --write",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -113,6 +114,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
 		"@de100/tailwind-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"@types/react": "catalog:react19",

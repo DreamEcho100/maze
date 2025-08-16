@@ -4,7 +4,11 @@
 export function getAuthorizationTokenFromHeaders(headers) {
 	const accessToken = headers.get("authorization")?.split(" ")[1] ?? null;
 
-	if (!accessToken || typeof accessToken !== "string" || accessToken.length === 0) {
+	if (
+		!accessToken ||
+		typeof accessToken !== "string" ||
+		accessToken.length === 0
+	) {
 		return null; // No access token found or invalid access token format
 	}
 
@@ -19,7 +23,11 @@ export function getAuthorizationTokenFromHeaders(headers) {
 export function getRefreshTokenFromHeaders(headers) {
 	const refreshToken = headers.get("x-refresh-token") ?? null;
 
-	if (!refreshToken || typeof refreshToken !== "string" || refreshToken.length === 0) {
+	if (
+		!refreshToken ||
+		typeof refreshToken !== "string" ||
+		refreshToken.length === 0
+	) {
 		return null; // No refresh token found or invalid format
 	}
 

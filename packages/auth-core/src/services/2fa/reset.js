@@ -1,7 +1,10 @@
 /** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
 import { resetUser2FAWithRecoveryCode } from "#utils/2fa.js";
-import { RESET_2FA_MESSAGES_ERRORS, RESET_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	RESET_2FA_MESSAGES_ERRORS,
+	RESET_2FA_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { reset2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
@@ -39,17 +42,24 @@ export async function reset2FAService(props) {
 		return RESET_2FA_MESSAGES_ERRORS.TWO_FACTOR_NOT_ENABLED;
 	}
 
-	if (!user.emailVerifiedAt || !user.twoFactorRegisteredAt || session.twoFactorVerifiedAt) {
+	if (
+		!user.emailVerifiedAt ||
+		!user.twoFactorRegisteredAt ||
+		session.twoFactorVerifiedAt
+	) {
 		return RESET_2FA_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
 	const valid = await resetUser2FAWithRecoveryCode(user.id, input.data.code, {
 		tx: props.tx,
 		authProviders: {
-			sessions: { unMarkOne2FAForUser: props.authProviders.sessions.unMarkOne2FAForUser },
+			sessions: {
+				unMarkOne2FAForUser: props.authProviders.sessions.unMarkOne2FAForUser,
+			},
 			users: {
 				getOneRecoveryCodeRaw: props.authProviders.users.getOneRecoveryCodeRaw,
-				updateOneRecoveryCodeByUserId: props.authProviders.users.updateOneRecoveryCodeById,
+				updateOneRecoveryCodeByUserId:
+					props.authProviders.users.updateOneRecoveryCodeById,
 			},
 		},
 	});

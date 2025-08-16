@@ -10,7 +10,11 @@ import {
 } from "#schema/_utils/cols/shared/foreign-keys/user-profile-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { userCategory } from "#schema/general/category/schema.js";
 // Assuming these tables exist in your schema
 import { table } from "../../../_utils/tables.js";
@@ -399,24 +403,40 @@ export const userJobProfileMetrics = table(
 		ratingAvg: numericCols.ratingAgg("rating_avg").default("0.00"),
 
 		reviewsCount: integer("reviews_count").default(0),
-		revenueGeneratedTotal: numericCols.currency.price("revenue_generated_total").default("0.00"),
+		revenueGeneratedTotal: numericCols.currency
+			.price("revenue_generated_total")
+			.default("0.00"),
 		payoutsTotal: numericCols.currency.price("payouts_total").default("0.00"),
 		studentsCount: integer("students_count").default(0),
 		completedByStudentsCount: integer("completed_by_students_count").default(0),
-		inProgressByStudentsCount: integer("in_progress_by_students_count").default(0),
+		inProgressByStudentsCount: integer("in_progress_by_students_count").default(
+			0,
+		),
 
 		coursesTotal: integer("courses_total").default(0),
-		coursesRatingTotal: numericCols.ratingTotal("courses_rating_total").default(0),
-		coursesRatingCount: numericCols.ratingCount("courses_rating_count").default(0),
-		coursesRatingAvg: numericCols.ratingAgg("courses_rating_avg").default("0.00"),
+		coursesRatingTotal: numericCols
+			.ratingTotal("courses_rating_total")
+			.default(0),
+		coursesRatingCount: numericCols
+			.ratingCount("courses_rating_count")
+			.default(0),
+		coursesRatingAvg: numericCols
+			.ratingAgg("courses_rating_avg")
+			.default("0.00"),
 		coursesReviewsCount: integer("courses_reviews_count").default(0),
 		coursesRevenueGeneratedTotal: numericCols.currency
 			.price("courses_revenue_generated_total")
 			.default("0.00"),
-		coursesPayoutsTotal: numericCols.currency.price("courses_payouts_total").default("0.00"),
+		coursesPayoutsTotal: numericCols.currency
+			.price("courses_payouts_total")
+			.default("0.00"),
 		coursesStudentsCount: integer("courses_students_count").default(0),
-		courseCompletedByStudentsCount: integer("courses_completed_by_students_count").default(0),
-		coursesInProgressByStudentsCount: integer("courses_in_progress_by_students_count").default(0),
+		courseCompletedByStudentsCount: integer(
+			"courses_completed_by_students_count",
+		).default(0),
+		coursesInProgressByStudentsCount: integer(
+			"courses_in_progress_by_students_count",
+		).default(0),
 
 		// calculationPeriod: text("calculation_period"), // "all_time", "last_30_days", etc.
 

@@ -23,10 +23,22 @@ export function SignUpForm() {
 			}}
 		>
 			<label for="form-signup.name">Username</label>
-			<input id="form-signup.name" name="name" required minLength={4} maxLength={31} />
+			<input
+				id="form-signup.name"
+				name="name"
+				required
+				minLength={4}
+				maxLength={31}
+			/>
 			<br />
 			<label for="form-signup.email">Email</label>
-			<input type="email" id="form-signup.email" name="email" autocomplete="name" required />
+			<input
+				type="email"
+				id="form-signup.email"
+				name="email"
+				autocomplete="name"
+				required
+			/>
 			<br />
 			<label for="form-signup.password">Password</label>
 			<input

@@ -1,6 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse, SessionsProvider, AuthStrategy, CookiesProvider, DynamicCookiesOptions, ValidSessionResult } from "#types.ts" */
 
-import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	LOGOUT_MESSAGES_ERRORS,
+	LOGOUT_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { invalidateOneAuthSessionToken } from "#utils/sessions/index.js";
 
 /**

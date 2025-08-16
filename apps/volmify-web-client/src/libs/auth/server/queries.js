@@ -78,7 +78,9 @@ export const extendCurrentSession = async () => {
 		return;
 	}
 
-	return db.transaction(async (tx) => resolveAuthSessionService({ ...authProps, tx }));
+	return db.transaction(async (tx) =>
+		resolveAuthSessionService({ ...authProps, tx }),
+	);
 };
 export const refreshCurrentSession = async () => {
 	"use server";

@@ -91,7 +91,9 @@ export function UpdateToggleIsTwoFactorEnabledForm(props) {
 				e.preventDefault();
 				if (mutation.isPending) return;
 				const formData = new FormData(e.currentTarget);
-				mutation.mutate({ isTwoFactorEnabled: formData.get("is_two_factor_enabled") });
+				mutation.mutate({
+					isTwoFactorEnabled: formData.get("is_two_factor_enabled"),
+				});
 			}}
 		>
 			<button

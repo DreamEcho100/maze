@@ -267,7 +267,13 @@
 import type { LanguageMessages } from "@de100/i18n";
 import { initI18n } from "@de100/i18n";
 import type { ParentComponent } from "solid-js";
-import { createContext, createMemo, For, useContext } from "solid-js";
+import {
+	createContext,
+	createEffect,
+	createMemo,
+	For,
+	useContext,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 
 export const name = "@de100/i18n-solidjs";
@@ -318,7 +324,9 @@ function createI18nStore() {
 		t: (key: string) => key, // Safe fallback
 		clearCache: () => void 0, // Safe fallback
 		loadTranslations: async () => {
-			throw new Error("Translations not loaded. Please initialize translations first.");
+			throw new Error(
+				"Translations not loaded. Please initialize translations first.",
+			);
 		},
 		isLoadingTranslations: false,
 		localeDirMap: {},
@@ -352,8 +360,6 @@ function createI18nStore() {
 				return;
 			}
 
-			setIsLoadingTranslations(false);
-
 			if (!newTranslations) {
 				throw new Error(`Translations for locale "${locale}" not found.`);
 			}
@@ -386,6 +392,10 @@ function createI18nStore() {
 			loadTranslations: state.loadTranslations,
 			localeDirMap: state.localeDirMap,
 		});
+
+		if (state.loadTranslations) {
+			setIsLoadingTranslations(false);
+		}
 	};
 
 	const init = (
@@ -446,6 +456,7 @@ export const I18nProvider: ParentComponent<
 		| "loadTranslations"
 	> & {
 		isNew?: boolean;
+		localeParam?: string;
 	}
 > = (props) => {
 	const store = props.isNew ? createI18nStore() : globalI18nStore;
@@ -461,8 +472,23 @@ export const I18nProvider: ParentComponent<
 		localeDirMap: props.localeDirMap,
 	});
 
+	createEffect(
+		() => {
+			if (
+				props.localeParam &&
+				!store.state.isLoadingTranslations &&
+				props.localeParam !== store.state.locale
+			) {
+				store.actions.setLocale(props.localeParam);
+			}
+		},
+		{ defer: true },
+	);
+
 	return (
-		<I18nContext.Provider value={{ state: store.state, actions: store.actions }}>
+		<I18nContext.Provider
+			value={{ state: store.state, actions: store.actions }}
+		>
 			{props.children}
 		</I18nContext.Provider>
 	);
@@ -556,7 +582,9 @@ export function LocaleChooser(props: {
 			<For each={props.locales}>
 				{(localeItem) => (
 					<option value={localeItem}>
-						{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ?? localeItem}
+						{new Intl.DisplayNames([localeItem], { type: "language" }).of(
+							localeItem,
+						) ?? localeItem}
 					</option>
 				)}
 			</For>

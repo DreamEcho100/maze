@@ -113,7 +113,13 @@ interface ClientSession {
 export interface SessionMetadata
 	extends Omit<
 		ClientSession,
-		"token" | "expiresAt" | "id" | "lastUsedAt" | "createdAt" | "authStrategy" | "revokedAt"
+		| "token"
+		| "expiresAt"
+		| "id"
+		| "lastUsedAt"
+		| "createdAt"
+		| "authStrategy"
+		| "revokedAt"
 	> {
 	// authStrategy: AuthStrategy;
 }
@@ -237,7 +243,10 @@ export interface UserEmailVerificationRequestsProvider {
 	 * @param id - The request ID
 	 * @returns {Promise<void>}
 	 */
-	findOneByIdAndUserId: (userId: string, id: string) => Promise<EmailVerificationRequest | null>;
+	findOneByIdAndUserId: (
+		userId: string,
+		id: string,
+	) => Promise<EmailVerificationRequest | null>;
 }
 
 export interface PasswordResetSessionsProvider {
@@ -257,7 +266,11 @@ export interface PasswordResetSessionsProvider {
 	 * @returns {Promise<PasswordResetSession | null>} The created password reset session
 	 */
 	createOne: (
-		props: { data: Omit<PasswordResetSession, "id"> & { id?: PasswordResetSession["id"] } },
+		props: {
+			data: Omit<PasswordResetSession, "id"> & {
+				id?: PasswordResetSession["id"];
+			};
+		},
 		options?: { tx?: TransactionClient },
 	) => Promise<PasswordResetSession | null>;
 	/**
@@ -267,7 +280,10 @@ export interface PasswordResetSessionsProvider {
 	 */
 	findOneWithUser: (
 		sessionId: string,
-	) => Promise<{ session: PasswordResetSession; user: User } | { session: null; user: null }>;
+	) => Promise<
+		| { session: PasswordResetSession; user: User }
+		| { session: null; user: null }
+	>;
 	/**
 	 * Delete a specific password reset session
 	 * @param sessionId - The password reset session ID to delete
@@ -418,7 +434,10 @@ export interface UsersProvider {
 	 * @returns {Promise<Uint8Array | null>} The encrypted recovery code bytes or null
 	 * @description Returns raw encrypted bytes from database
 	 */
-	getOneRecoveryCodeRaw: (id: string, tx?: TransactionClient) => Promise<Uint8Array | null>;
+	getOneRecoveryCodeRaw: (
+		id: string,
+		tx?: TransactionClient,
+	) => Promise<Uint8Array | null>;
 	/**
 	 * Get user's decrypted recovery code (plain text)
 	 * @param id - The user ID
@@ -433,7 +452,10 @@ export interface UsersProvider {
 	 * @param {Uint8Array} encryptedRecoveryCode - New encrypted recovery code
 	 * @returns {Promise<User>} The updated user
 	 */
-	updateOneRecoveryCode: (id: string, encryptedRecoveryCode: Uint8Array) => Promise<User | null>;
+	updateOneRecoveryCode: (
+		id: string,
+		encryptedRecoveryCode: Uint8Array,
+	) => Promise<User | null>;
 	/**
 	 * Update recovery code with verification of current code
 	 * @param id - The user ID
@@ -507,9 +529,15 @@ export interface CookiesProvider {
 }
 
 export interface DynamicCookiesOptions {
-	REFRESH_TOKEN?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
-	ACCESS_TOKEN?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
-	PASSWORD_RESET_SESSION?: CookiesOptions | ((props?: { expiresAt: Date }) => CookiesOptions);
+	REFRESH_TOKEN?:
+		| CookiesOptions
+		| ((props?: { expiresAt: Date }) => CookiesOptions);
+	ACCESS_TOKEN?:
+		| CookiesOptions
+		| ((props?: { expiresAt: Date }) => CookiesOptions);
+	PASSWORD_RESET_SESSION?:
+		| CookiesOptions
+		| ((props?: { expiresAt: Date }) => CookiesOptions);
 	USER_EMAIL_VERIFICATION_REQUEST?:
 		| CookiesOptions
 		| ((props?: { expiresAt: Date }) => CookiesOptions);
@@ -538,7 +566,9 @@ export interface SessionsProvider {
 	 * @param sessionId - The session ID to find
 	 * @returns {Promise<{session: DBSessionOutput, user: User}
 	 */
-	findOneWithUser: (sessionId: string) => Promise<{ session: DBSessionOutput; user: User } | null>;
+	findOneWithUser: (
+		sessionId: string,
+	) => Promise<{ session: DBSessionOutput; user: User } | null>;
 	/**
 	 * Extend a session's expiration time
 	 * @param sessionId - The session ID to extend
@@ -615,7 +645,10 @@ export interface SessionsProvider {
 	 * @returns {Promise<DBSessionOutput | null>} The updated session
 	 * @description Used when 2FA is disabled or when security requires re-verification
 	 */
-	unMarkOne2FAForUser: (userId: string, tx?: TransactionClient) => Promise<number>;
+	unMarkOne2FAForUser: (
+		userId: string,
+		tx?: TransactionClient,
+	) => Promise<number>;
 }
 
 export interface JWTRefreshTokenPayload {
@@ -670,7 +703,9 @@ export interface JWTProvider {
 	 * @returns The JWT refresh token string
 	 */
 	createRefreshToken: (
-		props: { data: { user: User; metadata: SessionMetadata; sessionId: string } },
+		props: {
+			data: { user: User; metadata: SessionMetadata; sessionId: string };
+		},
 		options?: {
 			expiresIn?: number;
 			audience?: string | string[];
@@ -756,10 +791,14 @@ export interface ProvidersInit {
 	strategy?: AuthStrategy;
 	providers: {
 		users: UsersProvider | (() => UsersProvider | Promise<UsersProvider>);
-		sessions: SessionsProvider | (() => SessionsProvider | Promise<SessionsProvider>);
+		sessions:
+			| SessionsProvider
+			| (() => SessionsProvider | Promise<SessionsProvider>);
 		passwordResetSessions:
 			| PasswordResetSessionsProvider
-			| (() => PasswordResetSessionsProvider | Promise<PasswordResetSessionsProvider>);
+			| (() =>
+					| PasswordResetSessionsProvider
+					| Promise<PasswordResetSessionsProvider>);
 		userEmailVerificationRequests:
 			| UserEmailVerificationRequestsProvider
 			| (() =>
@@ -779,7 +818,9 @@ export interface ActionResultBase<StatusType extends "success" | "error"> {
 	messageCode: string;
 }
 
-export type ActionResult = ActionResultBase<"error"> | ActionResultBase<"success">;
+export type ActionResult =
+	| ActionResultBase<"error">
+	| ActionResultBase<"success">;
 
 export type MultiErrorSingleSuccessResponse<
 	TErrorObj extends Record<string, ActionResultBase<"error">>,
@@ -819,7 +860,9 @@ export type AuthProvidersWithGetSessionProviders<
 	sessions: CustomAuthProvider["sessions"] extends undefined
 		? SesHan
 		: CustomAuthProvider["sessions"] & SesHan;
-	jwt?: CustomAuthProvider["jwt"] extends undefined ? JWTHan : CustomAuthProvider["jwt"] & JWTHan;
+	jwt?: CustomAuthProvider["jwt"] extends undefined
+		? JWTHan
+		: CustomAuthProvider["jwt"] & JWTHan;
 };
 
 export interface AuthProvidersWithGetSessionUtils {
@@ -830,7 +873,11 @@ export interface AuthProvidersWithGetSessionUtils {
 	canMutateCookies: boolean;
 	generateRandomId: () => string;
 	ipAddress?: string | (() => string | Promise<string>) | undefined | null;
-	userAgent?: UserAgent | (() => UserAgent | Promise<UserAgent>) | undefined | null;
+	userAgent?:
+		| UserAgent
+		| (() => UserAgent | Promise<UserAgent>)
+		| undefined
+		| null;
 	tx: any;
 	user: ValidSessionResult["user"];
 	session: ValidSessionResult["session"];

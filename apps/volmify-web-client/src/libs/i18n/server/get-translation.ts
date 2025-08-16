@@ -1,13 +1,20 @@
 // import { currencyCodeFkCol } from "@de100/db/schema";
-import { query } from "@solidjs/router";
+import { json, query } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { type AllowedLocale, allowedLocales, defaultLocale } from "../constants";
+import {
+	type AllowedLocale,
+	allowedLocales,
+	defaultLocale,
+} from "../constants";
 import { getServerLocale, setLocaleInCookies } from "./utils";
 
 export const getTranslation = query(async (registeredLocale?: string) => {
-	console.log("___ getTranslation", registeredLocale);
+	if (process.env.NODE_ENV === "development") {
+		console.log("___ getTranslation registeredLocale", registeredLocale);
+	}
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	const locale = (registeredLocale || defaultLocale) as (typeof allowedLocales)[number];
+	const locale = (registeredLocale ||
+		defaultLocale) as (typeof allowedLocales)[number];
 	if (!allowedLocales.includes(locale)) {
 		throw new Error(`Locale "${locale}" is not allowed.`);
 	}
@@ -17,7 +24,20 @@ export const getTranslation = query(async (registeredLocale?: string) => {
 		en: () => import("#libs/i18n/messages/en.ts"),
 	} as const;
 
-	return (await localeToMessagesPathMap[locale]()).default;
+	return json(
+		{
+			translation: (await localeToMessagesPathMap[locale]()).default,
+			locale,
+		},
+		{
+			headers: {
+				// IMP: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control>
+				"cache-control": "max-age=31536000, stale-while-revalidate=86400", // 1 year max-age, allow stale for 1 day
+			},
+		},
+	);
+
+	// return (await localeToMessagesPathMap[locale]()).default;
 
 	// switch (locale) {
 	// 	case "ar":
@@ -33,8 +53,14 @@ export const getTranslation = query(async (registeredLocale?: string) => {
 	// >;
 }, "translation");
 
-export const getTranslationByLocal = async (props: { locale?: AllowedLocale; direct: boolean }) => {
+export const getTranslationByLocal = async (props: {
+	locale?: AllowedLocale;
+	direct: boolean;
+}) => {
 	"use server";
+	if (process.env.NODE_ENV === "development") {
+		console.log("___ getTranslationByLocal props", props);
+	}
 	// console.log(currencyCodeFkCol);
 	const requestEvent = getRequestEvent();
 	if (!requestEvent) {
@@ -64,18 +90,17 @@ export const getTranslationByLocal = async (props: { locale?: AllowedLocale; dir
 
 	let locale: AllowedLocale | undefined = props.locale;
 	if (!locale) {
-		const { foundLocale = defaultLocale } = getServerLocale({
+		const { foundLocale = defaultLocale, shouldSetCookie } = getServerLocale({
 			nativeEvent: requestEvent.nativeEvent,
 			headers: requestEvent.request.headers,
 			pathname,
 		});
 		locale = foundLocale;
-	}
-	setLocaleInCookies(requestEvent.nativeEvent, locale);
 
-	console.log("___ Fetching translation for locale:", locale);
-	return {
-		translation: await getTranslation(locale),
-		locale,
-	};
+		if (shouldSetCookie) {
+			setLocaleInCookies(requestEvent.nativeEvent, locale);
+		}
+	}
+
+	return getTranslation(locale);
 };

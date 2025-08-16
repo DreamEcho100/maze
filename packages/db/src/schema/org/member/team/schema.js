@@ -3,7 +3,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { userIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/user-id.js";
 import {
 	compositePrimaryKey,
@@ -53,7 +56,9 @@ export const orgTeam = table(
 		/**
 		 * Whether this team can include employees from multiple departments.
 		 */
-		allowsCrossDepartmentEmployees: boolean("allows_cross_department_employees").default(true),
+		allowsCrossDepartmentEmployees: boolean(
+			"allows_cross_department_employees",
+		).default(true),
 
 		// metadata: jsonb("metadata"),
 	},
@@ -74,7 +79,11 @@ export const orgTeam = table(
 		}),
 		...multiIndexes({
 			tName: orgTeamTableName,
-			colsGrps: [{ cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }, { cols: [cols.slug] }],
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+				{ cols: [cols.slug] },
+			],
 		}),
 	],
 );
@@ -111,16 +120,22 @@ export const orgTeamI18n = buildOrgI18nTable(orgTeamTableName)(
 );
 
 const orgTeamEmployeeTableName = `${orgTeamTableName}_employee`;
-export const orgTeamEmployeeRoleEnum = pgEnum(`${orgTeamEmployeeTableName}_role`, [
-	"admin", // Full access to manage team employees, settings, and permissions
-	"employee", // Scoped access based on permission groups assigned within the team
-]);
-export const orgTeamEmployeeStatusEnum = pgEnum(`${orgTeamEmployeeTableName}_status`, [
-	"pending", // Awaiting acceptance of invitation
-	"active", // Currently active employee
-	"suspended", // Temporarily suspended; cannot access team resources
-	"left", // Employee has left the team
-]);
+export const orgTeamEmployeeRoleEnum = pgEnum(
+	`${orgTeamEmployeeTableName}_role`,
+	[
+		"admin", // Full access to manage team employees, settings, and permissions
+		"employee", // Scoped access based on permission groups assigned within the team
+	],
+);
+export const orgTeamEmployeeStatusEnum = pgEnum(
+	`${orgTeamEmployeeTableName}_status`,
+	[
+		"pending", // Awaiting acceptance of invitation
+		"active", // Currently active employee
+		"suspended", // Temporarily suspended; cannot access team resources
+		"left", // Employee has left the team
+	],
+);
 /**
  * Org Employee ⇄ Team Assignment
  *
@@ -146,7 +161,10 @@ export const orgTeamEmployee = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(cols) => [
-		compositePrimaryKey({ tName: orgTeamEmployeeTableName, cols: [cols.teamId, cols.employeeId] }),
+		compositePrimaryKey({
+			tName: orgTeamEmployeeTableName,
+			cols: [cols.teamId, cols.employeeId],
+		}),
 		...orgEmployeeIdFkExtraConfig({
 			tName: orgTeamEmployeeTableName,
 			cols,

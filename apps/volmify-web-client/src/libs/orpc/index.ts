@@ -18,6 +18,7 @@ const link = new RPCLink({
 	headers: () => Object.fromEntries(getRequestEvent()?.request.headers ?? []),
 });
 
-export const client: RouterClient<typeof router> = globalThis.$client ?? createORPCClient(link);
+export const client: RouterClient<typeof router> =
+	globalThis.$client ?? createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);

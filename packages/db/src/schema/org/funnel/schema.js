@@ -1,6 +1,9 @@
 import { isNull } from "drizzle-orm";
 import { boolean, varchar } from "drizzle-orm/pg-core";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
@@ -121,7 +124,10 @@ export const orgFunnelRegion = table(
 	(cols) => [
 		// primaryKey({ columns: [t.funnelId, t.regionId] }),
 		// index(`idx_${orgFunnelRegionName}_created_at`).on(t.createdAt),
-		compositePrimaryKey({ tName: orgFunnelRegionName, cols: [cols.funnelId, cols.regionId] }),
+		compositePrimaryKey({
+			tName: orgFunnelRegionName,
+			cols: [cols.funnelId, cols.regionId],
+		}),
 		...multiForeignKeys({
 			tName: orgFunnelRegionName,
 			fkGroups: [

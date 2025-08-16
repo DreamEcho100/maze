@@ -29,13 +29,16 @@ export const orgTeamI18nRelations = relations(orgTeamI18n, ({ one }) => ({
 	}),
 }));
 
-export const orgTeamEmployeeRelations = relations(orgTeamEmployee, ({ one }) => ({
-	team: one(orgTeam, {
-		fields: [orgTeamEmployee.teamId],
-		references: [orgTeam.id],
+export const orgTeamEmployeeRelations = relations(
+	orgTeamEmployee,
+	({ one }) => ({
+		team: one(orgTeam, {
+			fields: [orgTeamEmployee.teamId],
+			references: [orgTeam.id],
+		}),
+		employee: one(orgEmployee, {
+			fields: [orgTeamEmployee.employeeId],
+			references: [orgEmployee.id],
+		}),
 	}),
-	employee: one(orgEmployee, {
-		fields: [orgTeamEmployee.employeeId],
-		references: [orgEmployee.id],
-	}),
-}));
+);

@@ -53,7 +53,9 @@ export async function forgotPasswordService(props) {
 			{
 				tx: props.tx,
 				authProviders: {
-					passwordResetSession: { createOne: props.authProviders.passwordResetSession.createOne },
+					passwordResetSession: {
+						createOne: props.authProviders.passwordResetSession.createOne,
+					},
 				},
 			},
 		),
@@ -63,7 +65,10 @@ export async function forgotPasswordService(props) {
 		),
 	]);
 
-	await sendPasswordResetEmail(passwordResetEmailSession.email, passwordResetEmailSession.code);
+	await sendPasswordResetEmail(
+		passwordResetEmailSession.email,
+		passwordResetEmailSession.code,
+	);
 	setPasswordResetSessionTokenCookie({
 		token: sessionToken,
 		expiresAt: passwordResetEmailSession.expiresAt,

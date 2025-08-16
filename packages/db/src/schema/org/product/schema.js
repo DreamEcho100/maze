@@ -40,7 +40,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
@@ -100,11 +103,14 @@ export const productStatusEnum = pgEnum(`${orgProductTableName}_status`, [
 ]);
 
 const orgProductApprovalTableName = `${orgProductTableName}_approval`;
-export const orgProductApprovalStatusEnum = pgEnum(`${orgProductApprovalTableName}_status`, [
-	"pending", // Awaiting review
-	"approved", // Approved by reviewer
-	"rejected", // Rejected with comments
-]);
+export const orgProductApprovalStatusEnum = pgEnum(
+	`${orgProductApprovalTableName}_status`,
+	[
+		"pending", // Awaiting review
+		"approved", // Approved by reviewer
+		"rejected", // Rejected with comments
+	],
+);
 /**
  * @module ProductApproval
  * @domain Human-based review and compliance enforcement for user-created content
@@ -118,8 +124,12 @@ export const orgProductApproval = table(
 
 		productId: textCols.idFk("product_id").notNull(),
 		// .references(() => orgProduct.id),
-		submittedByEmployeeId: orgEmployeeIdFkCol({ name: "submitted_by_employee_id" }).notNull(),
-		reviewedByEmployeeId: orgEmployeeIdFkCol({ name: "reviewed_by_employee_id" }),
+		submittedByEmployeeId: orgEmployeeIdFkCol({
+			name: "submitted_by_employee_id",
+		}).notNull(),
+		reviewedByEmployeeId: orgEmployeeIdFkCol({
+			name: "reviewed_by_employee_id",
+		}),
 
 		status: orgProductApprovalStatusEnum("status").default("pending"),
 
@@ -605,7 +615,10 @@ export const orgProductBrandAttribution = table(
 		createdAt: temporalCols.audit.createdAt().notNull(),
 	},
 	(cols) => [
-		compositePrimaryKey({ tName: orgProductBrandTableName, cols: [cols.brandId, cols.productId] }),
+		compositePrimaryKey({
+			tName: orgProductBrandTableName,
+			cols: [cols.brandId, cols.productId],
+		}),
 		...multiForeignKeys({
 			tName: orgProductBrandTableName,
 			fkGroups: [
@@ -643,13 +656,16 @@ export const orgProductRevenuePool = table(
 			precision: 5,
 			scale: 2,
 		}).default("0.00"),
-		remainingPercentage: decimal("remaining_percentage", { precision: 5, scale: 2 }).default(
-			"100.00",
-		),
+		remainingPercentage: decimal("remaining_percentage", {
+			precision: 5,
+			scale: 2,
+		}).default("100.00"),
 
 		// Revenue allocation tracking
 		allocationHistory: jsonb("allocation_history"), // Track changes for audit
-		lastAllocationByEmployeeId: orgEmployeeIdFkCol({ name: "last_allocation_by_employee_id" }),
+		lastAllocationByEmployeeId: orgEmployeeIdFkCol({
+			name: "last_allocation_by_employee_id",
+		}),
 		lastAllocationAt: temporalCols.audit.lastUpdatedAt("last_allocation_at"),
 
 		createdAt: temporalCols.audit.createdAt().notNull(),

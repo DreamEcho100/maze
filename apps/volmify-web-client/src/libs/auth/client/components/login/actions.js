@@ -1,7 +1,10 @@
 "use server";
 
 import { loginUserService } from "@de100/auth-core/services/login";
-import { AUTH_URLS, LOGIN_MESSAGES_ERRORS } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	LOGIN_MESSAGES_ERRORS,
+} from "@de100/auth-core/utils/constants";
 import {
 	authStrategy,
 	createOneSession,
@@ -50,6 +53,10 @@ export async function loginAction(input) {
 			await redirect(AUTH_URLS.TWO_FA);
 			return result;
 		default:
-			return { type: /** @type {const} */ ("error"), statusCode: 500, message: "Unexpected error" };
+			return {
+				type: /** @type {const} */ ("error"),
+				statusCode: 500,
+				message: "Unexpected error",
+			};
 	}
 }

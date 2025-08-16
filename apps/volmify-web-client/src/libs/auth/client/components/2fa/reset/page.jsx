@@ -3,7 +3,9 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import { TwoFactorResetForm } from "./components";
 
 export default async function AuthTwoFactorResetPage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (!session) {
 		return redirect("/auth/login");

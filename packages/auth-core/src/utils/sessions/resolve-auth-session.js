@@ -77,12 +77,16 @@ function compareUserAgents(userAgent1, userAgent2) {
  */
 async function validateJWTRefreshToken(token, ctx) {
 	try {
-		const verifyRefreshToken = /** @type {JWTProvider['verifyRefreshToken']} */ (
-			ctx.authProviders.jwt?.verifyRefreshToken ?? jwtProvider.verifyRefreshToken
-		);
+		const verifyRefreshToken =
+			/** @type {JWTProvider['verifyRefreshToken']} */ (
+				ctx.authProviders.jwt?.verifyRefreshToken ??
+					jwtProvider.verifyRefreshToken
+			);
 		const verifyRefreshTokenResult = verifyRefreshToken(token);
 
-		const validation = validateJWTRefreshTokenSchema.safeParse(verifyRefreshTokenResult);
+		const validation = validateJWTRefreshTokenSchema.safeParse(
+			verifyRefreshTokenResult,
+		);
 
 		if (!validation.success) {
 			return null;
@@ -99,7 +103,8 @@ async function validateJWTRefreshToken(token, ctx) {
 		if (
 			!result?.session ||
 			Date.now() >= new Date(result.session.expiresAt).getTime() ||
-			((result.session.ipAddress || ctx.ipAddress) && result.session.ipAddress !== ctx.ipAddress) ||
+			((result.session.ipAddress || ctx.ipAddress) &&
+				result.session.ipAddress !== ctx.ipAddress) ||
 			((result.session.userAgent || ctx.userAgent) &&
 				!compareUserAgents(ctx.userAgent, result.session.userAgent))
 		) {
@@ -133,7 +138,8 @@ async function validateJWTRefreshToken(token, ctx) {
  */
 function getShouldExtendRefreshAuthTokens(ctx) {
 	const lastCheckpointAt = dateLikeToNumber(
-		ctx.validationResult.session.lastExtendedAt ?? ctx.validationResult.session.createdAt,
+		ctx.validationResult.session.lastExtendedAt ??
+			ctx.validationResult.session.createdAt,
 	);
 	const expiresAt = dateLikeToNumber(ctx.validationResult.session.expiresAt);
 	const halfwayPoint = (expiresAt - lastCheckpointAt) * 0.5 + lastCheckpointAt;
@@ -276,19 +282,22 @@ export async function resolveAuthSession(props) {
 		return { session: null, user: null, metadata: null };
 	}
 
-	const validatedRefreshToken = await validateJWTRefreshToken(props.refreshToken, {
-		authProviders: {
-			sessions: {
-				findOneWithUser: props.authProviders.sessions.findOneWithUser,
-				deleteOneById: props.authProviders.sessions.deleteOneById,
+	const validatedRefreshToken = await validateJWTRefreshToken(
+		props.refreshToken,
+		{
+			authProviders: {
+				sessions: {
+					findOneWithUser: props.authProviders.sessions.findOneWithUser,
+					deleteOneById: props.authProviders.sessions.deleteOneById,
+				},
+				jwt: {
+					verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
+				},
 			},
-			jwt: {
-				verifyRefreshToken: props.authProviders.jwt?.verifyRefreshToken,
-			},
+			ipAddress: props.ipAddress ?? null,
+			userAgent: props.userAgent ?? null,
 		},
-		ipAddress: props.ipAddress ?? null,
-		userAgent: props.userAgent ?? null,
-	});
+	);
 	if (!validatedRefreshToken) {
 		return { session: null, user: null, metadata: null };
 	}
@@ -318,11 +327,14 @@ export async function resolveAuthSession(props) {
 			},
 		});
 	} else {
-		const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_DURATION);
-		const updatedSession = await props.authProviders.sessions.extendOneExpirationDate({
-			data: { expiresAt: refreshTokenExpiresAt },
-			where: { id: validatedRefreshToken.session.id },
-		});
+		const refreshTokenExpiresAt = new Date(
+			Date.now() + REFRESH_TOKEN_EXPIRES_DURATION,
+		);
+		const updatedSession =
+			await props.authProviders.sessions.extendOneExpirationDate({
+				data: { expiresAt: refreshTokenExpiresAt },
+				where: { id: validatedRefreshToken.session.id },
+			});
 		if (!updatedSession) {
 			throw new Error(
 				`Failed to extend session ${validatedRefreshToken.session.id}: session may have been deleted or database error occurred`,
@@ -338,21 +350,25 @@ export async function resolveAuthSession(props) {
 
 	switch (props.authStrategy) {
 		case "jwt": {
-			const generateAccessTokenResult = generateAccessToken(newRefreshTokenDetails, {
-				authStrategy: props.authStrategy,
-				authProviders: {
-					jwt: {
-						createAccessToken: props.authProviders.jwt?.createAccessToken,
+			const generateAccessTokenResult = generateAccessToken(
+				newRefreshTokenDetails,
+				{
+					authStrategy: props.authStrategy,
+					authProviders: {
+						jwt: {
+							createAccessToken: props.authProviders.jwt?.createAccessToken,
+						},
 					},
 				},
-			});
+			);
 
 			if (props.canMutateCookies) {
 				setAuthTokenCookies({
 					accessToken: generateAccessTokenResult.accessToken,
 					refreshToken: generateAccessTokenResult.refreshToken,
 					accessTokenExpiresAt: generateAccessTokenResult.accessTokenExpiresAt,
-					refreshTokenExpiresAt: generateAccessTokenResult.refreshTokenExpiresAt,
+					refreshTokenExpiresAt:
+						generateAccessTokenResult.refreshTokenExpiresAt,
 					cookies: props.cookies,
 					authStrategy: props.authStrategy,
 					cookiesOptions: props.cookiesOptions,
@@ -365,9 +381,11 @@ export async function resolveAuthSession(props) {
 				metadata: {
 					authStrategy: props.authStrategy,
 					accessToken: generateAccessTokenResult.accessToken,
-					accessTokenExpiresAt: generateAccessTokenResult.accessTokenExpiresAt.getTime(),
+					accessTokenExpiresAt:
+						generateAccessTokenResult.accessTokenExpiresAt.getTime(),
 					refreshToken: generateAccessTokenResult.refreshToken,
-					refreshTokenExpiresAt: generateAccessTokenResult.refreshTokenExpiresAt.getTime(),
+					refreshTokenExpiresAt:
+						generateAccessTokenResult.refreshTokenExpiresAt.getTime(),
 				},
 			};
 		}

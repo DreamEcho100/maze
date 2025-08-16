@@ -6,7 +6,11 @@ import {
 } from "#schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { table } from "#schema/_utils/tables.js";
 import { locale } from "#schema/general/locale-and-currency/schema.js";
 
@@ -63,9 +67,10 @@ export const buildUserI18nTable =
 						},
 					],
 				}),
-				uniqueIndex({ tName, cols: [cols[options.fkKey], cols.isDefault] }).where(
-					eq(cols.isDefault, sql`TRUE`),
-				),
+				uniqueIndex({
+					tName,
+					cols: [cols[options.fkKey], cols.isDefault],
+				}).where(eq(cols.isDefault, sql`TRUE`)),
 				...multiIndexes({
 					tName,
 					colsGrps: [

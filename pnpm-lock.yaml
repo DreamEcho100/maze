@@ -257,6 +257,12 @@ importers:
         specifier: 'catalog:'
         version: 4.0.17
     devDependencies:
+      '@biomejs/biome':
+        specifier: 'catalog:'
+        version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -291,6 +297,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -328,6 +337,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -368,6 +380,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -393,6 +408,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -405,6 +423,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -439,6 +460,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -476,6 +500,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -522,6 +549,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -544,6 +574,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -556,6 +589,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -571,6 +607,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tailwind-config':
         specifier: workspace:*
         version: link:../../tooling/tailwind
@@ -586,6 +625,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -734,6 +776,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tailwind-config':
         specifier: workspace:*
         version: link:../../tooling/tailwind
@@ -762,12 +807,17 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../../tooling/biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
       typescript:
         specifier: 'catalog:'
         version: 5.9.2
+
+  tooling/biome: {}
 
   tooling/github: {}
 
@@ -786,6 +836,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.2.0
+      '@de100/biome-config':
+        specifier: workspace:*
+        version: link:../biome
       '@de100/tsconfig':
         specifier: workspace:*
         version: link:../typescript

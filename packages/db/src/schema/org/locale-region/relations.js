@@ -53,8 +53,12 @@ export const orgLocaleRelations = relations(orgLocale, ({ many, one }) => ({
 	orgsLessonsI18n: many(orgLessonI18n),
 	orgsProductsCoursesI18n: many(orgProductCourseI18n),
 	orgsProductsCoursesModulesI18n: many(orgProductCourseModuleI18n),
-	orgsProductsCoursesModulesSectionsI18n: many(orgProductCourseModuleSectionI18n),
-	orgsProductsCoursesModulesSectionsLessonsI18n: many(orgProductCourseModuleSectionLessonI18n),
+	orgsProductsCoursesModulesSectionsI18n: many(
+		orgProductCourseModuleSectionI18n,
+	),
+	orgsProductsCoursesModulesSectionsLessonsI18n: many(
+		orgProductCourseModuleSectionLessonI18n,
+	),
 	orgsDepartmentsI18n: many(orgDepartmentI18n),
 	orgsTeamsI18n: many(orgTeamI18n),
 	orgsCategoriesI18n: many(orgCategoryI18n),

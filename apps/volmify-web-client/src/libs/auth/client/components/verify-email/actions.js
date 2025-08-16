@@ -43,7 +43,9 @@ export async function verifyEmailAction(input) {
 		return AUTHENTICATION_REQUIRED;
 	}
 
-	const result = await db.transaction(async (tx) => verifyEmailUserService({ ...authProps, tx }));
+	const result = await db.transaction(async (tx) =>
+		verifyEmailUserService({ ...authProps, tx }),
+	);
 
 	if (result.type === "success") {
 		await redirect(AUTH_URLS.SUCCESS_VERIFY_EMAIL);
@@ -66,7 +68,8 @@ export async function verifyEmailAction(input) {
 		// case VERIFY_EMAIL_MESSAGES_ERRORS.ENTER_YOUR_CODE.messageCode:
 		// 	await redirect(AUTH_URLS.VERIFY_EMAIL);
 		// return result;
-		case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
+		case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE
+			.messageCode:
 			await redirect(AUTH_URLS.VERIFY_EMAIL);
 			return result;
 		// case VERIFY_EMAIL_MESSAGES_ERRORS.INCORRECT_CODE.messageCode:

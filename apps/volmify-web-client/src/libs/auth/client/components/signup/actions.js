@@ -40,7 +40,8 @@ export async function signupAction(input) {
 	}
 
 	switch (result.messageCode) {
-		case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED.messageCode:
+		case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED
+			.messageCode:
 			await redirect("/auth/2fa/setup");
 			return result;
 		default:

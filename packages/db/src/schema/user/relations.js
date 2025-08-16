@@ -52,9 +52,12 @@ export const userEmailVerificationRequestRelations = relations(
 		}),
 	}),
 );
-export const userPasswordResetSessionRelations = relations(userPasswordResetSession, ({ one }) => ({
-	user: one(user, {
-		fields: [userPasswordResetSession.userId],
-		references: [user.id],
+export const userPasswordResetSessionRelations = relations(
+	userPasswordResetSession,
+	({ one }) => ({
+		user: one(user, {
+			fields: [userPasswordResetSession.userId],
+			references: [user.id],
+		}),
 	}),
-}));
+);

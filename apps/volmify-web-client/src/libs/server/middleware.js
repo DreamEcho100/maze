@@ -79,18 +79,27 @@ export async function createAuthMiddleware(request, options) {
 	switch (authedRequest.status) {
 		case "authorized":
 			// return authedRequest.result;
-			return options?.onAuthorized?.(authedRequest.result) ?? NextResponse.next();
+			return (
+				options?.onAuthorized?.(authedRequest.result) ?? NextResponse.next()
+			);
 		case "unauthorized":
-			return options?.onUnauthorized?.() ?? new NextResponse(null, { status: 401 });
+			return (
+				options?.onUnauthorized?.() ?? new NextResponse(null, { status: 401 })
+			);
 		case "invalid-csrf":
 			// return new NextResponse(null, { status: 403 });
-			return options?.onInvalidCSRF?.() ?? new NextResponse(null, { status: 403 });
+			return (
+				options?.onInvalidCSRF?.() ?? new NextResponse(null, { status: 403 })
+			);
 		case "valid-csrf":
 			// return NextResponse.next();
 			return options?.onValidCSRF?.() ?? NextResponse.next();
 		case "error":
 			// return new NextResponse(null, { status: 500 });
-			return options?.onError?.(authedRequest.error) ?? new NextResponse(null, { status: 500 });
+			return (
+				options?.onError?.(authedRequest.error) ??
+				new NextResponse(null, { status: 500 })
+			);
 	}
 }
 
@@ -160,7 +169,9 @@ async function getLocale(request) {
 
 	const headers = {
 		"accept-language":
-			(await getRequestLocale()) ?? request.headers.get("accept-language") ?? "en-US,en;q=0.5",
+			(await getRequestLocale()) ??
+			request.headers.get("accept-language") ??
+			"en-US,en;q=0.5",
 	};
 	const languages = new Negotiator({ headers }).languages();
 

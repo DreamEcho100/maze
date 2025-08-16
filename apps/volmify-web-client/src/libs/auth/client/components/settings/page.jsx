@@ -10,12 +10,18 @@ import {
 } from "./components";
 
 export default async function AuthSettingsPage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (!session) {
 		return redirect("/auth/login");
 	}
-	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
+	if (
+		user.twoFactorEnabledAt &&
+		user.twoFactorRegisteredAt &&
+		!session.twoFactorVerifiedAt
+	) {
 		return redirect("/auth/2fa");
 	}
 
@@ -53,7 +59,9 @@ export default async function AuthSettingsPage() {
 
 				{recoveryCode && <RecoveryCodeSection recoveryCode={recoveryCode} />}
 
-				<UpdateToggleIsTwoFactorEnabledForm twoFactorEnabledAt={!!user.twoFactorEnabledAt} />
+				<UpdateToggleIsTwoFactorEnabledForm
+					twoFactorEnabledAt={!!user.twoFactorEnabledAt}
+				/>
 			</main>
 		</>
 	);

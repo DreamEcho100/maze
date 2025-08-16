@@ -2,10 +2,20 @@
 	"name": "volmify-web-client",
 	"type": "module",
 	"scripts": {
-		"dev": "vinxi dev",
-		"build": "vinxi build",
-		"start": "vinxi start",
-		"version": "vinxi version"
+		"dev": "pnpm with-env vinxi dev",
+		"build": "pnpm with-env vinxi build",
+		"start": "pnpm with-env vinxi start",
+		"version": "pnpm with-env vinxi version",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"clean": "git clean -xdf .cache .next .turbo node_modules",
+		"typecheck": "tsc --noEmit",
+		"with-env": "dotenv -e ../../.env --",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
 	},
 	"imports": {
 		"#*": "./src/*"
@@ -33,6 +43,8 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vite-plugin-top-level-await": "^1.6.0"

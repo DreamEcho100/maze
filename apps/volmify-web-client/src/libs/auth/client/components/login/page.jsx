@@ -4,7 +4,9 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import { LoginForm } from "./components";
 
 export default async function AuthLoginPage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (session) {
 		if (!user.emailVerifiedAt) {

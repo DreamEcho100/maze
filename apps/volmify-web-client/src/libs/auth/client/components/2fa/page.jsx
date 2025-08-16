@@ -4,7 +4,9 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import { TwoFactorVerificationForm } from "./components";
 
 export default async function AuthTwoFactorVerificationPage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (!session) {
 		return redirect("/auth/login");

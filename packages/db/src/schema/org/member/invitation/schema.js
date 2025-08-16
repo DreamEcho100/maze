@@ -3,7 +3,10 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
@@ -12,19 +15,21 @@ import { orgMemberTableName } from "../_utils/index.js";
 import { orgMemberBaseRoleEnum } from "../schema.js";
 
 const orgMemberInvitationTableName = `${orgMemberTableName}_invitation`;
-export const orgMemberInvitationStatusEnum = pgEnum(`${orgMemberInvitationTableName}_status`, [
-	"pending", // Awaiting response
-	"accepted", // Member joined org
-	"declined", // Invitee declined
-	"cancelled", // Invite cancelled by sender
-	"revoked", // Revoked access before action
-]);
+export const orgMemberInvitationStatusEnum = pgEnum(
+	`${orgMemberInvitationTableName}_status`,
+	[
+		"pending", // Awaiting response
+		"accepted", // Member joined org
+		"declined", // Invitee declined
+		"cancelled", // Invite cancelled by sender
+		"revoked", // Revoked access before action
+	],
+);
 
-export const invitationTypeEnum = pgEnum(`${orgMemberInvitationTableName}_type`, [
-	"learner",
-	"customer",
-	"community_member",
-]);
+export const invitationTypeEnum = pgEnum(
+	`${orgMemberInvitationTableName}_type`,
+	["learner", "customer", "community_member"],
+);
 
 /**
  * Member Invitation Table
@@ -47,7 +52,9 @@ export const orgMemberInvitation = table(
 		// // Course/product access (optional)
 		// grantedCourseAccess: text("granted_course_access").array(),
 
-		invitedByMemberId: orgMemberIdFkCol({ name: "invited_by_member_id" }).notNull(), // Any member can invite customers
+		invitedByMemberId: orgMemberIdFkCol({
+			name: "invited_by_member_id",
+		}).notNull(), // Any member can invite customers
 		status: orgMemberInvitationStatusEnum("status").default("pending"),
 		expiresAt: temporalCols.business.expiresAt().notNull(),
 

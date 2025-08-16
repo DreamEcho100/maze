@@ -16,7 +16,11 @@ import {
 	userProfileIdFkCol,
 	userProfileIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/user-profile-id.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
@@ -196,8 +200,10 @@ export const userProfileOrgMembership = table(
 		}).defaultNow(),
 		endedAt: timestamp("ended_at", { precision: 3, withTimezone: true }),
 
-		affiliationType: userProfileOrgMembershipAffiliationTypeEnum("affiliation_type").notNull(),
-		connectionMethod: userProfileOrgMembershipConnectionMethodEnum("connection_method"),
+		affiliationType:
+			userProfileOrgMembershipAffiliationTypeEnum("affiliation_type").notNull(),
+		connectionMethod:
+			userProfileOrgMembershipConnectionMethodEnum("connection_method"),
 		applicationNotes: text("application_notes"),
 
 		createdAt: temporalCols.audit.createdAt().notNull(),

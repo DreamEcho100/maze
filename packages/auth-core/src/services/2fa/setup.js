@@ -1,6 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
 
-import { SETUP_2FA_MESSAGES_ERRORS, SETUP_2FA_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	SETUP_2FA_MESSAGES_ERRORS,
+	SETUP_2FA_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
 import { setup2FAServiceInputSchema } from "#utils/validations.js";
@@ -38,7 +41,10 @@ export async function setup2FAService(props) {
 		return SETUP_2FA_MESSAGES_ERRORS.TWO_FACTOR_NOT_ENABLED;
 	}
 
-	if (!user.emailVerifiedAt || (user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt)) {
+	if (
+		!user.emailVerifiedAt ||
+		(user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt)
+	) {
 		return SETUP_2FA_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
@@ -62,7 +68,11 @@ export async function setup2FAService(props) {
 			{ data: { key }, where: { userId: user.id } },
 			{
 				tx: props.tx,
-				authProviders: { users: { updateOneTOTPKey: props.authProviders.users.updateOneTOTPKey } },
+				authProviders: {
+					users: {
+						updateOneTOTPKey: props.authProviders.users.updateOneTOTPKey,
+					},
+				},
 			},
 		),
 		props.authProviders.sessions.markOne2FAVerified(

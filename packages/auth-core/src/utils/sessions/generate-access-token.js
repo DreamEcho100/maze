@@ -17,11 +17,18 @@ import { ACCESS_TOKEN_EXPIRES_DURATION } from "./constants.js";
  * }} ctx.authProviders
  */
 export function generateAccessToken(result, ctx) {
-	const { user, session, token: refreshToken, expiresAt: refreshTokenExpiresAt } = result;
+	const {
+		user,
+		session,
+		token: refreshToken,
+		expiresAt: refreshTokenExpiresAt,
+	} = result;
 	const createAccessToken = /** @type {JWTProvider['createRefreshToken']} */ (
 		ctx.authProviders.jwt?.createAccessToken ?? jwtProvider.createAccessToken
 	);
-	const accessTokenExpiresAt = new Date(Date.now() + ACCESS_TOKEN_EXPIRES_DURATION);
+	const accessTokenExpiresAt = new Date(
+		Date.now() + ACCESS_TOKEN_EXPIRES_DURATION,
+	);
 	const accessToken = createAccessToken(
 		{
 			data: {

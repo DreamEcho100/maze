@@ -33,19 +33,24 @@ export function Link({
 		// countryCode: currentCountryCode,
 		locale: currentLocale,
 	} = parsePathname(pathname, { defaultLocale, allowedLocales });
-	const LINK_TYPE: "absolute|external" | "country&locale" | "relative" = useMemo(() => {
-		// If href is already absolute or external, pass it through
-		if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:")) {
-			return "absolute|external";
-		}
+	const LINK_TYPE: "absolute|external" | "country&locale" | "relative" =
+		useMemo(() => {
+			// If href is already absolute or external, pass it through
+			if (
+				href.startsWith("http") ||
+				href.startsWith("mailto:") ||
+				href.startsWith("tel:")
+			) {
+				return "absolute|external";
+			}
 
-		// If href already starts with country and locale, pass it through
-		if (/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
-			return "country&locale";
-		}
+			// If href already starts with country and locale, pass it through
+			if (/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
+				return "country&locale";
+			}
 
-		return "relative";
-	}, [pathname]);
+			return "relative";
+		}, [pathname]);
 
 	if (LINK_TYPE === "absolute|external") {
 		return <NextLink href={href} {...props} />;
@@ -92,7 +97,10 @@ function RelativePathsLink({
 	const fullPath = useMemo(() => {
 		const { defaultLocale, allowedLocales } = useI18n();
 		// For relative paths, need current path context
-		const { restPath } = parsePathname(pathname, { defaultLocale, allowedLocales });
+		const { restPath } = parsePathname(pathname, {
+			defaultLocale,
+			allowedLocales,
+		});
 
 		// Build complete URL
 		// let fullPath = `/${targetCountryCode}/${targetLocale}`;

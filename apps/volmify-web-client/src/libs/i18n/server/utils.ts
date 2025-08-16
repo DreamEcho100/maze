@@ -1,13 +1,26 @@
 import { initI18nSolidStart } from "@de100/i18n-solid-startjs/server/init";
 import { allowedLocales, defaultLocale } from "../constants";
 
-const { getCurrentRequestConfig, getRequestLocale, permanentRedirect, redirect, setRequestLocale } =
-	initI18nSolidStart({
-		allowedLocales: allowedLocales,
-		defaultLocale: defaultLocale,
-	});
+const {
+	getCurrentRequestConfig,
+	getRequestLocale,
+	permanentRedirect,
+	redirect,
+	setRequestLocale,
+} = initI18nSolidStart({
+	allowedLocales: allowedLocales,
+	defaultLocale: defaultLocale,
+});
 
-export { getCurrentRequestConfig, getRequestLocale, permanentRedirect, redirect, setRequestLocale };
+export {
+	getCurrentRequestConfig,
+	getRequestLocale,
+	permanentRedirect,
+	redirect,
+	setRequestLocale,
+};
+
+// TODO: use the [`useSession`](https://docs.solidjs.com/solid-start/advanced/session)
 
 import { getCookie, type HTTPEvent, setCookie } from "vinxi/http";
 import type { AllowedLocale } from "../constants";
@@ -15,7 +28,8 @@ import { isAllowedLocale } from "../is-allowed-locale";
 
 export function getLocaleFromAcceptLanguageHeader(headers: Headers) {
 	// 2. Check Accept-Language header
-	const acceptLanguageHeader = headers.get("accept-language") || headers.get("accept-language");
+	const acceptLanguageHeader =
+		headers.get("accept-language") || headers.get("accept-language");
 
 	if (!acceptLanguageHeader) {
 		return;
@@ -40,7 +54,10 @@ function getForcedLocaleFromCookies(nativeEvent: HTTPEvent) {
 	const cookieLocale = getCookie(nativeEvent, "forced-locale");
 	return cookieLocale;
 }
-export function setLocaleInCookies(nativeEvent: HTTPEvent, locale: AllowedLocale) {
+export function setLocaleInCookies(
+	nativeEvent: HTTPEvent,
+	locale: AllowedLocale,
+) {
 	const [cookieLocale, cookieXLocale] = getLocaleFromCookies(nativeEvent);
 	if (cookieLocale !== locale) {
 		setCookie(nativeEvent, "x-locale", locale, {
@@ -63,7 +80,10 @@ function getLocaleFromHeaders(nativeEvent: HTTPEvent) {
 	const headerXLocale = headers.get("x-locale");
 	return [headerLocale, headerXLocale] as const;
 }
-export function setLocaleInHeaders(nativeEvent: HTTPEvent, locale: AllowedLocale) {
+export function setLocaleInHeaders(
+	nativeEvent: HTTPEvent,
+	locale: AllowedLocale,
+) {
 	const headers = nativeEvent.headers;
 	const [headerLocale, headerXLocale] = getLocaleFromHeaders(nativeEvent);
 	if (headerLocale !== locale) {
@@ -73,58 +93,117 @@ export function setLocaleInHeaders(nativeEvent: HTTPEvent, locale: AllowedLocale
 		headers.set("x-locale", locale);
 	}
 }
-// Server-side locale detection
-export function getServerLocale({
-	nativeEvent,
-	headers,
-	pathname,
-}: {
+
+type LocaleSource =
+	| "pathname"
+	| "cookies"
+	| "headers"
+	| "accept-language"
+	| "default";
+
+const localeDeterminationStrategies: ((props: {
 	nativeEvent: HTTPEvent;
 	headers: Headers;
 	pathname: string;
-}) {
-	let foundLocale: AllowedLocale | undefined;
-	let localeSource: "pathname" | "cookies" | "headers" | "accept-language" | undefined;
-
-	const forcedLocaleFromCookies = getForcedLocaleFromCookies(nativeEvent);
-	if (forcedLocaleFromCookies && isAllowedLocale(forcedLocaleFromCookies)) {
-		localeSource = "cookies";
-		foundLocale = forcedLocaleFromCookies;
-	}
-
-	if (!foundLocale && pathname) {
-		const pathLocale = pathname.split("/")[1] as AllowedLocale;
-		if (isAllowedLocale(pathLocale)) {
-			localeSource = "pathname";
-			foundLocale = pathLocale;
+}) =>
+	| {
+			localeSource: Exclude<LocaleSource, "default">;
+			foundLocale: AllowedLocale;
+			shouldSetCookie: boolean;
+	  }
+	| undefined)[] = [
+	(props) => {
+		const forcedLocaleFromCookies = getForcedLocaleFromCookies(
+			props.nativeEvent,
+		);
+		if (forcedLocaleFromCookies && isAllowedLocale(forcedLocaleFromCookies)) {
+			return {
+				localeSource: "cookies",
+				foundLocale: forcedLocaleFromCookies,
+				shouldSetCookie: false,
+			};
 		}
-	}
-
-	if (!foundLocale) {
-		const cookiesLocales = getLocaleFromCookies(nativeEvent);
+	},
+	(props) => {
+		if (!props.pathname) {
+			return;
+		}
+		const pathLocale = props.pathname.split("/")[1] as AllowedLocale;
+		if (isAllowedLocale(pathLocale)) {
+			return {
+				localeSource: "pathname",
+				foundLocale: pathLocale,
+				shouldSetCookie: true,
+			};
+		}
+	},
+	(props) => {
+		const cookiesLocales = getLocaleFromCookies(props.nativeEvent);
 		const cookieLocale = cookiesLocales[0] ?? cookiesLocales[1];
 		if (cookieLocale && isAllowedLocale(cookieLocale)) {
-			localeSource = "cookies";
-			foundLocale = cookieLocale;
+			return {
+				localeSource: "cookies",
+				foundLocale: cookieLocale,
+				shouldSetCookie: true,
+			};
 		}
-	}
-
-	if (!foundLocale) {
-		const headersLocales = getLocaleFromHeaders(nativeEvent);
+	},
+	(props) => {
+		const headersLocales = getLocaleFromHeaders(props.nativeEvent);
 		const headerLocale = headersLocales[0] ?? headersLocales[1];
 		if (headerLocale && isAllowedLocale(headerLocale)) {
-			localeSource = "headers";
-			foundLocale = headerLocale;
+			return {
+				localeSource: "headers",
+				foundLocale: headerLocale,
+				shouldSetCookie: true,
+			};
 		}
-	}
-
-	if (!foundLocale) {
-		const acceptLanguageLocale = getLocaleFromAcceptLanguageHeader(headers);
+	},
+	(props) => {
+		const headersLocales = getLocaleFromHeaders(props.nativeEvent);
+		const headerLocale = headersLocales[0] ?? headersLocales[1];
+		if (headerLocale && isAllowedLocale(headerLocale)) {
+			return {
+				localeSource: "headers",
+				foundLocale: headerLocale,
+				shouldSetCookie: true,
+			};
+		}
+	},
+	(props) => {
+		const acceptLanguageLocale = getLocaleFromAcceptLanguageHeader(
+			props.headers,
+		);
 		if (acceptLanguageLocale) {
-			localeSource = "accept-language";
-			foundLocale = acceptLanguageLocale;
+			return {
+				localeSource: "accept-language",
+				foundLocale: acceptLanguageLocale,
+				shouldSetCookie: true,
+			};
+		}
+	},
+];
+
+// Server-side locale detection
+export function getServerLocale(props: {
+	nativeEvent: HTTPEvent;
+	headers: Headers;
+	pathname: string;
+}): {
+	foundLocale: AllowedLocale;
+	localeSource: LocaleSource;
+	shouldSetCookie: boolean;
+} {
+	for (const localeDeterminationStrategy of localeDeterminationStrategies) {
+		const result = localeDeterminationStrategy(props);
+		if (result) {
+			return result;
 		}
 	}
 
-	return { foundLocale, localeSource };
+	return {
+		foundLocale: defaultLocale,
+		localeSource: "default",
+		shouldSetCookie: true,
+	};
 }

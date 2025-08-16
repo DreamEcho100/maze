@@ -8,12 +8,19 @@ import {
 	localeKeyFkCol,
 	localeKeyFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/locale-key.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";

@@ -35,7 +35,8 @@ export async function adminUpdatePasswordService(props) {
 	}
 
 	const strongPassword = await verifyPasswordStrength(props.input.newPassword);
-	if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+	if (!strongPassword)
+		return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
 	const updatedUser = await updateUserPassword(
 		{
@@ -43,7 +44,11 @@ export async function adminUpdatePasswordService(props) {
 			where: { id: props.input.userId },
 		},
 		{
-			authProviders: { users: { updateOnePassword: props.authProviders.users.updateOnePassword } },
+			authProviders: {
+				users: {
+					updateOnePassword: props.authProviders.users.updateOnePassword,
+				},
+			},
 		},
 	);
 

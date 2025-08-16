@@ -6,7 +6,10 @@ import {
 	orgMemberProductCourseChallengeRating,
 	orgMemberProductCourseEnrollment,
 } from "../product/by-type/course/schema.js";
-import { orgMemberGiftCardUsage, orgMemberOrderDiscountUsage } from "../product/offers/schema.js";
+import {
+	orgMemberGiftCardUsage,
+	orgMemberOrderDiscountUsage,
+} from "../product/offers/schema.js";
 import { orgMemberOrder } from "../product/orders/schema.js";
 import { orgMemberProductVariantPaymentPlanSubscription } from "../product/payment/schema.js";
 import { org } from "../schema.js";
@@ -23,7 +26,9 @@ export const orgMemberRelations = relations(orgMember, ({ one, many }) => ({
 		fields: [orgMember.id],
 		references: [orgEmployee.memberId],
 	}),
-	productsVariantsPaymentPlansSubscriptions: many(orgMemberProductVariantPaymentPlanSubscription),
+	productsVariantsPaymentPlansSubscriptions: many(
+		orgMemberProductVariantPaymentPlanSubscription,
+	),
 	ordersDiscountsUsages: many(orgMemberOrderDiscountUsage),
 	ordersDiscountsUsage: many(orgMemberOrderDiscountUsage),
 	giftCardsUsage: many(orgMemberGiftCardUsage),

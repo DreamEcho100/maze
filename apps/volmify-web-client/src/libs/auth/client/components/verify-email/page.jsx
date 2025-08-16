@@ -4,7 +4,10 @@ import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { getCookiesManager } from "#libs/auth/server/utils.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components";
+import {
+	EmailVerificationForm,
+	ResendEmailVerificationCodeForm,
+} from "./components";
 
 export default async function AuthVerifyEmailPage() {
 	const { user } = await getCurrentSession({ canMutateCookies: false });
@@ -30,7 +33,9 @@ export default async function AuthVerifyEmailPage() {
 	return (
 		<>
 			<h1>Verify your email address</h1>
-			<p>We sent an 8-digit code to {verificationRequest?.email ?? user.email}.</p>
+			<p>
+				We sent an 8-digit code to {verificationRequest?.email ?? user.email}.
+			</p>
 			<EmailVerificationForm />
 			<ResendEmailVerificationCodeForm />
 			<Link href="/settings">Change your email</Link>

@@ -1,5 +1,9 @@
 import { isDefinedError } from "@orpc/client";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/solid-query";
 import { orpc } from "#libs/orpc";
 
 const query = useInfiniteQuery(() =>

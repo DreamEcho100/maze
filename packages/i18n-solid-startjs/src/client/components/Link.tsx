@@ -28,7 +28,11 @@ export function Link(
 	const linkType = createMemo(() => {
 		const href = props.href;
 		// If href is already absolute or external, pass it through
-		if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+		if (
+			href.startsWith("http") ||
+			href.startsWith("mailto:") ||
+			href.startsWith("tel:")
+		) {
 			return "absolute|external";
 		}
 

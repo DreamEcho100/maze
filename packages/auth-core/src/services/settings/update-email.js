@@ -1,6 +1,9 @@
 /** @import { MultiErrorSingleSuccessResponse, UsersProvider, UserEmailVerificationRequestsProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts" */
 
-import { UPDATE_EMAIL_MESSAGES_ERRORS, UPDATE_EMAIL_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	UPDATE_EMAIL_MESSAGES_ERRORS,
+	UPDATE_EMAIL_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
 	sendVerificationEmail,
@@ -39,13 +42,19 @@ export async function updateEmailService(props) {
 
 	const { session, user } = props;
 
-	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
+	if (
+		user.twoFactorEnabledAt &&
+		user.twoFactorRegisteredAt &&
+		!session.twoFactorVerifiedAt
+	) {
 		return UPDATE_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;
 	}
 
 	// const emailAvailable = await getUserByEmailRepository(validatedEmail);
-	const emailAvailable = await props.authProviders.users.findOneByEmail(validatedEmail);
-	if (emailAvailable) return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
+	const emailAvailable =
+		await props.authProviders.users.findOneByEmail(validatedEmail);
+	if (emailAvailable)
+		return UPDATE_EMAIL_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
 
 	const verificationRequest = await createEmailVerificationRequest(
 		{
@@ -54,13 +63,18 @@ export async function updateEmailService(props) {
 		{
 			authProviders: {
 				userEmailVerificationRequests: {
-					createOne: props.authProviders.userEmailVerificationRequests.createOne,
-					deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+					createOne:
+						props.authProviders.userEmailVerificationRequests.createOne,
+					deleteOneByUserId:
+						props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 				},
 			},
 		},
 	);
-	await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
+	await sendVerificationEmail(
+		verificationRequest.email,
+		verificationRequest.code,
+	);
 	setEmailVerificationRequestCookie({
 		request: verificationRequest,
 		cookies: props.cookies,

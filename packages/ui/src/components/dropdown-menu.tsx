@@ -148,7 +148,11 @@ function DropdownMenuLabel({
 	return (
 		<DropdownMenuPrimitive.Label
 			{...props}
-			className={cn("px-2 py-1.5 text-sm font-semibold", inset && "pl-8", className)}
+			className={cn(
+				"px-2 py-1.5 text-sm font-semibold",
+				inset && "pl-8",
+				className,
+			)}
 		/>
 	);
 }
@@ -165,9 +169,15 @@ function DropdownMenuSeparator({
 	);
 }
 
-const DropdownMenuShortcut = ({ className, ...props }: HTMLAttributes<HTMLSpanElement>) => {
+const DropdownMenuShortcut = ({
+	className,
+	...props
+}: HTMLAttributes<HTMLSpanElement>) => {
 	return (
-		<span {...props} className={cn("ml-auto text-xs tracking-widest opacity-60", className)} />
+		<span
+			{...props}
+			className={cn("ml-auto text-xs tracking-widest opacity-60", className)}
+		/>
 	);
 };
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut";

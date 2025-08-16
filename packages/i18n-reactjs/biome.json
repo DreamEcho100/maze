@@ -1,7 +1,8 @@
 {
-	"extends": ["../../biome.json"],
+	"root": false,
+	"extends": ["@de100/biome-config/base.json"],
 	"files": {
-		"includes": ["!dist/**"]
+		"includes": ["!dist", "!**/_ignore"]
 	},
 	"linter": {
 		"domains": {

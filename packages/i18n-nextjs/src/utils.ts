@@ -11,7 +11,12 @@ export function buildUrl({
 	baseUrl = "",
 }: {
 	pathname: string;
-	query?: string | URLSearchParams | Record<string, string> | string[][] | undefined;
+	query?:
+		| string
+		| URLSearchParams
+		| Record<string, string>
+		| string[][]
+		| undefined;
 	params?: Record<ParamKey, ParamValue>;
 	baseUrl?: string;
 }) {
@@ -31,13 +36,19 @@ export function buildUrl({
 		// Handle [...param] (catch-all routes)
 		const catchAllPattern = new RegExp(`\\[\\.\\.\\.${key}\\]`, "g");
 		if (Array.isArray(value)) {
-			constructedPath = constructedPath.replace(catchAllPattern, value.join("/"));
+			constructedPath = constructedPath.replace(
+				catchAllPattern,
+				value.join("/"),
+			);
 		} else if (typeof value === "string") {
 			constructedPath = constructedPath.replace(catchAllPattern, value);
 		}
 
 		// Handle [[...param]] (optional catch-all routes)
-		const optionalCatchAllPattern = new RegExp(`\\[\\[\\.\\.\\.${key}\\]\\]`, "g");
+		const optionalCatchAllPattern = new RegExp(
+			`\\[\\[\\.\\.\\.${key}\\]\\]`,
+			"g",
+		);
 		if (Array.isArray(value)) {
 			constructedPath = constructedPath.replace(
 				optionalCatchAllPattern,
@@ -107,7 +118,8 @@ export function getPathname(
 		locale?: string;
 	},
 ) {
-	const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+	const currentPath =
+		typeof window !== "undefined" ? window.location.pathname : "";
 	const {
 		// countryCode: currentCountryCode,
 		locale: currentLocale,

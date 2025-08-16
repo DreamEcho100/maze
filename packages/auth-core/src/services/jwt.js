@@ -9,7 +9,9 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		const secret = options.secret ?? JWT_SECRET;
 
 		if (!secret) {
-			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
+			throw new Error(
+				"JWT secret is not set. Please configure JWT_SECRET environment variable.",
+			);
 		}
 
 		return jwt.sign({ payload }, secret, {
@@ -25,7 +27,9 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		const secret = options.secret ?? JWT_SECRET;
 
 		if (!secret) {
-			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
+			throw new Error(
+				"JWT secret is not set. Please configure JWT_SECRET environment variable.",
+			);
 		}
 
 		return jwt.sign({ payload }, secret, {
@@ -39,7 +43,9 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		const secret = options.secret ?? JWT_SECRET;
 
 		if (!secret) {
-			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
+			throw new Error(
+				"JWT secret is not set. Please configure JWT_SECRET environment variable.",
+			);
 		}
 		try {
 			return jwt.verify(token, secret, {
@@ -60,7 +66,9 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 		const secret = options.secret ?? JWT_SECRET;
 
 		if (!secret) {
-			throw new Error("JWT secret is not set. Please configure JWT_SECRET environment variable.");
+			throw new Error(
+				"JWT secret is not set. Please configure JWT_SECRET environment variable.",
+			);
 		}
 		try {
 			return jwt.verify(token, secret, {

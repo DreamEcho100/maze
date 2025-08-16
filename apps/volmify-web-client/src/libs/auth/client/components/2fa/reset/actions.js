@@ -1,7 +1,10 @@
 "use server";
 
 import { reset2FAService } from "@de100/auth-core/services/2fa/reset";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	getOneUserRecoveryCodeRaw,
 	unMarkOneSession2FAForUser,

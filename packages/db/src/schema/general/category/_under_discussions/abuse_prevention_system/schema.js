@@ -1,13 +1,20 @@
 import { pgEnum } from "drizzle-orm/pg-core";
 import { numericCols } from "#schema/_utils/cols/numeric.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	userIdFkCol,
 	userIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";
-import { compositePrimaryKey, multiForeignKeys, multiIndexes } from "#schema/_utils/helpers.js";
+import {
+	compositePrimaryKey,
+	multiForeignKeys,
+	multiIndexes,
+} from "#schema/_utils/helpers.js";
 import { table } from "#schema/_utils/tables.js";
 import { category } from "../../schema.js";
 
@@ -124,9 +131,13 @@ export const orgCategoryQuota = table(
 		orgId: orgIdFkCol().notNull().primaryKey(),
 		// Rate limiting configuration
 		/** Maximum categories that can be created per day */
-		maxCategoriesPerDay: numericCols.limit("max_categories_per_day").default(10),
+		maxCategoriesPerDay: numericCols
+			.limit("max_categories_per_day")
+			.default(10),
 		/** Maximum categories that can be created per month */
-		maxCategoriesPerMonth: numericCols.limit("max_categories_per_month").default(100),
+		maxCategoriesPerMonth: numericCols
+			.limit("max_categories_per_month")
+			.default(100),
 		// Hierarchy limits to prevent performance issues
 		/** Maximum hierarchy depth allowed */
 		maxDepth: numericCols.depth("max_depth").default(6),
@@ -183,13 +194,19 @@ export const orgCategoryUsageTracking = table(
 		trackingDate: temporalCols.date("tracking_date").notNull(),
 		// Usage counters
 		/** Categories created today */
-		categoriesCreatedToday: numericCols.count("categories_created_today").default(0),
+		categoriesCreatedToday: numericCols
+			.count("categories_created_today")
+			.default(0),
 		/** Categories created this month */
-		categoriesCreatedThisMonth: numericCols.count("categories_created_this_month").default(0),
+		categoriesCreatedThisMonth: numericCols
+			.count("categories_created_this_month")
+			.default(0),
 		/** Current maximum depth in use */
 		currentMaxDepth: numericCols.depth("current_max_depth").default(0),
 		/** Relationships created today */
-		relationshipsCreatedToday: numericCols.count("relationships_created_today").default(0),
+		relationshipsCreatedToday: numericCols
+			.count("relationships_created_today")
+			.default(0),
 		// Audit trail
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt().notNull(),
 	},

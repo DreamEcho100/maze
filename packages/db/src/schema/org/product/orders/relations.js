@@ -20,33 +20,36 @@ import {
  * @businessContext Complete order relationship mapping for e-commerce workflows
  * enabling customer service, financial reporting, and creator economy revenue tracking
  */
-export const orgMemberProductOrderRelations = relations(orgMemberOrder, ({ one, many }) => ({
-	/**
-	 * @multiTenant Organization context for order processing
-	 */
-	org: one(org, {
-		fields: [orgMemberOrder.orgId],
-		references: [org.id],
+export const orgMemberProductOrderRelations = relations(
+	orgMemberOrder,
+	({ one, many }) => ({
+		/**
+		 * @multiTenant Organization context for order processing
+		 */
+		org: one(org, {
+			fields: [orgMemberOrder.orgId],
+			references: [org.id],
+		}),
+
+		/**
+		 * @customerIdentity Member who placed the order
+		 */
+		member: one(orgMember, {
+			fields: [orgMemberOrder.memberId],
+			references: [orgMember.id],
+		}),
+
+		/**
+		 * @orderDetails Line items and discount applications
+		 */
+		items: many(orgMemberOrderItem),
+		discountApplications: many(orgMemberOrderDiscount),
+
+		taxCalculations: many(orgMemberOrderTaxCalculation),
+		paymentDetails: many(orgMemberOrderPayment),
+		accountTransactions: many(accountTransaction),
 	}),
-
-	/**
-	 * @customerIdentity Member who placed the order
-	 */
-	member: one(orgMember, {
-		fields: [orgMemberOrder.memberId],
-		references: [orgMember.id],
-	}),
-
-	/**
-	 * @orderDetails Line items and discount applications
-	 */
-	items: many(orgMemberOrderItem),
-	discountApplications: many(orgMemberOrderDiscount),
-
-	taxCalculations: many(orgMemberOrderTaxCalculation),
-	paymentDetails: many(orgMemberOrderPayment),
-	accountTransactions: many(accountTransaction),
-}));
+);
 
 export const orgMemberProductOrderItemRelations = relations(
 	orgMemberOrderItem,

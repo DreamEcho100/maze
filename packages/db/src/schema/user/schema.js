@@ -1,7 +1,10 @@
 /** @import { UserAgent } from "@de100/auth-core/types" */
 
 import { jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
-import { userIdFkCol, userIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/user-id.js";
+import {
+	userIdFkCol,
+	userIdFkExtraConfig,
+} from "../_utils/cols/shared/foreign-keys/user-id.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
 import { bytea } from "../_utils/custom-fields.js";
@@ -27,7 +30,9 @@ export const user = table(
 		twoFactorEnabledAt: timestamp("two_factor_enabled_at", { precision: 3 }),
 		totpKey: bytea("totp_key"),
 		recoveryCode: bytea("recovery_code"),
-		twoFactorRegisteredAt: timestamp("two_factor_registered_at", { precision: 3 }),
+		twoFactorRegisteredAt: timestamp("two_factor_registered_at", {
+			precision: 3,
+		}),
 	},
 	(cols) => [
 		...multiIndexes({
@@ -59,12 +64,17 @@ export const userSession = table(
 		lastVerifiedAt: timestamp("last_verified_at", { precision: 3 }).notNull(),
 		lastExtendedAt: timestamp("last_extended_at", { precision: 3 }),
 		ipAddress: varchar("ip_address", { length: 45 }),
-		userAgent: /** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (userAgentJsonb),
+		userAgent:
+			/** @type {ReturnType<typeof userAgentJsonb.$type<UserAgent>>} */ (
+				userAgentJsonb
+			),
 		userId: userIdFkCol().notNull(),
 		twoFactorVerifiedAt: timestamp("two_factor_verified_at", { precision: 3 }),
 
 		//
-		authStrategy: varchar("auth_strategy", { length: 50 }).notNull().default("jwt"), // 'session' | 'refresh_token'
+		authStrategy: varchar("auth_strategy", { length: 50 })
+			.notNull()
+			.default("jwt"), // 'session' | 'refresh_token'
 		revokedAt: timestamp("revoked_at", { withTimezone: true }), // For token revocation
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }), // For refresh token tracking
 		// metadata: /** @type {ReturnType<typeof sessionMetadataJsonb.$type<Record<string, any>>>} */ (
@@ -116,7 +126,11 @@ export const userEmailVerificationRequest = table(
 		}),
 		...multiIndexes({
 			tName: userEmailVerificationTableName,
-			colsGrps: [{ cols: [cols.createdAt] }, { cols: [cols.expiresAt] }, { cols: [cols.email] }],
+			colsGrps: [
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.expiresAt] },
+				{ cols: [cols.email] },
+			],
 		}),
 	],
 );

@@ -1,6 +1,10 @@
 import { boolean, integer, text } from "drizzle-orm/pg-core";
 import { currencyCodeFkCol } from "#schema/_utils/cols/shared/foreign-keys/currency-code.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { numericCols } from "../../_utils/cols/numeric.js";
 import { sharedCols } from "../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../_utils/cols/temporal.js";
@@ -243,8 +247,12 @@ export const exchangeRate = table(
 	exchangeRateTableName,
 	{
 		id: textCols.idPk(),
-		baseCurrencyCode: currencyCodeFkCol({ name: "base_currency_code" }).notNull(),
-		targetCurrencyCode: currencyCodeFkCol({ name: "target_currency_code" }).notNull(),
+		baseCurrencyCode: currencyCodeFkCol({
+			name: "base_currency_code",
+		}).notNull(),
+		targetCurrencyCode: currencyCodeFkCol({
+			name: "target_currency_code",
+		}).notNull(),
 		rate: numericCols.exchangeRate.rate().notNull(),
 		source: textCols.source(), // e.g., "ECB", "manual"
 		validFrom: temporalCols.financial.validFrom().notNull(),

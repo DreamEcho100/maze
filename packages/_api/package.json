@@ -28,6 +28,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	}

@@ -14,13 +14,17 @@
 			"cache": false,
 			"persistent": false
 		},
-		"format": {
-			"outputs": [".cache/.biomeformatcache"],
+		"format:fix": {
+			"outputs": [".cache/.biomeformatcheckcache.json"],
+			"outputLogs": "new-only"
+		},
+		"format:check": {
+			"outputs": [".cache/.biomeformatcheckcache.json"],
 			"outputLogs": "new-only"
 		},
 		"lint": {
 			"dependsOn": ["^topo", "^build"],
-			"outputs": [".cache/.biomelintcache"]
+			"outputs": [".cache/.biomelintcache.json"]
 		},
 		"typecheck": {
 			"dependsOn": ["^topo", "^build"],

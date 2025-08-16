@@ -2,12 +2,22 @@
 
 import type { Label as LabelPrimitive } from "radix-ui";
 import type { ComponentProps, HTMLAttributes } from "react";
-import type { ControllerProps, FieldPath, FieldValues, UseFormProps } from "react-hook-form";
+import type {
+	ControllerProps,
+	FieldPath,
+	FieldValues,
+	UseFormProps,
+} from "react-hook-form";
 import type { ZodType } from "zod/v4";
 import { createContext, useContext, useId } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Slot } from "radix-ui";
-import { useForm as __useForm, Controller, FormProvider, useFormContext } from "react-hook-form";
+import {
+	useForm as __useForm,
+	Controller,
+	FormProvider,
+	useFormContext,
+} from "react-hook-form";
 
 import { cn } from "#libs/utils";
 import { Label } from "./label";
@@ -77,7 +87,9 @@ interface FormItemContextValue {
 	id: string;
 }
 
-const FormItemContext = createContext<FormItemContextValue>({} as FormItemContextValue);
+const FormItemContext = createContext<FormItemContextValue>(
+	{} as FormItemContextValue,
+);
 
 function FormItem({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 	const id = useId();
@@ -89,34 +101,59 @@ function FormItem({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 	);
 }
 
-function FormLabel({ className, ...props }: ComponentProps<typeof LabelPrimitive.Root>) {
+function FormLabel({
+	className,
+	...props
+}: ComponentProps<typeof LabelPrimitive.Root>) {
 	const { error, formItemId } = useFormField();
 
 	return (
-		<Label className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />
+		<Label
+			className={cn(error && "text-destructive", className)}
+			htmlFor={formItemId}
+			{...props}
+		/>
 	);
 }
 
 function FormControl({ ...props }: ComponentProps<typeof Slot.Slot>) {
-	const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+	const { error, formItemId, formDescriptionId, formMessageId } =
+		useFormField();
 
 	return (
 		<Slot.Slot
 			id={formItemId}
-			aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+			aria-describedby={
+				!error
+					? `${formDescriptionId}`
+					: `${formDescriptionId} ${formMessageId}`
+			}
 			aria-invalid={!!error}
 			{...props}
 		/>
 	);
 }
 
-function FormDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
+function FormDescription({
+	className,
+	...props
+}: HTMLAttributes<HTMLParagraphElement>) {
 	const { formDescriptionId } = useFormField();
 
-	return <p id={formDescriptionId} className={cn("bg-red-500", className)} {...props} />;
+	return (
+		<p
+			id={formDescriptionId}
+			className={cn("bg-red-500", className)}
+			{...props}
+		/>
+	);
 }
 
-function FormMessage({ className, children, ...props }: HTMLAttributes<HTMLParagraphElement>) {
+function FormMessage({
+	className,
+	children,
+	...props
+}: HTMLAttributes<HTMLParagraphElement>) {
 	const { error, formMessageId } = useFormField();
 	const body = error ? String(error.message) : children;
 

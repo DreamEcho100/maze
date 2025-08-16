@@ -6,7 +6,8 @@ export function ListPlanetsQuery() {
 	const query = useInfiniteQuery(() =>
 		orpc.planet.list.infiniteOptions({
 			input: (cursor) => ({ cursor, limit: 10 }),
-			getNextPageParam: (lastPage) => (lastPage.length === 10 ? lastPage.at(-1)?.id : null),
+			getNextPageParam: (lastPage) =>
+				lastPage.length === 10 ? lastPage.at(-1)?.id : null,
 			initialPageParam: 0,
 		}),
 	);

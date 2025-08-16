@@ -6,7 +6,9 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import { TwoFactorSetUpForm } from "./components";
 
 export default async function AuthTwoFactorSetUpPage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (!session) {
 		return redirect("/auth/login");
@@ -26,6 +28,7 @@ export default async function AuthTwoFactorSetUpPage() {
 	const totpKey = new Uint8Array(20);
 	crypto.getRandomValues(totpKey);
 	const encodedTOTPKey = encodeBase64(totpKey);
+	// Q: Should `DOMPurify` be used here to sanitize the URI?
 	const keyURI = createTOTPKeyURI("Demo", user.name, totpKey, 30, 6);
 	const qrcode = renderSVG(keyURI);
 	return (

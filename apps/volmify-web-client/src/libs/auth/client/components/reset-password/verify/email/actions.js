@@ -1,7 +1,10 @@
 "use server";
 
 import { verifyPasswordResetEmailVerificationService } from "@de100/auth-core/services/reset-password/verify/email";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	deleteOnePasswordResetSession,
 	findOnePasswordResetSessionWithUser,

@@ -1,6 +1,9 @@
 /** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider, DynamicCookiesOptions } from "#types.ts" */
 
-import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	LOGIN_MESSAGES_ERRORS,
+	LOGIN_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
 import { createAuthSession } from "#utils/sessions/index.js";
 import { loginServiceInputSchema } from "#utils/validations.js";
@@ -47,12 +50,17 @@ export async function loginUserService(props) {
 	if (!user) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
-	const passwordHash = await props.authProviders.users.getOnePasswordHash(user.id);
+	const passwordHash = await props.authProviders.users.getOnePasswordHash(
+		user.id,
+	);
 	if (!passwordHash) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
 	}
 
-	const validPassword = await verifyPasswordHash(passwordHash, input.data.password);
+	const validPassword = await verifyPasswordHash(
+		passwordHash,
+		input.data.password,
+	);
 	if (!validPassword) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}

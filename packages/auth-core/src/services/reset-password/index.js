@@ -52,15 +52,17 @@ export async function resetPasswordService(props) {
 
 	const { password } = input.data;
 
-	const { session: passwordResetSession } = await validatePasswordResetSessionRequest({
-		cookies: props.cookies,
-		authProviders: {
-			passwordResetSession: {
-				deleteOne: props.authProviders.passwordResetSession.deleteOne,
-				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
+	const { session: passwordResetSession } =
+		await validatePasswordResetSessionRequest({
+			cookies: props.cookies,
+			authProviders: {
+				passwordResetSession: {
+					deleteOne: props.authProviders.passwordResetSession.deleteOne,
+					findOneWithUser:
+						props.authProviders.passwordResetSession.findOneWithUser,
+				},
 			},
-		},
-	});
+		});
 
 	if (!passwordResetSession) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
@@ -104,7 +106,9 @@ export async function resetPasswordService(props) {
 			{
 				tx: props.tx,
 				authProviders: {
-					users: { updateOnePassword: props.authProviders.users.updateOnePassword },
+					users: {
+						updateOnePassword: props.authProviders.users.updateOnePassword,
+					},
 				},
 			},
 		),

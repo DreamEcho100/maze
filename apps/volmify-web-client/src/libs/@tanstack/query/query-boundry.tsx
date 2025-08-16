@@ -46,6 +46,7 @@ export function QueryBoundary<T>(props: QueryBoundaryProps<T>) {
 							<div class="error">{err.message}</div>
 							<button
 								type="button"
+								disabled={props.query.isRefetching || props.query.isSuccess}
 								onClick={async () => {
 									await props.query.refetch();
 									reset();
@@ -76,11 +77,17 @@ export function QueryBoundary<T>(props: QueryBoundaryProps<T>) {
           </Match> */}
 
 					<Match when={!props.query.isFetching && !props.query.data}>
-						{props.notFoundFallback ? props.notFoundFallback : <div>not found</div>}
+						{props.notFoundFallback ? (
+							props.notFoundFallback
+						) : (
+							<div>not found</div>
+						)}
 					</Match>
 
 					<Match when={props.query.data}>
-						{props.children(props.query.data as Exclude<T, null | false | undefined>)}
+						{props.children(
+							props.query.data as Exclude<T, null | false | undefined>,
+						)}
 					</Match>
 				</Switch>
 			</ErrorBoundary>

@@ -111,7 +111,8 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 /*************** ***************/
 export const createOneIdSync = ulid;
 /** @returns {Promise<string>} */
-export const createOneIdAsync = async () => new Promise((resolve) => resolve(ulid()));
+export const createOneIdAsync = async () =>
+	new Promise((resolve) => resolve(ulid()));
 
 /** @type {AuthStrategy} */
 // @ts-expect-error
@@ -134,7 +135,9 @@ export const createOneUser = async (values) => {
 			name: values.name,
 			displayName: values.displayName, // Add displayName, fallback to name or empty string
 			passwordHash: values.passwordHash,
-			recoveryCode: values.encryptedRecoveryCode ? Buffer.from(values.encryptedRecoveryCode) : null, // Buffer.from(encryptedRecoveryCode),
+			recoveryCode: values.encryptedRecoveryCode
+				? Buffer.from(values.encryptedRecoveryCode)
+				: null, // Buffer.from(encryptedRecoveryCode),
 			emailVerifiedAt: null, // Default value as unverified
 			createdAt,
 			lastUpdatedAt: createdAt,
@@ -172,12 +175,16 @@ export const getOneUserRecoveryCode = async (userId) => {
 		.select({ recoveryCode: dbSchema.user.recoveryCode })
 		.from(dbSchema.user)
 		.where(eq(dbSchema.user.id, userId))
-		.then((result) => (result[0]?.recoveryCode ? decryptToString(result[0].recoveryCode) : null));
+		.then((result) =>
+			result[0]?.recoveryCode ? decryptToString(result[0].recoveryCode) : null,
+		);
 };
 /** @type {UsersProvider['getOneRecoveryCodeRaw']} */
 export const getOneUserRecoveryCodeRaw = async (userId, tx) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (tx) ?? db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			tx
+		) ?? db;
 	return _db
 		.select({ recoveryCode: dbSchema.user.recoveryCode })
 		.from(dbSchema.user)
@@ -187,8 +194,9 @@ export const getOneUserRecoveryCodeRaw = async (userId, tx) => {
 /** @type {UsersProvider['updateOneEmailAndVerify']} */
 export const updateOneUserEmailAndVerify = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.user)
 		.set({
@@ -206,8 +214,12 @@ export const updateOneUser2FAEnabled = async (data, where) => {
 		.update(dbSchema.user)
 		.set({
 			twoFactorEnabledAt:
-				data.twoFactorEnabledAt == null ? null : dateLikeToDate(data.twoFactorEnabledAt),
-			recoveryCode: data.recoveryCode ? Buffer.from(data.recoveryCode) : undefined,
+				data.twoFactorEnabledAt == null
+					? null
+					: dateLikeToDate(data.twoFactorEnabledAt),
+			recoveryCode: data.recoveryCode
+				? Buffer.from(data.recoveryCode)
+				: undefined,
 			totpKey: !data.twoFactorEnabledAt ? null : undefined,
 			// Is the following needed?
 			// twoFactorRegisteredAt: data.twoFactorEnabledAt ? new Date() : null,
@@ -220,8 +232,9 @@ export const updateOneUser2FAEnabled = async (data, where) => {
 /** @type {UsersProvider['updateOnePassword']} */
 export const updateOneUserPassword = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.user)
 		.set({
@@ -233,7 +246,10 @@ export const updateOneUserPassword = async (props, options) => {
 		.then((result) => result[0] ?? null);
 };
 /** @type {UsersProvider['updateOneRecoveryCode']} */
-export const updateOneUserRecoveryCode = async (userId, encryptedRecoveryCode) => {
+export const updateOneUserRecoveryCode = async (
+	userId,
+	encryptedRecoveryCode,
+) => {
 	return db
 		.update(dbSchema.user)
 		.set({
@@ -252,7 +268,9 @@ export const updateOneUserRecoveryCodeById = async (
 	tx,
 ) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (tx) ?? db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			tx
+		) ?? db;
 	return _db
 		.update(dbSchema.user)
 		.set({
@@ -260,15 +278,21 @@ export const updateOneUserRecoveryCodeById = async (
 			totpKey: null,
 			lastUpdatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.user.id, userId), eq(dbSchema.user.recoveryCode, userRecoveryCode)))
+		.where(
+			and(
+				eq(dbSchema.user.id, userId),
+				eq(dbSchema.user.recoveryCode, userRecoveryCode),
+			),
+		)
 		.returning({ recoveryCode: dbSchema.user.recoveryCode })
 		.then((result) => result[0]?.recoveryCode ?? null);
 };
 /** @type {UsersProvider['updateOneTOTPKey']} */
 export const updateOneUserTOTPKey = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.user)
 		.set({
@@ -285,15 +309,21 @@ export const updateOneUserTOTPKey = async (props, options) => {
 /** @type {UsersProvider['verifyOneEmailIfMatches']} */
 export const verifyOneUserEmailIfMatches = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.user)
 		.set({
 			emailVerifiedAt: new Date(),
 			lastUpdatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.user.id, props.where.id), eq(dbSchema.user.email, props.where.email)))
+		.where(
+			and(
+				eq(dbSchema.user.id, props.where.id),
+				eq(dbSchema.user.email, props.where.email),
+			),
+		)
 		.returning(userReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
@@ -328,8 +358,12 @@ export const createOneSession = async (props) => {
 				twoFactorVerifiedAt: props.data.twoFactorVerifiedAt
 					? dateLikeToDate(props.data.twoFactorVerifiedAt)
 					: null,
-				revokedAt: props.data.revokedAt ? dateLikeToDate(props.data.revokedAt) : null,
-				lastUsedAt: props.data.lastUsedAt ? dateLikeToDate(props.data.lastUsedAt) : null,
+				revokedAt: props.data.revokedAt
+					? dateLikeToDate(props.data.revokedAt)
+					: null,
+				lastUsedAt: props.data.lastUsedAt
+					? dateLikeToDate(props.data.lastUsedAt)
+					: null,
 				createdAt,
 				lastUpdatedAt: createdAt,
 				lastVerifiedAt: createdAt,
@@ -356,7 +390,10 @@ export const findOneSessionWithUser = async (sessionId) => {
 		.findFirst({
 			with: { user: { columns: userReturnSchema } },
 			columns: sessionReturnSchema,
-			where: and(eq(dbSchema.userSession.id, sessionId), isNull(dbSchema.userSession.revokedAt)),
+			where: and(
+				eq(dbSchema.userSession.id, sessionId),
+				isNull(dbSchema.userSession.revokedAt),
+			),
 		})
 		.then(async (result) => {
 			if (!result) return null;
@@ -372,8 +409,9 @@ export const findOneSessionWithUser = async (sessionId) => {
 /** @type {SessionsProvider['extendOneExpirationDate']} */
 export const extendOneSessionExpirationDate = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	const lastUpdatedAt = new Date();
 	return db
 		.update(dbSchema.userSession)
@@ -388,14 +426,19 @@ export const extendOneSessionExpirationDate = async (props, options) => {
 };
 /** @type {SessionsProvider['deleteOneById']} */
 export const deleteOneSessionById = async (sessionId) => {
-	await db.delete(dbSchema.userSession).where(eq(dbSchema.userSession.id, sessionId));
+	await db
+		.delete(dbSchema.userSession)
+		.where(eq(dbSchema.userSession.id, sessionId));
 };
 /** @type {SessionsProvider['deleteAllByUserId']} */
 export const deleteAllSessionsByUserId = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
-	await _db.delete(dbSchema.userSession).where(eq(dbSchema.userSession.userId, props.where.userId));
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
+	await _db
+		.delete(dbSchema.userSession)
+		.where(eq(dbSchema.userSession.userId, props.where.userId));
 };
 /** @type {SessionsProvider['revokeOneById']} */
 export const revokeOneSessionById = async (id) => {
@@ -408,8 +451,9 @@ export const revokeOneSessionById = async (id) => {
 /** @type {SessionsProvider['revokeAllByUserId']} */
 export const revokeAllSessionsByUserId = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 
 	// const result =
 	await _db
@@ -452,29 +496,42 @@ export const cleanupAllSessionExpired = async () => {
 /** @type {SessionsProvider['markOne2FAVerified']} */
 export const markOneSession2FAVerified = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.userSession)
 		.set({
 			twoFactorVerifiedAt: new Date(),
 			lastUpdatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.userSession.id, props.where.id), isNull(dbSchema.userSession.revokedAt)))
+		.where(
+			and(
+				eq(dbSchema.userSession.id, props.where.id),
+				isNull(dbSchema.userSession.revokedAt),
+			),
+		)
 		.returning(sessionReturnTemplate)
 		.then((result) => result[0] ?? null);
 };
 /** @type {SessionsProvider['unMarkOne2FAForUser']} */
 export const unMarkOneSession2FAForUser = async (userId, tx) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (tx) ?? db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			tx
+		) ?? db;
 	return await _db
 		.update(dbSchema.userSession)
 		.set({
 			twoFactorVerifiedAt: null,
 			lastUpdatedAt: new Date(),
 		})
-		.where(and(eq(dbSchema.userSession.userId, userId), isNull(dbSchema.userSession.revokedAt)))
+		.where(
+			and(
+				eq(dbSchema.userSession.userId, userId),
+				isNull(dbSchema.userSession.revokedAt),
+			),
+		)
 		// .returning(sessionReturnTemplate)
 		.then((result) => result.rowCount ?? 0);
 };
@@ -507,8 +564,9 @@ export const defaultSessionsHandlers = {
 /** @type {PasswordResetSessionsProvider['createOne']} */
 export const createOnePasswordResetSession = async (props, options) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	const createdAt = new Date();
 	return _db
 		.insert(dbSchema.userPasswordResetSession)
@@ -542,10 +600,14 @@ export const findOnePasswordResetSessionWithUser = async (sessionId) => {
 		});
 };
 /** @type {PasswordResetSessionsProvider['markOneEmailAsVerified']} */
-export const markOnePasswordResetSessionEmailAsVerified = async (props, options) => {
+export const markOnePasswordResetSessionEmailAsVerified = async (
+	props,
+	options,
+) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	return _db
 		.update(dbSchema.userPasswordResetSession)
 		.set({
@@ -563,7 +625,9 @@ export const deleteOnePasswordResetSession = async (sessionId) => {
 		.where(eq(dbSchema.userPasswordResetSession.id, sessionId));
 };
 /** @type {PasswordResetSessionsProvider['markOneTwoFactorAsVerified']} */
-export const markOnePasswordResetSessionTwoFactorAsVerified = async (sessionId) => {
+export const markOnePasswordResetSessionTwoFactorAsVerified = async (
+	sessionId,
+) => {
 	return db
 		.update(dbSchema.userPasswordResetSession)
 		.set({
@@ -575,10 +639,14 @@ export const markOnePasswordResetSessionTwoFactorAsVerified = async (sessionId) 
 		.then((result) => result[0] ?? null);
 };
 /** @type {PasswordResetSessionsProvider['deleteAllByUserId']} */
-export const deleteAllPasswordResetSessionsByUserId = async (props, options) => {
+export const deleteAllPasswordResetSessionsByUserId = async (
+	props,
+	options,
+) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	await _db
 		.delete(dbSchema.userPasswordResetSession)
 		.where(eq(dbSchema.userPasswordResetSession.userId, props.where.userId));
@@ -606,17 +674,26 @@ export const createOneEmailVerificationRequests = async (values) => {
 };
 
 /** @type {UserEmailVerificationRequestsProvider['deleteOneByUserId']} */
-export const deleteOneEmailVerificationRequestsByUserId = async (props, options) => {
+export const deleteOneEmailVerificationRequestsByUserId = async (
+	props,
+	options,
+) => {
 	const _db =
-		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (options?.tx) ??
-		db;
+		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
+			options?.tx
+		) ?? db;
 	await _db
 		.delete(dbSchema.userEmailVerificationRequest)
-		.where(eq(dbSchema.userEmailVerificationRequest.userId, props.where.userId));
+		.where(
+			eq(dbSchema.userEmailVerificationRequest.userId, props.where.userId),
+		);
 };
 
 /** @type {UserEmailVerificationRequestsProvider['findOneByIdAndUserId']} */
-export const findOneEmailVerificationRequestsByIdAndUserId = async (userId, id) => {
+export const findOneEmailVerificationRequestsByIdAndUserId = async (
+	userId,
+	id,
+) => {
 	return db
 		.select(emailVerificationRequestReturnTemplate)
 		.from(dbSchema.userEmailVerificationRequest)

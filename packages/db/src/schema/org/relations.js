@@ -1,5 +1,9 @@
 import { relations } from "drizzle-orm";
-import { account, accountTransaction, accountTransactionOrgContext } from "../account/schema.js";
+import {
+	account,
+	accountTransaction,
+	accountTransactionOrgContext,
+} from "../account/schema.js";
 import { currency } from "../general/locale-and-currency/schema.js";
 import { orgBrand } from "./brand/schema.js";
 import { orgFunnel } from "./funnel/schema.js";
@@ -12,7 +16,12 @@ import { orgEmployee } from "./member/employee/schema.js";
 import { orgMemberInvitation } from "./member/invitation/schema.js";
 import { orgMember } from "./member/schema.js";
 import { orgTeam } from "./member/team/schema.js";
-import { orgCoupon, orgDiscount, orgGiftCard, orgPromotion } from "./product/offers/schema.js";
+import {
+	orgCoupon,
+	orgDiscount,
+	orgGiftCard,
+	orgPromotion,
+} from "./product/offers/schema.js";
 import {
 	orgMemberProductVariantPaymentPlanSubscription,
 	orgProductVariantPaymentPlan,
@@ -67,13 +76,16 @@ export const orgRelations = relations(org, ({ many }) => ({
  * @currencyContext Org–Currency Association
  * @financialGovernance Tracks preferred billing and payout currencies
  */
-export const orgCurrencySettingsRelations = relations(orgCurrencySettings, ({ one }) => ({
-	org: one(org, {
-		fields: [orgCurrencySettings.orgId],
-		references: [org.id],
+export const orgCurrencySettingsRelations = relations(
+	orgCurrencySettings,
+	({ one }) => ({
+		org: one(org, {
+			fields: [orgCurrencySettings.orgId],
+			references: [org.id],
+		}),
+		currency: one(currency, {
+			fields: [orgCurrencySettings.currencyCode],
+			references: [currency.code],
+		}),
 	}),
-	currency: one(currency, {
-		fields: [orgCurrencySettings.currencyCode],
-		references: [currency.code],
-	}),
-}));
+);

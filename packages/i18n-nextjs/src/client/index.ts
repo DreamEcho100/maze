@@ -1,7 +1,10 @@
 "use client";
 
 import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { usePathname as useNextPathname, useRouter as useNextRouter } from "next/navigation";
+import {
+	usePathname as useNextPathname,
+	useRouter as useNextRouter,
+} from "next/navigation";
 
 import { useI18n } from "@de100/i18n-reactjs";
 
@@ -41,7 +44,10 @@ export function useRouter() {
 		) => {
 			const { defaultLocale, allowedLocales } = useI18n();
 
-			if (href.startsWith("http") || /^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
+			if (
+				href.startsWith("http") ||
+				/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)
+			) {
 				return nextRouter.push(href, options);
 			}
 
@@ -54,7 +60,10 @@ export function useRouter() {
 			}
 
 			// Handle relative paths
-			const { restPath } = parsePathname(pathname, { defaultLocale, allowedLocales });
+			const { restPath } = parsePathname(pathname, {
+				defaultLocale,
+				allowedLocales,
+			});
 
 			const basePath = restPath ? `/${restPath}` : "";
 			// let fullPath = `/${selectedCountryCode}/${selectedLocale}${basePath}/${href}`;
@@ -79,7 +88,10 @@ export function useRouter() {
 		) => {
 			const { defaultLocale, allowedLocales } = useI18n();
 
-			if (href.startsWith("http") || /^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
+			if (
+				href.startsWith("http") ||
+				/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)
+			) {
 				return nextRouter.replace(href, options);
 			}
 
@@ -91,7 +103,10 @@ export function useRouter() {
 				return nextRouter.replace(`/${selectedLocale}${href}`, options);
 			}
 
-			const { restPath } = parsePathname(pathname, { defaultLocale, allowedLocales });
+			const { restPath } = parsePathname(pathname, {
+				defaultLocale,
+				allowedLocales,
+			});
 			const basePath = restPath ? `/${restPath}` : "";
 			// let fullPath = `/${selectedCountryCode}/${selectedLocale}${basePath}/${href}`;
 			let fullPath = `/${selectedLocale}${basePath}/${href}`;
@@ -107,7 +122,10 @@ export function useRouter() {
 export function usePathname() {
 	const fullPath = useNextPathname();
 	const { defaultLocale, allowedLocales } = useI18n();
-	const { restPath } = parsePathname(fullPath, { defaultLocale, allowedLocales });
+	const { restPath } = parsePathname(fullPath, {
+		defaultLocale,
+		allowedLocales,
+	});
 
 	return `/${restPath}`;
 }

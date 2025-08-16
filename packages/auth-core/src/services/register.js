@@ -1,6 +1,9 @@
 /** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy, DynamicCookiesOptions } from "#types.ts"; */
 
-import { REGISTER_MESSAGES_ERRORS, REGISTER_MESSAGES_SUCCESS } from "#utils/constants.js";
+import {
+	REGISTER_MESSAGES_ERRORS,
+	REGISTER_MESSAGES_SUCCESS,
+} from "#utils/constants.js";
 import {
 	createEmailVerificationRequest,
 	getEmailVerificationRequestCookie,
@@ -44,7 +47,9 @@ export async function registerService(props) {
 		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await props.authProviders.users.findOneByEmail(input.data.email);
+	const emailAvailable = await props.authProviders.users.findOneByEmail(
+		input.data.email,
+	);
 
 	if (emailAvailable) {
 		return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -56,17 +61,26 @@ export async function registerService(props) {
 		return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 	}
 
-	const user = await createUser(input.data.email, input.data.name, input.data.password, {
-		authProviders: { users: { createOne: props.authProviders.users.createOne } },
-	});
+	const user = await createUser(
+		input.data.email,
+		input.data.name,
+		input.data.password,
+		{
+			authProviders: {
+				users: { createOne: props.authProviders.users.createOne },
+			},
+		},
+	);
 
 	const userEmailVerificationRequests = await createEmailVerificationRequest(
 		{ where: { userId: user.id, email: user.email } },
 		{
 			authProviders: {
 				userEmailVerificationRequests: {
-					createOne: props.authProviders.userEmailVerificationRequests.createOne,
-					deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+					createOne:
+						props.authProviders.userEmailVerificationRequests.createOne,
+					deleteOneByUserId:
+						props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 				},
 			},
 		},

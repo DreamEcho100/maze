@@ -25,7 +25,11 @@ export default async function AuthPasswordResetPage() {
 		return redirect("/auth/reset-password/verify-email");
 	}
 
-	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
+	if (
+		user.twoFactorEnabledAt &&
+		user.twoFactorRegisteredAt &&
+		!session.twoFactorVerifiedAt
+	) {
 		return redirect("/auth/reset-password/2fa");
 	}
 

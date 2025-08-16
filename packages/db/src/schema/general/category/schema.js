@@ -5,7 +5,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { seoMetadataIdFkCol } from "#schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
 	userIdFkCol,
@@ -199,10 +202,16 @@ export const categoryMetrics = table(
 		/** Last time this category was actively used */
 		lastUsedAt: temporalCols.lastUsedAt(),
 		// Type-specific counts for detailed analytics
-		orgBrandCategoryCount: numericCols.count("org_brand_category_count").default(0),
-		orgProductCourseSkillCount: numericCols.count("org_product_course_skill_count").default(0),
+		orgBrandCategoryCount: numericCols
+			.count("org_brand_category_count")
+			.default(0),
+		orgProductCourseSkillCount: numericCols
+			.count("org_product_course_skill_count")
+			.default(0),
 		orgTaxCategoryCount: numericCols.count("org_tax_category_count").default(0),
-		userJobProfileSkillCount: numericCols.count("user_job_profile_skill_count").default(0),
+		userJobProfileSkillCount: numericCols
+			.count("user_job_profile_skill_count")
+			.default(0),
 
 		// Audit fields
 		createdAt: temporalCols.audit.createdAt().notNull(),
@@ -252,7 +261,9 @@ export const orgCategory = table(
 		/** Organization identifier for multi-tenant isolation */
 		orgId: orgIdFkCol().notNull(),
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
-		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
+		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({
+			name: "last_updated_by_employee_id",
+		}),
 
 		/** Reference to global category slug */
 		slugRef: textCols.slug("slug_ref").notNull(),
@@ -376,7 +387,9 @@ export const orgCategoryAssociation = table(
 		/** Organization identifier */
 		orgId: orgIdFkCol().notNull(),
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
-		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
+		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({
+			name: "last_updated_by_employee_id",
+		}),
 
 		childId: textCols.idFk("child_id").notNull(),
 		parentId: textCols.idFk("parent_id").notNull(),
@@ -385,7 +398,8 @@ export const orgCategoryAssociation = table(
 		scope: orgCategoryScopeEnum("scope").notNull(),
 
 		// Relationship metadata/** Type of relationship (hierarchical, related, etc.) */
-		relationshipType: relationshipTypeEnum("relationship_type").default("hierarchical"),
+		relationshipType:
+			relationshipTypeEnum("relationship_type").default("hierarchical"),
 		/** Relationship strength/importance weight */
 		weight: numericCols.weight(),
 		/** Whether this is the primary parent relationship */
@@ -472,7 +486,9 @@ export const orgCategoryClosureAncestorPath = table(
 		/** Organization identifier */
 		orgId: orgIdFkCol().notNull(),
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
-		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
+		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({
+			name: "last_updated_by_employee_id",
+		}),
 
 		/** Ancestor category in the path */
 		mainId: textCols.idFk("main_id").notNull(),
@@ -547,7 +563,9 @@ export const orgCategoryClosure = table(
 		/** Organization identifier */
 		orgId: orgIdFkCol().notNull(),
 		createdByEmployeeId: orgEmployeeIdFkCol({ name: "created_by_employee_id" }),
-		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({ name: "last_updated_by_employee_id" }),
+		lastUpdatedByEmployeeId: orgEmployeeIdFkCol({
+			name: "last_updated_by_employee_id",
+		}),
 
 		/** Ancestor category in the path */
 		ancestorPathId: textCols.idFk("ancestor_path_id").notNull(),
@@ -631,7 +649,10 @@ export const orgCategoryClosure = table(
       (${cols.ancestorId} != ${cols.descendantId} AND ${cols.depth} > 0)`,
 		),
 		// Ensure depth is non-negative
-		check(`${orgCategoryClosureTableName}_depth_non_negative`, sql`${cols.depth} >= 0`),
+		check(
+			`${orgCategoryClosureTableName}_depth_non_negative`,
+			sql`${cols.depth} >= 0`,
+		),
 		// // Ensure path count is positive
 		// check(`${orgCategoryClosureTableName}_path_count_positive`, sql`${cols.pathCount} > 0`),
 	],

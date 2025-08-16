@@ -124,9 +124,8 @@ export const orgProductVariantPaymentPlanSubscriptionTypeRelations = relations(
 		translations: many(orgProductVariantPaymentPlanSubscriptionTypeI18n),
 	}),
 );
-export const orgProductVariantPaymentPlanSubscriptionTypeI18nRelations = relations(
-	orgProductVariantPaymentPlanSubscriptionTypeI18n,
-	({ one }) => ({
+export const orgProductVariantPaymentPlanSubscriptionTypeI18nRelations =
+	relations(orgProductVariantPaymentPlanSubscriptionTypeI18n, ({ one }) => ({
 		planId: one(orgProductVariantPaymentPlan, {
 			fields: [orgProductVariantPaymentPlanSubscriptionTypeI18n.planId],
 			references: [orgProductVariantPaymentPlan.id],
@@ -135,11 +134,9 @@ export const orgProductVariantPaymentPlanSubscriptionTypeI18nRelations = relatio
 			fields: [orgProductVariantPaymentPlanSubscriptionTypeI18n.localeKey],
 			references: [orgLocale.localeKey],
 		}),
-	}),
-);
-export const orgMemberProductVariantPaymentPlanSubscriptionRelations = relations(
-	orgMemberProductVariantPaymentPlanSubscription,
-	({ one }) => ({
+	}));
+export const orgMemberProductVariantPaymentPlanSubscriptionRelations =
+	relations(orgMemberProductVariantPaymentPlanSubscription, ({ one }) => ({
 		// userId
 		user: one(user, {
 			fields: [orgMemberProductVariantPaymentPlanSubscription.userId],
@@ -160,5 +157,4 @@ export const orgMemberProductVariantPaymentPlanSubscriptionRelations = relations
 			fields: [orgMemberProductVariantPaymentPlanSubscription.orgMemberId],
 			references: [orgMember.id],
 		}),
-	}),
-);
+	}));

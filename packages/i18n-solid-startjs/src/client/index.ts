@@ -75,7 +75,10 @@ export function useRouter() {
 			const selectedLocale = locale ?? currentLocale() ?? defaultLocale();
 
 			if (href.startsWith("/")) {
-				return navigate(`/${selectedLocale}${href}`, { ...navigateOptions, replace: true });
+				return navigate(`/${selectedLocale}${href}`, {
+					...navigateOptions,
+					replace: true,
+				});
 			}
 
 			const { restPath } = parsePathname(location.pathname, {

@@ -11,7 +11,10 @@ import { updateIsTwoFactorService } from "@de100/auth-core/services/settings/upd
  */
 
 import { updatePasswordService } from "@de100/auth-core/services/settings/update-password";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	createOneEmailVerificationRequests,
 	createOneSession,
@@ -53,7 +56,10 @@ export async function updatePasswordAction(input) {
 		return AUTHENTICATION_REQUIRED;
 	}
 
-	if (typeof input.currentPassword !== "string" || typeof input.newPassword !== "string") {
+	if (
+		typeof input.currentPassword !== "string" ||
+		typeof input.newPassword !== "string"
+	) {
 		return {
 			message: "Invalid or missing fields",
 			type: "error",

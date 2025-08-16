@@ -2,16 +2,26 @@ import type { FetchEvent } from "@solidjs/start/server";
 import { defaultLocale } from "../constants";
 import { getServerLocale, setLocaleInCookies } from "./utils";
 
-export function createI18nMiddlewareOnRequest({ event }: { event: FetchEvent }) {
+export function createI18nMiddlewareOnRequest({
+	event,
+}: {
+	event: FetchEvent;
+}) {
 	const url = new URL(event.request.url);
 	const pathname = url.pathname;
 
-	const { foundLocale = defaultLocale, localeSource } = getServerLocale({
+	const {
+		foundLocale = defaultLocale,
+		localeSource,
+		shouldSetCookie,
+	} = getServerLocale({
 		nativeEvent: event.nativeEvent,
 		headers: event.request.headers,
 		pathname,
 	});
-	setLocaleInCookies(event.nativeEvent, foundLocale);
+	if (shouldSetCookie) {
+		setLocaleInCookies(event.nativeEvent, foundLocale);
+	}
 
 	switch (localeSource) {
 		case "pathname":

@@ -25,7 +25,13 @@ export function LoginForm() {
 		>
 			<h2>{t("locale")}</h2>
 			<label for="form-login.email">Email</label>
-			<input type="email" id="form-login.email" name="email" autocomplete="name" required />
+			<input
+				type="email"
+				id="form-login.email"
+				name="email"
+				autocomplete="name"
+				required
+			/>
 			<br />
 			<label for="form-login.password">Password</label>
 			<input

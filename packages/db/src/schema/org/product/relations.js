@@ -36,7 +36,10 @@ import { orgEmployee } from "../member/employee/schema.js";
 import { org } from "../schema.js";
 import { orgProductCourse } from "./by-type/course/schema.js";
 import { orgProductCollectionProduct } from "./collection/schema.js";
-import { orgDiscountProduct, orgDiscountProductVariant } from "./offers/schema.js";
+import {
+	orgDiscountProduct,
+	orgDiscountProductVariant,
+} from "./offers/schema.js";
 import { orgMemberOrder } from "./orders/schema.js";
 import { orgProductVariantPaymentPlan } from "./payment/schema.js";
 import {
@@ -142,31 +145,34 @@ export const productRelations = relations(orgProduct, ({ one, many }) => ({
  * in international markets while supporting region-specific SEO optimization and
  * cultural adaptation for global expansion strategies.
  */
-export const productTranslationRelations = relations(orgProductI18n, ({ one }) => ({
-	/**
-	 * @translationTarget Product this localized content applies to
-	 * @businessContext Enables multi-language product marketing and conversion optimization
-	 * @globalStrategy Region-specific messaging for international market penetration
-	 */
-	product: one(orgProduct, {
-		fields: [orgProductI18n.productId],
-		references: [orgProduct.id],
-	}),
+export const productTranslationRelations = relations(
+	orgProductI18n,
+	({ one }) => ({
+		/**
+		 * @translationTarget Product this localized content applies to
+		 * @businessContext Enables multi-language product marketing and conversion optimization
+		 * @globalStrategy Region-specific messaging for international market penetration
+		 */
+		product: one(orgProduct, {
+			fields: [orgProductI18n.productId],
+			references: [orgProduct.id],
+		}),
 
-	/**
-	 * @seoOptimization Optional SEO metadata for localized product landing pages
-	 * @marketingStrategy Enables search optimization for region-specific product content
-	 * @organicGrowth Improves product discoverability in international search engines
-	 */
-	seoMetadata: one(seoMetadata, {
-		fields: [orgProductI18n.seoMetadataId],
-		references: [seoMetadata.id],
+		/**
+		 * @seoOptimization Optional SEO metadata for localized product landing pages
+		 * @marketingStrategy Enables search optimization for region-specific product content
+		 * @organicGrowth Improves product discoverability in international search engines
+		 */
+		seoMetadata: one(seoMetadata, {
+			fields: [orgProductI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgProductI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
 	}),
-	locale: one(orgLocale, {
-		fields: [orgProductI18n.localeKey],
-		references: [orgLocale.localeKey],
-	}),
-}));
+);
 
 /**
  * Product Variant Relations (E-commerce Variations)
@@ -179,52 +185,58 @@ export const productTranslationRelations = relations(orgProductI18n, ({ one }) =
  * table complexity while maintaining sophisticated pricing strategies and promotional
  * campaign compatibility for comprehensive e-commerce monetization.
  */
-export const productVariantRelations = relations(orgProductVariant, ({ one, many }) => ({
-	/**
-	 * @ecommerceIntegration Parent product this variant belongs to
-	 * @businessContext Variants provide purchasable variations of core product content
-	 * @contentSeparation Product handles marketing, variant handles commerce and pricing
-	 */
-	product: one(orgProduct, {
-		fields: [orgProductVariant.productId],
-		references: [orgProduct.id],
+export const productVariantRelations = relations(
+	orgProductVariant,
+	({ one, many }) => ({
+		/**
+		 * @ecommerceIntegration Parent product this variant belongs to
+		 * @businessContext Variants provide purchasable variations of core product content
+		 * @contentSeparation Product handles marketing, variant handles commerce and pricing
+		 */
+		product: one(orgProduct, {
+			fields: [orgProductVariant.productId],
+			references: [orgProduct.id],
+		}),
+
+		translations: many(orgProductVariantI18n),
+
+		/**
+		 * @paymentPlanIntegration Payment plan pricing for this variant
+		 * @businessContext Direct integration with payment plans for variant pricing
+		 * @ecommerceStrategy Enables sophisticated pricing strategies without separate pricing tables
+		 * @revenueOptimization Supports subscription, one-time purchase, and free access models
+		 * @multiCurrencySupport Maintains multi-currency pricing for global markets
+		 */
+		paymentPlans: many(orgProductVariantPaymentPlan),
+
+		/**
+		 * @promotionalStrategy Variant-specific discount campaign integration
+		 * @businessContext Enables granular promotional strategies for different access levels
+		 * @revenueOptimization Supports targeted promotional campaigns for conversion optimization
+		 */
+		discounts: many(orgDiscountProductVariant),
 	}),
+);
 
-	translations: many(orgProductVariantI18n),
+export const productVariantTranslationRelations = relations(
+	orgProductVariantI18n,
+	({ one }) => ({
+		productVariant: one(orgProductVariant, {
+			fields: [orgProductVariantI18n.variantId],
+			references: [orgProductVariant.id],
+		}),
 
-	/**
-	 * @paymentPlanIntegration Payment plan pricing for this variant
-	 * @businessContext Direct integration with payment plans for variant pricing
-	 * @ecommerceStrategy Enables sophisticated pricing strategies without separate pricing tables
-	 * @revenueOptimization Supports subscription, one-time purchase, and free access models
-	 * @multiCurrencySupport Maintains multi-currency pricing for global markets
-	 */
-	paymentPlans: many(orgProductVariantPaymentPlan),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgProductVariantI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
 
-	/**
-	 * @promotionalStrategy Variant-specific discount campaign integration
-	 * @businessContext Enables granular promotional strategies for different access levels
-	 * @revenueOptimization Supports targeted promotional campaigns for conversion optimization
-	 */
-	discounts: many(orgDiscountProductVariant),
-}));
-
-export const productVariantTranslationRelations = relations(orgProductVariantI18n, ({ one }) => ({
-	productVariant: one(orgProductVariant, {
-		fields: [orgProductVariantI18n.variantId],
-		references: [orgProductVariant.id],
+		locale: one(locale, {
+			fields: [orgProductVariantI18n.localeKey],
+			references: [locale.key],
+		}),
 	}),
-
-	seoMetadata: one(seoMetadata, {
-		fields: [orgProductVariantI18n.seoMetadataId],
-		references: [seoMetadata.id],
-	}),
-
-	locale: one(locale, {
-		fields: [orgProductVariantI18n.localeKey],
-		references: [locale.key],
-	}),
-}));
+);
 
 /**
  * Product Brand Attribution Relations (Brand Identity Integration)
@@ -262,13 +274,16 @@ export const productBrandAttributionRelations = relations(
 	}),
 );
 
-export const orgProductRevenuePoolRelations = relations(orgProductRevenuePool, ({ one }) => ({
-	lastAllocatedByEmployee: one(orgEmployee, {
-		fields: [orgProductRevenuePool.lastAllocationByEmployeeId],
-		references: [orgEmployee.id],
+export const orgProductRevenuePoolRelations = relations(
+	orgProductRevenuePool,
+	({ one }) => ({
+		lastAllocatedByEmployee: one(orgEmployee, {
+			fields: [orgProductRevenuePool.lastAllocationByEmployeeId],
+			references: [orgEmployee.id],
+		}),
+		product: one(orgProduct, {
+			fields: [orgProductRevenuePool.productId],
+			references: [orgProduct.id],
+		}),
 	}),
-	product: one(orgProduct, {
-		fields: [orgProductRevenuePool.productId],
-		references: [orgProduct.id],
-	}),
-}));
+);

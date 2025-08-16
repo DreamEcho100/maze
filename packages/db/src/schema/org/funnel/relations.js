@@ -2,7 +2,12 @@ import { relations } from "drizzle-orm";
 import { seoMetadata } from "../../general/seo/schema.js";
 import { orgLocale, orgRegion } from "../locale-region/schema.js";
 import { org } from "../schema.js";
-import { orgFunnel, orgFunnelDomain, orgFunnelI18n, orgFunnelRegion } from "./schema.js";
+import {
+	orgFunnel,
+	orgFunnelDomain,
+	orgFunnelI18n,
+	orgFunnelRegion,
+} from "./schema.js";
 
 export const orgFunnelRelations = relations(orgFunnel, ({ many, one }) => ({
 	org: one(org, {
@@ -25,23 +30,29 @@ export const orgFunnelI18nRelations = relations(orgFunnelI18n, ({ one }) => ({
 		references: [seoMetadata.id],
 	}),
 }));
-export const orgFunnelRegionRelations = relations(orgFunnelRegion, ({ one }) => ({
-	funnel: one(orgFunnel, {
-		fields: [orgFunnelRegion.funnelId],
-		references: [orgFunnel.id],
+export const orgFunnelRegionRelations = relations(
+	orgFunnelRegion,
+	({ one }) => ({
+		funnel: one(orgFunnel, {
+			fields: [orgFunnelRegion.funnelId],
+			references: [orgFunnel.id],
+		}),
+		region: one(orgRegion, {
+			fields: [orgFunnelRegion.regionId],
+			references: [orgRegion.id],
+		}),
 	}),
-	region: one(orgRegion, {
-		fields: [orgFunnelRegion.regionId],
-		references: [orgRegion.id],
+);
+export const orgFunnelDomainRelations = relations(
+	orgFunnelDomain,
+	({ one }) => ({
+		funnel: one(orgFunnel, {
+			fields: [orgFunnelDomain.funnelId],
+			references: [orgFunnel.id],
+		}),
+		region: one(orgRegion, {
+			fields: [orgFunnelDomain.regionId],
+			references: [orgRegion.id],
+		}),
 	}),
-}));
-export const orgFunnelDomainRelations = relations(orgFunnelDomain, ({ one }) => ({
-	funnel: one(orgFunnel, {
-		fields: [orgFunnelDomain.funnelId],
-		references: [orgFunnel.id],
-	}),
-	region: one(orgRegion, {
-		fields: [orgFunnelDomain.regionId],
-		references: [orgRegion.id],
-	}),
-}));
+);

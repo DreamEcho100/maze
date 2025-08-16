@@ -1,7 +1,10 @@
 "use server";
 
 import { resetPasswordService } from "@de100/auth-core/services/reset-password";
-import { AUTH_URLS, AUTHENTICATION_REQUIRED } from "@de100/auth-core/utils/constants";
+import {
+	AUTH_URLS,
+	AUTHENTICATION_REQUIRED,
+} from "@de100/auth-core/utils/constants";
 import {
 	deleteAllPasswordResetSessionsByUserId,
 	deleteAllSessionsByUserId,

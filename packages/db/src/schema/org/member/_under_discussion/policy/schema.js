@@ -16,7 +16,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { sharedCols } from "../../../../_utils/cols/shared/index.js";
 import { temporalCols } from "../../../../_utils/cols/temporal.js";
 import { textCols } from "../../../../_utils/cols/text.js";
@@ -45,14 +48,17 @@ import { orgTeam } from "../../team/schema.js";
  * @examples "edit_invoice", "view_reports", "manage_employees", "create_courses"
  */
 const orgPermissionTableName = `${orgTableName}_permission`;
-export const orgPermissionScopeEnum = pgEnum(`${orgPermissionTableName}_scope`, [
-	"global", // Applies to all resources in the org
-	"org", // Applies to all resources within the org
-	"resource", // Applies to a specific resource
-	"team", // Applies to all resources within a specific team
-	"department", // Applies to all resources within a specific department
-	"employee", // Applies to all resources owned by a specific employee
-]);
+export const orgPermissionScopeEnum = pgEnum(
+	`${orgPermissionTableName}_scope`,
+	[
+		"global", // Applies to all resources in the org
+		"org", // Applies to all resources within the org
+		"resource", // Applies to a specific resource
+		"team", // Applies to all resources within a specific team
+		"department", // Applies to all resources within a specific department
+		"employee", // Applies to all resources owned by a specific employee
+	],
+);
 
 export const orgPermission = table(
 	orgPermissionTableName,
@@ -161,10 +167,13 @@ export const orgPolicy = table(
  * @description Links permissions to policies with conditional access logic
  */
 const orgPolicyRuleTableName = `${orgPolicyTableName}_rule`;
-export const orgPolicyRuleEffectEnum = pgEnum(`${orgPolicyRuleTableName}_effect`, [
-	"allow", // Grants permission if conditions are met
-	"deny", // Explicitly denies permission if conditions are met
-]);
+export const orgPolicyRuleEffectEnum = pgEnum(
+	`${orgPolicyRuleTableName}_effect`,
+	[
+		"allow", // Grants permission if conditions are met
+		"deny", // Explicitly denies permission if conditions are met
+	],
+);
 
 export const orgPolicyRule = table(
 	orgPolicyRuleTableName,
@@ -214,7 +223,10 @@ export const orgPolicyRule = table(
 		lastUpdatedAt: temporalCols.audit.lastUpdatedAt(),
 	},
 	(t) => [
-		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(t.policyId, t.permissionId),
+		uniqueIndex(`uq_${orgPolicyRuleTableName}_policy_permission`).on(
+			t.policyId,
+			t.permissionId,
+		),
 		index(`idx_${orgPolicyRuleTableName}_effect`).on(t.effect),
 		index(`idx_${orgPolicyRuleTableName}_priority`).on(t.priority),
 		index(`idx_${orgPolicyRuleTableName}_created_at`).on(t.createdAt),
@@ -327,9 +339,11 @@ export const orgPolicyAssignment = table(
 		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
-			onDelete: "cascade",
-		}),
+		departmentId: textCols
+			.idFk("department_id")
+			.references(() => orgDepartment.id, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @assignment Assignment metadata and audit trail
@@ -408,9 +422,11 @@ export const orgRoleAssignment = table(
 		teamId: textCols.idFk("team_id").references(() => orgTeam.id, {
 			onDelete: "cascade",
 		}),
-		departmentId: textCols.idFk("department_id").references(() => orgDepartment.id, {
-			onDelete: "cascade",
-		}),
+		departmentId: textCols
+			.idFk("department_id")
+			.references(() => orgDepartment.id, {
+				onDelete: "cascade",
+			}),
 
 		/**
 		 * @assignment Assignment metadata and audit trail
@@ -516,10 +532,17 @@ export const orgPermissionAuditLog = table(
 			cols: t,
 		}),
 		index(`idx_${orgPermissionAuditLogTableName}_employee`).on(t.employeeId),
-		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(t.permissionKey),
+		index(`idx_${orgPermissionAuditLogTableName}_permission`).on(
+			t.permissionKey,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_granted`).on(t.granted),
-		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(t.evaluatedAt),
-		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(t.resourceType, t.resourceId),
+		index(`idx_${orgPermissionAuditLogTableName}_evaluated_at`).on(
+			t.evaluatedAt,
+		),
+		index(`idx_${orgPermissionAuditLogTableName}_resource`).on(
+			t.resourceType,
+			t.resourceId,
+		),
 		index(`idx_${orgPermissionAuditLogTableName}_created_at`).on(t.createdAt),
 	],
 );

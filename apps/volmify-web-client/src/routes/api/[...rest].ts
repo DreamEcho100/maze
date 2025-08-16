@@ -7,7 +7,11 @@ import type { APIEvent } from "@solidjs/start/server";
 import { router } from "#libs/orpc/router";
 import "#libs/orpc/polyfill.ts";
 import { CredentialSchema, TokenSchema } from "#libs/schemas/auth";
-import { NewPlanetSchema, PlanetSchema, UpdatePlanetSchema } from "#libs/schemas/planet";
+import {
+	NewPlanetSchema,
+	PlanetSchema,
+	UpdatePlanetSchema,
+} from "#libs/schemas/planet";
 import { NewUserSchema, UserSchema } from "#libs/schemas/user";
 
 const handler = new OpenAPIHandler(router, {

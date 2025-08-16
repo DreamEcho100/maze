@@ -5,8 +5,15 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { temporalCols } from "../../../_utils/cols/temporal.js";
 import { textCols } from "../../../_utils/cols/text.js";
@@ -20,28 +27,34 @@ import { orgProduct, orgProductVariant } from "../schema.js";
 const orgMemberOrderTableName = `${orgTableName}_member_order`;
 
 // ✅ ORDER STATUS: Complete e-commerce lifecycle
-export const orgMemberOrderStatusEnum = pgEnum(`${orgMemberOrderTableName}_status`, [
-	"pending", // Order created, awaiting payment
-	"processing", // Payment received, processing order
-	"confirmed", // Order confirmed, access granted
-	"fulfilled", // Digital delivery completed
-	"cancelled", // Order cancelled before payment
-	"refunded", // Order refunded after payment
-	"failed", // Payment or processing failed
-	"expired", // Order expired without payment
-]);
+export const orgMemberOrderStatusEnum = pgEnum(
+	`${orgMemberOrderTableName}_status`,
+	[
+		"pending", // Order created, awaiting payment
+		"processing", // Payment received, processing order
+		"confirmed", // Order confirmed, access granted
+		"fulfilled", // Digital delivery completed
+		"cancelled", // Order cancelled before payment
+		"refunded", // Order refunded after payment
+		"failed", // Payment or processing failed
+		"expired", // Order expired without payment
+	],
+);
 
 // ✅ PAYMENT STATUS: Financial transaction tracking
-export const orgMemberOrderPaymentStatusEnum = pgEnum(`${orgMemberOrderTableName}_payment_status`, [
-	"pending", // Payment not yet attempted
-	"cancelled", // Payment cancelled by user
-	"processing", // Payment in progress
-	"paid", // Payment successful
-	"failed", // Payment failed
-	"refunded", // Payment refunded
-	"partially_refunded", // Partial refund issued
-	"disputed", // Payment disputed/chargeback
-]);
+export const orgMemberOrderPaymentStatusEnum = pgEnum(
+	`${orgMemberOrderTableName}_payment_status`,
+	[
+		"pending", // Payment not yet attempted
+		"cancelled", // Payment cancelled by user
+		"processing", // Payment in progress
+		"paid", // Payment successful
+		"failed", // Payment failed
+		"refunded", // Payment refunded
+		"partially_refunded", // Partial refund issued
+		"disputed", // Payment disputed/chargeback
+	],
+);
 
 /**
  * Organization Member Product Order - E-commerce Transaction Foundation
@@ -115,14 +128,18 @@ export const orgMemberOrder = table(
 		 * @businessRule Sum of all applied discounts (coupons, promotions, gift cards)
 		 * @revenueImpact Reduces final order amount and affects revenue attribution
 		 */
-		totalDiscountAmount: numericCols.currency.amount("discount_amount").default("0.00"),
+		totalDiscountAmount: numericCols.currency
+			.amount("discount_amount")
+			.default("0.00"),
 
 		/**
 		 * @taxCompliance Tax amount calculated based on org tax policies
 		 * @businessRule Tax calculation respects regional tax requirements
 		 * @financialReporting Essential for tax reporting and compliance
 		 */
-		totalTaxAmount: numericCols.currency.amount("total_tax_amount").default("0.00"),
+		totalTaxAmount: numericCols.currency
+			.amount("total_tax_amount")
+			.default("0.00"),
 
 		/**
 		 * @finalPricing Total amount charged to customer
@@ -327,12 +344,18 @@ export const orgMemberOrderItem = table(
 		}),
 
 		// Business constraints
-		check(`ck_${orgMemberOrderItemTableName}_positive_quantity`, sql`${t.quantity} > 0`),
+		check(
+			`ck_${orgMemberOrderItemTableName}_positive_quantity`,
+			sql`${t.quantity} > 0`,
+		),
 		check(
 			`ck_${orgMemberOrderItemTableName}_total_price_calculation`,
 			sql`${t.totalPrice} = ${t.unitPrice} * ${t.quantity}`,
 		),
-		check(`ck_${orgMemberOrderItemTableName}_valid_access_tier`, sql`${t.selectedAccessTier} >= 0`),
+		check(
+			`ck_${orgMemberOrderItemTableName}_valid_access_tier`,
+			sql`${t.selectedAccessTier} >= 0`,
+		),
 	],
 );
 
@@ -394,11 +417,18 @@ export const orgMemberOrderDiscount = table(
 		}),
 		...multiIndexes({
 			tName: orgMemberOrderDiscountTableName,
-			colsGrps: [{ cols: [t.discountAmount] }, { cols: [t.discountType] }, { cols: [t.createdAt] }],
+			colsGrps: [
+				{ cols: [t.discountAmount] },
+				{ cols: [t.discountType] },
+				{ cols: [t.createdAt] },
+			],
 		}),
 
 		// Business constraints
-		check(`ck_${orgMemberOrderDiscountTableName}_positive_discount`, sql`${t.discountAmount} >= 0`),
+		check(
+			`ck_${orgMemberOrderDiscountTableName}_positive_discount`,
+			sql`${t.discountAmount} >= 0`,
+		),
 		check(
 			`ck_${orgMemberOrderDiscountTableName}_single_discount_source`,
 			sql`(${t.discountId} IS NOT NULL)::int + (${t.couponId} IS NOT NULL)::int + (${t.giftCardId} IS NOT NULL)::int = 1`,
@@ -437,7 +467,9 @@ export const orgMemberOrderTaxCalculation = table(
 		// .references(() => orgTaxRateSnapshot.id, { onDelete: "set null" }),
 
 		taxableAmount: numericCols.currency.amount("taxable_amount").notNull(), // Amount subject to tax (pre-tax)
-		calculatedTaxAmount: numericCols.currency.amount("calculated_tax_amount").notNull(), // Actual tax calculated for this order
+		calculatedTaxAmount: numericCols.currency
+			.amount("calculated_tax_amount")
+			.notNull(), // Actual tax calculated for this order
 
 		// Calculation verification
 		/**
@@ -546,7 +578,9 @@ export const orgMemberOrderPayment = table(
 		 * @financialDetails Payment amounts and fees
 		 */
 		grossAmount: numericCols.currency.amount("gross_amount").notNull(), // What customer paid
-		processingFee: numericCols.currency.amount("processing_fee").default("0.00"), // Gateway fee
+		processingFee: numericCols.currency
+			.amount("processing_fee")
+			.default("0.00"), // Gateway fee
 		netAmount: numericCols.currency.amount("net_amount").notNull(), // What org receives
 
 		/**
@@ -559,7 +593,9 @@ export const orgMemberOrderPayment = table(
 		/**
 		 * @paymentStatus Detailed payment state
 		 */
-		status: orgMemberOrderPaymentStatusEnum("status").notNull().default("pending"),
+		status: orgMemberOrderPaymentStatusEnum("status")
+			.notNull()
+			.default("pending"),
 
 		/**
 		 * @disputeTracking Chargeback and dispute information

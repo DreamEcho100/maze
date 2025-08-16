@@ -12,7 +12,11 @@ import {
 import { orgIdFkCol } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { temporalCols } from "#schema/_utils/cols/temporal.js";
 import { textCols } from "#schema/_utils/cols/text.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { table } from "../../../../_utils/tables.js";
 import { orgMemberOrderItem } from "../../../product/orders/schema.js";
 import { orgProduct } from "../../../product/schema.js";
@@ -63,9 +67,9 @@ export const orgEmployeeProductAttribution = table(
 		// 	.references(() => orgEmployeeProductOrder.id),
 
 		compensationType:
-			orgEmployeeProductAttributionCompensationTypeEnum("compensation_type").default(
-				"revenue_share",
-			),
+			orgEmployeeProductAttributionCompensationTypeEnum(
+				"compensation_type",
+			).default("revenue_share"),
 		/**
 		 * compensationAmount: The fixed amount paid to the employee for their contribution, regardless of product revenue.
 		 * Used for "flat_fee", "hourly", "salary", "per_course" compensation types.
@@ -76,7 +80,9 @@ export const orgEmployeeProductAttribution = table(
 		 * revenueSharePercentage: The percentage of the product's revenue that the employee is entitled to.
 		 * Used for "revenue_share" compensation type.
 		 */
-		revenueSharePercentage: numericCols.percentage.revenueShare("revenue_share_percentage"),
+		revenueSharePercentage: numericCols.percentage.revenueShare(
+			"revenue_share_percentage",
+		),
 		// Q: is `revenueAmount` the actual revenue amount attributed to the employee for a given period or payout?
 		// And is it needed if we have `revenueSharePercentage` or `sharePercentage`?
 		/**
@@ -196,7 +202,9 @@ export const orgEmployeeProductAttributionRevenue = table(
 		 * @revenueRecipient Who receives this revenue portion
 		 */
 		recipientType:
-			orgEmployeeProductAttributionRevenueRecipientTypeEnum("recipient_type").notNull(), // TODO: Needs another way for flexible recipient identification, for example could user profile be changed a profile table and in CTI way define if it's for an org or a user _(it seems to be over-engineering though)_? or maybe just make a separate table for org attribution _(maybe also change how the product connect to the orgs or have secondary/affiliated orgs)_?
+			orgEmployeeProductAttributionRevenueRecipientTypeEnum(
+				"recipient_type",
+			).notNull(), // TODO: Needs another way for flexible recipient identification, for example could user profile be changed a profile table and in CTI way define if it's for an org or a user _(it seems to be over-engineering though)_? or maybe just make a separate table for org attribution _(maybe also change how the product connect to the orgs or have secondary/affiliated orgs)_?
 		// orgId: textCols.idFk("org_id").references(() => org.id),
 		attributedEmployeeId: textCols
 			.idFk("attributed_employee_id")
@@ -213,7 +221,10 @@ export const orgEmployeeProductAttributionRevenue = table(
 		/**
 		 * @attributionBasis How this revenue share was calculated
 		 */
-		attributionBasis: orgEmployeeProductAttributionRevenueBasisEnum("attribution_basis").notNull(),
+		attributionBasis:
+			orgEmployeeProductAttributionRevenueBasisEnum(
+				"attribution_basis",
+			).notNull(),
 
 		/**
 		 * @currencyConsistency Revenue currency

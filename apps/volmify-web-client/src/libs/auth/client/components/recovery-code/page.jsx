@@ -9,7 +9,9 @@ import { getCurrentSession } from "#libs/auth/server/queries.js";
 // import { userProvider } from "@de100/auth-core/src/providers";
 
 export default async function AuthRecoveryCodePage() {
-	const { session, user } = await getCurrentSession({ canMutateCookies: false });
+	const { session, user } = await getCurrentSession({
+		canMutateCookies: false,
+	});
 
 	if (!session) {
 		return redirect("/auth/login");
@@ -34,7 +36,10 @@ export default async function AuthRecoveryCodePage() {
 		<>
 			<h1>Recovery code</h1>
 			<p>Your recovery code is: {recoveryCode}</p>
-			<p>You can use this recovery code if you lose access to your second factors.</p>
+			<p>
+				You can use this recovery code if you lose access to your second
+				factors.
+			</p>
 			<Link href="/">Next</Link>
 		</>
 	);

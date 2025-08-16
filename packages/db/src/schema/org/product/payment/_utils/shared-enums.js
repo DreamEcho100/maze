@@ -9,8 +9,7 @@ import { orgTableName } from "#schema/org/_utils/helpers.js";
  * - subscription: Recurring billing for continued access (SaaS, premium memberships)
  * - usage_based: Pay-per-consumption billing (API calls, content downloads, processing time)
  */
-export const orgProductVariantPaymentTypeEnum = pgEnum(`${orgTableName}_payment_plan_type`, [
-	"one_time",
-	"subscription",
-	"usage_based",
-]);
+export const orgProductVariantPaymentTypeEnum = pgEnum(
+	`${orgTableName}_payment_plan_type`,
+	["one_time", "subscription", "usage_based"],
+);

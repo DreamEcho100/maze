@@ -1,5 +1,8 @@
 import { pgEnum } from "drizzle-orm/pg-core";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
@@ -40,7 +43,10 @@ export const orgLesson = table(
 		}),
 		...multiIndexes({
 			tName: orgLessonTableName,
-			colsGrps: [{ cols: [cols.orgId, cols.type] }, { cols: [cols.orgId, cols.createdAt] }],
+			colsGrps: [
+				{ cols: [cols.orgId, cols.type] },
+				{ cols: [cols.orgId, cols.createdAt] },
+			],
 		}),
 	],
 );

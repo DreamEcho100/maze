@@ -39,7 +39,10 @@ import { verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema } from "#utils/
  * >}
  */
 export async function verifyPasswordReset2FAViaRecoveryCodeService(props) {
-	const input = verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema.safeParse(props.input);
+	const input =
+		verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema.safeParse(
+			props.input,
+		);
 
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
@@ -51,7 +54,8 @@ export async function verifyPasswordReset2FAViaRecoveryCodeService(props) {
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,
-				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
+				findOneWithUser:
+					props.authProviders.passwordResetSession.findOneWithUser,
 			},
 		},
 	});
@@ -66,19 +70,26 @@ export async function verifyPasswordReset2FAViaRecoveryCodeService(props) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 
-	const valid = await resetUser2FAWithRecoveryCode(session.userId, input.data.code, {
-		tx: props.tx,
-		authProviders: {
-			sessions: {
-				unMarkOne2FAForUser: props.authProviders.sessions.unMarkOne2FAForUser,
-			},
-			users: {
-				getOneRecoveryCodeRaw: props.authProviders.users.getOneRecoveryCodeRaw,
-				updateOneRecoveryCodeByUserId: props.authProviders.users.updateOneRecoveryCodeById,
+	const valid = await resetUser2FAWithRecoveryCode(
+		session.userId,
+		input.data.code,
+		{
+			tx: props.tx,
+			authProviders: {
+				sessions: {
+					unMarkOne2FAForUser: props.authProviders.sessions.unMarkOne2FAForUser,
+				},
+				users: {
+					getOneRecoveryCodeRaw:
+						props.authProviders.users.getOneRecoveryCodeRaw,
+					updateOneRecoveryCodeByUserId:
+						props.authProviders.users.updateOneRecoveryCodeById,
+				},
 			},
 		},
-	});
-	if (!valid) return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_INVALID;
+	);
+	if (!valid)
+		return VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS.TOTP_CODE_INVALID;
 
 	return {
 		...VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED_SUCCESSFULLY,

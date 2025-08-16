@@ -50,7 +50,9 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	orgsRegions: many(orgRegion),
 	orgsCurrenciesSettings: many(orgCurrencySettings),
 	orgsProductsVariantsPaymentPlans: many(orgProductVariantPaymentPlan),
-	orgsProductsVariantsPaymentPlansOneTimeType: many(orgProductVariantPaymentPlanOneTimeType),
+	orgsProductsVariantsPaymentPlansOneTimeType: many(
+		orgProductVariantPaymentPlanOneTimeType,
+	),
 	orgsProductsVariantsPaymentPlansSubscriptionType: many(
 		orgProductVariantPaymentPlanSubscriptionType,
 	),

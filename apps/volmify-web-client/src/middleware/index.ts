@@ -1,6 +1,11 @@
 import { createMiddleware } from "@solidjs/start/middleware";
 import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
 
+// TODO: Look at
+// - <https://docs.solidjs.com/solid-start/guides/security#content-security-policy-csp>
+// - <https://docs.solidjs.com/solid-start/guides/security#cors-cross-origin-resource-sharing>
+// - <https://docs.solidjs.com/solid-start/guides/security#csrf-cross-site-request-forgery>
+// more to see if we can improve security
 export default createMiddleware({
 	onRequest: (event) => {
 		// const { cookieName, headerName } = event.locals;

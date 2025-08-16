@@ -32,6 +32,7 @@ export default defineConfig({
 	server: {
 		prerender: {
 			crawlLinks: true,
+			failOnError: true,
 		},
 	},
 	middleware: "src/middleware/index.ts",

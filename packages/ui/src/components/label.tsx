@@ -12,8 +12,14 @@ const labelVariants = cva(
 function Label({
 	className,
 	...props
-}: ComponentProps<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>) {
-	return <LabelPrimitive.Root className={cn(labelVariants(), className)} {...props} />;
+}: ComponentProps<typeof LabelPrimitive.Root> &
+	VariantProps<typeof labelVariants>) {
+	return (
+		<LabelPrimitive.Root
+			className={cn(labelVariants(), className)}
+			{...props}
+		/>
+	);
 }
 
 export { Label };

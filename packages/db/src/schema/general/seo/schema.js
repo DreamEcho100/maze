@@ -1,5 +1,15 @@
-import { boolean, decimal, integer, jsonb, pgEnum, text } from "drizzle-orm/pg-core";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	boolean,
+	decimal,
+	integer,
+	jsonb,
+	pgEnum,
+	text,
+} from "drizzle-orm/pg-core";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
@@ -180,10 +190,17 @@ export const seoMetadataOpenGraph = table(
 			tName: seoMetadataOpenGraphTableName,
 			cols,
 		}),
-		uniqueIndex({ tName: seoMetadataOpenGraphTableName, cols: [cols.seoMetadataId] }),
+		uniqueIndex({
+			tName: seoMetadataOpenGraphTableName,
+			cols: [cols.seoMetadataId],
+		}),
 		...multiIndexes({
 			tName: seoMetadataOpenGraphTableName,
-			colsGrps: [{ cols: [cols.type] }, { cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }],
+			colsGrps: [
+				{ cols: [cols.type] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
 		}),
 	],
 );
@@ -249,10 +266,17 @@ export const seoMetadataTwitterCard = table(
 			tName: seoMetadataTwitterCardTableName,
 			cols,
 		}),
-		uniqueIndex({ tName: seoMetadataTwitterCardTableName, cols: [cols.seoMetadataId] }),
+		uniqueIndex({
+			tName: seoMetadataTwitterCardTableName,
+			cols: [cols.seoMetadataId],
+		}),
 		...multiIndexes({
 			tName: seoMetadataTwitterCardTableName,
-			colsGrps: [{ cols: [cols.card] }, { cols: [cols.createdAt] }, { cols: [cols.lastUpdatedAt] }],
+			colsGrps: [
+				{ cols: [cols.card] },
+				{ cols: [cols.createdAt] },
+				{ cols: [cols.lastUpdatedAt] },
+			],
 		}),
 	],
 );

@@ -20,7 +20,12 @@ export function TwoFactorVerificationForm() {
 			}}
 		>
 			<label for="form-totp.code">Code</label>
-			<input id="form-totp.code" name="code" autocomplete="one-time-code" required />
+			<input
+				id="form-totp.code"
+				name="code"
+				autocomplete="one-time-code"
+				required
+			/>
 			<br />
 			<button type="submit" disabled={mutation.isPending}>
 				Verify

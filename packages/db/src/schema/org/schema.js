@@ -5,7 +5,10 @@ import {
 	currencyCodeFkCol,
 	currencyCodeFkExtraConfig,
 } from "../_utils/cols/shared/foreign-keys/currency-code.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "../_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "../_utils/cols/shared/foreign-keys/org-id.js";
 import { sharedCols } from "../_utils/cols/shared/index.js";
 import { temporalCols } from "../_utils/cols/temporal.js";
 import { textCols } from "../_utils/cols/text.js";
@@ -64,9 +67,10 @@ export const org = table(
 		logo: varchar("logo", { length: 2096 }),
 
 		/** Arbitrary JSON for custom org-specific metadata, preferences, etc. */
-		metadata: /** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
-			orgMetadataJsonb
-		),
+		metadata:
+			/** @type {ReturnType<typeof orgMetadataJsonb.$type<Record<string, any>>>} */ (
+				orgMetadataJsonb
+			),
 	},
 	(table) => {
 		const base = orgTableName;
@@ -132,9 +136,10 @@ export const orgCurrencySettings = table(
 			tName: orgCurrencySettingsTableName,
 			cols,
 		}),
-		uniqueIndex({ tName: orgCurrencySettingsTableName, cols: [cols.orgId, cols.isDefault] }).where(
-			eq(cols.isDefault, sql`TRUE`),
-		),
+		uniqueIndex({
+			tName: orgCurrencySettingsTableName,
+			cols: [cols.orgId, cols.isDefault],
+		}).where(eq(cols.isDefault, sql`TRUE`)),
 	],
 );
 

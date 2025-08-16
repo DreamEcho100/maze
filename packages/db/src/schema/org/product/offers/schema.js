@@ -11,7 +11,10 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	compositePrimaryKey,
 	multiForeignKeys,
@@ -46,12 +49,10 @@ export const orgDiscountTypeEnum = pgEnum(`${orgDiscountTableName}_type`, [
  * @permissionContext Defines scoping logic for discount applicability
  * @abacRole Affects who can redeem based on resource association
  */
-export const discountAppliesToEnum = pgEnum(`${orgDiscountTableName}_applies_to`, [
-	"product",
-	"variant",
-	"collection",
-	"all",
-]);
+export const discountAppliesToEnum = pgEnum(
+	`${orgDiscountTableName}_applies_to`,
+	["product", "variant", "collection", "all"],
+);
 
 /**
  * @table discount
@@ -455,7 +456,9 @@ export const orgGiftCard = table(
 		currencyCode: currencyCodeFkCol().notNull(),
 		// Q: What's the use and the meaning of the issue logic here? is it correct? is this where it should be? something feels off...
 		// Who created/issued the gift card
-		issuedByEmployeeId: orgEmployeeIdFkCol({ name: "issued_by_employee_id" }).notNull(),
+		issuedByEmployeeId: orgEmployeeIdFkCol({
+			name: "issued_by_employee_id",
+		}).notNull(),
 		// Who receives it
 		issuedToMemberId: orgMemberIdFkCol({ name: "issued_to_member_id" }),
 		issuedToEmail: text("issued_to_email"),

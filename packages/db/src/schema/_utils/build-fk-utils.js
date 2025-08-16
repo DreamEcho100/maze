@@ -203,7 +203,8 @@ export function buildLocaleKeyFkUtils(config) {
 	/**
 	 * @param {{ name?: string }} [props]
 	 */
-	const fkCol = ({ name = config.defaultColName } = {}) => textCols.localeKey(name);
+	const fkCol = ({ name = config.defaultColName } = {}) =>
+		textCols.localeKey(name);
 
 	/**
 	 * @template {string} TTableName

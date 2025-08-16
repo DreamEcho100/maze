@@ -45,7 +45,9 @@ export function decrypt(encrypted) {
 	const decipher = createDecipheriv("aes-128-gcm", key, encrypted.slice(0, 16));
 	decipher.setAuthTag(encrypted.slice(encrypted.byteLength - 16));
 	const decrypted = new DynamicBuffer(0);
-	decrypted.write(decipher.update(encrypted.slice(16, encrypted.byteLength - 16)));
+	decrypted.write(
+		decipher.update(encrypted.slice(16, encrypted.byteLength - 16)),
+	);
 	decrypted.write(decipher.final());
 	return decrypted.bytes();
 }

@@ -1,5 +1,12 @@
 import { eq, sql } from "drizzle-orm";
-import { boolean, integer, jsonb, pgEnum, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	integer,
+	jsonb,
+	pgEnum,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 import {
 	currencyCodeFkCol,
 	currencyCodeFkExtraConfig,
@@ -8,13 +15,20 @@ import {
 	orgMemberIdFkCol,
 	orgMemberIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/member-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import { seoMetadataIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js";
 import {
 	userIdFkCol,
 	userIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/user-id.js";
-import { multiForeignKeys, multiIndexes, uniqueIndex } from "#schema/_utils/helpers.js";
+import {
+	multiForeignKeys,
+	multiIndexes,
+	uniqueIndex,
+} from "#schema/_utils/helpers.js";
 import { orgCategory } from "#schema/general/category/schema.js";
 import { numericCols } from "../../../_utils/cols/numeric.js";
 import { sharedCols } from "../../../_utils/cols/shared/index.js";
@@ -86,15 +100,18 @@ export const orgProductVariantPaymentSubscriptionStatusEnum = pgEnum(
  * - lesson_views: Content consumption billing for educational products
  * - processing_time: Computation time billing for service-based products
  */
-export const orgProductVariantPaymentUsageTypeEnum = pgEnum(`${orgTableName}_usage_type`, [
-	"api_calls",
-	"downloads",
-	"storage_usage",
-	"bandwidth_usage",
-	"course_completions",
-	"lesson_views",
-	"processing_time",
-]);
+export const orgProductVariantPaymentUsageTypeEnum = pgEnum(
+	`${orgTableName}_usage_type`,
+	[
+		"api_calls",
+		"downloads",
+		"storage_usage",
+		"bandwidth_usage",
+		"course_completions",
+		"lesson_views",
+		"processing_time",
+	],
+);
 
 /**
  * Usage Pricing Models - Consumption-to-Revenue Strategies
@@ -537,10 +554,15 @@ export const orgProductVariantPaymentPlanOneTimeType = table(
 );
 
 const orgProductVariantPaymentPlanSubscriptionTypeTableName = `${orgProductVariantPaymentPlanTableName}_subscription_type`;
-export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum = pgEnum(
-	`${orgTableName}_subscription_interval_count_unit`,
-	["hours", "days", "weeks", "months", "quarters", "years"],
-);
+export const orgProductVariantPaymentPlanSubscriptionTypeCustomBillingIntervalUnitEnum =
+	pgEnum(`${orgTableName}_subscription_interval_count_unit`, [
+		"hours",
+		"days",
+		"weeks",
+		"months",
+		"quarters",
+		"years",
+	]);
 
 /**
  * Subscription Payment Plan - Recurring Billing Model
@@ -595,12 +617,15 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
 		 * @billingCycle How frequently org charges subscribers
 		 * @cashFlowModel Determines revenue timing and customer payment preferences
 		 */
-		billingInterval: orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
+		billingInterval:
+			orgProductVariantPaymentBillingIntervalEnum("billing_interval").notNull(),
 		/**
 		 * @billingCycle Multiplier for billing interval enabling custom periods
 		 * @businessFlexibility intervalCount=3 with monthly = quarterly billing
 		 */
-		customBillingIntervalCount: integer("custom_billing_interval_count").default(1),
+		customBillingIntervalCount: integer(
+			"custom_billing_interval_count",
+		).default(1),
 		/**
 		 * Define the interval count measurement/unit
 		 */
@@ -666,53 +691,54 @@ export const orgProductVariantPaymentPlanSubscriptionType = table(
  *
  * @abacRole Translations readable globally; write-scoped to org owners
  */
-export const orgProductVariantPaymentPlanSubscriptionTypeI18n = buildOrgI18nTable(
-	orgProductVariantPaymentPlanSubscriptionTypeTableName,
-)(
-	{
-		/**
-		 * @translationTarget Target subscription plan
-		 */
-		planId: textCols.idFk("plan_id").notNull(),
-		// .references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
-		// 	onDelete: "cascade",
-		// }),
+export const orgProductVariantPaymentPlanSubscriptionTypeI18n =
+	buildOrgI18nTable(orgProductVariantPaymentPlanSubscriptionTypeTableName)(
+		{
+			/**
+			 * @translationTarget Target subscription plan
+			 */
+			planId: textCols.idFk("plan_id").notNull(),
+			// .references(() => orgProductVariantPaymentPlanSubscriptionType.planId, {
+			// 	onDelete: "cascade",
+			// }),
 
-		/**
-		 * @localizedContent Localized recurring cycle description
-		 * @onboardingContent Improves understanding for end customers
-		 */
-		billingDescription: text("billing_description"),
+			/**
+			 * @localizedContent Localized recurring cycle description
+			 * @onboardingContent Improves understanding for end customers
+			 */
+			billingDescription: text("billing_description"),
 
-		/**
-		 * @localizedContent Localized message for free trial info
-		 * @conversionCopy Increases conversion during signup
-		 */
-		trialMessage: text("trial_message"),
+			/**
+			 * @localizedContent Localized message for free trial info
+			 * @conversionCopy Increases conversion during signup
+			 */
+			trialMessage: text("trial_message"),
 
-		/**
-		 * @localizedContent Cancellation rules and expectations
-		 * @complianceContext Required in regulated markets (e.g., EU, CA)
-		 */
-		cancellationPolicy: text("cancellation_policy"),
-	},
-	{
-		fkKey: "planId",
-		extraConfig: (cols, tName) => [
-			...multiForeignKeys({
-				tName,
-				indexAll: true,
-				fkGroups: [
-					{
-						cols: [cols.planId],
-						foreignColumns: [orgProductVariantPaymentPlanSubscriptionType.planId],
-						afterBuild: (fk) => fk.onDelete("cascade"),
-					},
-				],
-			}),
-		],
-	},
-);
+			/**
+			 * @localizedContent Cancellation rules and expectations
+			 * @complianceContext Required in regulated markets (e.g., EU, CA)
+			 */
+			cancellationPolicy: text("cancellation_policy"),
+		},
+		{
+			fkKey: "planId",
+			extraConfig: (cols, tName) => [
+				...multiForeignKeys({
+					tName,
+					indexAll: true,
+					fkGroups: [
+						{
+							cols: [cols.planId],
+							foreignColumns: [
+								orgProductVariantPaymentPlanSubscriptionType.planId,
+							],
+							afterBuild: (fk) => fk.onDelete("cascade"),
+						},
+					],
+				}),
+			],
+		},
+	);
 
 // -------------------------------------
 // USER SUBSCRIPTIONS (CUSTOMER PURCHASE INSTANCES)
@@ -792,7 +818,10 @@ export const orgMemberProductVariantPaymentPlanSubscription = table(
 		 * @subscriptionLifecycle Current subscription state for access control
 		 * @accessControl Determines customer's access to product content and features
 		 */
-		status: orgProductVariantPaymentSubscriptionStatusEnum("status").default("active"),
+		status:
+			orgProductVariantPaymentSubscriptionStatusEnum("status").default(
+				"active",
+			),
 
 		/**
 		 * @accessControl When customer first gained access to subscribed content

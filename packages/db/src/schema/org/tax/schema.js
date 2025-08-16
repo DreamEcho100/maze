@@ -8,7 +8,10 @@ import {
 	orgEmployeeIdFkCol,
 	orgEmployeeIdFkExtraConfig,
 } from "#schema/_utils/cols/shared/foreign-keys/employee-id.js";
-import { orgIdFkCol, orgIdFkExtraConfig } from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
+import {
+	orgIdFkCol,
+	orgIdFkExtraConfig,
+} from "#schema/_utils/cols/shared/foreign-keys/org-id.js";
 import {
 	seoMetadataIdFkCol,
 	seoMetadataIdFkExtraConfig,
@@ -95,7 +98,9 @@ export const orgTaxRate = table(
 		// Q: can'cols I use the `lastUpdatedAt` to determine the version or track, or is it not reliable or better to use a separate version column?
 		// ✅ VERSIONING: Track rate changes
 		modificationVersion: integer("modification_version").notNull().default(1),
-		systemChangesVersion: integer("system_changes_version").notNull().default(1),
+		systemChangesVersion: integer("system_changes_version")
+			.notNull()
+			.default(1),
 		// supersededBy: textCols.idFk("superseded_by").references(() => orgTaxRate.id),
 
 		// startsAt: temporalCols.business.startsAt(),

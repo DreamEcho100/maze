@@ -2,7 +2,14 @@
 
 import type { VariantProps } from "class-variance-authority";
 import type { ComponentProps, CSSProperties } from "react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { Columns2 } from "lucide-react";
@@ -12,9 +19,20 @@ import { useIsMobile } from "../libs/hooks/use-is-mobile";
 import { Button } from "./button";
 import { Input } from "./input";
 import { Separator } from "./separator";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "./sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "./sheet";
 import { Skeleton } from "./skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "./tooltip";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -89,7 +107,10 @@ function SidebarProvider({
 	// Adds a keyboard shortcut to toggle the sidebar.
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
+			if (
+				event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+				(event.metaKey || event.ctrlKey)
+			) {
 				event.preventDefault();
 				toggleSidebar();
 			}
@@ -239,7 +260,11 @@ function Sidebar({
 	);
 }
 
-function SidebarTrigger({ className, onClick, ...props }: ComponentProps<typeof Button>) {
+function SidebarTrigger({
+	className,
+	onClick,
+	...props
+}: ComponentProps<typeof Button>) {
 	const { toggleSidebar } = useSidebar();
 
 	return (
@@ -312,17 +337,28 @@ function SidebarInput({ className, ...props }: ComponentProps<typeof Input>) {
 
 function SidebarHeader({ className, ...props }: ComponentProps<"div">) {
 	return (
-		<div data-sidebar="header" className={cn("flex flex-col gap-2 p-2", className)} {...props} />
+		<div
+			data-sidebar="header"
+			className={cn("flex flex-col gap-2 p-2", className)}
+			{...props}
+		/>
 	);
 }
 
 function SidebarFooter({ className, ...props }: ComponentProps<"div">) {
 	return (
-		<div data-sidebar="footer" className={cn("flex flex-col gap-2 p-2", className)} {...props} />
+		<div
+			data-sidebar="footer"
+			className={cn("flex flex-col gap-2 p-2", className)}
+			{...props}
+		/>
 	);
 }
 
-function SidebarSeparator({ className, ...props }: ComponentProps<typeof Separator>) {
+function SidebarSeparator({
+	className,
+	...props
+}: ComponentProps<typeof Separator>) {
 	return (
 		<Separator
 			data-sidebar="separator"
@@ -399,7 +435,11 @@ function SidebarGroupAction({
 
 function SidebarGroupContent({ className, ...props }: ComponentProps<"div">) {
 	return (
-		<div data-sidebar="group-content" className={cn("w-full text-sm", className)} {...props} />
+		<div
+			data-sidebar="group-content"
+			className={cn("w-full text-sm", className)}
+			{...props}
+		/>
 	);
 }
 
@@ -415,7 +455,11 @@ function SidebarMenu({ className, ...props }: ComponentProps<"ul">) {
 
 function SidebarMenuItem({ className, ...props }: ComponentProps<"li">) {
 	return (
-		<li data-sidebar="menu-item" className={cn("group/menu-item relative", className)} {...props} />
+		<li
+			data-sidebar="menu-item"
+			className={cn("group/menu-item relative", className)}
+			{...props}
+		/>
 	);
 }
 
@@ -557,7 +601,12 @@ function SidebarMenuSkeleton({
 			className={cn("flex h-8 items-center gap-2 rounded-md px-2", className)}
 			{...props}
 		>
-			{showIcon && <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />}
+			{showIcon && (
+				<Skeleton
+					className="size-4 rounded-md"
+					data-sidebar="menu-skeleton-icon"
+				/>
+			)}
 			<Skeleton
 				className="h-4 max-w-[--skeleton-width] flex-1"
 				data-sidebar="menu-skeleton-text"

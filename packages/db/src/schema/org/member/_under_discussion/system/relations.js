@@ -43,12 +43,15 @@ export const systemPermissionCategoryRelations = relations(
  * ```
  * This path enables runtime authorization decisions based on user context.
  */
-export const systemPermissionRelations = relations(systemPermission, ({ one, many }) => ({
-	/**
-	 * @abacContext Namespace assignment for attribute org
-	 */
-	category: one(systemPermissionCategory, {
-		fields: [systemPermission.categoryId],
-		references: [systemPermissionCategory.id],
+export const systemPermissionRelations = relations(
+	systemPermission,
+	({ one, many }) => ({
+		/**
+		 * @abacContext Namespace assignment for attribute org
+		 */
+		category: one(systemPermissionCategory, {
+			fields: [systemPermission.categoryId],
+			references: [systemPermissionCategory.id],
+		}),
 	}),
-}));
+);

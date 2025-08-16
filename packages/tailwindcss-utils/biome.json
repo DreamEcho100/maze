@@ -1,6 +1,7 @@
 {
-	"extends": ["../../biome.json"],
+	"root": false,
+	"extends": ["@de100/biome-config/base.json"],
 	"files": {
-		"includes": ["!dist/**", "!./src/web/styles/.css"]
+		"includes": ["!dist", "!**/_ignore", "!./src/web/styles/.css"]
 	}
 }

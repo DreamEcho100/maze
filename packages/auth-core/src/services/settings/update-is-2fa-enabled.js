@@ -35,17 +35,24 @@ export async function updateIsTwoFactorService(props) {
 	// const input = formBoolSchema.safeParse(isTwoFactorEnabled);
 	const input = updateIsTwoFactorServiceInputSchema.safeParse(props.input);
 
-	if (!input.success) return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_2FA_INPUT;
+	if (!input.success)
+		return UPDATE_IS_TWO_FACTOR_MESSAGES_ERRORS.INVALID_2FA_INPUT;
 
 	const isTwoFactorEnabled = input.data.isTwoFactorEnabled;
 
 	const { user } = props;
 
-	await updateUserTwoFactorEnabledService(user.id, isTwoFactorEnabled ? new Date() : null, {
-		authProviders: {
-			users: { updateOne2FAEnabled: props.authProviders.users.updateOne2FAEnabled },
+	await updateUserTwoFactorEnabledService(
+		user.id,
+		isTwoFactorEnabled ? new Date() : null,
+		{
+			authProviders: {
+				users: {
+					updateOne2FAEnabled: props.authProviders.users.updateOne2FAEnabled,
+				},
+			},
 		},
-	});
+	);
 
 	return UPDATE_IS_TWO_FACTOR_MESSAGES_SUCCESS.TWO_FACTOR_STATUS_UPDATED_SUCCESSFULLY;
 }

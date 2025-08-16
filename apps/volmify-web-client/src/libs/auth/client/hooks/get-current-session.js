@@ -122,7 +122,10 @@ export function useGetCurrentSessionQuery(props) {
 
 	const sessionStatus = createMemo(() => query.data?.status);
 
-	if (props?.required && sessionStatus() === CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED) {
+	if (
+		props?.required &&
+		sessionStatus() === CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED
+	) {
 		// If required, ensure we have a session
 		// navigate("/auth/login", { replace: true });
 		// throw new Error("Redirecting to login...");
