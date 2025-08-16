@@ -2,10 +2,8 @@ import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useI18n, useTranslations } from "@de100/i18n-solidjs";
 import { Title } from "@solidjs/meta";
-import { revalidate } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import {
-	createEffect,
 	createSignal,
 	For,
 	type ParentProps,
@@ -15,7 +13,6 @@ import Counter from "#components/Counter";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
 import ForgotPasswordPage from "#libs/auth/client/components/forgot-password/page.jsx";
-import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { allowedLocales } from "#libs/i18n/constants.ts";
 import { cookieManager } from "#libs/js-cookies/index.ts";
 

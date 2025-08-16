@@ -272,6 +272,7 @@ import {
 	createEffect,
 	createMemo,
 	For,
+	on,
 	useContext,
 } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -473,16 +474,18 @@ export const I18nProvider: ParentComponent<
 	});
 
 	createEffect(
-		() => {
-			if (
-				props.localeParam &&
+		on(
+			() =>
 				!store.state.isLoadingTranslations &&
-				props.localeParam !== store.state.locale
-			) {
-				store.actions.setLocale(props.localeParam);
-			}
-		},
-		{ defer: true },
+				props.localeParam !== store.state.locale &&
+				props.localeParam,
+			(localeParam) => {
+				if (localeParam) {
+					store.actions.setLocale(localeParam);
+				}
+			},
+			{ defer: true },
+		),
 	);
 
 	return (
