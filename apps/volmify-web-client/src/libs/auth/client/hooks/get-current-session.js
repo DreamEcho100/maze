@@ -7,9 +7,10 @@ import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useQuery } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
 import { queryClient } from "#libs/@tanstack/query/query-client.js";
+import { getCurrentSession } from "#libs/auth/server/queries.js";
 import {
 	// extendCurrentSession,
-	getCurrentSession,
+	// getCurrentSession,
 	// refreshCurrentSession,
 } from "#libs/auth/server/utils.js";
 // import { extendCurrentSession } from "#server/libs/auth/extend-current-session";

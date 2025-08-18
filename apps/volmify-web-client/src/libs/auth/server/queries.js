@@ -1,4 +1,4 @@
-// @ts-check
+"use server";
 
 /**
  * @import { AuthProvidersShape, AuthProvidersWithGetSessionUtils, HeadersProvider } from "@de100/auth-core/types";
@@ -18,7 +18,6 @@ import { generateGetCurrentAuthSessionProps } from "./utils";
  * @param {boolean} [props.canMutateCookies] - Indicates whether the function can modify cookies.
  */
 export async function getUncachedCurrentSession(props) {
-	"use server";
 	return getCurrentAuthSession(
 		await generateGetCurrentAuthSessionProps({
 			reqHeaders: props?.reqHeaders,
@@ -65,7 +64,6 @@ export const getCurrentSession = query(
 // };
 
 export const extendCurrentSession = async () => {
-	"use server";
 	// return sessionUtils.extendCurrentSession({
 	// 	onInvalidSession: () => {
 	// 		redirect(AUTH_URLS.LOGIN);
@@ -83,7 +81,6 @@ export const extendCurrentSession = async () => {
 	);
 };
 export const refreshCurrentSession = async () => {
-	"use server";
 	// return sessionUtils.refreshCurrentSession({
 	// 	onInvalidSession: () => {
 	// 		redirect(AUTH_URLS.LOGIN);

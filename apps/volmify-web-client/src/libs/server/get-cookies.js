@@ -2,14 +2,11 @@
 
 import { dateLikeToDate } from "@de100/auth-core/utils/dates";
 /** @import { CookiesProvider, HeadersProvider } from "@de100/auth-core/types"; */
-import { cookies as _cookies } from "next/headers";
 
 /** @returns {Promise<CookiesProvider>} */
 export async function getCookies() {
-	const cookies = await _cookies();
-
 	return {
-		get: (name) => cookies.get(name)?.value,
+		get: (name) => getCookies(name),
 		set: (name, value, { expires, ...options } = {}) => {
 			cookies.set(name, value, {
 				...options,

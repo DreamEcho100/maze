@@ -4,6 +4,7 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import "./app.css";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+import { authRoutesConfig } from "#libs/auth/client/components/routes-config.js";
 
 export default function App() {
 	return (
@@ -14,6 +15,12 @@ export default function App() {
 						<Title>SolidStart - Basic</Title>
 						<Link href="/">Index</Link>
 						<Link href="/about">About</Link>
+						<Link href={authRoutesConfig.login.path}>
+							{authRoutesConfig.login.title}
+						</Link>
+						<Link href={authRoutesConfig.register.path}>
+							{authRoutesConfig.register.title}
+						</Link>
 						<Suspense>{props.children}</Suspense>
 					</MetaProvider>
 				);

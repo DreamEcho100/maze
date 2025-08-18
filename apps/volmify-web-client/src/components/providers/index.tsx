@@ -5,6 +5,7 @@ import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import type { ParentProps } from "solid-js";
 import { Show, Suspense } from "solid-js";
 import { queryClient } from "#libs/@tanstack/query/query-client.js";
+import SessionProvider from "#libs/auth/client/components/session-provider.js";
 // import { queryClient } from "#libs/@tanstack/query/query-client.js";
 import {
 	type AllowedLocale,
@@ -86,8 +87,10 @@ export default function Providers(
 ) {
 	return (
 		<QueryClientProvider client={queryClient}>
-			<I18nProviderWrapper>{props.children}</I18nProviderWrapper>
-			<SolidQueryDevtools initialIsOpen={false} />
+			<I18nProviderWrapper>
+				<SessionProvider>{props.children}</SessionProvider>
+				<SolidQueryDevtools initialIsOpen={false} />
+			</I18nProviderWrapper>
 		</QueryClientProvider>
 	);
 }

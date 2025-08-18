@@ -12,7 +12,8 @@ import {
 import Counter from "#components/Counter";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
-import ForgotPasswordPage from "#libs/auth/client/components/forgot-password/page.jsx";
+import ForgotPasswordPage from "#libs/auth/client/components/screens/forgot-password/page.jsx";
+import { useGetCurrentSessionQuery } from "#libs/auth/client/hooks/get-current-session.js";
 import { allowedLocales } from "#libs/i18n/constants.ts";
 import { cookieManager } from "#libs/js-cookies/index.ts";
 
@@ -37,8 +38,38 @@ export default function Home() {
 	// const t = useTranslations();
 	const router = useRouter();
 
+	const getCurrentSessionQuery = useGetCurrentSessionQuery();
+
 	return (
 		<main>
+			<QueryBoundary
+				query={getCurrentSessionQuery}
+				loadingFallback={<div class="loader">Loading session...</div>}
+				errorFallback={(err, retry) => (
+					<div>
+						<div class="error">{err.message}</div>
+						<button
+							type="button"
+							disabled={
+								getCurrentSessionQuery.isRefetching ||
+								getCurrentSessionQuery.isSuccess
+							}
+							onClick={() => {
+								retry();
+							}}
+						>
+							retry
+						</button>
+					</div>
+				)}
+			>
+				{(session) => (
+					<div>
+						<h2>Current Session</h2>
+						<pre>{JSON.stringify(session, null, 2)}</pre>
+					</div>
+				)}
+			</QueryBoundary>
 			<ForgotPasswordPage />
 			<Title>Hello World</Title>
 			<h1>Hello world!</h1>
