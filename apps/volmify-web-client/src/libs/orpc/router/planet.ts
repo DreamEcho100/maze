@@ -4,9 +4,9 @@ import {
 	NewPlanetSchema,
 	PlanetSchema,
 	UpdatePlanetSchema,
-} from "../../schemas/planet";
-import { retry } from "../middlewares/retry";
-import { authed, pub } from "./_root";
+} from "../../schemas/planet.ts";
+import { retry } from "../middlewares/retry.ts";
+import { authed, pub } from "./_root.ts";
 
 export const listPlanets = pub
 	.use(retry({ times: 3 }))

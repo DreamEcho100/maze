@@ -62,18 +62,22 @@
 		"studio": "pnpm with-env drizzle-kit studio",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
 		"with-env": "dotenv -e ../../.env --",
-		"db:push": "drizzle-kit push",
-		"db:studio": "drizzle-kit studio",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate"
+		"db:push": "pnpm with-env drizzle-kit push",
+		"db:studio": "pnpm with-env drizzle-kit studio",
+		"db:generate": "pnpm with-env drizzle-kit generate",
+		"db:migrate": "pnpm with-env drizzle-kit migrate"
 	},
 	"dependencies": {
 		"@de100/auth-core": "workspace:^",
+		"base32-crockford": "^0.0.6",
+		"byte-encodings": "^1.0.11",
+		"crockford-base32": "^2.0.0",
 		"drizzle-orm": "catalog:",
 		"drizzle-zod": "catalog:",
-		"id128": "catalog:",
 		"pg": "catalog:",
 		"ulid": "catalog:",
+		"ulidx": "catalog:",
+		"uuid-parse": "^1.1.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
@@ -81,6 +85,7 @@
 		"@de100/biome-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
 		"@types/pg": "catalog:",
+		"@types/uuid-parse": "^1.0.2",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "catalog:",
 		"typescript": "catalog:"

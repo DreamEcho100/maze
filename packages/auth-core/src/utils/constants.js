@@ -10,6 +10,12 @@ export const AUTHENTICATION_REQUIRED = /** @type {const} */ ({
 	message: "Please log in to continue",
 	messageCode: "AUTHENTICATION_REQUIRED",
 });
+export const INTERNAL_SERVER_ERROR = /** @type {const} */ ({
+	type: "error",
+	statusCode: 500,
+	message: "An internal server error occurred",
+	messageCode: "INTERNAL_SERVER_ERROR",
+});
 
 export const LOGIN_MESSAGES_ERRORS = /** @type {const} */ ({
 	INVALID_CREDENTIALS: {
@@ -63,6 +69,7 @@ export const LOGIN_MESSAGES_SUCCESS = /** @type {const} */ ({
 });
 
 export const REGISTER_MESSAGES_ERRORS = /** @type {const} */ ({
+	INTERNAL_SERVER_ERROR,
 	INVALID_OR_MISSING_FIELDS: {
 		type: "error",
 		statusCode: 400,

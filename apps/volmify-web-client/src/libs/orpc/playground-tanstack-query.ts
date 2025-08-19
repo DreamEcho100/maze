@@ -4,7 +4,7 @@ import {
 	useMutation,
 	useQueryClient,
 } from "@tanstack/solid-query";
-import { orpc } from "#libs/orpc";
+import { orpc } from "#libs/orpc/index.ts";
 
 const query = useInfiniteQuery(() =>
 	orpc.planet.list.infiniteOptions({

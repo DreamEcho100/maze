@@ -1,7 +1,7 @@
 "use client";
 import { useMutation } from "@tanstack/solid-query";
 
-import { verifyPasswordResetEmailVerificationAction } from "./actions";
+import { verifyPasswordResetEmailVerificationAction } from "./actions.js";
 
 export function PasswordResetEmailVerificationForm() {
 	const mutation = useMutation(() => ({

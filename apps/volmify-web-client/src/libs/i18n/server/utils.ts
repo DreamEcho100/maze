@@ -1,98 +1,5 @@
 import { initI18nSolidStart } from "@de100/i18n-solid-startjs/server/init";
-import { allowedLocales, defaultLocale } from "../constants";
-
-const {
-	getCurrentRequestConfig,
-	getRequestLocale,
-	permanentRedirect,
-	redirect,
-	setRequestLocale,
-} = initI18nSolidStart({
-	allowedLocales: allowedLocales,
-	defaultLocale: defaultLocale,
-});
-
-export {
-	getCurrentRequestConfig,
-	getRequestLocale,
-	permanentRedirect,
-	redirect,
-	setRequestLocale,
-};
-
-// TODO: use the [`useSession`](https://docs.solidjs.com/solid-start/advanced/session)
-
-import { getCookie, type HTTPEvent, setCookie } from "vinxi/http";
-import type { AllowedLocale } from "../constants";
-import { isAllowedLocale } from "../is-allowed-locale";
-
-export function getLocaleFromAcceptLanguageHeader(headers: Headers) {
-	// 2. Check Accept-Language header
-	const acceptLanguageHeader =
-		headers.get("accept-language") || headers.get("accept-language");
-
-	if (!acceptLanguageHeader) {
-		return;
-	}
-
-	const acceptLanguages = acceptLanguageHeader.split(",");
-	for (const lang of acceptLanguages) {
-		const langCode = lang.split(";")[0]?.trim().split("-")[0] as AllowedLocale;
-		if (isAllowedLocale(langCode)) {
-			return langCode;
-		}
-	}
-}
-
-function getLocaleFromCookies(nativeEvent: HTTPEvent) {
-	const cookieLocale = getCookie(nativeEvent, "locale");
-	const cookieXLocale = getCookie(nativeEvent, "x-locale");
-	return [cookieLocale, cookieXLocale] as const;
-}
-
-function getForcedLocaleFromCookies(nativeEvent: HTTPEvent) {
-	const cookieLocale = getCookie(nativeEvent, "forced-locale");
-	return cookieLocale;
-}
-export function setLocaleInCookies(
-	nativeEvent: HTTPEvent,
-	locale: AllowedLocale,
-) {
-	const [cookieLocale, cookieXLocale] = getLocaleFromCookies(nativeEvent);
-	if (cookieLocale !== locale) {
-		setCookie(nativeEvent, "x-locale", locale, {
-			path: "/",
-			maxAge: 31536000, // 1 year
-			sameSite: "lax",
-		});
-	}
-	if (cookieXLocale !== locale) {
-		setCookie(nativeEvent, "locale", locale, {
-			path: "/",
-			maxAge: 31536000, // 1 year
-			sameSite: "lax",
-		});
-	}
-}
-function getLocaleFromHeaders(nativeEvent: HTTPEvent) {
-	const headers = nativeEvent.headers;
-	const headerLocale = headers.get("locale");
-	const headerXLocale = headers.get("x-locale");
-	return [headerLocale, headerXLocale] as const;
-}
-export function setLocaleInHeaders(
-	nativeEvent: HTTPEvent,
-	locale: AllowedLocale,
-) {
-	const headers = nativeEvent.headers;
-	const [headerLocale, headerXLocale] = getLocaleFromHeaders(nativeEvent);
-	if (headerLocale !== locale) {
-		headers.set("x-locale", locale);
-	}
-	if (headerXLocale !== locale) {
-		headers.set("x-locale", locale);
-	}
-}
+import { allowedLocales, defaultLocale } from "../constants.ts";
 
 type LocaleSource =
 	| "pathname"
@@ -196,6 +103,7 @@ export function getServerLocale(props: {
 } {
 	for (const localeDeterminationStrategy of localeDeterminationStrategies) {
 		const result = localeDeterminationStrategy(props);
+		console.log("___ result", result);
 		if (result) {
 			return result;
 		}
@@ -206,4 +114,115 @@ export function getServerLocale(props: {
 		localeSource: "default",
 		shouldSetCookie: true,
 	};
+}
+
+const {
+	getCurrentRequestConfig,
+	getRequestLocale,
+	buildRedirectConfig,
+	permanentRedirect,
+	redirect,
+	setRequestLocale,
+} = initI18nSolidStart({
+	allowedLocales: allowedLocales,
+	defaultLocale: defaultLocale,
+	getServerLocale: () => {
+		const event = getEvent();
+		if (!event) {
+			throw new Error("No `requestEvent` found!");
+		}
+		const pathname = event.node.req.url;
+		if (!pathname) {
+			throw new Error("No `event.node.req.url` found!");
+		}
+		return getServerLocale({
+			nativeEvent: event,
+			headers: event.headers,
+			pathname,
+		}).foundLocale;
+	},
+});
+
+export {
+	getCurrentRequestConfig,
+	getRequestLocale,
+	buildRedirectConfig,
+	permanentRedirect,
+	redirect,
+	setRequestLocale,
+};
+
+// TODO: use the [`useSession`](https://docs.solidjs.com/solid-start/advanced/session)
+
+import { getRequestEvent } from "solid-js/web";
+import { getCookie, getEvent, type HTTPEvent, setCookie } from "vinxi/http";
+import type { AllowedLocale } from "../constants.ts";
+import { isAllowedLocale } from "../is-allowed-locale.ts";
+
+export function getLocaleFromAcceptLanguageHeader(headers: Headers) {
+	// 2. Check Accept-Language header
+	const acceptLanguageHeader =
+		headers.get("accept-language") || headers.get("accept-language");
+
+	if (!acceptLanguageHeader) {
+		return;
+	}
+
+	const acceptLanguages = acceptLanguageHeader.split(",");
+	for (const lang of acceptLanguages) {
+		const langCode = lang.split(";")[0]?.trim().split("-")[0] as AllowedLocale;
+		if (isAllowedLocale(langCode)) {
+			return langCode;
+		}
+	}
+}
+
+function getLocaleFromCookies(nativeEvent: HTTPEvent) {
+	const cookieLocale = getCookie(nativeEvent, "locale");
+	const cookieXLocale = getCookie(nativeEvent, "x-locale");
+	return [cookieLocale, cookieXLocale] as const;
+}
+
+function getForcedLocaleFromCookies(nativeEvent: HTTPEvent) {
+	const cookieLocale = getCookie(nativeEvent, "forced-locale");
+	return cookieLocale;
+}
+export function setLocaleInCookies(
+	nativeEvent: HTTPEvent,
+	locale: AllowedLocale,
+) {
+	const [cookieLocale, cookieXLocale] = getLocaleFromCookies(nativeEvent);
+	if (cookieLocale !== locale) {
+		setCookie(nativeEvent, "x-locale", locale, {
+			path: "/",
+			maxAge: 31536000, // 1 year
+			sameSite: "lax",
+		});
+	}
+	if (cookieXLocale !== locale) {
+		setCookie(nativeEvent, "locale", locale, {
+			path: "/",
+			maxAge: 31536000, // 1 year
+			sameSite: "lax",
+		});
+	}
+}
+function getLocaleFromHeaders(nativeEvent: HTTPEvent) {
+	const headers = nativeEvent.headers;
+	const headerLocale = headers.get("locale");
+	const headerXLocale = headers.get("x-locale");
+	return [headerLocale, headerXLocale] as const;
+}
+export function setLocaleInHeaders(
+	nativeEvent: HTTPEvent,
+	locale: AllowedLocale,
+) {
+	const headers = nativeEvent.headers;
+	const [headerLocale, headerXLocale] = getLocaleFromHeaders(nativeEvent);
+	if (headerLocale !== locale) {
+		headers.set("x-locale", locale);
+	}
+	if (headerXLocale !== locale) {
+		headers.set("x-locale", locale);
+	}
 }

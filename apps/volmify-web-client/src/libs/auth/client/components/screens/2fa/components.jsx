@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/solid-query";
-import { verify2FAAction } from "./actions";
+import { verify2FAAction } from "./actions.js";
 
 export function TwoFactorVerificationForm() {
 	const mutation = useMutation(() => ({

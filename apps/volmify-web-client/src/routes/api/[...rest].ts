@@ -4,15 +4,15 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import type { APIEvent } from "@solidjs/start/server";
-import { router } from "#libs/orpc/router";
+import { router } from "#libs/orpc/router/index.ts";
 import "#libs/orpc/polyfill.ts";
-import { CredentialSchema, TokenSchema } from "#libs/schemas/auth";
+import { CredentialSchema, TokenSchema } from "#libs/schemas/auth.ts";
 import {
 	NewPlanetSchema,
 	PlanetSchema,
 	UpdatePlanetSchema,
-} from "#libs/schemas/planet";
-import { NewUserSchema, UserSchema } from "#libs/schemas/user";
+} from "#libs/schemas/planet.ts";
+import { NewUserSchema, UserSchema } from "#libs/schemas/user.ts";
 
 const handler = new OpenAPIHandler(router, {
 	interceptors: [

@@ -26,8 +26,8 @@ catalog:
   drizzle-orm: ^0.44.2
   "drizzle-zod": ^0.6.1
   drizzle-kit: ^0.31.2
-  id128: ^1.6.6  # dotenv: ^16.4.7
   ulid: ^3.0.1
+  ulidx: ^2.4.1
   pg: ^8.14.1
   "@types/pg": ^8.15.5
   "@orpc/tanstack-query": ^1.5.0

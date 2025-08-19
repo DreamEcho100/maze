@@ -1,4 +1,4 @@
-import { POST as handle } from "./[...rest]";
+import { POST as handle } from "./[...rest].ts";
 
 export const HEAD = handle;
 export const GET = handle;

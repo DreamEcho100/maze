@@ -5,7 +5,7 @@
  */
 import { useMutation } from "@tanstack/solid-query";
 
-import { logoutAction } from "./actions";
+import { logoutAction } from "./actions.js";
 
 /** @param {JSX.ButtonHTMLAttributes<HTMLButtonElement>} props  */
 export function LogoutButton(props) {

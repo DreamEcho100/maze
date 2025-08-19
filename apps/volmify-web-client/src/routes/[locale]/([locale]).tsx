@@ -9,7 +9,7 @@ import {
 	type ParentProps,
 	resetErrorBoundaries,
 } from "solid-js";
-import Counter from "#components/Counter";
+import Counter from "#components/Counter.jsx";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
 import ForgotPasswordPage from "#libs/auth/client/components/screens/forgot-password/page.jsx";
@@ -42,6 +42,7 @@ export default function Home() {
 
 	return (
 		<main>
+			<p>{`froms+["'](?!@)(?!.*.(?:ts|tsx|js|jsx)["']).*["']`}</p>
 			<QueryBoundary
 				query={getCurrentSessionQuery}
 				loadingFallback={<div class="loader">Loading session...</div>}

@@ -4,14 +4,14 @@
 import { userAgent as getUserAgent } from "next/server";
 import { getCookiesAndHeaders } from "#libs/auth/server/utils.js";
 
-// import { getCookiesAndHeaders } from "./get-cookies-and-headers";
+// import { getCookiesAndHeaders } from "./get-cookies-and-headers.js";
 
 /** * Retrieves the client's IP address and user agent from the request headers.
  *
  * @param {Headers} [reqHeaders] - Optional request headers object.
- * @returns {Promise<{ ipAddress: string | null, userAgent: ReturnType<typeof getUserAgent>; cookies: CookiesProvider; headers: HeadersProvider; cookiesOptions: DynamicCookiesOptions }>} An object containing the IP address and user agent.
+ * @returns {{ ipAddress: string | null, userAgent: ReturnType<typeof getUserAgent>; cookies: CookiesProvider; headers: HeadersProvider; cookiesOptions: DynamicCookiesOptions }} An object containing the IP address and user agent.
  */
-export async function getSessionOptionsBasics(reqHeaders) {
+export function getSessionOptionsBasics(reqHeaders) {
 	const { cookies, headers } = getCookiesAndHeaders(reqHeaders);
 
 	let ipAddress = null;

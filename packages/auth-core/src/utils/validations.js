@@ -27,9 +27,10 @@ export const emailSchema = z.email();
 // 	}),
 // );
 
-export const registerServiceInputSchema = z.object({
+export const RegisterServiceInputSchema = z.object({
 	email: emailSchema,
 	name: z.string().check(z.minLength(3), z.maxLength(32)),
+	displayName: z.string().check(z.minLength(3), z.maxLength(32)),
 	password: z.string().check(z.minLength(8)),
 	enable2FA:
 		// 	z.preprocess((value) => {
@@ -99,6 +100,7 @@ export const adminRegisterServiceInputSchema = z.object({
 	email: emailSchema,
 	// name: z.string().min(3).max(32),
 	name: z.string().check(z.minLength(3), z.maxLength(32)),
+	displayName: z.string().check(z.minLength(3), z.maxLength(32)),
 	// password: z.string().min(8),
 	password: z.string().check(z.minLength(8)),
 	// enable2FA: z.preprocess((value) => {

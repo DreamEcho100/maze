@@ -5,6 +5,7 @@ import { REGISTER_MESSAGES_ERRORS } from "@de100/auth-core/utils/constants";
 import {
 	authStrategy,
 	createOneEmailVerificationRequests,
+	createOneIdSync,
 	createOneUser,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
@@ -22,7 +23,8 @@ import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics
  */
 export async function signupAction(input) {
 	const result = await registerService({
-		...(await getSessionOptionsBasics()),
+		...getSessionOptionsBasics(),
+		// generateRandomId: createOneIdSync,
 		input,
 		authStrategy,
 		authProviders: {

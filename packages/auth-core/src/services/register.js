@@ -1,6 +1,7 @@
 /** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy, DynamicCookiesOptions } from "#types.ts"; */
 
 import {
+	INTERNAL_SERVER_ERROR,
 	REGISTER_MESSAGES_ERRORS,
 	REGISTER_MESSAGES_SUCCESS,
 } from "#utils/constants.js";
@@ -12,7 +13,7 @@ import {
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createUser } from "#utils/users.js";
-import { registerServiceInputSchema } from "#utils/validations.js";
+import { RegisterServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -42,108 +43,120 @@ import { registerServiceInputSchema } from "#utils/validations.js";
  * >}
  */
 export async function registerService(props) {
-	const input = registerServiceInputSchema.safeParse(props.input);
-	if (!input.success) {
-		return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
-	}
+	try {
+		const input = RegisterServiceInputSchema.safeParse(props.input);
+		console.log("___ input", input);
+		if (!input.success) {
+			return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
+		}
 
-	const emailAvailable = await props.authProviders.users.findOneByEmail(
-		input.data.email,
-	);
+		const emailAvailable = await props.authProviders.users.findOneByEmail(
+			input.data.email,
+		);
 
-	if (emailAvailable) {
-		return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
-	}
+		console.log("___ emailAvailable", emailAvailable);
 
-	const strongPassword = await verifyPasswordStrength(input.data.password);
+		if (emailAvailable) {
+			return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
+		}
 
-	if (!strongPassword) {
-		return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
-	}
+		const strongPassword = await verifyPasswordStrength(input.data.password);
+		console.log("___ strongPassword", strongPassword);
 
-	const user = await createUser(
-		input.data.email,
-		input.data.name,
-		input.data.password,
-		{
+		if (!strongPassword) {
+			return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+		}
+
+		// TODO: `input.data.enable2FA` usage
+		const user = await createUser(input.data, {
 			authProviders: {
 				users: { createOne: props.authProviders.users.createOne },
 			},
-		},
-	);
+		});
 
-	const userEmailVerificationRequests = await createEmailVerificationRequest(
-		{ where: { userId: user.id, email: user.email } },
-		{
-			authProviders: {
-				userEmailVerificationRequests: {
-					createOne:
-						props.authProviders.userEmailVerificationRequests.createOne,
-					deleteOneByUserId:
-						props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+		console.log("___ user", user);
+
+		const userEmailVerificationRequests = await createEmailVerificationRequest(
+			{ where: { userId: user.id, email: user.email } },
+			{
+				authProviders: {
+					userEmailVerificationRequests: {
+						createOne:
+							props.authProviders.userEmailVerificationRequests.createOne,
+						deleteOneByUserId:
+							props.authProviders.userEmailVerificationRequests
+								.deleteOneByUserId,
+					},
 				},
 			},
-		},
-	);
+		);
+		console.log(
+			"___ userEmailVerificationRequests",
+			userEmailVerificationRequests,
+		);
 
-	await sendVerificationEmail(
-		userEmailVerificationRequests.email,
-		userEmailVerificationRequests.code,
-	);
-	setEmailVerificationRequestCookie({
-		request: userEmailVerificationRequests,
-		cookies: props.cookies,
-		cookiesOptions: props.cookiesOptions,
-	});
+		await sendVerificationEmail(
+			userEmailVerificationRequests.email,
+			userEmailVerificationRequests.code,
+		);
+		setEmailVerificationRequestCookie({
+			request: userEmailVerificationRequests,
+			cookies: props.cookies,
+			cookiesOptions: props.cookiesOptions,
+		});
 
-	const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
+		const id = getEmailVerificationRequestCookie(props.cookies) ?? null;
 
-	return REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL;
+		return REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL;
 
-	// /** @type {SessionMetadata} */
-	// const sessionInputBasicInfo = {
-	// 	ipAddress: props.ipAddress ?? null,
-	// 	userAgent: props.userAgent ?? null,
-	// 	twoFactorVerifiedAt: null,
-	// 	userId: user.id,
-	// 	metadata: null,
-	// };
-	// const sessionToken = generateAuthSessionToken(
-	// 	{ data: { user: user, metadata: sessionInputBasicInfo, sessionId: session.id } },
-	// 	{
-	// 		authStrategy: props.authStrategy,
-	// 		authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
-	// 	},
-	// );
-	// const session = await createAuthSession({
-	// 	// token: sessionToken,
-	// 	generateRandomId: props.generateRandomId,
-	// 	cookies: props.cookies,
-	// 	userAgent: props.userAgent,
-	// 	user,
-	// 	metadata: sessionInputBasicInfo,
-	// 	authStrategy: props.authStrategy,
-	// 	authProviders: {
-	// 		sessions: {
-	// 			createOne: props.authProviders.sessions.createOne,
-	// 		},
-	// 		jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
-	// 	},
-	// });
-	// const result = setOneAuthSessionToken(session, {
-	// 	cookies: props.cookies,
-	// 	userAgent: props.userAgent,
-	// 	authStrategy: props.authStrategy,
-	// });
+		// /** @type {SessionMetadata} */
+		// const sessionInputBasicInfo = {
+		// 	ipAddress: props.ipAddress ?? null,
+		// 	userAgent: props.userAgent ?? null,
+		// 	twoFactorVerifiedAt: null,
+		// 	userId: user.id,
+		// 	metadata: null,
+		// };
+		// const sessionToken = generateAuthSessionToken(
+		// 	{ data: { user: user, metadata: sessionInputBasicInfo, sessionId: session.id } },
+		// 	{
+		// 		authStrategy: props.authStrategy,
+		// 		authProviders: { jwt: { createRefreshToken: props.authProviders.jwt?.createRefreshToken } },
+		// 	},
+		// );
+		// const session = await createAuthSession({
+		// 	// token: sessionToken,
+		// 	generateRandomId: props.generateRandomId,
+		// 	cookies: props.cookies,
+		// 	userAgent: props.userAgent,
+		// 	user,
+		// 	metadata: sessionInputBasicInfo,
+		// 	authStrategy: props.authStrategy,
+		// 	authProviders: {
+		// 		sessions: {
+		// 			createOne: props.authProviders.sessions.createOne,
+		// 		},
+		// 		jwt: { createTokenPair: props.authProviders.jwt?.createTokenPair },
+		// 	},
+		// });
+		// const result = setOneAuthSessionToken(session, {
+		// 	cookies: props.cookies,
+		// 	userAgent: props.userAgent,
+		// 	authStrategy: props.authStrategy,
+		// });
 
-	// if (user.twoFactorEnabledAt) {
-	// 	return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
-	// }
+		// if (user.twoFactorEnabledAt) {
+		// 	return REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED;
+		// }
 
-	// redirect("/auth/2fa/setup");
-	// return redirect("/auth/login");
-	// return {
-	// 	...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
-	// 	data: { user, session: result },
-	// };
+		// redirect("/auth/2fa/setup");
+		// return redirect("/auth/login");
+		// return {
+		// 	...REGISTER_MESSAGES_SUCCESS.REGISTRATION_SUCCESSFUL,
+		// 	data: { user, session: result },
+		// };
+	} catch (error) {
+		console.error("Error in registerService:", error);
+		return INTERNAL_SERVER_ERROR;
+	}
 }

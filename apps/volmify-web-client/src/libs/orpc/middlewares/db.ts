@@ -1,6 +1,6 @@
 import { os } from "@orpc/server";
-import type { NewPlanet, Planet, UpdatePlanet } from "../../schemas/planet";
-import type { User } from "../../schemas/user";
+import type { NewPlanet, Planet, UpdatePlanet } from "../../schemas/planet.ts";
+import type { User } from "../../schemas/user.ts";
 
 export interface DB {
 	planets: {

@@ -57,9 +57,12 @@ export async function adminRegisterService(props) {
 	}
 
 	const user = await createUser(
-		input.data.email,
-		input.data.name,
-		input.data.password,
+		{
+			name: input.data.name,
+			email: input.data.email,
+			password: input.data.password,
+			displayName: input.data.displayName,
+		},
 		{
 			authProviders: {
 				users: { createOne: props.authProviders.users.createOne },

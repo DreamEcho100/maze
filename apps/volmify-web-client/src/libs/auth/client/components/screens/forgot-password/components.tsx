@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/solid-query";
 // import { useMutation } from "@tanstack/solid-query";
-import { forgotPasswordAction } from "./actions";
+import { forgotPasswordAction } from "./actions.js";
 
 export function ForgotPasswordForm() {
 	const mutation = useMutation(() => ({

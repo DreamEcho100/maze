@@ -7,7 +7,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { getRequestEvent } from "solid-js/web";
-import type { router } from "#libs/orpc/router";
+import type { router } from "#libs/orpc/router/index.ts";
 
 declare global {
 	var $client: RouterClient<typeof router> | undefined;

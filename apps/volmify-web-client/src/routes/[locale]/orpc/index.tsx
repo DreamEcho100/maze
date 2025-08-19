@@ -1,5 +1,5 @@
-import { CreatePlanetMutationForm } from "./mutation";
-import { ListPlanetsQuery } from "./query";
+import { CreatePlanetMutationForm } from "./mutation.ts";
+import { ListPlanetsQuery } from "./query.ts";
 
 export default function Home() {
 	return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/solid-query";
-import { reset2FAAction } from "./actions";
+import { reset2FAAction } from "./actions.js";
 
 export function TwoFactorResetForm() {
 	const mutation = useMutation(() => ({

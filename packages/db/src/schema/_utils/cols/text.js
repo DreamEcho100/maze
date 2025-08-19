@@ -1,13 +1,13 @@
 import { jsonb, text, varchar } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
-import { byteaUlid } from "../custom-fields.js";
+import { ulidBytea } from "../custom-fields.js";
 
 const createId = ulid;
 
 export const textCols = {
-	// id: () => byteaUlid("id").$default(createId),
-	idPk: () => byteaUlid("id").primaryKey().$default(createId),
-	idFk: byteaUlid,
+	// id: () => ulidBytea("id").$default(createId),
+	idPk: () => ulidBytea("id").primaryKey().$default(createId),
+	idFk: ulidBytea,
 	// Identifiers & URLs (ASCII-optimized)
 	slug: (name = "slug") => varchar(name, { length: 128 }), // URL-safe, indexed frequently
 	key: () => varchar("key", { length: 128 }), // Permission keys, API keys

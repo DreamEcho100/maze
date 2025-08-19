@@ -9,29 +9,33 @@ import { dateLikeToDate } from "./dates.js";
 
 /**
  * Create a new user.
- * @param {string} email
- * @param {string} name
- * @param {string} password
+ *
+ * @param {Object} data - The user data.
+ * @param {string} data.email
+ * @param {string} data.name
+ * @param {string} data.displayName
+ * @param {string} data.password
  * @param {Object} ctx - Context object containing auth providers.
  * @param {{ users: { createOne: UsersProvider['createOne']; } }} ctx.authProviders
  * @returns {Promise<User>}
  */
-export async function createUser(email, name, password, ctx) {
-	const passwordHash = await hashPassword(password);
+export async function createUser(data, ctx) {
+	const passwordHash = await hashPassword(data.password);
 	const recoveryCode = generateRandomRecoveryCode();
 	const encryptedRecoveryCode = encryptString(recoveryCode);
 
 	// const result = await createUserRepository(email, name, passwordHash, encryptedRecoveryCode);
 	// @ts-expect-error
 	const result = await ctx.authProviders.users.createOne({
-		email,
-		name,
+		email: data.email,
+		name: data.name,
+		displayName: data.displayName,
 		passwordHash,
 		encryptedRecoveryCode,
 	});
 
 	if (!result) {
-		throw new Error(`Failed to create user with email ${email}`);
+		throw new Error(`Failed to create user with email ${data.email}`);
 	}
 
 	return result;

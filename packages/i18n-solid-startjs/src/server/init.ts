@@ -1,6 +1,7 @@
 import type { LanguageMessages } from "@de100/i18n";
 import type { CustomResponse } from "@solidjs/router";
 import {
+	buildRedirectConfig,
 	getCurrentRequestConfig,
 	getRequestLocale,
 	permanentRedirect,
@@ -20,6 +21,7 @@ export function initI18nSolidStart(
 		getRequestLocale,
 		getCurrentRequestConfig,
 		setRequestLocale,
+		buildRedirectConfig,
 		redirect,
 		permanentRedirect,
 	};
@@ -27,15 +29,13 @@ export function initI18nSolidStart(
 
 // https://stackoverflow.com/a/78111987/13961420
 export interface InitI18nSolidStartReturn {
-	getRequestLocale: () => Promise<string | undefined>;
+	getRequestLocale: () => string | undefined;
 	getCurrentRequestConfig: (
-		loadLocaleMessages: (
-			locale: string,
-		) => Promise<Record<string, LanguageMessages>>,
-	) => Promise<{
+		loadLocaleMessages: (locale: string) => Record<string, LanguageMessages>,
+	) => {
 		locale: string;
 		messages: Record<string, LanguageMessages>;
-	}>;
+	};
 	setRequestLocale: (locale: string, _headers?: Headers | undefined) => void;
 	redirect: (
 		path: string,
@@ -45,7 +45,7 @@ export interface InitI18nSolidStartReturn {
 					locale?: string | undefined;
 			  }
 			| undefined,
-	) => Promise<CustomResponse<never> | undefined>;
+	) => CustomResponse<never> | undefined;
 	permanentRedirect: (
 		path: string,
 		init?: ResponseInit | undefined,
@@ -54,5 +54,5 @@ export interface InitI18nSolidStartReturn {
 					locale?: string | undefined;
 			  }
 			| undefined,
-	) => Promise<CustomResponse<never> | undefined>;
+	) => CustomResponse<never> | undefined;
 }

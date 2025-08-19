@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/solid-query";
 import {
 	resendEmailVerificationCodeAction,
 	verifyEmailAction,
-} from "./actions";
+} from "./actions.js";
 
 export function EmailVerificationForm() {
 	const mutation = useMutation(() => ({

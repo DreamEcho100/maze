@@ -1,6 +1,11 @@
-import { me, signin, signup } from "./auth";
-import { createPlanet, findPlanet, listPlanets, updatePlanet } from "./planet";
-import { sse } from "./sse";
+import { me, signin, signup } from "./auth.ts";
+import {
+	createPlanet,
+	findPlanet,
+	listPlanets,
+	updatePlanet,
+} from "./planet.ts";
+import { sse } from "./sse.ts";
 
 export const router = {
 	auth: {

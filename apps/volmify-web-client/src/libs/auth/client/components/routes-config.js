@@ -7,6 +7,10 @@ export const authRoutesConfig = /** @type {const} */ ({
 		path: "/auth/register",
 		title: "Register",
 	},
+	forgotPassword: {
+		path: "/auth/forgot-password",
+		title: "Forgot Password",
+	},
 	verifyEmail: {
 		path: "/auth/verify-email",
 		title: "Verify email",

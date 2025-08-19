@@ -5,7 +5,7 @@ import {
 } from "@de100/db/auth/init";
 import { getCookiesManager } from "#libs/auth/server/utils.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { PasswordResetEmailVerificationForm } from "./components";
+import { PasswordResetEmailVerificationForm } from "./components.jsx";
 
 export default async function AuthPasswordResetEmailVerificationPage() {
 	const { session } = await validatePasswordResetSessionRequest({

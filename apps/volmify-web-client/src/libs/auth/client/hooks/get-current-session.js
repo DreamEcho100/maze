@@ -13,8 +13,8 @@ import {
 	// getCurrentSession,
 	// refreshCurrentSession,
 } from "#libs/auth/server/utils.js";
-// import { extendCurrentSession } from "#server/libs/auth/extend-current-session";
-// import { refreshCurrentSession } from "#server/libs/auth/refresh-current-session";
+// import { extendCurrentSession } from "#server/libs/auth/extend-current-session.js";
+// import { refreshCurrentSession } from "#server/libs/auth/refresh-current-session.js";
 
 export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
 	AUTHENTICATED: "AUTHENTICATED",

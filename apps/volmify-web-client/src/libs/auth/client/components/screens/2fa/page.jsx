@@ -1,7 +1,7 @@
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { TwoFactorVerificationForm } from "./components";
+import { TwoFactorVerificationForm } from "./components.jsx";
 
 export default async function AuthTwoFactorVerificationPage() {
 	const { session, user } = await getCurrentSession({

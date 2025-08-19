@@ -1,6 +1,7 @@
+"use server";
 import { createRouterClient } from "@orpc/server";
 import { getRequestEvent } from "solid-js/web";
-import { router } from "#libs/orpc/router";
+import { router } from "#libs/orpc/router/index.ts";
 
 if (typeof window !== "undefined") {
 	throw new Error("This file should not be imported in the browser");

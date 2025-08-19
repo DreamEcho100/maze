@@ -7,7 +7,7 @@ import {
 	updateEmailAction,
 	updateIsTwoFactorEnabledAction,
 	updatePasswordAction,
-} from "./actions";
+} from "./actions.js";
 
 export function UpdatePasswordForm() {
 	const mutation = useMutation(() => ({

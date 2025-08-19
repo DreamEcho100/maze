@@ -1,7 +1,7 @@
 import { ORPCError, os } from "@orpc/server";
 import type { z } from "zod";
-import type { UserSchema } from "../../schemas/user";
-import { dbProviderMiddleware } from "../middlewares/db";
+import type { UserSchema } from "../../schemas/user.ts";
+import { dbProviderMiddleware } from "../middlewares/db.ts";
 
 export interface ORPCContext {
 	user?: z.infer<typeof UserSchema>;

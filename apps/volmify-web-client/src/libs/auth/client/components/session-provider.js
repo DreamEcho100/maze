@@ -3,9 +3,7 @@
  * @import { ParentProps } from "solid-js";
  */
 
-import { useGetCurrentSessionQuery } from "../hooks/get-current-session";
-
-// import { useGetCurrentSession } from "../utils/hooks/get-current-session";
+import { useGetCurrentSessionQuery } from "../hooks/get-current-session.js";
 
 /** @param {ParentProps<{ authData?: ValidSessionResult | null }>} props */
 export default function SessionProvider(props) {

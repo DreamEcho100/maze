@@ -143,6 +143,10 @@
 			"types": "./dist/src/utils/sessions/index.d.ts",
 			"default": "./src/utils/sessions/index.js"
 		},
+		"./utils/validations": {
+			"types": "./dist/src/utils/validations.d.ts",
+			"default": "./src/utils/validations.js"
+		},
 		"./init": {
 			"types": "./dist/src/init/index.d.ts",
 			"default": "./src/init/index.js"

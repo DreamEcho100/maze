@@ -1,6 +1,6 @@
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { TwoFactorResetForm } from "./components";
+import { TwoFactorResetForm } from "./components.jsx";
 
 export default async function AuthTwoFactorResetPage() {
 	const { session, user } = await getCurrentSession({

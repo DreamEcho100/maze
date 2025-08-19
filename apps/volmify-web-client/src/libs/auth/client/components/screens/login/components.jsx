@@ -2,20 +2,33 @@
 
 import { useTranslations } from "@de100/i18n-solidjs";
 import { useMutation } from "@tanstack/solid-query";
-import { loginAction } from "./actions";
+import { createMemo } from "solid-js";
+import { loginAction } from "./actions.js";
 
-export function LoginForm() {
+/**
+ * @param {{
+ * 	isDisabled?: boolean;
+ * 	errorMessage?: string;
+ * }} props
+ */
+export function LoginForm(props) {
 	const t = useTranslations();
-
 	const mutation = useMutation(() => ({
 		mutationFn: loginAction,
 	}));
+
+	const isDisabled = createMemo(() => props.isDisabled || mutation.isPending);
+	const errorMessage = createMemo(
+		() =>
+			mutation.data?.message ?? props.errorMessage ?? mutation.error?.message,
+	);
 
 	return (
 		<form
 			onSubmit={(e) => {
 				e.preventDefault();
-				if (mutation.isPending) return;
+				if (isDisabled()) return;
+
 				const formData = new FormData(e.currentTarget);
 				mutation.mutate({
 					email: formData.get("email"),
@@ -42,10 +55,14 @@ export function LoginForm() {
 				required
 			/>
 			<br />
-			<button type="submit" disabled={mutation.isPending}>
+			<button
+				type="submit"
+				disabled={mutation.isPending}
+				aria-disabled={isDisabled()}
+			>
 				Continue
 			</button>
-			<p>{mutation.data?.message ?? mutation.error?.message}</p>
+			<p>{errorMessage()}</p>
 		</form>
 	);
 }

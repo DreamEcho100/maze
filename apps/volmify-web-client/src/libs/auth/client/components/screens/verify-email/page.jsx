@@ -7,7 +7,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import {
 	EmailVerificationForm,
 	ResendEmailVerificationCodeForm,
-} from "./components";
+} from "./components.jsx";
 
 export default async function AuthVerifyEmailPage() {
 	const { user } = await getCurrentSession({ canMutateCookies: false });

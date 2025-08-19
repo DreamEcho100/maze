@@ -3,7 +3,7 @@
 /** @import { CookiesProvider, HeadersProvider } from "@de100/auth-core/types"; */
 import { headers as _headers } from "next/headers";
 import { getCookiesManager } from "#libs/auth/server/utils.js";
-import { getCookies } from "./get-cookies";
+import { getCookies } from "./get-cookies.js";
 
 /** * Retrieves the client's IP address and user agent from the request headers.
  *

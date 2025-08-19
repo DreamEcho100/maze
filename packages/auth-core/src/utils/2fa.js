@@ -3,7 +3,7 @@
 import { decryptToString, encryptString } from "./encryption.js";
 import { generateRandomRecoveryCode } from "./generate-random-recovery-code.js";
 
-// import { generateRandomRecoveryCode } from "./utils";
+// import { generateRandomRecoveryCode } from "./utils.js";
 
 /**
  * Reset the user's 2FA with a recovery code.

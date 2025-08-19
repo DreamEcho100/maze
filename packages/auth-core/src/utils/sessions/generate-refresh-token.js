@@ -29,6 +29,7 @@ export async function generateRefreshToken(props) {
 			jwtProvider.createRefreshToken
 	);
 
+	console.log("___ props.generateRandomId", props.generateRandomId);
 	const createId = /** @type {() => string} */ (
 		props.generateRandomId ?? generateRandomId
 	);
@@ -55,6 +56,8 @@ export async function generateRefreshToken(props) {
 
 	const tokenHash = getTokenBytes(refreshToken);
 
+	const { ipAddress, userAgent, ...metadata } = props.metadata;
+
 	/** @type {DBSession} */
 	const sessionData = {
 		id: sessionId, // ✅ Separate session ID
@@ -64,12 +67,13 @@ export async function generateRefreshToken(props) {
 		twoFactorVerifiedAt: props.metadata.twoFactorVerifiedAt,
 		createdAt: new Date(),
 		authStrategy: props.authStrategy,
-		ipAddress: props.metadata.ipAddress ?? null,
-		userAgent: props.metadata.userAgent ?? null,
+		ipAddress: ipAddress ?? null,
+		userAgent: userAgent ?? null,
 		lastUsedAt: new Date(),
 		revokedAt: null, // Not revoked initially
-		metadata: props.metadata,
+		metadata: Object.keys(metadata).length > 0 ? metadata : null,
 	};
+	console.log("___ sessionData", sessionData);
 	const result = await props.authProviders.sessions.createOne({
 		data: sessionData,
 	});

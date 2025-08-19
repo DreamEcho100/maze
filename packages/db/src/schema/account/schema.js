@@ -43,10 +43,13 @@ export const orgAccountingLedgerAccountTypeEnum = pgEnum(
 		"expense", // `expense`: is "cost_of_goods_sold", "operating_expenses", outflows from primary business activities
 	],
 );
-export const OrgAccountingLedgerNormalBalanceTypeEnum = pgEnum("balance_type", [
-	"debit", // Normal balance for assets and expenses
-	"credit", // Normal balance for liabilities, equity, and revenue
-]);
+export const OrgAccountingLedgerNormalBalanceTypeEnum = pgEnum(
+	`${accountTableName}_balance_type`,
+	[
+		"debit", // Normal balance for assets and expenses
+		"credit", // Normal balance for liabilities, equity, and revenue
+	],
+);
 
 // /**
 //  * Ledger account types - used to define the behavior of financial accounts.

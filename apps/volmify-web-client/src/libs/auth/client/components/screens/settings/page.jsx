@@ -7,7 +7,7 @@ import {
 	UpdateEmailForm,
 	UpdatePasswordForm,
 	UpdateToggleIsTwoFactorEnabledForm,
-} from "./components";
+} from "./components.jsx";
 
 export default async function AuthSettingsPage() {
 	const { session, user } = await getCurrentSession({

@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/solid-query";
 import {
 	verifyPasswordReset2FAWithRecoveryCodeAction,
 	verifyPasswordReset2FAWithTOTPAction,
-} from "./actions";
+} from "./actions.js";
 
 export function PasswordResetTOTPForm() {
 	const mutation = useMutation(() => ({

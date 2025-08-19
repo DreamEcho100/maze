@@ -13,7 +13,7 @@ import Negotiator from "negotiator";
 import { getCookie, getHeader, setCookie } from "vinxi/http";
 import { parsePathname } from "#utils";
 import type { Locale } from "./config";
-import { initializeLocaleConfigCache, updateLocaleConfigCache } from "./config";
+import { localeConfigCache, updateLocaleConfigCache } from "./config";
 
 export function isPromise<Value>(
 	value: Value | Promise<Value>,
@@ -26,15 +26,12 @@ export function isPromise<Value>(
 // Used to read the locale from the middleware
 export const I18N_HEADER_LOCALE_NAME = "X-DE100-I18N-LOCALE";
 
-async function getHeadersImpl(): Promise<Headers> {
-	const promiseOrValue = getHeaders();
-
-	// Compatibility with Next.js <15
-	return isPromise(promiseOrValue) ? await promiseOrValue : promiseOrValue;
+function getHeadersImpl(): Headers {
+	return getHeaders();
 }
 const getHeaders = query(getHeadersImpl, "headers");
 
-async function getLocaleFromHeaderImpl(): Promise<Locale | undefined> {
+function getLocaleFromHeaderImpl(): Locale | undefined {
 	let locale: string | undefined;
 
 	try {
@@ -68,20 +65,16 @@ async function getLocaleFromHeaderImpl(): Promise<Locale | undefined> {
 }
 const getLocaleFromHeader = query(getLocaleFromHeaderImpl, "localeFromHeader");
 
-export async function getRequestLocale() {
-	return initializeLocaleConfigCache().locale ?? (await getLocaleFromHeader());
+export function getRequestLocale() {
+	return localeConfigCache.locale ?? getLocaleFromHeader();
 }
 
-export async function getCurrentRequestConfig(
-	loadLocaleMessages: (
-		locale: Locale,
-	) => Promise<Record<string, LanguageMessages>>,
+export function getCurrentRequestConfig(
+	loadLocaleMessages: (locale: Locale) => Record<string, LanguageMessages>,
 ) {
 	// This typically corresponds to the `[locale]` segment
-	const store = await initializeLocaleConfigCache();
-	const locale: Locale | undefined =
-		(await getRequestLocale()) ?? store.defaultLocale;
-
+	const store = localeConfigCache;
+	const locale: Locale | undefined = getRequestLocale() ?? store.defaultLocale;
 	// Ensure that a valid locale is used
 	if (!locale || !store.allowedLocales?.includes(locale)) {
 		throw new Error("No locale found in request headers or cache.");
@@ -89,7 +82,7 @@ export async function getCurrentRequestConfig(
 
 	return {
 		locale,
-		messages: await loadLocaleMessages(locale),
+		messages: loadLocaleMessages(locale),
 	};
 }
 
@@ -112,8 +105,49 @@ export function setRequestLocale(locale: Locale, _headers?: Headers) {
 	updateLocaleConfigCache({ locale });
 }
 
+export function buildRedirectConfig(
+	path: string,
+	props?: {
+		// countryCode?: string,
+		locale?: string;
+	},
+): {
+	type: string;
+	location: string;
+} {
+	if (path.startsWith("http")) {
+		return {
+			type: "absolute",
+			location: path,
+		};
+	}
+
+	const {
+		// countryCode: currentCountryCode,
+		locale: currentLocale,
+		restPath,
+	} = parsePathname(path, localeConfigCache);
+
+	if (!currentLocale) {
+		throw new Error("!currentLocale");
+	}
+
+	const targetLocale = props?.locale ?? currentLocale; // ?? defaultLocale;
+	if (!restPath) {
+		return {
+			type: "relative",
+			location: `/${targetLocale}`,
+		};
+	}
+
+	return {
+		type: "relative",
+		location: `/${targetLocale}${restPath}`,
+	};
+}
+
 // Custom redirect function that maintains country code and locale
-export async function redirect(
+export function redirect(
 	path: string,
 	init?: ResponseInit,
 	props?: {
@@ -121,29 +155,13 @@ export async function redirect(
 		locale?: string;
 	},
 ) {
-	if (path.startsWith("http")) {
-		return solidRedirect(path, init);
-	}
-
-	const {
-		// countryCode: currentCountryCode,
-		locale: currentLocale,
-		restPath,
-	} = parsePathname(path, await initializeLocaleConfigCache());
-
-	if (!currentLocale) {
-		throw new Error("!currentLocale");
-	}
-
-	const targetLocale = props?.locale ?? currentLocale; // ?? defaultLocale;
-	if (!restPath) {
-		solidRedirect(`/${targetLocale}`, init);
-	}
-
-	solidRedirect(`/${targetLocale}${restPath}`, init);
+	return solidRedirect(buildRedirectConfig(path, props).location, {
+		...init,
+		status: 307, // Temporary redirect
+	});
 }
 
-export async function permanentRedirect(
+export function permanentRedirect(
 	path: string,
 	init?: ResponseInit,
 	props?: {
@@ -151,41 +169,23 @@ export async function permanentRedirect(
 		locale?: string;
 	},
 ) {
-	const init_ = { ...init, status: 301 };
-
-	if (path.startsWith("http")) {
-		return solidRedirect(path, init_);
-	}
-
-	const {
-		// countryCode: currentCountryCode,
-		locale: currentLocale,
-		restPath,
-	} = parsePathname(path, await initializeLocaleConfigCache());
-
-	if (!currentLocale) {
-		throw new Error("!currentLocale");
-	}
-
-	const targetLocale = props?.locale ?? currentLocale; // ?? defaultLocale;
-	if (!restPath) {
-		solidRedirect(`/${targetLocale}`, init_);
-	}
-
-	solidRedirect(`/${targetLocale}${restPath}`, init_);
+	return solidRedirect(buildRedirectConfig(path, props).location, {
+		...init,
+		status: 308, // Permanent redirect
+	});
 }
 
-export async function getLocale(_headersReq?: Headers) {
-	// const cookiesManager = await cookies();
+export function getLocale(_headersReq?: Headers) {
+	// const cookiesManager = cookies();
 	// const locale = cookiesManager.get("NEXT_LOCALE")?.value;
-	const locale = await getLocaleFromHeader();
-	const headersReq = await getHeaders();
+	const locale = getLocaleFromHeader();
+	const headersReq = getHeaders();
 
 	if (locale) {
 		return locale;
 	}
 
-	const cachedConfig = await initializeLocaleConfigCache();
+	const cachedConfig = localeConfigCache;
 	const allowedLocales = cachedConfig.allowedLocales;
 	const defaultLocale = cachedConfig.defaultLocale;
 

@@ -438,11 +438,14 @@ export const orgMemberOrderDiscount = table(
 
 const orgMemberOrderTaxCalculationTableName = `${orgMemberOrderTableName}_tax_calculation`;
 
-export const taxCalculationMethodEnum = pgEnum("tax_calculation_method", [
-	"inclusive", // Tax included in displayed price (common in EU)
-	"exclusive", // Tax added to displayed price (common in US)
-	"exempt", // Tax exempt transaction
-]);
+export const taxCalculationMethodEnum = pgEnum(
+	`${orgMemberOrderTableName}_tax_calculation_method`,
+	[
+		"inclusive", // Tax included in displayed price (common in EU)
+		"exclusive", // Tax added to displayed price (common in US)
+		"exempt", // Tax exempt transaction
+	],
+);
 
 // Q: Add a nullable productVariantId or a new table for variant-specific tax rates?
 /**

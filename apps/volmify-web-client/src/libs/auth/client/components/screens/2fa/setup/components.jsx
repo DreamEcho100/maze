@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/solid-query";
-import { setup2FAAction } from "./actions";
+import { setup2FAAction } from "./actions.js";
 
 /** @param {{ encodedTOTPKey: string }} props */
 export function TwoFactorSetUpForm(props) {

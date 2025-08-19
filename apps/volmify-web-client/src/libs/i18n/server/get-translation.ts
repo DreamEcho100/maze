@@ -5,8 +5,8 @@ import {
 	type AllowedLocale,
 	allowedLocales,
 	defaultLocale,
-} from "../constants";
-import { getServerLocale, setLocaleInCookies } from "./utils";
+} from "../constants.ts";
+import { getServerLocale, setLocaleInCookies } from "./utils.ts";
 
 export const getTranslation = query(async (registeredLocale?: string) => {
 	if (process.env.NODE_ENV === "development") {

@@ -49,7 +49,7 @@ export const user = table(
 	],
 );
 
-const _sessionMetadataJsonb = jsonb("metadata");
+// const _sessionMetadataJsonb = jsonb("metadata");
 const userAgentJsonb = jsonb("user_agent_metadata");
 
 const userSessionTableName = `${userTableName}_session`;
@@ -108,7 +108,7 @@ const userEmailVerificationTableName = `${userTableName}_email_verification`;
 export const userEmailVerificationRequest = table(
 	userEmailVerificationTableName,
 	{
-		id: textCols.idPk().notNull(),
+		id: varchar("id", { length: 32 }).notNull(),
 		createdAt: temporalCols.audit.createdAt().notNull(),
 		code: textCols.longCode("code").notNull(),
 		expiresAt: temporalCols.business.expiresAt().notNull(),
@@ -139,7 +139,7 @@ const userPasswordResetTableName = `${userTableName}_password_reset`;
 export const userPasswordResetSession = table(
 	userPasswordResetTableName,
 	{
-		id: textCols.idPk().notNull(),
+		id: varchar("id", { length: 32 }).notNull(),
 		createdAt: temporalCols.audit.createdAt().notNull(),
 		code: textCols.longCode("code").notNull(),
 		expiresAt: temporalCols.business.expiresAt().notNull(),

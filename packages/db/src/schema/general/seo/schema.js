@@ -23,8 +23,10 @@ import { table } from "../../_utils/tables.js";
 
 // TODO: revise the the `extraConfig` args
 
+const seoMetadataTableName = "seo_metadata";
+
 // SEO status for content workflow
-export const seoStatusEnum = pgEnum("seo_status", [
+export const seoStatusEnum = pgEnum(`${seoMetadataTableName}_status`, [
 	"draft",
 	"review",
 	"approved",
@@ -33,7 +35,7 @@ export const seoStatusEnum = pgEnum("seo_status", [
 ]);
 
 // Change frequency enum for better validation
-export const changeFreqEnum = pgEnum("change_freq", [
+export const changeFreqEnum = pgEnum(`${seoMetadataTableName}_change_freq`, [
 	"always",
 	"hourly",
 	"daily",
@@ -49,7 +51,6 @@ export const changeFreqEnum = pgEnum("change_freq", [
 // -------------------------------------
 // MAIN SEO METADATA TABLE (No entityId/entityType)
 // -------------------------------------
-const seoMetadataTableName = "seo_metadata";
 export const seoMetadata = table(
 	seoMetadataTableName,
 	{

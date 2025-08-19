@@ -109,14 +109,19 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 /*************** ***************/
 /* ID */
 /*************** ***************/
-export const createOneIdSync = ulid;
+let counter = 0;
+export const createOneIdSync = () => {
+	const id = ulid();
+	console.log(`___ id: ${id}, length: ${id.length}, counter: ${counter}`);
+	counter++;
+	return id;
+};
 /** @returns {Promise<string>} */
 export const createOneIdAsync = async () =>
 	new Promise((resolve) => resolve(ulid()));
 
 /** @type {AuthStrategy} */
 // @ts-expect-error
-// @ts-ignore
 export const authStrategy = process.env.AUTH_STRATEGY ?? "jwt";
 
 /*************** ***************/
@@ -126,6 +131,12 @@ export const authStrategy = process.env.AUTH_STRATEGY ?? "jwt";
 /** @type {UsersProvider['createOne']} */
 export const createOneUser = async (values) => {
 	const createdAt = new Date();
+	console.log(
+		"___ createOneUser values",
+		values,
+		"id:",
+		values.id ?? createOneIdSync(),
+	);
 	return db
 		.insert(dbSchema.user)
 		.values({
@@ -143,7 +154,11 @@ export const createOneUser = async (values) => {
 			lastUpdatedAt: createdAt,
 		})
 		.returning(userReturnTemplate)
-		.then((result) => result[0] ?? null);
+		.then((result) => result[0] ?? null)
+		.catch((error) => {
+			console.error("Error creating user:", error);
+			throw new Error("Failed to create user");
+		});
 };
 /** @type {UsersProvider['findOneById']} */
 export const findOneUserById = async (id) => {
@@ -660,6 +675,7 @@ export const deleteAllPasswordResetSessionsByUserId = async (
 
 /** @type {UserEmailVerificationRequestsProvider['createOne']} */
 export const createOneEmailVerificationRequests = async (values) => {
+	console.log("___ createOneEmailVerificationRequests values", values);
 	const createdAt = new Date();
 	return db
 		.insert(dbSchema.userEmailVerificationRequest)

@@ -3,7 +3,7 @@ import { renderSVG } from "uqr";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
 
-import { TwoFactorSetUpForm } from "./components";
+import { TwoFactorSetUpForm } from "./components.jsx";
 
 export default async function AuthTwoFactorSetUpPage() {
 	const { session, user } = await getCurrentSession({

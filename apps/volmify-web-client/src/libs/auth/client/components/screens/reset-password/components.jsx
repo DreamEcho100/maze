@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/solid-query";
-import { resetPasswordAction } from "./actions";
+import { resetPasswordAction } from "./actions.js";
 
 export function PasswordResetForm() {
 	const mutation = useMutation(() => ({

@@ -1,5 +1,5 @@
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
-import { ForgotPasswordForm } from "./components";
+import { ForgotPasswordForm } from "./components.jsx";
 
 export default function ForgotPasswordPage() {
 	return (

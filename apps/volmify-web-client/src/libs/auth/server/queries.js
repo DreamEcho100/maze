@@ -10,7 +10,7 @@ import { getCurrentAuthSession } from "@de100/auth-core/utils/sessions";
 import { db } from "@de100/db/client";
 import { query } from "@solidjs/router";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { generateGetCurrentAuthSessionProps } from "./utils";
+import { generateGetCurrentAuthSessionProps } from "./utils.js";
 
 /**
  * @param {object} [props]

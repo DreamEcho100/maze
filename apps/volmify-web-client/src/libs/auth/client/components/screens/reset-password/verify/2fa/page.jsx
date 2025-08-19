@@ -8,7 +8,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
 import {
 	PasswordResetRecoveryCodeForm,
 	PasswordResetTOTPForm,
-} from "./components";
+} from "./components.jsx";
 
 export default async function AuthPasswordReset2FAVerificationPage() {
 	const { session, user } = await validatePasswordResetSessionRequest({

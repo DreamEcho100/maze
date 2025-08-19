@@ -1,6 +1,6 @@
 import type { FetchEvent } from "@solidjs/start/server";
-import { defaultLocale } from "../constants";
-import { getServerLocale, setLocaleInCookies } from "./utils";
+import { defaultLocale } from "../constants.ts";
+import { getServerLocale, setLocaleInCookies } from "./utils.ts";
 
 export function createI18nMiddlewareOnRequest({
 	event,

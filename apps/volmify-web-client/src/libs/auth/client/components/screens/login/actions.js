@@ -7,6 +7,7 @@ import {
 } from "@de100/auth-core/utils/constants";
 import {
 	authStrategy,
+	createOneIdSync,
 	createOneSession,
 	findOneUserByEmail,
 	getOneUserPasswordHash,
@@ -20,7 +21,8 @@ import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics
  */
 export async function loginAction(input) {
 	const result = await loginUserService({
-		...(await getSessionOptionsBasics()),
+		...getSessionOptionsBasics(),
+		generateRandomId: createOneIdSync,
 		input,
 		authStrategy,
 		authProviders: {

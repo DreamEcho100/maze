@@ -1,5 +1,5 @@
 import { safe } from "@orpc/client";
-import { client as orpc } from "#libs/orpc";
+import { client as orpc } from "#libs/orpc/index.ts";
 
 const token = await orpc.auth.signin({
 	email: "john@doe.com",
