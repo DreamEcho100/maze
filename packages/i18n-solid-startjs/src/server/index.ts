@@ -1,9 +1,7 @@
 // import type { IntlConfig, Locale } from "use-intl/core";
 
 import type { LanguageMessages } from "@de100/i18n";
-import { match } from "@formatjs/intl-localematcher";
 import { query, redirect as solidRedirect } from "@solidjs/router";
-import Negotiator from "negotiator";
 // import { cookies, headers } from "next/headers.js";
 // import {
 // 	// permanentRedirect as solidPermanentRedirect,
@@ -175,28 +173,28 @@ export function permanentRedirect(
 	});
 }
 
-export function getLocale(_headersReq?: Headers) {
-	// const cookiesManager = cookies();
-	// const locale = cookiesManager.get("NEXT_LOCALE")?.value;
-	const locale = getLocaleFromHeader();
-	const headersReq = getHeaders();
+// export function getLocale(_headersReq?: Headers) {
+// 	// const cookiesManager = cookies();
+// 	// const locale = cookiesManager.get("NEXT_LOCALE")?.value;
+// 	const locale = getLocaleFromHeader();
+// 	const headersReq = getHeaders();
 
-	if (locale) {
-		return locale;
-	}
+// 	if (locale) {
+// 		return locale;
+// 	}
 
-	const cachedConfig = localeConfigCache;
-	const allowedLocales = cachedConfig.allowedLocales;
-	const defaultLocale = cachedConfig.defaultLocale;
+// 	const cachedConfig = localeConfigCache;
+// 	const allowedLocales = cachedConfig.allowedLocales;
+// 	const defaultLocale = cachedConfig.defaultLocale;
 
-	if (!allowedLocales || !defaultLocale) {
-		throw new Error("Allowed locales or default locale not set in config.");
-	}
+// 	if (!allowedLocales || !defaultLocale) {
+// 		throw new Error("Allowed locales or default locale not set in config.");
+// 	}
 
-	const headers = {
-		"accept-language": headersReq.get("accept-language") ?? "en-US,en;q=0.5",
-	};
-	const languages = new Negotiator({ headers }).languages();
+// 	const headers = {
+// 		"accept-language": headersReq.get("accept-language") ?? "en-US,en;q=0.5",
+// 	};
+// 	const languages = new Negotiator({ headers }).languages();
 
-	return match(languages, allowedLocales, defaultLocale); // -> 'en-US'
-}
+// 	return match(languages, allowedLocales, defaultLocale); // -> 'en-US'
+// }

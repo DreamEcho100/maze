@@ -185,7 +185,7 @@ const mapFrom = (arr, index, cb) => {
 	const newArr = new Array(arr.length - index);
 
 	for (let i = index; i < arr.length; i++) {
-		// @ts-ignore
+		// @ts-expect-error
 		newArr[i - index] = cb(arr[i], i - index, arr);
 	}
 
@@ -211,7 +211,7 @@ const toCamelCase = (str) => {
 			return word;
 		}
 
-		// @ts-ignore
+		// @ts-expect-error
 		return word[0].toUpperCase() + word.slice(1);
 	}).join("")}`;
 };

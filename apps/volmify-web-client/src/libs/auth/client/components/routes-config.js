@@ -15,6 +15,10 @@ export const authRoutesConfig = /** @type {const} */ ({
 		path: "/auth/verify-email",
 		title: "Verify email",
 	},
+	verifyEmailSuccess: {
+		path: "/auth/verify-email/success",
+		title: "Verify email success",
+	},
 	twoFactorSetup: {
 		path: "/auth/2fa/setup",
 		title: "2FA Setup",

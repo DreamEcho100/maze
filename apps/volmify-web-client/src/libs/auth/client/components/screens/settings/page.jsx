@@ -1,3 +1,4 @@
+"use server";
 import { getOneUserRecoveryCode } from "@de100/db/auth/init";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
 import { getCurrentSession } from "#libs/auth/server/queries.js";

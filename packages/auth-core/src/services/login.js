@@ -45,17 +45,14 @@ export async function loginUserService(props) {
 	if (!input.success) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}
-	console.log("___ input", input);
 
 	const user = await props.authProviders.users.findOneByEmail(input.data.email);
-	console.log("___ user", user);
 	if (!user) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
 	const passwordHash = await props.authProviders.users.getOnePasswordHash(
 		user.id,
 	);
-	console.log("___ passwordHash", passwordHash);
 	if (!passwordHash) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
 	}
@@ -64,7 +61,6 @@ export async function loginUserService(props) {
 		passwordHash,
 		input.data.password,
 	);
-	console.log("___ validPassword", validPassword);
 	if (!validPassword) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}

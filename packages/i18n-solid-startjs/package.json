@@ -34,17 +34,14 @@
 		"@biomejs/biome": "catalog:",
 		"@de100/biome-config": "workspace:*",
 		"@de100/tsconfig": "workspace:*",
-		"@types/negotiator": "^0.6.4",
 		"typescript": "catalog:"
 	},
 	"dependencies": {
 		"@de100/i18n": "workspace:*",
 		"@de100/i18n-solidjs": "workspace:*",
-		"@formatjs/intl-localematcher": "^0.6.1",
 		"@solidjs/meta": "catalog:",
 		"@solidjs/router": "catalog:",
 		"@solidjs/start": "catalog:",
-		"negotiator": "^1.0.0",
 		"solid-js": "catalog:",
 		"vinxi": "catalog:"
 	}

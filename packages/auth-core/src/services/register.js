@@ -45,7 +45,6 @@ import { RegisterServiceInputSchema } from "#utils/validations.js";
 export async function registerService(props) {
 	try {
 		const input = RegisterServiceInputSchema.safeParse(props.input);
-		console.log("___ input", input);
 		if (!input.success) {
 			return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 		}
@@ -54,14 +53,11 @@ export async function registerService(props) {
 			input.data.email,
 		);
 
-		console.log("___ emailAvailable", emailAvailable);
-
 		if (emailAvailable) {
 			return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
 		}
 
 		const strongPassword = await verifyPasswordStrength(input.data.password);
-		console.log("___ strongPassword", strongPassword);
 
 		if (!strongPassword) {
 			return REGISTER_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
@@ -73,8 +69,6 @@ export async function registerService(props) {
 				users: { createOne: props.authProviders.users.createOne },
 			},
 		});
-
-		console.log("___ user", user);
 
 		const userEmailVerificationRequests = await createEmailVerificationRequest(
 			{ where: { userId: user.id, email: user.email } },
@@ -89,10 +83,6 @@ export async function registerService(props) {
 					},
 				},
 			},
-		);
-		console.log(
-			"___ userEmailVerificationRequests",
-			userEmailVerificationRequests,
 		);
 
 		await sendVerificationEmail(

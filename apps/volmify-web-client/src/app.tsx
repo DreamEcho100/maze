@@ -15,8 +15,12 @@ export default function App() {
 						<Title>SolidStart - Basic</Title>
 						<Link href="/">Index</Link>
 						<Link href="/about">About</Link>
+						<Link href="/orpc">ORPC</Link>
 						<Link href={authRoutesConfig.login.path}>
 							{authRoutesConfig.login.title}
+						</Link>
+						<Link href={authRoutesConfig.verifyEmail.path}>
+							{authRoutesConfig.verifyEmail.title}
 						</Link>
 						<Link href={authRoutesConfig.register.path}>
 							{authRoutesConfig.register.title}

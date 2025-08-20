@@ -1,6 +1,12 @@
-import { createCipheriv, createDecipheriv } from "crypto";
+if (typeof window !== "undefined") {
+	throw new Error(
+		"Passwords utilities should not be used in the browser. Use them only on the server side.",
+	);
+}
+
 import { DynamicBuffer } from "@oslojs/binary";
 import { decodeBase64 } from "@oslojs/encoding";
+import { createCipheriv, createDecipheriv } from "crypto";
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 

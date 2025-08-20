@@ -1,7 +1,3 @@
-"use sever";
-
-console.log("___ is client", typeof window === "undefined");
-
 import { registerService } from "@de100/auth-core/services/register";
 import { REGISTER_MESSAGES_ERRORS } from "@de100/auth-core/utils/constants";
 // TODO: fix import
@@ -10,17 +6,14 @@ import { RegisterServiceInputSchema } from "@de100/auth-core/utils/validations";
 import {
 	authStrategy,
 	createOneEmailVerificationRequests,
-	createOneIdSync,
 	createOneUser,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
 } from "@de100/db/auth/init";
 // import { buildRedirectConfig } from "node_modules/@de100/i18n-solid-startjs/src/server/index.ts";
-import { authRoutesConfig } from "#libs/auth/client/components/routes-config.js";
-import { buildRedirectConfig, redirect } from "#libs/i18n/server/utils.ts";
 import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
 import { CredentialSchema, TokenSchema } from "../../schemas/auth.ts";
-import { NewUserSchema, UserSchema } from "../../schemas/user.ts";
+import { UserSchema } from "../../schemas/user.ts";
 import { authed, pub } from "./_root.ts";
 
 export const signup = pub
@@ -56,20 +49,20 @@ export const signup = pub
 		}
 	});
 
-export const redirect_ = pub
-	.route({
-		method: "GET",
-		path: "/redirect",
-		successStatus: 307,
-		outputStructure: "detailed",
-	})
-	.handler(async () => {
-		return {
-			headers: {
-				location: "https://orpc.unnoq.com",
-			},
-		};
-	});
+// export const redirect_ = pub
+// 	.route({
+// 		method: "GET",
+// 		path: "/redirect",
+// 		successStatus: 307,
+// 		outputStructure: "detailed",
+// 	})
+// 	.handler(async () => {
+// 		return {
+// 			headers: {
+// 				location: "https://orpc.unnoq.com",
+// 			},
+// 		};
+// 	});
 
 export const signin = pub
 	.route({

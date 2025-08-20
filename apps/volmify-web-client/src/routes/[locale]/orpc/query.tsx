@@ -5,6 +5,7 @@ import { orpc } from "#libs/orpc/index.ts";
 export function ListPlanetsQuery() {
 	const query = useInfiniteQuery(() =>
 		orpc.planet.list.infiniteOptions({
+			queryKey: orpc.planet.key(),
 			input: (cursor) => ({ cursor, limit: 10 }),
 			getNextPageParam: (lastPage) =>
 				lastPage.length === 10 ? lastPage.at(-1)?.id : null,

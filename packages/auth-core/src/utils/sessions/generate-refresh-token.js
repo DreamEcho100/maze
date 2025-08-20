@@ -29,7 +29,6 @@ export async function generateRefreshToken(props) {
 			jwtProvider.createRefreshToken
 	);
 
-	console.log("___ props.generateRandomId", props.generateRandomId);
 	const createId = /** @type {() => string} */ (
 		props.generateRandomId ?? generateRandomId
 	);
@@ -73,7 +72,6 @@ export async function generateRefreshToken(props) {
 		revokedAt: null, // Not revoked initially
 		metadata: Object.keys(metadata).length > 0 ? metadata : null,
 	};
-	console.log("___ sessionData", sessionData);
 	const result = await props.authProviders.sessions.createOne({
 		data: sessionData,
 	});

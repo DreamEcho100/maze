@@ -116,3 +116,4 @@ export const jwtProvider = /** @type {import("#types.ts").JWTProvider} */ ({
 	// 	return { accessToken, refreshToken };
 	// },
 });
+export default jwtProvider;

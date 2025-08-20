@@ -1,3 +1,5 @@
+"use server";
+
 import { validatePasswordResetSessionRequest } from "@de100/auth-core/utils/password-reset";
 import {
 	deleteOnePasswordResetSession,

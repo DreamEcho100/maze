@@ -7,7 +7,7 @@ import { authRoutesConfig } from "../../routes-config";
 
 /**
  * @param {{
- * 	isDisabled?: boolean;
+ * 	isPending?: boolean;
  * 	errorMessage?: string;
  * }} props
  */
@@ -43,7 +43,7 @@ export function SignUpForm(props) {
 		}),
 	);
 
-	const isDisabled = createMemo(() => props.isDisabled || mutation.isPending);
+	const isPending = createMemo(() => props.isPending || mutation.isPending);
 	const errorMessage = createMemo(
 		() =>
 			mutation.data?.message ?? props.errorMessage ?? mutation.error?.message,
@@ -53,7 +53,7 @@ export function SignUpForm(props) {
 		<form
 			onSubmit={(e) => {
 				e.preventDefault();
-				if (isDisabled()) return;
+				if (isPending()) return;
 
 				const formData = new FormData(e.currentTarget);
 				// TODO: integrate with an form lib
@@ -104,10 +104,10 @@ export function SignUpForm(props) {
 			<br />
 			<label for="form-signup.enable-2fa">Enable 2FA</label>
 			<input type="checkbox" id="form-signup.enable-2fa" name="enable_2fa" />
-			<button type="submit" aria-disabled={isDisabled()}>
+			<button type="submit" aria-disabled={isPending()}>
 				Continue
 			</button>
-			<p>{errorMessage()}</p>
+			<p>{!isPending() && errorMessage()}</p>
 		</form>
 	);
 }

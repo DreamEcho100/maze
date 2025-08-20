@@ -1,8 +1,9 @@
+import { query } from "@solidjs/router";
 import { authRoutesConfig } from "#libs/auth/client/components/routes-config.js";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
 
-export async function validateNonOrInvalidAuth() {
+export const validateNonOrInvalidAuth = async () => {
 	"use server";
 
 	const { session, user } = await getCurrentSession({
@@ -27,4 +28,4 @@ export async function validateNonOrInvalidAuth() {
 	}
 
 	return { session, user };
-}
+};

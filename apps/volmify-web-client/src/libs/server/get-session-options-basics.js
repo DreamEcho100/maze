@@ -1,5 +1,3 @@
-"use server";
-
 /** @import { CookiesProvider, DynamicCookiesOptions, HeadersProvider } from "@de100/auth-core/types"; */
 import { userAgent as getUserAgent } from "next/server";
 import { getCookiesAndHeaders } from "#libs/auth/server/utils.js";
@@ -12,6 +10,8 @@ import { getCookiesAndHeaders } from "#libs/auth/server/utils.js";
  * @returns {{ ipAddress: string | null, userAgent: ReturnType<typeof getUserAgent>; cookies: CookiesProvider; headers: HeadersProvider; cookiesOptions: DynamicCookiesOptions }} An object containing the IP address and user agent.
  */
 export function getSessionOptionsBasics(reqHeaders) {
+	"use server";
+
 	const { cookies, headers } = getCookiesAndHeaders(reqHeaders);
 
 	let ipAddress = null;

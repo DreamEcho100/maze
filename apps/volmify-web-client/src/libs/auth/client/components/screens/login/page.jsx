@@ -4,17 +4,17 @@ import { authRoutesConfig } from "../../routes-config.js";
 import { validateNonOrInvalidAuth } from "../../validate-non-or-invalid-auth.js";
 import { LoginForm } from "./components.jsx";
 
-export default function AuthLoginPage() {
+export function AuthLogin() {
 	const query = useQuery(() => ({
 		queryKey: ["auth", "validate-non-or-invalid-auth"],
-		queryFn: validateNonOrInvalidAuth,
+		queryFn: () => validateNonOrInvalidAuth(),
 	}));
 
 	return (
 		<>
 			<h1>Sign in</h1>
 			<LoginForm
-				isDisabled={query.isPending}
+				isPending={query.isPending}
 				errorMessage={query.error?.message}
 			/>
 			<Link href={authRoutesConfig.register.path}>Create an account</Link>
@@ -22,3 +22,40 @@ export default function AuthLoginPage() {
 		</>
 	);
 }
+
+/*
+
+export default function AuthLoginPage() {
+	// const query = useQuery(() => ({
+	// 	queryKey: ["auth", "validate-non-or-invalid-auth"],
+	// 	queryFn: validateNonOrInvalidAuth,
+	// }));
+
+	const validatedNonOrInvalidAuth = createAsync(validateNonOrInvalidAuth);
+
+	return (
+		<>
+			<h1>Sign in</h1>
+			<ErrorBoundary
+				fallback={(error) => (
+					<div>
+						<h1>Error</h1>
+						<p>{error.message}</p>
+					</div>
+				)}
+			>
+				<Suspense fallback={<div>Loading...</div>}>
+					{JSON.stringify(validatedNonOrInvalidAuth())}
+
+					<LoginForm
+					// isDisabled={query.isPending}
+					// errorMessage={query.error?.message}
+					/>
+				</Suspense>
+			</ErrorBoundary>
+			<Link href={authRoutesConfig.register.path}>Create an account</Link>
+			<Link href={authRoutesConfig.forgotPassword.path}>Forgot password?</Link>
+		</>
+	);
+}
+*/

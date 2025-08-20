@@ -1,5 +1,3 @@
-"use server";
-
 import { logoutService } from "@de100/auth-core/services/logout";
 import {
 	AUTH_URLS,
@@ -9,6 +7,8 @@ import { generateAuthSessionProps } from "#libs/auth/server/queries.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
 
 export async function logoutAction() {
+	"use server";
+
 	const authProps = await generateAuthSessionProps({});
 
 	if (!authProps?.session) {

@@ -103,7 +103,6 @@ export function getServerLocale(props: {
 } {
 	for (const localeDeterminationStrategy of localeDeterminationStrategies) {
 		const result = localeDeterminationStrategy(props);
-		console.log("___ result", result);
 		if (result) {
 			return result;
 		}

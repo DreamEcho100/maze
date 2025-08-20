@@ -5,7 +5,7 @@
 import { dateLikeToDate } from "@de100/auth-core/utils/dates";
 import { decrypt, decryptToString } from "@de100/auth-core/utils/encryption";
 import { and, eq, isNull, lt } from "drizzle-orm";
-import { ulid } from "ulid";
+import { v7 } from "uuid";
 import { db, dbSchema } from "../client.js";
 
 // export * from "./def";
@@ -109,16 +109,10 @@ const passwordResetSessionReturnSchema = /** @type {const} */ ({
 /*************** ***************/
 /* ID */
 /*************** ***************/
-let counter = 0;
-export const createOneIdSync = () => {
-	const id = ulid();
-	console.log(`___ id: ${id}, length: ${id.length}, counter: ${counter}`);
-	counter++;
-	return id;
-};
+export const createOneIdSync = () => v7();
 /** @returns {Promise<string>} */
 export const createOneIdAsync = async () =>
-	new Promise((resolve) => resolve(ulid()));
+	new Promise((resolve) => resolve(v7()));
 
 /** @type {AuthStrategy} */
 // @ts-expect-error
@@ -131,12 +125,7 @@ export const authStrategy = process.env.AUTH_STRATEGY ?? "jwt";
 /** @type {UsersProvider['createOne']} */
 export const createOneUser = async (values) => {
 	const createdAt = new Date();
-	console.log(
-		"___ createOneUser values",
-		values,
-		"id:",
-		values.id ?? createOneIdSync(),
-	);
+
 	return db
 		.insert(dbSchema.user)
 		.values({
@@ -675,7 +664,6 @@ export const deleteAllPasswordResetSessionsByUserId = async (
 
 /** @type {UserEmailVerificationRequestsProvider['createOne']} */
 export const createOneEmailVerificationRequests = async (values) => {
-	console.log("___ createOneEmailVerificationRequests values", values);
 	const createdAt = new Date();
 	return db
 		.insert(dbSchema.userEmailVerificationRequest)

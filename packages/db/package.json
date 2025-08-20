@@ -75,9 +75,7 @@
 		"drizzle-orm": "catalog:",
 		"drizzle-zod": "catalog:",
 		"pg": "catalog:",
-		"ulid": "catalog:",
-		"ulidx": "catalog:",
-		"uuid-parse": "^1.1.0",
+		"uuid": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

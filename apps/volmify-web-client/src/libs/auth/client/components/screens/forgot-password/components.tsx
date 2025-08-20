@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@tanstack/solid-query";
 // import { useMutation } from "@tanstack/solid-query";
 import { forgotPasswordAction } from "./actions.js";

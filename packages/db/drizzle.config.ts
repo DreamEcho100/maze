@@ -5,7 +5,6 @@ import type { Config } from "drizzle-kit";
 // }
 
 // const _nonPoolingUrl = process.env.POSTGRES_URL.replace(":6543", ":5432");
-console.log("___ process.env.DATABASE_URL", process.env.DATABASE_URL);
 export default {
 	// schema: "./src/schema.ts",
 	// dialect: "postgresql",

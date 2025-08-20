@@ -1,5 +1,3 @@
-"use server";
-
 import { forgotPasswordService } from "@de100/auth-core/services/forgot-password";
 import {
 	AUTH_URLS,
@@ -18,6 +16,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
  * @param {{ email: unknown }} input
  */
 export async function forgotPasswordAction(input) {
+	"use server";
 	const authProps = await generateAuthSessionProps({
 		input,
 		authProviders: {

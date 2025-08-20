@@ -1,5 +1,3 @@
-"use server";
-
 import { setup2FAService } from "@de100/auth-core/services/2fa/setup";
 import {
 	AUTH_URLS,
@@ -17,6 +15,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
  * @param {{ code: unknown, encodedTOTPKey: unknown }} input
  */
 export async function setup2FAAction(input) {
+	"use server";
 	const authProps = await generateAuthSessionProps({
 		input,
 		authProviders: {

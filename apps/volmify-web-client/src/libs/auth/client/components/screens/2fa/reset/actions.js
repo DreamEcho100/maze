@@ -1,5 +1,3 @@
-"use server";
-
 import { reset2FAService } from "@de100/auth-core/services/2fa/reset";
 import {
 	AUTH_URLS,
@@ -18,6 +16,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
  * @param {{ code: unknown }} input
  */
 export async function reset2FAAction(input) {
+	"use server";
 	const authProps = await generateAuthSessionProps({
 		input,
 		authProviders: {

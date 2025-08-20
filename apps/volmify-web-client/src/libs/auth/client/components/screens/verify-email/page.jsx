@@ -1,44 +1,48 @@
-import { getUserEmailVerificationRequestFromRequest } from "@de100/auth-core/utils/email-verification";
-import { findOneEmailVerificationRequestsByIdAndUserId } from "@de100/db/auth/init";
 import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
-import { getCurrentSession } from "#libs/auth/server/queries.js";
-import { getCookiesManager } from "#libs/auth/server/utils.js";
-import { redirect } from "#libs/i18n/server/utils.ts";
+import { revalidate } from "@solidjs/router";
+import { useQuery } from "@tanstack/solid-query";
+import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.jsx";
 import {
 	EmailVerificationForm,
 	ResendEmailVerificationCodeForm,
 } from "./components.jsx";
+import { routeData } from "./route-data.js";
 
-export default async function AuthVerifyEmailPage() {
-	const { user } = await getCurrentSession({ canMutateCookies: false });
-	if (!user) {
-		throw redirect("/auth/login");
-	}
+export function AuthVerifyEmail() {
+	console.log('"auth", routeData.key', "auth", routeData.key);
+	const query = useQuery(() => ({
+		queryKey: ["auth", routeData.key],
+		queryFn: () => routeData(),
+	}));
 
-	// TODO: Ideally we'd sent a new verification email automatically if the previous one is expired,
-	// but we can't set cookies inside server components.
-	const verificationRequest = await getUserEmailVerificationRequestFromRequest({
-		userId: user.id,
-		cookies: getCookiesManager(),
-		cookiesOptions: {},
-		authProviders: {
-			userEmailVerificationRequests: {
-				findOneByIdAndUserId: findOneEmailVerificationRequestsByIdAndUserId,
-			},
-		},
-	});
-	if (!verificationRequest && user.emailVerifiedAt) {
-		throw redirect("/");
-	}
 	return (
-		<>
-			<h1>Verify your email address</h1>
-			<p>
-				We sent an 8-digit code to {verificationRequest?.email ?? user.email}.
-			</p>
-			<EmailVerificationForm />
-			<ResendEmailVerificationCodeForm />
-			<Link href="/settings">Change your email</Link>
-		</>
+		<QueryBoundary query={query} loadingFallback={<>Loading...</>}>
+			{(data) => (
+				<>
+					<h1>Verify your email address</h1>
+					{data.verificationRequest?.email ? (
+						<> We sent an 8-digit code to {data.verificationRequest.email}.</>
+					) : (
+						<>
+							It looks like you haven't verified your email address yet.
+							<button type="submit" form="resend-email-verification-code-form">
+								Resend verification code?
+							</button>
+						</>
+					)}
+					{data.verificationRequest?.email ?? data.currentSession.user.email}
+					.
+					<EmailVerificationForm />
+					<ResendEmailVerificationCodeForm
+						formId="resend-email-verification-code-form"
+						onSuccess={() => {
+							revalidate(routeData.key);
+							query.refetch();
+						}}
+					/>
+					<Link href="/settings">Change your email</Link>
+				</>
+			)}
+		</QueryBoundary>
 	);
 }

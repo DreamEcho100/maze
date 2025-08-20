@@ -1,12 +1,10 @@
 // @ts-check
 
 /** @import { ValidSessionResult, InvalidSessionResult } from "@de100/auth-core/types" */
-/** @import { SessionWithUser } from "@de100/auth-core/types";  */
 
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useQuery } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
-import { queryClient } from "#libs/@tanstack/query/query-client.js";
 import { getCurrentSession } from "#libs/auth/server/queries.js";
 import {
 	// extendCurrentSession,
@@ -23,17 +21,17 @@ export const CLIENT_CURRENT_SESSION_STATUS = /** @type {const} */ ({
 });
 // * 	refreshCurrentSession: typeof refreshCurrentSession;
 // * 	extendCurrentSession: typeof extendCurrentSession;
+// * 	updateUser: (user: Partial<SessionWithUser["user"]>) => Promise<void>;
+// * @typedef {{
+// * }} Utils
 
 /**
  * @typedef {typeof CLIENT_CURRENT_SESSION_STATUS[keyof typeof CLIENT_CURRENT_SESSION_STATUS]} ClientCurrentSessionStatus
  * @typedef {typeof CLIENT_CURRENT_SESSION_STATUS} TCLIENT_CURRENT_SESSION_STATUS
- * @typedef {{
- * 	updateUser: (user: Partial<SessionWithUser["user"]>) => Promise<void>;
- * }} Utils
  *
- * @typedef {Utils & { data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
- * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
- * @typedef {{updateUser?: undefined; refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["PENDING"] }} ClientInitialLoadingUserSession
+ * @typedef {{ data: ValidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["AUTHENTICATED"] }} ClientAuthenticatedUserSession
+ * @typedef {{refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["UNAUTHENTICATED"] }} ClientUnauthenticatedUserSession
+ * @typedef {{refreshCurrentSession?: undefined; extendCurrentSession?: undefined; data: InvalidSessionResult} & { status: TCLIENT_CURRENT_SESSION_STATUS["PENDING"] }} ClientInitialLoadingUserSession
  *
  * @typedef {ClientAuthenticatedUserSession
  * 	| ClientUnauthenticatedUserSession
@@ -71,44 +69,44 @@ export function useGetCurrentSessionQuery(props) {
 				});
 			}
 
-			/** @param {Partial<SessionWithUser['user']>} user */
-			async function updateUser(user) {
-				queryClient.setQueryData(
-					getCurrentSessionQueryKey(),
-					/**
-					 * @param {ClientUserSession | null} prev
-					 * @returns {ClientUserSession}
-					 */
-					(prev) => {
-						if (!prev) {
-							return {
-								status: CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED,
-								data: INITIAL_INVALID_DATA,
-							};
-						}
+			// /** @param {Partial<SessionWithUser['user']>} user */
+			// async function updateUser(user) {
+			// 	queryClient.setQueryData(
+			// 		getCurrentSessionQueryKey(),
+			// 		/**
+			// 		 * @param {ClientUserSession | null} prev
+			// 		 * @returns {ClientUserSession}
+			// 		 */
+			// 		(prev) => {
+			// 			if (!prev) {
+			// 				return {
+			// 					status: CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED,
+			// 					data: INITIAL_INVALID_DATA,
+			// 				};
+			// 			}
 
-						if (prev.status !== CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED) {
-							return prev;
-						}
+			// 			if (prev.status !== CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED) {
+			// 				return prev;
+			// 			}
 
-						return /** @type {ClientUserSession} */ ({
-							...prev,
-							data: {
-								...prev.data,
-								user: {
-									...prev.data.user,
-									...user,
-								},
-							},
-						});
-					},
-				);
-			}
+			// 			return /** @type {ClientUserSession} */ ({
+			// 				...prev,
+			// 				data: {
+			// 					...prev.data,
+			// 					user: {
+			// 						...prev.data.user,
+			// 						...user,
+			// 					},
+			// 				},
+			// 			});
+			// 		},
+			// 	);
+			// }
 
 			return /** @type {Required extends true ? RequiredClientUserSession : ClientUserSession} */ ({
 				status: CLIENT_CURRENT_SESSION_STATUS.AUTHENTICATED,
 				data: result,
-				updateUser: updateUser,
+				// updateUser: updateUser,
 				// refreshCurrentSession: refreshCurrentSession,
 				// extendCurrentSession: extendCurrentSession,
 			});

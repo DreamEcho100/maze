@@ -1,13 +1,11 @@
-import { jsonb, text, varchar } from "drizzle-orm/pg-core";
-import { ulid } from "ulid";
-import { ulidBytea } from "../custom-fields.js";
+import { jsonb, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { v7 } from "uuid";
 
-const createId = ulid;
+const createId = () => v7();
 
 export const textCols = {
-	// id: () => ulidBytea("id").$default(createId),
-	idPk: () => ulidBytea("id").primaryKey().$default(createId),
-	idFk: ulidBytea,
+	idPk: () => uuid("id").primaryKey().$defaultFn(createId),
+	idFk: uuid,
 	// Identifiers & URLs (ASCII-optimized)
 	slug: (name = "slug") => varchar(name, { length: 128 }), // URL-safe, indexed frequently
 	key: () => varchar("key", { length: 128 }), // Permission keys, API keys

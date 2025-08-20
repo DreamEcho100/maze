@@ -1,33 +1,52 @@
-"use client";
-
+import { LOGIN_MESSAGES_ERRORS } from "@de100/auth-core/utils/constants";
+import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useTranslations } from "@de100/i18n-solidjs";
 import { useMutation } from "@tanstack/solid-query";
-import { createMemo } from "solid-js";
+import { createMemo, Show } from "solid-js";
+import { authRoutesConfig } from "../../routes-config.js";
 import { loginAction } from "./actions.js";
 
 /**
  * @param {{
- * 	isDisabled?: boolean;
+ * 	isPending?: boolean;
  * 	errorMessage?: string;
  * }} props
  */
 export function LoginForm(props) {
 	const t = useTranslations();
+	const router = useRouter();
 	const mutation = useMutation(() => ({
 		mutationFn: loginAction,
+		onSuccess: (result) => {
+			if (result.type === "success") {
+				return router.push("/");
+			}
+
+			switch (result.messageCode) {
+				case LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND.messageCode:
+					return router.push(authRoutesConfig.register.path);
+				case LOGIN_MESSAGES_ERRORS.EMAIL_VERIFICATION_REQUIRED.messageCode:
+					return router.push(authRoutesConfig.verifyEmail.path);
+				case LOGIN_MESSAGES_ERRORS.TWO_FACTOR_SETUP_REQUIRED.messageCode:
+					return router.push(authRoutesConfig.twoFactorSetup.path);
+				case LOGIN_MESSAGES_ERRORS.TWO_FACTOR_VERIFICATION_REQUIRED.messageCode:
+					return router.push(authRoutesConfig.twoFactor.path);
+			}
+		},
 	}));
 
-	const isDisabled = createMemo(() => props.isDisabled || mutation.isPending);
+	const isPending = createMemo(() => props.isPending || mutation.isPending);
 	const errorMessage = createMemo(
 		() =>
-			mutation.data?.message ?? props.errorMessage ?? mutation.error?.message,
+			!isPending() &&
+			(mutation.error?.message ?? mutation.data?.message ?? props.errorMessage),
 	);
 
 	return (
 		<form
 			onSubmit={(e) => {
 				e.preventDefault();
-				if (isDisabled()) return;
+				if (isPending()) return;
 
 				const formData = new FormData(e.currentTarget);
 				mutation.mutate({
@@ -58,11 +77,14 @@ export function LoginForm(props) {
 			<button
 				type="submit"
 				disabled={mutation.isPending}
-				aria-disabled={isDisabled()}
+				aria-disabled={isPending()}
 			>
 				Continue
 			</button>
-			<p>{errorMessage()}</p>
+			<Show when={!isPending() && errorMessage()}>
+				{(errorMessage) => errorMessage()}
+			</Show>
+			<p>{!isPending() && errorMessage()}</p>
 		</form>
 	);
 }

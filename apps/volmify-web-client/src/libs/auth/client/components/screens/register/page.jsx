@@ -4,10 +4,10 @@ import { authRoutesConfig } from "../../routes-config.js";
 import { validateNonOrInvalidAuth } from "../../validate-non-or-invalid-auth.js";
 import { SignUpForm } from "./components.jsx";
 
-export default function AuthRegisterPage() {
+export function AuthRegister() {
 	const query = useQuery(() => ({
 		queryKey: ["auth", "validate-non-or-invalid-auth"],
-		queryFn: validateNonOrInvalidAuth,
+		queryFn: () => validateNonOrInvalidAuth(),
 	}));
 
 	return (
@@ -18,7 +18,7 @@ export default function AuthRegisterPage() {
 				at least 8 characters long.
 			</p>
 			<SignUpForm
-				isDisabled={query.isPending}
+				isPending={query.isPending}
 				errorMessage={query.error?.message}
 			/>
 			<Link href={authRoutesConfig.login.path}>Login</Link>

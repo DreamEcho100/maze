@@ -1,5 +1,3 @@
-"use server";
-
 import { verify2FAService } from "@de100/auth-core/services/2fa/verify";
 import {
 	AUTH_URLS,
@@ -17,6 +15,7 @@ import { redirect } from "#libs/i18n/server/utils.ts";
  * @param {{ code: unknown }} input
  */
 export async function verify2FAAction(input) {
+	"use server";
 	const authProps = await generateAuthSessionProps({
 		input,
 		authProviders: {

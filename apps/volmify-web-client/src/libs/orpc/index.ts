@@ -5,7 +5,8 @@ if (typeof window === "undefined") {
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+// import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { createORPCSolidQueryUtils } from "@orpc/solid-query";
 import { getRequestEvent } from "solid-js/web";
 import type { router } from "#libs/orpc/router/index.ts";
 
@@ -21,4 +22,4 @@ const link = new RPCLink({
 export const client: RouterClient<typeof router> =
 	globalThis.$client ?? createORPCClient(link);
 
-export const orpc = createTanstackQueryUtils(client);
+export const orpc = createORPCSolidQueryUtils(client);

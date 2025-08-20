@@ -24,7 +24,6 @@ import { generateRandomOTP } from "./generate-randomotp.js";
  * @returns {Promise<EmailVerificationRequest>} The email verification request.
  */
 export async function createEmailVerificationRequest(props, ctx) {
-	console.log("___ createEmailVerificationRequest props", props);
 	await ctx.authProviders.userEmailVerificationRequests.deleteOneByUserId(
 		props,
 		{ tx: ctx.tx },
@@ -38,13 +37,6 @@ export async function createEmailVerificationRequest(props, ctx) {
 		Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	);
 
-	console.log("___ idxxxxxxxxxxxx", {
-		id: id,
-		userId: props.where.userId,
-		code: code,
-		email: props.where.email,
-		expiresAt: expiresAt,
-	});
 	const result =
 		await ctx.authProviders.userEmailVerificationRequests.createOne(
 			{

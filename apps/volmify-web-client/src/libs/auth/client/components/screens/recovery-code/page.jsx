@@ -9,6 +9,8 @@ import { getCurrentSession } from "#libs/auth/server/queries.js";
 // import { userProvider } from "@de100/auth-core/src/providers";
 
 export default async function AuthRecoveryCodePage() {
+	"use server";
+
 	const { session, user } = await getCurrentSession({
 		canMutateCookies: false,
 	});

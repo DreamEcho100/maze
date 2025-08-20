@@ -1,4 +1,3 @@
-"use server";
 import { createRouterClient } from "@orpc/server";
 import { getRequestEvent } from "solid-js/web";
 import { router } from "#libs/orpc/router/index.ts";

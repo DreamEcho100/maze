@@ -1,5 +1,3 @@
-"use server";
-
 /**
  * @import { AuthProvidersShape, AuthProvidersWithGetSessionUtils, HeadersProvider } from "@de100/auth-core/types";
  */
@@ -64,6 +62,7 @@ export const getCurrentSession = query(
 // };
 
 export const extendCurrentSession = async () => {
+	"use server";
 	// return sessionUtils.extendCurrentSession({
 	// 	onInvalidSession: () => {
 	// 		redirect(AUTH_URLS.LOGIN);
@@ -162,6 +161,7 @@ export const refreshCurrentSession = async () => {
  * @param {TProps} props
  */
 export async function generateAuthSessionProps(props) {
+	"use server";
 	const input = await generateGetCurrentAuthSessionProps(props);
 	const result = await getCurrentSession(input);
 

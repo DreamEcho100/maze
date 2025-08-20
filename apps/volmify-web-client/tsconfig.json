@@ -15,6 +15,7 @@
 		"types": ["vinxi/types/client"],
 		"isolatedModules": true,
 		"allowImportingTsExtensions": true,
+		"allowArbitraryExtensions": true,
 		"baseUrl": ".",
 		"paths": { "#*": ["./src/*"] }
 	},

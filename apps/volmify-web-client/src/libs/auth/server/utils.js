@@ -1,5 +1,4 @@
 // @ts-check
-"use server";
 
 /**
  * @import { AuthProvidersShape, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, CookiesProvider, DynamicCookiesOptions, HeadersProvider, UserAgent } from "@de100/auth-core/types";
@@ -20,6 +19,7 @@ import { deleteCookie, getCookie, setCookie } from "vinxi/http";
  * @returns {{ ipAddress: string | null, userAgent: UserAgent; cookies: CookiesProvider; headers: HeadersProvider; cookiesOptions: DynamicCookiesOptions }} An object containing the IP address and user agent.
  */
 export function getSessionOptionsBasics(reqHeaders) {
+	"use server";
 	const { cookies, headers } = getCookiesAndHeaders(reqHeaders);
 
 	let ipAddress = null;
@@ -51,6 +51,7 @@ import { UAParser } from "ua-parser-js";
  * @returns {UserAgent}
  */
 function parseUserAgent(userAgentString) {
+	"use server";
 	const parser = new UAParser(userAgentString);
 	const result = parser.getResult();
 
@@ -122,6 +123,7 @@ function parseUserAgent(userAgentString) {
 
 /** @returns {CookiesProvider} */
 export function getCookiesManager() {
+	"use server";
 	const requestEvent = getRequestEvent();
 	if (!requestEvent) {
 		throw new Error(
@@ -152,6 +154,7 @@ export function getCookiesManager() {
  * @param {Headers} [reqHeaders] - Optional request headers object.
  */
 export function getCookiesAndHeaders(reqHeaders) {
+	"use server";
 	const requestEvent = getRequestEvent();
 	if (!requestEvent) {
 		throw new Error(
@@ -171,6 +174,8 @@ export function getCookiesAndHeaders(reqHeaders) {
 export function getDefaultSessionAndJWTFromAuthProviders(
 	authProvidersFromInput,
 ) {
+	"use server";
+
 	return {
 		...authProvidersFromInput,
 		sessions: {
@@ -247,6 +252,7 @@ export function getDefaultSessionAndJWTFromAuthProviders(
  * @param {TProps} props
  */
 export async function generateGetCurrentAuthSessionProps(props) {
+	"use server";
 	const input = {
 		...(await getSessionOptionsBasics(props.reqHeaders)),
 		cookiesOptions: props.cookiesOptions ?? {},

@@ -26,8 +26,7 @@ catalog:
   drizzle-orm: ^0.44.2
   "drizzle-zod": ^0.6.1
   drizzle-kit: ^0.31.2
-  ulid: ^3.0.1
-  ulidx: ^2.4.1
+  uuid: ^11.1.0
   pg: ^8.14.1
   "@types/pg": ^8.15.5
   "@orpc/tanstack-query": ^1.5.0

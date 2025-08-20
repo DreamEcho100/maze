@@ -1,4 +1,3 @@
-// import { currencyCodeFkCol } from "@de100/db/schema";
 import { json, query } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import {
@@ -10,7 +9,6 @@ import { getServerLocale, setLocaleInCookies } from "./utils.ts";
 
 export const getTranslation = query(async (registeredLocale?: string) => {
 	if (process.env.NODE_ENV === "development") {
-		console.log("___ getTranslation registeredLocale", registeredLocale);
 	}
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	const locale = (registeredLocale ||
@@ -59,7 +57,6 @@ export const getTranslationByLocal = async (props: {
 }) => {
 	"use server";
 	if (process.env.NODE_ENV === "development") {
-		console.log("___ getTranslationByLocal props", props);
 	}
 	// console.log(currencyCodeFkCol);
 	const requestEvent = getRequestEvent();
