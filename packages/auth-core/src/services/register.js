@@ -1,10 +1,11 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy, DynamicCookiesOptions } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, UserEmailVerificationRequestsProvider, UsersProvider, AuthStrategy, DynamicCookiesOptions } from "@de100/auth-shared/types"; */
 
 import {
 	INTERNAL_SERVER_ERROR,
 	REGISTER_MESSAGES_ERRORS,
 	REGISTER_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { RegisterServiceInputSchema } from "@de100/auth-shared/validations";
 import {
 	createEmailVerificationRequest,
 	getEmailVerificationRequestCookie,
@@ -13,7 +14,6 @@ import {
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createUser } from "#utils/users.js";
-import { RegisterServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -49,9 +49,7 @@ export async function registerService(props) {
 			return REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 		}
 
-		const emailAvailable = await props.authProviders.users.findOneByEmail(
-			input.data.email,
-		);
+		const emailAvailable = await props.authProviders.users.findOneByEmail(input.data.email);
 
 		if (emailAvailable) {
 			return REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -75,11 +73,8 @@ export async function registerService(props) {
 			{
 				authProviders: {
 					userEmailVerificationRequests: {
-						createOne:
-							props.authProviders.userEmailVerificationRequests.createOne,
-						deleteOneByUserId:
-							props.authProviders.userEmailVerificationRequests
-								.deleteOneByUserId,
+						createOne: props.authProviders.userEmailVerificationRequests.createOne,
+						deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 					},
 				},
 			},

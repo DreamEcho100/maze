@@ -1,16 +1,16 @@
-/** @import { MultiErrorSingleSuccessResponse, User, UserEmailVerificationRequestsProvider, UsersProvider } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, User, UserEmailVerificationRequestsProvider, UsersProvider } from "@de100/auth-shared/types"; */
 
 import {
 	ADMIN_REGISTER_MESSAGES_ERRORS,
 	ADMIN_REGISTER_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { adminRegisterServiceInputSchema } from "@de100/auth-shared/validations";
 import {
 	createEmailVerificationRequest,
 	sendVerificationEmail,
 } from "#utils/email-verification.js";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createUser } from "#utils/users.js";
-import { adminRegisterServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles register by deleting the user session and clearing session cookies.
@@ -42,9 +42,7 @@ export async function adminRegisterService(props) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.INVALID_OR_MISSING_FIELDS;
 	}
 
-	const emailAvailable = await props.authProviders.users.findOneByEmail(
-		input.data.email,
-	);
+	const emailAvailable = await props.authProviders.users.findOneByEmail(input.data.email);
 
 	if (emailAvailable) {
 		return ADMIN_REGISTER_MESSAGES_ERRORS.EMAIL_ALREADY_REGISTERED;
@@ -77,10 +75,8 @@ export async function adminRegisterService(props) {
 		{
 			authProviders: {
 				userEmailVerificationRequests: {
-					createOne:
-						props.authProviders.userEmailVerificationRequests.createOne,
-					deleteOneByUserId:
-						props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
+					createOne: props.authProviders.userEmailVerificationRequests.createOne,
+					deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 				},
 			},
 		},

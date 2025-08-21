@@ -1,13 +1,10 @@
-/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types" */
 
 import {
 	UPDATE_PASSWORD_MESSAGES_ERRORS,
 	UPDATE_PASSWORD_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
-import {
-	verifyPasswordHash,
-	verifyPasswordStrength,
-} from "#utils/passwords.js";
+} from "@de100/auth-shared/constants";
+import { verifyPasswordHash, verifyPasswordStrength } from "#utils/passwords.js";
 import { createAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -42,11 +39,7 @@ export async function updatePasswordService(props) {
 
 	if (!session) return UPDATE_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 
-	if (
-		user.twoFactorEnabledAt &&
-		user.twoFactorRegisteredAt &&
-		!session.twoFactorVerifiedAt
-	) {
+	if (user.twoFactorEnabledAt && user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt) {
 		return UPDATE_PASSWORD_MESSAGES_ERRORS.TWO_FACTOR_SETUP_OR_VERIFICATION_REQUIRED;
 	}
 
@@ -60,17 +53,11 @@ export async function updatePasswordService(props) {
 	const strongPassword = await verifyPasswordStrength(props.input.newPassword);
 	if (!strongPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
-	const passwordHash = await props.authProviders.users.getOnePasswordHash(
-		user.id,
-	);
+	const passwordHash = await props.authProviders.users.getOnePasswordHash(user.id);
 	if (!passwordHash) return UPDATE_PASSWORD_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 
-	const validPassword = await verifyPasswordHash(
-		passwordHash,
-		props.input.currentPassword,
-	);
-	if (!validPassword)
-		return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
+	const validPassword = await verifyPasswordHash(passwordHash, props.input.currentPassword);
+	if (!validPassword) return UPDATE_PASSWORD_MESSAGES_ERRORS.CURRENT_PASSWORD_INCORRECT;
 
 	await Promise.all([
 		props.authProviders.sessions.deleteAllByUserId(

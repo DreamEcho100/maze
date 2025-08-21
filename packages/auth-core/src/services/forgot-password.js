@@ -1,9 +1,10 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, PasswordResetSessionsProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, HeadersProvider, AuthStrategy, UsersProvider, PasswordResetSessionsProvider, AuthProvidersWithGetSessionProviders, JWTProvider, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types"; */
 
 import {
 	FORGET_PASSWORD_MESSAGES_ERRORS,
 	FORGET_PASSWORD_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { forgotPasswordServiceInputSchema } from "@de100/auth-shared/validations";
 import { dateLikeToISOString } from "#utils/dates.js";
 import { generateRandomToken } from "#utils/generate-random-token.js";
 import {
@@ -11,7 +12,6 @@ import {
 	sendPasswordResetEmail,
 	setPasswordResetSessionTokenCookie,
 } from "#utils/password-reset.js";
-import { forgotPasswordServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the forgot password logic, verifying the user, creating a reset session, and sending the reset email.
@@ -65,10 +65,7 @@ export async function forgotPasswordService(props) {
 		),
 	]);
 
-	await sendPasswordResetEmail(
-		passwordResetEmailSession.email,
-		passwordResetEmailSession.code,
-	);
+	await sendPasswordResetEmail(passwordResetEmailSession.email, passwordResetEmailSession.code);
 	setPasswordResetSessionTokenCookie({
 		token: sessionToken,
 		expiresAt: passwordResetEmailSession.expiresAt,

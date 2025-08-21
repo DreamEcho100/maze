@@ -1,0 +1,12 @@
+{
+	"extends": "@de100/tsconfig/internal-package.json",
+	"compilerOptions": {
+		"lib": ["ESNext", "DOM"],
+		"allowImportingTsExtensions": true,
+		"rootDir": ".",
+		"baseUrl": ".",
+		"paths": { "#*": ["./src/*"] }
+	},
+	"include": ["*.ts", "src", "src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+	"exclude": ["node_modules"]
+}

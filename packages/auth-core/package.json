@@ -99,10 +99,6 @@
 			"types": "./dist/src/utils/2fa.d.ts",
 			"default": "./src/utils/2fa.js"
 		},
-		"./utils/constants": {
-			"types": "./dist/src/utils/constants.d.ts",
-			"default": "./src/utils/constants.js"
-		},
 		"./utils/csrf": {
 			"types": "./dist/src/utils/csrf.d.ts",
 			"default": "./src/utils/csrf.js"
@@ -143,10 +139,6 @@
 			"types": "./dist/src/utils/sessions/index.d.ts",
 			"default": "./src/utils/sessions/index.js"
 		},
-		"./utils/validations": {
-			"types": "./dist/src/utils/validations.d.ts",
-			"default": "./src/utils/validations.js"
-		},
 		"./init": {
 			"types": "./dist/src/init/index.d.ts",
 			"default": "./src/init/index.js"
@@ -154,10 +146,6 @@
 		"./utils/users": {
 			"types": "./dist/src/utils/users.d.ts",
 			"default": "./src/utils/users.js"
-		},
-		"./types": {
-			"types": "./dist/src/types.d.ts",
-			"default": "./src/types.js"
 		}
 	},
 	"license": "MIT",
@@ -171,6 +159,7 @@
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
+		"@de100/auth-shared": "workspace:^",
 		"@de100/env": "workspace:^",
 		"@node-rs/argon2": "^2.0.0",
 		"@node-rs/argon2-wasm32-wasi": "^2.0.2",

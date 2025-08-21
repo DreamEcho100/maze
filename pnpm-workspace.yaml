@@ -1,70 +1,72 @@
 packages:
   - apps/*
   - packages/*
-  # - packages/i18n/*
   - tooling/*
-  # - playground/*
   - packages/ts-rest/src/schemas/adapters/zod
+
 catalog:
-  tailwindcss: ^4.0.6
-  "@tailwindcss/postcss": ^4
-  typescript: ^5.9.2
-  "@types/node": ^22.17.1
-  zod: ^4.0.17
-  tsx: ^4.20.4
-  "solid-js": ^1.9.9
-  "@solidjs/meta": ^0.29.4
-  "@solidjs/router": ^0.15.0
-  "@solidjs/start": ^1.1.0
-  vinxi: ^0.5.7
-  vite: "^7.0.2"
-  "@biomejs/biome": "^2.2.0"
-  "@standard-schema/spec": ^1.0.0
-  mutative: ^1.2.0 # https://www.npmjs.com/package/mutative
-  zustand-mutative: ^1.3.0 # https://www.npmjs.com/package/zustand-mutative
-  zustand: ^5.0.7 # https://www.npmjs.com/package/zustand
-  drizzle-orm: ^0.44.2
-  "drizzle-zod": ^0.6.1
+  '@auth/core': 0.37.2
+  '@auth/drizzle-adapter': ~1.7.4
+  '@biomejs/biome': ^2.2.0
+  '@hookform/resolvers': ^4.1.3
+  '@orpc/client': ^1.8.1
+  '@orpc/openapi': ^1.8.1
+  '@orpc/server': ^1.8.1
+  '@orpc/tanstack-query': ^1.5.0
+  '@orpc/zod': ^1.8.1
+  '@solidjs/meta': ^0.29.4
+  '@solidjs/router': ^0.15.0
+  '@solidjs/start': ^1.1.0
+  '@standard-schema/spec': ^1.0.0
+  '@tailwindcss/postcss': ^4
+  '@tanstack/react-query': ^5.67.1
+  '@tanstack/solid-query': ^5.85.2
+  '@tanstack/solid-query-devtools': ^5.85.2
+  '@trpc/client': ^11.4.4
+  '@trpc/server': ^11.4.4
+  '@trpc/tanstack-react-query': ^11.4.4
+  '@types/node': ^22.17.1
+  '@types/pg': ^8.15.5
+  '@types/react': ^19.1.10
+  '@types/react-dom': ^19.1.7
   drizzle-kit: ^0.31.2
-  uuid: ^11.1.0
+  drizzle-orm: ^0.44.2
+  drizzle-zod: ^0.6.1
+  eslint: ^9.19.0
+  eslint-config-next: ^15.4.6
+  mutative: ^1.2.0
+  next: ^15.4.6
+  next-auth: 5.0.0-beta.25
+  next-themes: ^0.4.6
   pg: ^8.14.1
-  "@types/pg": ^8.15.5
-  "@orpc/tanstack-query": ^1.5.0
-  "@orpc/client": ^1.8.1
-  "@orpc/server": ^1.8.1
-  "@orpc/openapi": ^1.8.1
-  "@orpc/zod": ^1.8.1
-  "@tanstack/solid-query": ^5.85.2
-  "@tanstack/solid-query-devtools": ^5.85.2 ###################################
+  prettier: ^3.4.2
   react: ^19.1.1
   react-dom: ^19.1.1
-  "@types/react": ^19.1.10
-  "@types/react-dom": ^19.1.7 
-  "@auth/core": 0.37.2
-  "@auth/drizzle-adapter": ~1.7.4
-  next-auth: 5.0.0-beta.25
-  eslint: ^9.19.0
-  prettier: ^3.4.2
-  "@hookform/resolvers": ^4.1.3
   react-hook-form: ^7.62.0
-  next-themes: ^0.4.6
-  next: ^15.4.6 # https://github.com/vercel/next.js/discussions/71727
-  eslint-config-next: ^15.4.6
-  "@tanstack/react-query": ^5.67.1
-  "@trpc/client": ^11.4.4
-  "@trpc/tanstack-react-query": ^11.4.4
-  "@trpc/server": ^11.4.4
+  solid-js: ^1.9.9
+  tailwindcss: ^4.0.6
+  tsx: ^4.20.4
+  typescript: ^5.9.2
+  uuid: ^11.1.0
+  vinxi: ^0.5.7
+  vite: ^7.0.2
+  zod: ^4.0.17
+  zustand: ^5.0.7
+  zustand-mutative: ^1.3.0
+
 catalogs:
   react19:
+    '@types/react': ^19.1.10
+    '@types/react-dom': ^19.1.7
     react: ^19.1.1
     react-dom: ^19.1.1
-    "@types/react": ^19.1.10
-    "@types/react-dom": ^19.1.7 
+
 onlyBuiltDependencies:
-  - "@clerk/shared"
-  - "@parcel/watcher"
-  - "@prisma/client"
-  - "@prisma/engines"
+  - '@clerk/shared'
+  - '@parcel/watcher'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@swc/core'
   - bufferutil
   - core-js-pure
   - esbuild

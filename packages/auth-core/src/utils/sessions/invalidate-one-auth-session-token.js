@@ -1,4 +1,4 @@
-/** @import { AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, AuthStrategy, CookiesProvider, DynamicCookiesOptions, HeadersProvider, SessionsProvider, UserAgent, ValidSessionResult } from "#types.ts" */
+/** @import { AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, AuthStrategy, CookiesProvider, DynamicCookiesOptions, HeadersProvider, SessionsProvider, UserAgent, ValidSessionResult } from "@de100/auth-shared/types" */
 
 import { deleteAuthTokenCookies } from "./cookies.js";
 

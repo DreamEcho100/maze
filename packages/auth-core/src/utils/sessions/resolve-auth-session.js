@@ -1,10 +1,9 @@
-/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput, ValidSessionResultMetadata, DynamicCookiesOptions } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, CookiesProvider, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike, AuthProvidersWithGetSessionProviders, HeadersProvider, SessionValidationResult, AuthProvidersWithGetSessionUtils, DBSessionOutput, ValidSessionResultMetadata, DynamicCookiesOptions } from "@de100/auth-shared/types" */
 
+import { REFRESH_TOKEN_EXPIRES_DURATION } from "@de100/auth-shared/constants";
 import { z } from "zod/v4-mini";
-
 import { jwtProvider } from "#services/jwt.js";
 import { dateLikeToNumber } from "#utils/dates.js";
-import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants.js";
 import { setAuthTokenCookies } from "./cookies.js";
 import { generateAccessToken } from "./generate-access-token.js";
 import { generateRefreshToken } from "./generate-refresh-token.js";

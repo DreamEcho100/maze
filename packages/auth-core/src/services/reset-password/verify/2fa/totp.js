@@ -1,12 +1,12 @@
-/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
+/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "@de100/auth-shared/types" */
 
 import {
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { verifyPasswordReset2FAViaTOTPServiceInputSchema } from "@de100/auth-shared/validations";
 import { verifyTOTP } from "#utils/index.js";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
-import { verifyPasswordReset2FAViaTOTPServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the 2FA verification for a password reset using TOTP.
@@ -34,9 +34,7 @@ import { verifyPasswordReset2FAViaTOTPServiceInputSchema } from "#utils/validati
  * >}
  */
 export async function verifyPasswordReset2FAViaTOTPService(props) {
-	const input = verifyPasswordReset2FAViaTOTPServiceInputSchema.safeParse(
-		props.input,
-	);
+	const input = verifyPasswordReset2FAViaTOTPServiceInputSchema.safeParse(props.input);
 
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.TOTP_CODE_REQUIRED;
@@ -48,13 +46,11 @@ export async function verifyPasswordReset2FAViaTOTPService(props) {
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,
-				findOneWithUser:
-					props.authProviders.passwordResetSession.findOneWithUser,
+				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
 			},
 		},
 	});
-	if (!session)
-		return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
+	if (!session) return VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	if (
 		!user.twoFactorEnabledAt ||
 		session.twoFactorVerifiedAt ||
@@ -71,9 +67,7 @@ export async function verifyPasswordReset2FAViaTOTPService(props) {
 	}
 
 	// await updateOnePasswordRemarkOne2FAVerifiedRepository(session.id);
-	await props.authProviders.passwordResetSession.markOneTwoFactorAsVerified(
-		session.id,
-	);
+	await props.authProviders.passwordResetSession.markOneTwoFactorAsVerified(session.id);
 	return {
 		...VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS.TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET,
 		data: { nextStep: "reset-password" },

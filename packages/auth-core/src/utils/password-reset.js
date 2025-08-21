@@ -1,12 +1,11 @@
-/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider, DynamicCookiesOptions } from "#types.ts"; */
-
-import { sha256 } from "@oslojs/crypto/sha2";
-import { encodeHexLowerCase } from "@oslojs/encoding";
+/** @import { DateLike, PasswordResetSession, PasswordResetSessionValidationResult, CookiesProvider, PasswordResetSessionsProvider, DynamicCookiesOptions } from "@de100/auth-shared/types"; */
 
 import {
 	COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
 	COOKIE_TOKEN_PASSWORD_RESET_KEY,
-} from "./constants.js";
+} from "@de100/auth-shared/constants";
+import { sha256 } from "@oslojs/crypto/sha2";
+import { encodeHexLowerCase } from "@oslojs/encoding";
 import { dateLikeToDate, dateLikeToNumber } from "./dates.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
 
@@ -25,18 +24,14 @@ import { generateRandomOTP } from "./generate-randomotp.js";
  * }} ctx - The properties for the password reset session.
  */
 export async function createPasswordResetSession(props, ctx) {
-	const sessionId = encodeHexLowerCase(
-		sha256(new TextEncoder().encode(props.data.token)),
-	);
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(props.data.token)));
 
 	/** @type {PasswordResetSession} */
 	const session = {
 		id: sessionId,
 		userId: props.data.userId,
 		email: props.data.email,
-		expiresAt: new Date(
-			Date.now() + COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION,
-		),
+		expiresAt: new Date(Date.now() + COOKIE_TOKEN_PASSWORD_RESET_EXPIRES_DURATION),
 		code: generateRandomOTP(),
 		emailVerifiedAt: null,
 		twoFactorVerifiedAt: null,
@@ -44,31 +39,27 @@ export async function createPasswordResetSession(props, ctx) {
 	};
 
 	// await createOnePasswordResetSessionRepository(session).then(
-	await ctx.authProviders.passwordResetSession
-		.createOne({ data: session }, ctx)
-		.then(
-			/** @returns {PasswordResetSession} session */
-			(result) => {
-				if (!result) {
-					throw new Error("Failed to create password reset session.");
-				}
+	await ctx.authProviders.passwordResetSession.createOne({ data: session }, ctx).then(
+		/** @returns {PasswordResetSession} session */
+		(result) => {
+			if (!result) {
+				throw new Error("Failed to create password reset session.");
+			}
 
-				return {
-					id: result.id,
-					userId: result.userId,
-					email: result.email,
-					code: result.code,
-					expiresAt: dateLikeToDate(result.expiresAt),
-					emailVerifiedAt: result.emailVerifiedAt
-						? dateLikeToDate(result.emailVerifiedAt)
-						: null,
-					twoFactorVerifiedAt: result.twoFactorVerifiedAt
-						? dateLikeToDate(result.twoFactorVerifiedAt)
-						: null,
-					createdAt: dateLikeToDate(result.createdAt),
-				};
-			},
-		);
+			return {
+				id: result.id,
+				userId: result.userId,
+				email: result.email,
+				code: result.code,
+				expiresAt: dateLikeToDate(result.expiresAt),
+				emailVerifiedAt: result.emailVerifiedAt ? dateLikeToDate(result.emailVerifiedAt) : null,
+				twoFactorVerifiedAt: result.twoFactorVerifiedAt
+					? dateLikeToDate(result.twoFactorVerifiedAt)
+					: null,
+				createdAt: dateLikeToDate(result.createdAt),
+			};
+		},
+	);
 
 	return session;
 }
@@ -87,13 +78,9 @@ export async function createPasswordResetSession(props, ctx) {
 export async function validatePasswordResetSessionToken(token, ctx) {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	// const result = await findOnePasswordResetSessionWithUserRepository(sessionId);
-	const result =
-		await ctx.authProviders.passwordResetSession.findOneWithUser(sessionId);
+	const result = await ctx.authProviders.passwordResetSession.findOneWithUser(sessionId);
 
-	if (
-		!result.session ||
-		Date.now() >= dateLikeToNumber(result.session.expiresAt)
-	) {
+	if (!result.session || Date.now() >= dateLikeToNumber(result.session.expiresAt)) {
 		// await deleteOnePasswordResetSessionRepository(sessionId);
 		await ctx.authProviders.passwordResetSession.deleteOne(sessionId);
 		return { session: null, user: null };
@@ -149,11 +136,7 @@ export function setPasswordResetSessionTokenCookie(props) {
 			? props.cookiesOptions.PASSWORD_RESET_SESSION({ expiresAt })
 			: props.cookiesOptions?.PASSWORD_RESET_SESSION),
 	};
-	props.cookies.set(
-		COOKIE_TOKEN_PASSWORD_RESET_KEY,
-		props.token,
-		cookiesOptions,
-	);
+	props.cookies.set(COOKIE_TOKEN_PASSWORD_RESET_KEY, props.token, cookiesOptions);
 }
 
 /**

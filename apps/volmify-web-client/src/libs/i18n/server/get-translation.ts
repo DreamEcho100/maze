@@ -1,18 +1,13 @@
 import { json, query } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import {
-	type AllowedLocale,
-	allowedLocales,
-	defaultLocale,
-} from "../constants.ts";
-import { getServerLocale, setLocaleInCookies } from "./utils.ts";
+import { type AllowedLocale, allowedLocales, defaultLocale } from "../constants.ts";
+import { getServerLocale, setLocaleInCookies } from "./get-server-locale.ts";
 
 export const getTranslation = query(async (registeredLocale?: string) => {
 	if (process.env.NODE_ENV === "development") {
 	}
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	const locale = (registeredLocale ||
-		defaultLocale) as (typeof allowedLocales)[number];
+	const locale = (registeredLocale || defaultLocale) as (typeof allowedLocales)[number];
 	if (!allowedLocales.includes(locale)) {
 		throw new Error(`Locale "${locale}" is not allowed.`);
 	}
@@ -51,10 +46,7 @@ export const getTranslation = query(async (registeredLocale?: string) => {
 	// >;
 }, "translation");
 
-export const getTranslationByLocal = async (props: {
-	locale?: AllowedLocale;
-	direct: boolean;
-}) => {
+export const getTranslationByLocal = async (props: { locale?: AllowedLocale; direct: boolean }) => {
 	"use server";
 	if (process.env.NODE_ENV === "development") {
 	}

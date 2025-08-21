@@ -1,12 +1,12 @@
-/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types"; */
 
 import {
 	SETUP_2FA_MESSAGES_ERRORS,
 	SETUP_2FA_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { setup2FAServiceInputSchema } from "@de100/auth-shared/validations";
 import { decodeBase64, verifyTOTP } from "#utils/index.js";
 import { updateUserTOTPKey } from "#utils/users.js";
-import { setup2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the setup of 2FA, including validating inputs, decoding the key, and updating session and user records.
@@ -41,10 +41,7 @@ export async function setup2FAService(props) {
 		return SETUP_2FA_MESSAGES_ERRORS.TWO_FACTOR_NOT_ENABLED;
 	}
 
-	if (
-		!user.emailVerifiedAt ||
-		(user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt)
-	) {
+	if (!user.emailVerifiedAt || (user.twoFactorRegisteredAt && !session.twoFactorVerifiedAt)) {
 		return SETUP_2FA_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 

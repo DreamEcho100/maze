@@ -1,4 +1,4 @@
-/** @import { ActionResultBase } from "#types.ts"; */
+/** @import { ActionResultBase } from "@de100/auth-shared/types"; */
 
 // Standardize error shapes across all services
 export class AuthError extends Error {

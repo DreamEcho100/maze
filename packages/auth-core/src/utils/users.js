@@ -1,5 +1,5 @@
 /**
- * @import { DateLike, User, UsersProvider } from "#types.ts";
+ * @import { DateLike, User, UsersProvider } from "@de100/auth-shared/types";
  */
 
 import { encrypt, encryptString } from "#utils/encryption.js";
@@ -145,11 +145,7 @@ export async function updateUserTOTPKey(props, ctx) {
  * @param {{ users: { updateOne2FAEnabled: UsersProvider['updateOne2FAEnabled']; } }} ctx.authProviders
  * @returns {Promise<User>}
  */
-export async function updateUserTwoFactorEnabledService(
-	userId,
-	twoFactorEnabledAt,
-	ctx,
-) {
+export async function updateUserTwoFactorEnabledService(userId, twoFactorEnabledAt, ctx) {
 	const encryptedRecoveryCode = twoFactorEnabledAt
 		? (() => {
 				const recoveryCode = generateRandomRecoveryCode();
@@ -162,9 +158,7 @@ export async function updateUserTwoFactorEnabledService(
 	// return await updateUserTwoFactorEnabledRepository(
 	const result = await ctx.authProviders.users.updateOne2FAEnabled(
 		{
-			twoFactorEnabledAt: twoFactorEnabledAt
-				? dateLikeToDate(twoFactorEnabledAt)
-				: null,
+			twoFactorEnabledAt: twoFactorEnabledAt ? dateLikeToDate(twoFactorEnabledAt) : null,
 			recoveryCode: encryptedRecoveryCode,
 		},
 		{ userId },

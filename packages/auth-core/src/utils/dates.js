@@ -1,4 +1,4 @@
-/** @import { DateLike } from "#types.ts"  */
+/** @import { DateLike } from "@de100/auth-shared/types"  */
 
 /**
  * @param {string|number|Date} dateLike

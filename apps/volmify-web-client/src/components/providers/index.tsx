@@ -1,9 +1,10 @@
 import { I18nProvider } from "@de100/i18n-solidjs";
+import { MetaProvider } from "@solidjs/meta";
 import { createAsync, useParams } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import type { ParentProps } from "solid-js";
-import { Show, Suspense } from "solid-js";
+import { createEffect, createRenderEffect, Show, Suspense, untrack } from "solid-js";
 import { queryClient } from "#libs/@tanstack/query/query-client.js";
 import SessionProvider from "#libs/auth/client/components/session-provider.js";
 // import { queryClient } from "#libs/@tanstack/query/query-client.js";
@@ -18,80 +19,95 @@ import { isAllowedLocale } from "#libs/i18n/is-allowed-locale.ts";
 import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
 
 function I18nProviderWrapper(props: ParentProps) {
-	// TODO: use react query instead???
-	const localeTranslationsRecourse = createAsync(() =>
-		getTranslationByLocal({ direct: true }),
-	);
+	const localeTranslationsRecourse = createAsync(() => getTranslationByLocal({ direct: true }));
 	const params = useParams();
 
+	untrack(() => {
+		const localeTranslation = localeTranslationsRecourse();
+		if (typeof window !== "undefined" && localeTranslation) {
+			const htmlElement = document.documentElement;
+
+			localeTranslation.locale;
+
+			htmlElement.lang = localeTranslation.locale;
+			htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
+
+			console.log("___ htmlElement", htmlElement);
+		}
+	});
+
+	// createRenderEffect(() => {
+	// 	const localeTranslation = localeTranslationsRecourse();
+	// 	if (!localeTranslation) return;
+	// 	if (typeof window === "undefined") return;
+	// 	const htmlElement = document.documentElement;
+
+	// 	localeTranslation.locale;
+
+	// 	htmlElement.lang = localeTranslation.locale;
+	// 	htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
+
+	// 	console.log("___ htmlElement", htmlElement);
+	// });
+
 	return (
-		<Suspense fallback={<div>Loading...</div>}>
-			<Show when={localeTranslationsRecourse()}>
-				{(localeTranslation) => {
-					const translation = localeTranslation().translation;
-					const locale = localeTranslation().locale;
-
-					return (
-						<I18nProvider
-							allowedLocales={allowedLocales}
-							localeDirMap={localeDirMap}
-							defaultLocale={defaultLocale}
-							fallbackLocale={fallbackLocale}
-							translations={{ [locale]: translation }}
-							locale={locale}
-							loadTranslations={async (props) => {
-								if (!isAllowedLocale(props.locale)) {
-									throw new Error(
-										`props \`props.locale\` "${props.locale}" is not allowed.`,
-									);
-								}
-
-								const result = await getTranslationByLocal({
-									locale: props.locale,
-									direct: true,
-								});
-
-								if (!result) {
-									throw new Error(
-										"Failed to get the `getTranslationQuery` result",
-									);
-								}
-								// set cookie on the client
-								// cookieManager.setCookie("locale", props.locale, {
-								// 	path: "/",
-								// 	maxAge: 31536000, // 1 year
-								// 	sameSite: "lax",
-								// });
-								// cookieManager.setCookie("x-locale", props.locale, {
-								// 	path: "/",
-								// 	maxAge: 31536000, // 1 year
-								// 	sameSite: "lax",
-								// });
-
-								return { [props.locale]: result.translation };
-							}}
-							localeParam={params.locale}
-						>
-							{Math.random()}
-							{props.children}
-						</I18nProvider>
-					);
-				}}
-			</Show>
-		</Suspense>
+		<Show when={localeTranslationsRecourse()}>
+			{(localeTranslation) => {
+				const translation = localeTranslation().translation;
+				const locale = localeTranslation().locale;
+				return (
+					<I18nProvider
+						allowedLocales={allowedLocales}
+						localeDirMap={localeDirMap}
+						defaultLocale={defaultLocale}
+						fallbackLocale={fallbackLocale}
+						translations={{ [locale]: translation }}
+						locale={locale}
+						loadTranslations={async (props) => {
+							if (!isAllowedLocale(props.locale)) {
+								throw new Error(`props \`props.locale\` "${props.locale}" is not allowed.`);
+							}
+							const result = await getTranslationByLocal({
+								locale: props.locale,
+								direct: true,
+							});
+							if (!result) {
+								throw new Error("Failed to get the `getTranslationQuery` result");
+							}
+							// set cookie on the client
+							// cookieManager.setCookie("locale", props.locale, {
+							// 	path: "/",
+							// 	maxAge: 31536000, // 1 year
+							// 	sameSite: "lax",
+							// });
+							// cookieManager.setCookie("x-locale", props.locale, {
+							// 	path: "/",
+							// 	maxAge: 31536000, // 1 year
+							// 	sameSite: "lax",
+							// });
+							return { [props.locale]: result.translation };
+						}}
+						localeParam={params.locale}
+					>
+						{/* {Math.random()} */}
+						{props.children}
+					</I18nProvider>
+				);
+			}}
+		</Show>
 	);
 }
 
-export default function Providers(
-	props: ParentProps<{ locale?: AllowedLocale }>,
-) {
+export default function Providers(props: ParentProps<{ locale?: AllowedLocale }>) {
 	return (
-		<QueryClientProvider client={queryClient}>
-			<I18nProviderWrapper>
-				<SessionProvider>{props.children}</SessionProvider>
+		<MetaProvider>
+			<QueryClientProvider client={queryClient}>
+				<I18nProviderWrapper>
+					<SessionProvider>{props.children}</SessionProvider>
+				</I18nProviderWrapper>
 				<SolidQueryDevtools initialIsOpen={false} />
-			</I18nProviderWrapper>
-		</QueryClientProvider>
+			</QueryClientProvider>
+		</MetaProvider>
 	);
 }
 

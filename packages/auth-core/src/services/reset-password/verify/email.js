@@ -1,11 +1,11 @@
-/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "#types.ts" */
+/** @import { CookiesProvider, DynamicCookiesOptions, MultiErrorSingleSuccessResponse, PasswordResetSessionsProvider, UsersProvider } from "@de100/auth-shared/types" */
 
 import {
 	VERIFY_PASSWORD_RESET_MESSAGES_ERRORS,
 	VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "@de100/auth-shared/validations";
 import { validatePasswordResetSessionRequest } from "#utils/password-reset.js";
-import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/validations.js";
 
 /**
  * @typedef {typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS[keyof typeof VERIFY_PASSWORD_RESET_MESSAGES_ERRORS]} ActionResultError
@@ -41,10 +41,7 @@ import { verifyPasswordResetEmailVerificationServiceSchemaInput } from "#utils/v
  * >}
  */
 export async function verifyPasswordResetEmailVerificationService(props) {
-	const input =
-		verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(
-			props.input,
-		);
+	const input = verifyPasswordResetEmailVerificationServiceSchemaInput.safeParse(props.input);
 	if (!input.success) {
 		return VERIFY_PASSWORD_RESET_MESSAGES_ERRORS.VERIFICATION_CODE_REQUIRED;
 	}
@@ -55,8 +52,7 @@ export async function verifyPasswordResetEmailVerificationService(props) {
 		authProviders: {
 			passwordResetSession: {
 				deleteOne: props.authProviders.passwordResetSession.deleteOne,
-				findOneWithUser:
-					props.authProviders.passwordResetSession.findOneWithUser,
+				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
 			},
 		},
 	});

@@ -1,9 +1,9 @@
-/** @import { MultiErrorSingleSuccessResponse, User, UsersProvider } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, User, UsersProvider } from "@de100/auth-shared/types"; */
 
 import {
 	ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS,
 	ADMIN_UPDATE_PASSWORD_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { updateUserPassword } from "#utils/users.js";
 
@@ -35,8 +35,7 @@ export async function adminUpdatePasswordService(props) {
 	}
 
 	const strongPassword = await verifyPasswordStrength(props.input.newPassword);
-	if (!strongPassword)
-		return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
+	if (!strongPassword) return ADMIN_UPDATE_PASSWORD_MESSAGES_ERRORS.PASSWORD_TOO_WEAK;
 
 	const updatedUser = await updateUserPassword(
 		{

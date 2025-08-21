@@ -1,4 +1,4 @@
-/** @import { AuthStrategy, CookiesProvider, DateLike, DynamicCookiesOptions } from "#types.ts"; */
+/** @import { AuthStrategy, CookiesProvider, DateLike, DynamicCookiesOptions } from "@de100/auth-shared/types"; */
 
 import { dateLikeToDate } from "#utils/dates.js";
 
@@ -65,9 +65,7 @@ export function deleteAuthTokenCookies(props) {
  * })} props
  */
 export function setAuthTokenCookies(props) {
-	const refreshTokenCookieExpiresAt = dateLikeToDate(
-		props.refreshTokenExpiresAt,
-	);
+	const refreshTokenCookieExpiresAt = dateLikeToDate(props.refreshTokenExpiresAt);
 	const refreshTokenCookieOptions = {
 		...defaultRefreshTokenOptions,
 		expires: refreshTokenCookieExpiresAt,
@@ -78,16 +76,10 @@ export function setAuthTokenCookies(props) {
 			: props.cookiesOptions?.REFRESH_TOKEN),
 	};
 	// Set refresh token cookie (long-lived, httpOnly)
-	props.cookies.set(
-		refreshTokenCookieName,
-		props.refreshToken,
-		refreshTokenCookieOptions,
-	);
+	props.cookies.set(refreshTokenCookieName, props.refreshToken, refreshTokenCookieOptions);
 
 	if (props.authStrategy === "jwt") {
-		const accessTokenCookieExpiresAt = dateLikeToDate(
-			props.accessTokenExpiresAt,
-		);
+		const accessTokenCookieExpiresAt = dateLikeToDate(props.accessTokenExpiresAt);
 		const accessTokenCookieOptions = {
 			...defaultAccessTokenOptions,
 			expires: accessTokenCookieExpiresAt,
@@ -98,11 +90,7 @@ export function setAuthTokenCookies(props) {
 				: props.cookiesOptions?.ACCESS_TOKEN),
 		};
 		// Set access token cookie (short-lived)
-		props.cookies.set(
-			accessTokenCookieName,
-			props.accessToken,
-			accessTokenCookieOptions,
-		);
+		props.cookies.set(accessTokenCookieName, props.accessToken, accessTokenCookieOptions);
 	}
 }
 
@@ -110,11 +98,9 @@ export function setAuthTokenCookies(props) {
  * Get access token from cookies (for web platforms)
  * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  */
-export const getAccessTokenFromCookies = (cookies) =>
-	cookies.get(accessTokenCookieName);
+export const getAccessTokenFromCookies = (cookies) => cookies.get(accessTokenCookieName);
 /**
  * Get refresh token from cookies (for web platforms)
  * @param {CookiesProvider} cookies - The cookies provider to access the session token cookie.
  */
-export const getRefreshTokenFromCookies = (cookies) =>
-	cookies.get(refreshTokenCookieName);
+export const getRefreshTokenFromCookies = (cookies) => cookies.get(refreshTokenCookieName);

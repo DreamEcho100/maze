@@ -1,9 +1,9 @@
-/** @import { User, UserAgent, SessionMetadata, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike } from "#types.ts" */
+/** @import { User, UserAgent, SessionMetadata, SessionsProvider, AuthStrategy, JWTProvider, DBSession, DateLike } from "@de100/auth-shared/types" */
 
+import { REFRESH_TOKEN_EXPIRES_DURATION } from "@de100/auth-shared/constants";
 import { jwtProvider } from "#services/jwt.js";
 import { generateRandomId } from "#utils/generate-random-id.js";
 import { getTokenBytes } from "#utils/get-token-bytes.js";
-import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants.js";
 
 /**
  * Strategy-aware session creation (replaces createSession)
@@ -25,13 +25,10 @@ import { REFRESH_TOKEN_EXPIRES_DURATION } from "./constants.js";
  */
 export async function generateRefreshToken(props) {
 	const createRefreshToken = /** @type {JWTProvider['createRefreshToken']} */ (
-		props.authProviders.jwt?.createRefreshToken ??
-			jwtProvider.createRefreshToken
+		props.authProviders.jwt?.createRefreshToken ?? jwtProvider.createRefreshToken
 	);
 
-	const createId = /** @type {() => string} */ (
-		props.generateRandomId ?? generateRandomId
-	);
+	const createId = /** @type {() => string} */ (props.generateRandomId ?? generateRandomId);
 	const sessionId = createId();
 
 	// const accessTokenExpiresAt = Date.now() + ACCESS_TOKEN_EXPIRES_DURATION;

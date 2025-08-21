@@ -1,9 +1,6 @@
-/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, AuthStrategy, CookiesProvider, DynamicCookiesOptions, ValidSessionResult } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, SessionsProvider, AuthStrategy, CookiesProvider, DynamicCookiesOptions, ValidSessionResult } from "@de100/auth-shared/types" */
 
-import {
-	LOGOUT_MESSAGES_ERRORS,
-	LOGOUT_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+import { LOGOUT_MESSAGES_ERRORS, LOGOUT_MESSAGES_SUCCESS } from "@de100/auth-shared/constants";
 import { invalidateOneAuthSessionToken } from "#utils/sessions/index.js";
 
 /**

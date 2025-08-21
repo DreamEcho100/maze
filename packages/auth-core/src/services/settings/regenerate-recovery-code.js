@@ -1,9 +1,9 @@
-/** @import { MultiErrorSingleSuccessResponse, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts" */
+/** @import { MultiErrorSingleSuccessResponse, UsersProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types" */
 
 import {
 	REGENERATE_RECOVERY_CODE_MESSAGES_ERRORS,
 	REGENERATE_RECOVERY_CODE_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
 import { resetUserRecoveryCode } from "#utils/users.js";
 
 /**

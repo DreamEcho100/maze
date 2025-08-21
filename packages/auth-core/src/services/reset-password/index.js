@@ -1,9 +1,10 @@
-/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, PasswordResetSessionsProvider, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, SessionMetadata, PasswordResetSessionsProvider, SessionsProvider, UsersProvider, JWTProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types"; */
 
 import {
 	RESET_PASSWORD_MESSAGES_ERRORS,
 	RESET_PASSWORD_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { resetPasswordServiceInputSchema } from "@de100/auth-shared/validations";
 import {
 	deletePasswordResetSessionTokenCookie,
 	validatePasswordResetSessionRequest,
@@ -11,7 +12,6 @@ import {
 import { verifyPasswordStrength } from "#utils/passwords.js";
 import { createAuthSession } from "#utils/sessions/index.js";
 import { updateUserPassword } from "#utils/users.js";
-import { resetPasswordServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the reset password process, including validation and session management.
@@ -52,17 +52,15 @@ export async function resetPasswordService(props) {
 
 	const { password } = input.data;
 
-	const { session: passwordResetSession } =
-		await validatePasswordResetSessionRequest({
-			cookies: props.cookies,
-			authProviders: {
-				passwordResetSession: {
-					deleteOne: props.authProviders.passwordResetSession.deleteOne,
-					findOneWithUser:
-						props.authProviders.passwordResetSession.findOneWithUser,
-				},
+	const { session: passwordResetSession } = await validatePasswordResetSessionRequest({
+		cookies: props.cookies,
+		authProviders: {
+			passwordResetSession: {
+				deleteOne: props.authProviders.passwordResetSession.deleteOne,
+				findOneWithUser: props.authProviders.passwordResetSession.findOneWithUser,
 			},
-		});
+		},
+	});
 
 	if (!passwordResetSession) {
 		return RESET_PASSWORD_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;

@@ -1,4 +1,4 @@
-/** @import { UserAgent } from "#types.ts"; */
+/** @import { UserAgent } from "@de100/auth-shared/types"; */
 
 /** @param {UserAgent} ua */
 export const checkIsDeviceMobileOrTablet = (ua) =>

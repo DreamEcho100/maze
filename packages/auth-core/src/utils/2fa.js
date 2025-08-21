@@ -1,4 +1,4 @@
-/** @import { UsersProvider, SessionsProvider } from "#types.ts"; */
+/** @import { UsersProvider, SessionsProvider } from "@de100/auth-shared/types"; */
 
 import { decryptToString, encryptString } from "./encryption.js";
 import { generateRandomRecoveryCode } from "./generate-random-recovery-code.js";
@@ -26,8 +26,10 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, ctx) {
 	// Note: In Postgres and MySQL, these queries should be done in a transaction using SELECT FOR UPDATE
 	// return await db.$transaction(async (tx) => {
 	//
-	const userRecoveryCodeStored =
-		await ctx.authProviders.users.getOneRecoveryCodeRaw(userId, ctx.tx);
+	const userRecoveryCodeStored = await ctx.authProviders.users.getOneRecoveryCodeRaw(
+		userId,
+		ctx.tx,
+	);
 	if (!userRecoveryCodeStored) {
 		return false;
 	}
@@ -42,17 +44,13 @@ export async function resetUser2FAWithRecoveryCode(userId, recoveryCode, ctx) {
 	await ctx.authProviders.sessions.unMarkOne2FAForUser(userId, ctx.tx);
 
 	// const updatedUserRecoveryCode = await updateUserRecoveryCodeRepository(
-	const updatedUserRecoveryCode =
-		await ctx.authProviders.users.updateOneRecoveryCodeByUserId(
-			userId,
-			encryptedNewRecoveryCode,
-			userRecoveryCodeStored,
-			ctx.tx,
-		);
-
-	return (
-		!!updatedUserRecoveryCode &&
-		updatedUserRecoveryCode !== userRecoveryCodeStored
+	const updatedUserRecoveryCode = await ctx.authProviders.users.updateOneRecoveryCodeByUserId(
+		userId,
+		encryptedNewRecoveryCode,
+		userRecoveryCodeStored,
+		ctx.tx,
 	);
+
+	return !!updatedUserRecoveryCode && updatedUserRecoveryCode !== userRecoveryCodeStored;
 	// });
 }

@@ -1,11 +1,10 @@
-/** @import { EmailVerificationRequest, CookiesProvider, UserEmailVerificationRequestsProvider, DynamicCookiesOptions } from "#types.ts"; */
-
-import { encodeBase32 } from "@oslojs/encoding";
+/** @import { EmailVerificationRequest, CookiesProvider, UserEmailVerificationRequestsProvider, DynamicCookiesOptions } from "@de100/auth-shared/types"; */
 
 import {
 	COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
 	COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
-} from "./constants.js";
+} from "@de100/auth-shared/constants";
+import { encodeBase32 } from "@oslojs/encoding";
 import { dateLikeToDate } from "./dates.js";
 import { generateRandomOTP } from "./generate-randomotp.js";
 
@@ -24,30 +23,24 @@ import { generateRandomOTP } from "./generate-randomotp.js";
  * @returns {Promise<EmailVerificationRequest>} The email verification request.
  */
 export async function createEmailVerificationRequest(props, ctx) {
-	await ctx.authProviders.userEmailVerificationRequests.deleteOneByUserId(
-		props,
-		{ tx: ctx.tx },
-	);
+	await ctx.authProviders.userEmailVerificationRequests.deleteOneByUserId(props, { tx: ctx.tx });
 	const idBytes = new Uint8Array(20);
 	crypto.getRandomValues(idBytes);
 	const id = encodeBase32(idBytes).toLowerCase();
 
 	const code = generateRandomOTP();
-	const expiresAt = new Date(
-		Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION,
-	);
+	const expiresAt = new Date(Date.now() + COOKIE_TOKEN_EMAIL_VERIFICATION_EXPIRES_DURATION);
 
-	const result =
-		await ctx.authProviders.userEmailVerificationRequests.createOne(
-			{
-				id: id,
-				userId: props.where.userId,
-				code: code,
-				email: props.where.email,
-				expiresAt: expiresAt,
-			},
-			{ tx: ctx.tx },
-		);
+	const result = await ctx.authProviders.userEmailVerificationRequests.createOne(
+		{
+			id: id,
+			userId: props.where.userId,
+			code: code,
+			email: props.where.email,
+			expiresAt: expiresAt,
+		},
+		{ tx: ctx.tx },
+	);
 
 	if (!result) {
 		throw new Error("Failed to create email verification request.");
@@ -83,16 +76,11 @@ export function setEmailVerificationRequestCookie(props) {
 	const cookiesOptions = {
 		...defaultEmailVerificationRequestCookieOptions,
 		expires: expiresAt,
-		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST ===
-		"function"
+		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST === "function"
 			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST({ expiresAt })
 			: props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST),
 	};
-	props.cookies.set(
-		COOKIE_TOKEN_EMAIL_VERIFICATION_KEY,
-		props.request.id,
-		cookiesOptions,
-	);
+	props.cookies.set(COOKIE_TOKEN_EMAIL_VERIFICATION_KEY, props.request.id, cookiesOptions);
 }
 
 /**
@@ -120,8 +108,7 @@ export function deleteEmailVerificationRequestCookie(props) {
 	const cookiesOptions = {
 		...defaultEmailVerificationRequestCookieOptions,
 		maxAge: 0,
-		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST ===
-		"function"
+		...(typeof props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST === "function"
 			? props.cookiesOptions.USER_EMAIL_VERIFICATION_REQUEST()
 			: props.cookiesOptions?.USER_EMAIL_VERIFICATION_REQUEST),
 	};
@@ -142,11 +129,10 @@ export async function getUserEmailVerificationRequestFromRequest(props) {
 
 	if (!id) return null;
 
-	const request =
-		await props.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
-			props.userId,
-			id,
-		);
+	const request = await props.authProviders.userEmailVerificationRequests.findOneByIdAndUserId(
+		props.userId,
+		id,
+	);
 	if (!request)
 		deleteEmailVerificationRequestCookie({
 			cookies: props.cookies,

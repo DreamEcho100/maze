@@ -22,6 +22,7 @@
 	},
 	"dependencies": {
 		"@de100/auth-core": "workspace:*",
+		"@de100/auth-shared": "workspace:^",
 		"@de100/db": "workspace:*",
 		"@de100/i18n": "workspace:*",
 		"@de100/i18n-solid-startjs": "workspace:*",

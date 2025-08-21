@@ -1,9 +1,9 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, AuthStrategy, UserEmailVerificationRequestsProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
+/** @import { UserAgent, MultiErrorSingleSuccessResponse, CookiesProvider, HeadersProvider, AuthStrategy, UserEmailVerificationRequestsProvider, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types"; */
 
 import {
 	RESEND_EMAIL_MESSAGES_ERRORS,
 	RESEND_EMAIL_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
 import {
 	createEmailVerificationRequest,
 	getUserEmailVerificationRequestFromRequest,
@@ -43,8 +43,7 @@ export async function resendEmailVerificationCodeService(props) {
 		authProviders: {
 			userEmailVerificationRequests: {
 				findOneByIdAndUserId:
-					props.authProviders.userEmailVerificationRequests
-						.findOneByIdAndUserId,
+					props.authProviders.userEmailVerificationRequests.findOneByIdAndUserId,
 			},
 		},
 	});
@@ -60,11 +59,8 @@ export async function resendEmailVerificationCodeService(props) {
 				tx: props.tx,
 				authProviders: {
 					userEmailVerificationRequests: {
-						createOne:
-							props.authProviders.userEmailVerificationRequests.createOne,
-						deleteOneByUserId:
-							props.authProviders.userEmailVerificationRequests
-								.deleteOneByUserId,
+						createOne: props.authProviders.userEmailVerificationRequests.createOne,
+						deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 					},
 				},
 			},
@@ -76,21 +72,15 @@ export async function resendEmailVerificationCodeService(props) {
 				tx: props.tx,
 				authProviders: {
 					userEmailVerificationRequests: {
-						createOne:
-							props.authProviders.userEmailVerificationRequests.createOne,
-						deleteOneByUserId:
-							props.authProviders.userEmailVerificationRequests
-								.deleteOneByUserId,
+						createOne: props.authProviders.userEmailVerificationRequests.createOne,
+						deleteOneByUserId: props.authProviders.userEmailVerificationRequests.deleteOneByUserId,
 					},
 				},
 			},
 		);
 	}
 
-	await sendVerificationEmail(
-		verificationRequest.email,
-		verificationRequest.code,
-	);
+	await sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	setEmailVerificationRequestCookie({
 		request: verificationRequest,
 		cookies: props.cookies,

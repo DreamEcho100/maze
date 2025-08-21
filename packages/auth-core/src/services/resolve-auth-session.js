@@ -1,20 +1,17 @@
-/** @import { MultiErrorSingleSuccessResponse, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, ValidSessionResult } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, ValidSessionResult } from "@de100/auth-shared/types"; */
 
 import {
 	RESOLVE_AUTH_SESSION_MESSAGES_ERRORS,
 	RESOLVE_AUTH_SESSION_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { resolveAuthSessionServiceInputSchema } from "@de100/auth-shared/validations";
 import { isPromise } from "#utils/is-promise.js";
-import {
-	deleteAuthTokenCookies,
-	getRefreshTokenFromCookies,
-} from "#utils/sessions/cookies.js";
+import { deleteAuthTokenCookies, getRefreshTokenFromCookies } from "#utils/sessions/cookies.js";
 import {
 	getAuthorizationTokenFromHeaders,
 	getRefreshTokenFromHeaders,
 } from "#utils/sessions/headers.js";
 import { resolveAuthSession } from "#utils/sessions/resolve-auth-session.js";
-import { resolveAuthSessionServiceInputSchema } from "#utils/validations.js";
 
 /**
  *
@@ -58,8 +55,7 @@ export async function resolveAuthSessionService(props) {
 	switch (props.authStrategy) {
 		case "jwt": {
 			refreshToken =
-				getRefreshTokenFromCookies(props.cookies) ??
-				getRefreshTokenFromHeaders(props.headers);
+				getRefreshTokenFromCookies(props.cookies) ?? getRefreshTokenFromHeaders(props.headers);
 
 			break;
 		}
@@ -77,11 +73,7 @@ export async function resolveAuthSessionService(props) {
 		}
 	}
 
-	if (
-		!refreshToken ||
-		typeof refreshToken !== "string" ||
-		refreshToken.length === 0
-	) {
+	if (!refreshToken || typeof refreshToken !== "string" || refreshToken.length === 0) {
 		return RESOLVE_AUTH_SESSION_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED;
 	}
 
@@ -89,8 +81,7 @@ export async function resolveAuthSessionService(props) {
 		authStrategy: props.authStrategy,
 		refreshToken,
 		canMutateCookies: props.canMutateCookies,
-		shouldExtendRefreshAuthTokensOnNeed:
-			input.data?.shouldExtendRefreshAuthTokensOnNeed,
+		shouldExtendRefreshAuthTokensOnNeed: input.data?.shouldExtendRefreshAuthTokensOnNeed,
 		ipAddress,
 		userAgent,
 		tx: props.tx,
@@ -98,8 +89,7 @@ export async function resolveAuthSessionService(props) {
 			sessions: {
 				findOneWithUser: props.authProviders.sessions.findOneWithUser,
 				deleteOneById: props.authProviders.sessions.deleteOneById,
-				extendOneExpirationDate:
-					props.authProviders.sessions.extendOneExpirationDate,
+				extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
 				revokeOneById: props.authProviders.sessions.revokeOneById,
 				createOne: props.authProviders.sessions.createOne,
 			},

@@ -1,4 +1,4 @@
-/** @import { UserAgent, JWTProvider, AuthProvidersWithGetSessionProviders, SessionValidationResult, AuthProvidersWithGetSessionUtils } from "#types.ts" */
+/** @import { UserAgent, JWTProvider, AuthProvidersWithGetSessionProviders, SessionValidationResult, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types" */
 
 import { z } from "zod/v4-mini";
 
@@ -9,10 +9,7 @@ import {
 	getAccessTokenFromCookies,
 	getRefreshTokenFromCookies,
 } from "./cookies.js";
-import {
-	getAuthorizationTokenFromHeaders,
-	getRefreshTokenFromHeaders,
-} from "./headers.js";
+import { getAuthorizationTokenFromHeaders, getRefreshTokenFromHeaders } from "./headers.js";
 import { resolveAuthSession } from "./resolve-auth-session.js";
 
 const validateJWTAccessTokenSchema = z.object({
@@ -58,19 +55,15 @@ function validateJWTAccessToken(token, ctx) {
 export async function getCurrentAuthSession(props) {
 	const userAgent = props.userAgent;
 	const ipAddress = props.ipAddress;
-	const isDeviceMobileOrTablet = !!(
-		userAgent && checkIsDeviceMobileOrTablet(userAgent)
-	);
+	const isDeviceMobileOrTablet = !!(userAgent && checkIsDeviceMobileOrTablet(userAgent));
 
 	let refreshToken;
 	switch (props.authStrategy) {
 		case "jwt": {
 			refreshToken =
-				getRefreshTokenFromCookies(props.cookies) ??
-				getRefreshTokenFromHeaders(props.headers);
+				getRefreshTokenFromCookies(props.cookies) ?? getRefreshTokenFromHeaders(props.headers);
 			const accessToken =
-				getAccessTokenFromCookies(props.cookies) ??
-				getAuthorizationTokenFromHeaders(props.headers);
+				getAccessTokenFromCookies(props.cookies) ?? getAuthorizationTokenFromHeaders(props.headers);
 
 			// Try access token first (if valid and not expired)
 			if (refreshToken && accessToken) {
@@ -125,8 +118,7 @@ export async function getCurrentAuthSession(props) {
 			sessions: {
 				findOneWithUser: props.authProviders.sessions.findOneWithUser,
 				deleteOneById: props.authProviders.sessions.deleteOneById,
-				extendOneExpirationDate:
-					props.authProviders.sessions.extendOneExpirationDate,
+				extendOneExpirationDate: props.authProviders.sessions.extendOneExpirationDate,
 				revokeOneById: props.authProviders.sessions.revokeOneById,
 				createOne: props.authProviders.sessions.createOne,
 			},

@@ -1,11 +1,11 @@
-/** @import { MultiErrorSingleSuccessResponse, UsersProvider, AuthProvidersWithGetSessionProviders, SessionsProvider, AuthProvidersWithGetSessionUtils } from "#types.ts"; */
+/** @import { MultiErrorSingleSuccessResponse, UsersProvider, AuthProvidersWithGetSessionProviders, SessionsProvider, AuthProvidersWithGetSessionUtils } from "@de100/auth-shared/types"; */
 
 import {
 	VERIFY_2FA_MESSAGES_ERRORS,
 	VERIFY_2FA_MESSAGES_SUCCESS,
-} from "#utils/constants.js";
+} from "@de100/auth-shared/constants";
+import { verify2FAServiceInputSchema } from "@de100/auth-shared/validations";
 import { verifyTOTP } from "#utils/index.js";
-import { verify2FAServiceInputSchema } from "#utils/validations.js";
 
 /**
  * Handles the 2FA verification logic, validating the code, and updating session if successful.
@@ -39,11 +39,7 @@ export async function verify2FAService(props) {
 		return VERIFY_2FA_MESSAGES_ERRORS.TWO_FACTOR_NOT_ENABLED;
 	}
 
-	if (
-		!user.emailVerifiedAt ||
-		!user.twoFactorRegisteredAt ||
-		session.twoFactorVerifiedAt
-	) {
+	if (!user.emailVerifiedAt || !user.twoFactorRegisteredAt || session.twoFactorVerifiedAt) {
 		return VERIFY_2FA_MESSAGES_ERRORS.ACCESS_DENIED;
 	}
 

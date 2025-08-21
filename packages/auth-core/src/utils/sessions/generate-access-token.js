@@ -1,10 +1,10 @@
 /**
- * @import { AuthStrategy, JWTProvider } from "#types.ts"
+ * @import { AuthStrategy, JWTProvider } from "@de100/auth-shared/types"
  * @import { CreateRefreshTokenResult } from "./generate-refresh-token.js";
  */
 
+import { ACCESS_TOKEN_EXPIRES_DURATION } from "@de100/auth-shared/constants";
 import { jwtProvider } from "#services/jwt.js";
-import { ACCESS_TOKEN_EXPIRES_DURATION } from "./constants.js";
 
 /**
  * @param {CreateRefreshTokenResult} result

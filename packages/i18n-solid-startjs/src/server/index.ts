@@ -13,9 +13,7 @@ import { parsePathname } from "#utils";
 import type { Locale } from "./config";
 import { localeConfigCache, updateLocaleConfigCache } from "./config";
 
-export function isPromise<Value>(
-	value: Value | Promise<Value>,
-): value is Promise<Value> {
+export function isPromise<Value>(value: Value | Promise<Value>): value is Promise<Value> {
 	return typeof (value as any)?.then === "function";
 }
 
@@ -24,10 +22,10 @@ export function isPromise<Value>(
 // Used to read the locale from the middleware
 export const I18N_HEADER_LOCALE_NAME = "X-DE100-I18N-LOCALE";
 
-function getHeadersImpl(): Headers {
-	return getHeaders();
-}
-const getHeaders = query(getHeadersImpl, "headers");
+// function getHeadersImpl(): Headers {
+// 	return getHeaders();
+// }
+// const getHeaders = query(getHeadersImpl, "headers");
 
 function getLocaleFromHeaderImpl(): Locale | undefined {
 	let locale: string | undefined;
@@ -36,18 +34,12 @@ function getLocaleFromHeaderImpl(): Locale | undefined {
 		// locale =
 		// 	(await getHeaders()).get(I18N_HEADER_LOCALE_NAME) ??
 		// 	(await cookies()).get(I18N_HEADER_LOCALE_NAME)?.value ??
-		locale =
-			getHeader(I18N_HEADER_LOCALE_NAME) ??
-			getCookie(I18N_HEADER_LOCALE_NAME) ??
-			undefined;
+		locale = getHeader(I18N_HEADER_LOCALE_NAME) ?? getCookie(I18N_HEADER_LOCALE_NAME) ?? undefined;
 		undefined;
 		if (locale) updateLocaleConfigCache({ locale });
 	} catch (error) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		if (
-			error instanceof Error &&
-			(error as any).digest === "DYNAMIC_SERVER_USAGE"
-		) {
+		if (error instanceof Error && (error as any).digest === "DYNAMIC_SERVER_USAGE") {
 			const wrappedError = new Error(
 				"Usage of @de100/i18n APIs in Server Components currently opts into dynamic rendering. This limitation will eventually be lifted, but as a stopgap solution, you can use the `setRequestLocale` API to enable static rendering, see https://next-intl.dev/docs/getting-started/app-router/with-i18n-routing#static-rendering",
 				{ cause: error },

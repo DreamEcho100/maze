@@ -1,0 +1,58 @@
+{
+	"name": "example-basic",
+
+	"type": "module",
+	"scripts": {
+		"dev": "pnpm with-env vinxi dev",
+		"build": "pnpm with-env vinxi build",
+		"start": "pnpm with-env vinxi start",
+		"version": "pnpm with-env vinxi version",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"clean": "git clean -xdf .cache .next  .output .turbo .vinxi node_modules",
+		"typecheck": "tsc --noEmit",
+		"with-env": "dotenv -e ../../.env --",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
+	},
+	"imports": {
+		"#*": "./src/*"
+	},
+	"dependencies": {
+		"@de100/auth-core": "workspace:*",
+		"@de100/auth-shared": "workspace:^",
+		"@de100/db": "workspace:*",
+		"@de100/i18n": "workspace:*",
+		"@de100/i18n-solid-startjs": "workspace:*",
+		"@de100/i18n-solidjs": "workspace:*",
+		"@orpc/client": "catalog:",
+		"@orpc/openapi": "catalog:",
+		"@orpc/server": "catalog:",
+		"@orpc/solid-query": "^1.8.2",
+		"@orpc/tanstack-query": "catalog:",
+		"@orpc/zod": "catalog:",
+		"@solidjs/meta": "catalog:",
+		"@solidjs/router": "catalog:",
+		"@solidjs/start": "catalog:",
+		"@tanstack/solid-query": "catalog:",
+		"@tanstack/solid-query-devtools": "catalog:",
+		"solid-js": "catalog:",
+		"tailwindcss": "catalog:",
+		"ua-parser-js": "^2.0.4",
+		"vinxi": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
+		"@de100/tsconfig": "workspace:*",
+		"typescript": "catalog:",
+		"vite-plugin-top-level-await": "^1.6.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
