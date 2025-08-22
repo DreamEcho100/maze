@@ -1,9 +1,7 @@
-import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";
 import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
 
-// import { redirect } from "#libs/i18n/server/utils.ts";
 
 function i18nMiddleware(event: FetchEvent) {
 	// const { cookieName, headerName } = event.locals;

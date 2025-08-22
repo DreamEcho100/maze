@@ -16,7 +16,7 @@ export function createQueryClient() {
 					// 	return queryClient;
 					// },
 				},
-				experimental_prefetchInRender: true,
+				// experimental_prefetchInRender: true,
 			},
 			mutations: {
 				// retry: false,

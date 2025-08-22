@@ -103,13 +103,7 @@ function I18nProviderWrapper(props: ParentProps) {
 
 export default function Providers(props: ParentProps<{ locale?: AllowedLocale }>) {
 	const queryClient = getQueryClient();
-	// return props.children;
-	const localeTranslationsRecourse = useQuery(() => ({
-		queryKey: ["localeTranslations", props.locale],
-		queryFn: () => getTranslationByLocalQuery({ direct: true }),
-	}));
 
-	console.log("___ localeTranslationsRecourse.data", localeTranslationsRecourse.data);
 	return (
 		<QueryClientProvider client={queryClient}>
 			{props.children}

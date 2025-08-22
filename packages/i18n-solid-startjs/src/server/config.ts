@@ -45,7 +45,7 @@ export function updateLocaleConfigCache(props: {
 	defaultLocale?: Locale;
 	getServerLocale?: () => Locale | undefined;
 }) {
-	props.locale ??= props.getServerLocale?.();
+	// props.locale ??= props.getServerLocale?.();
 
 	let key: keyof typeof props;
 	for (key in props) {
@@ -53,7 +53,16 @@ export function updateLocaleConfigCache(props: {
 		if (Object.hasOwn(props, key) && value !== undefined) {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-expect-error
-			initializeLocaleConfig()[key] = value;
+			localeConfigCache[key] = value;
 		}
+	}
+
+	if (!props.locale && props.getServerLocale) {
+		Object.defineProperty(localeConfigCache, "locale", {
+			get () {
+				return props.getServerLocale?.()
+			},
+			configurable: true // allows redefining later if needed
+		});
 	}
 }

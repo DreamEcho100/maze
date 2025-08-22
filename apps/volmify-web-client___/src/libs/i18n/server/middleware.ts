@@ -31,6 +31,7 @@ export function createI18nMiddlewareOnRequest({ event }: { event: FetchEvent }) 
 	const url = new URL(event.request.url);
 	const pathname = url.pathname;
 
+
 	const {
 		foundLocale = defaultLocale,
 		localeSource,
