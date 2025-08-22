@@ -1,0 +1,180 @@
+import { relations } from "drizzle-orm";
+import { seoMetadata } from "../../../../0-seo/00-schema.js";
+import { orgLocale } from "../../../0-locale/00-schema.js";
+import { orgCategory } from "../../../1-category/schema.js";
+import { orgMember } from "../../../1-member-and-employee/00-schema.js";
+import { orgLesson } from "../../../3-lesson/schema.js";
+import { orgProduct } from "../../00-schema.js";
+import {
+	orgMemberLearningProfile,
+	orgMemberProductCourseChallengeRating,
+	orgMemberProductCourseEnrollment,
+	orgProductCourse,
+	orgProductCourseI18n,
+	orgProductCourseModule,
+	orgProductCourseModuleI18n,
+	orgProductCourseModuleSection,
+	orgProductCourseModuleSectionI18n,
+	orgProductCourseModuleSectionLesson,
+	orgProductCourseModuleSectionLessonI18n,
+	orgProductCourseSkill,
+} from "./schema.js";
+
+// ## org -> product -> by-type -> course
+export const orgProductCourseRelations = relations(orgProductCourse, ({ many, one }) => ({
+	product: one(orgProduct, {
+		fields: [orgProductCourse.productId],
+		references: [orgProduct.id],
+	}),
+	translations: many(orgProductCourseI18n),
+	skills: many(orgProductCourseSkill),
+	modules: many(orgProductCourseModule),
+	challengeRatings: many(orgMemberProductCourseChallengeRating),
+	enrollments: many(orgMemberProductCourseEnrollment),
+}));
+export const orgProductCourseI18nRelations = relations(orgProductCourseI18n, ({ one }) => ({
+	/**
+	 * @localizationTarget Course being translated for international markets
+	 * @businessContext Enables region-specific course marketing and positioning
+	 */
+	course: one(orgProductCourse, {
+		fields: [orgProductCourseI18n.courseId],
+		references: [orgProductCourse.id],
+	}),
+	locale: one(orgLocale, {
+		fields: [orgProductCourseI18n.localeKey],
+		references: [orgLocale.localeKey],
+	}),
+}));
+export const orgProductCourseSkillRelations = relations(orgProductCourseSkill, ({ one }) => ({
+	course: one(orgProductCourse, {
+		fields: [orgProductCourseSkill.courseId],
+		references: [orgProductCourse.id],
+	}),
+
+	skill: one(orgCategory, {
+		fields: [orgProductCourseSkill.skillId],
+		references: [orgCategory.id],
+	}),
+}));
+export const orgMemberProductCourseChallengeRatingRelations = relations(
+	orgMemberProductCourseChallengeRating,
+	({ one }) => ({
+		course: one(orgProductCourse, {
+			fields: [orgMemberProductCourseChallengeRating.courseId],
+			references: [orgProductCourse.id],
+		}),
+		member: one(orgMember, {
+			fields: [orgMemberProductCourseChallengeRating.memberId],
+			references: [orgMember.id],
+		}),
+	}),
+);
+export const orgProductCourseModuleRelations = relations(
+	orgProductCourseModule,
+	({ many, one }) => ({
+		course: one(orgProductCourse, {
+			fields: [orgProductCourseModule.courseId],
+			references: [orgProductCourse.id],
+		}),
+		sections: many(orgProductCourseModuleSection),
+		translations: many(orgProductCourseModuleI18n),
+	}),
+);
+export const orgProductCourseModuleI18nRelations = relations(
+	orgProductCourseModuleI18n,
+	({ one }) => ({
+		module: one(orgProductCourseModule, {
+			fields: [orgProductCourseModuleI18n.moduleId],
+			references: [orgProductCourseModule.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgProductCourseModuleI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgProductCourseModuleI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
+	}),
+);
+export const orgProductCourseModuleSectionRelations = relations(
+	orgProductCourseModuleSection,
+	({ many, one }) => ({
+		module: one(orgProductCourseModule, {
+			fields: [orgProductCourseModuleSection.moduleId],
+			references: [orgProductCourseModule.id],
+		}),
+		lessons: many(orgProductCourseModuleSectionLesson),
+		translations: many(orgProductCourseModuleSectionI18n),
+	}),
+);
+export const orgProductCourseModuleSectionI18nRelations = relations(
+	orgProductCourseModuleSectionI18n,
+	({ one }) => ({
+		section: one(orgProductCourseModuleSection, {
+			fields: [orgProductCourseModuleSectionI18n.sectionId], // Fixed field name
+			references: [orgProductCourseModuleSection.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgProductCourseModuleSectionI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgProductCourseModuleSectionI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
+	}),
+);
+export const orgProductCourseModuleSectionLessonRelations = relations(
+	orgProductCourseModuleSectionLesson,
+	({ many, one }) => ({
+		section: one(orgProductCourseModuleSection, {
+			fields: [orgProductCourseModuleSectionLesson.sectionId],
+			references: [orgProductCourseModuleSection.id],
+		}),
+		lesson: one(orgLesson, {
+			fields: [orgProductCourseModuleSectionLesson.lessonId],
+			references: [orgLesson.id],
+		}),
+		translations: many(orgProductCourseModuleSectionLessonI18n),
+	}),
+);
+export const orgProductCourseModuleSectionLessonI18nRelations = relations(
+	orgProductCourseModuleSectionLessonI18n,
+	({ one }) => ({
+		sectionLesson: one(orgProductCourseModuleSectionLesson, {
+			// Fixed field name
+			fields: [orgProductCourseModuleSectionLessonI18n.lessonId], // Fixed field
+			references: [orgProductCourseModuleSectionLesson.id],
+		}),
+		seoMetadata: one(seoMetadata, {
+			fields: [orgProductCourseModuleSectionLessonI18n.seoMetadataId],
+			references: [seoMetadata.id],
+		}),
+		locale: one(orgLocale, {
+			fields: [orgProductCourseModuleSectionLessonI18n.localeKey],
+			references: [orgLocale.localeKey],
+		}),
+	}),
+);
+export const orgMemberProductCourseEnrollmentRelations = relations(
+	orgMemberProductCourseEnrollment,
+	({ one }) => ({
+		orgMember: one(orgMember, {
+			fields: [orgMemberProductCourseEnrollment.memberId],
+			references: [orgMember.id],
+		}),
+		course: one(orgProductCourse, {
+			fields: [orgMemberProductCourseEnrollment.courseId],
+			references: [orgProductCourse.id],
+		}),
+	}),
+);
+export const orgMemberLearningProfileRelations = relations(orgMemberLearningProfile, ({ one }) => ({
+	member: one(orgMember, {
+		fields: [orgMemberLearningProfile.memberId],
+		references: [orgMember.id],
+	}),
+}));
+// -- org -> product -> by-type -> course

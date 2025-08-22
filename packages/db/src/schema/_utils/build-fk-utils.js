@@ -1,76 +1,5 @@
-// import { foreignKey, index } from "#schema/_utils/helpers.js";
-// import { textCols } from "./cols/text.js";
-
-// const tableCache = new Map();
-// /**
-//  * @template TTable
-//  * @template {keyof TTable & string} TKey
-//  * @template {string} TName
-//  * @param {{
-//  * 	defaultColFkKey: TKey;
-//  * 	defaultColFkName: TName;
-//  * 	getTable: () => TTable
-//  * 	refColKeys?: (keyof TTable & string)[];
-//  * }} props
-//  */
-// export function buildFkUtils(props) {
-// 	return {
-// 		/**
-// 		 * @param {{
-// 		 * 	name?: string;
-// 		 * }} [props]
-// 		 */
-// 		[`${props.defaultColFkKey}FkCol`]: ({ name = props.defaultColFkName } = {}) =>
-// 			textCols.idFk(name), // .references(() => org.id, { onDelete: "cascade" });
-// 		/**
-// 		 * @template {string} TTableName
-// 		 * @template {Record<string, import("drizzle-orm/pg-core").PgColumnBuilderBase>} TColumnsMap
-// 		 * @param {{
-// 		 * 	tName: string;
-// 		 * 	onDelete?: "cascade" | "set null" | "restrict" | "no action";
-// 		 * 	cols: import("drizzle-orm").BuildExtraConfigColumns<TTableName, TColumnsMap, 'pg'>;
-// 		 * 	colFkKey?: keyof TColumnsMap;
-// 		 * }} props
-// 		 */
-// 		[`${props.defaultColFkKey}ExtraConfig`]: ({
-// 			onDelete = "cascade",
-// 			colFkKey = props.defaultColFkKey,
-// 			...innerProps
-// 		}) => {
-// 			/** @type {TTable} */
-// 			let entity;
-// 			if (tableCache.has(props.defaultColFkKey)) {
-// 				entity = tableCache.get(props.defaultColFkKey);
-// 			} else {
-// 				entity =
-// 					// require("#schema/general/locale-and-entity/schema.js").entity;
-// 					props.getTable();
-
-// 				tableCache.set(props.defaultColFkKey, entity);
-// 			}
-
-// 			const refColKeys = props.refColKeys;
-// 			if (!refColKeys) {
-// 				throw new Error(
-// 					`Reference column keys must be provided for ${props.defaultColFkKey}ExtraConfig`,
-// 				);
-// 			}
-
-// 			return [
-// 				foreignKey({
-// 					tName: innerProps.tName,
-// 					cols: [innerProps.cols[colFkKey]],
-// 					// @ts-ignore
-// 					foreignColumns: refColKeys.map((key) => entity[key]),
-// 				}).onDelete(onDelete),
-// 				index({ tName: innerProps.tName, cols: [innerProps.cols[colFkKey]] }),
-// 			];
-// 		},
-// 	};
-// }
-
-import { textCols } from "#schema/_utils/cols/text.js";
-import { foreignKey, index } from "#schema/_utils/helpers.js";
+import { textCols } from "./cols/text";
+import { foreignKey, index } from "./helpers";
 
 const tableCache = new Map();
 
@@ -80,7 +9,7 @@ const tableCache = new Map();
  * 	cacheKey: string;
  * 	defaultColKey: string;
  * 	defaultColName: string;
- * 	getTable: () => TTable;
+ * 	table: TTable;
  * 	getRefColumns: (table: TTable) => any[];
  * 	defaultOnDelete?: "cascade" | "set null" | "restrict" | "no action";
  * }} config
@@ -106,22 +35,13 @@ export function buildFkUtils(config) {
 		colFkKey = config.defaultColKey,
 		...props
 	}) => {
-		/** @type {TTable} */
-		let table;
-		if (tableCache.has(config.cacheKey)) {
-			table = tableCache.get(config.cacheKey);
-		} else {
-			table = config.getTable();
-			tableCache.set(config.cacheKey, table);
-		}
-
-		const foreignColumns = config.getRefColumns(table);
+		const foreignColumns = config.getRefColumns(config.table);
 
 		return [
 			foreignKey({
 				tName: props.tName,
 				cols: [props.cols[colFkKey]],
-				// @ts-ignore
+				// @ts-expect-error
 				foreignColumns,
 			}).onDelete(onDelete),
 			index({ tName: props.tName, cols: [props.cols[colFkKey]] }),
@@ -137,7 +57,7 @@ export function buildFkUtils(config) {
  * 	cacheKey: string;
  * 	defaultColKey: string;
  * 	defaultColName: string;
- * 	getTable: () => TTable;
+ * 	table: TTable;
  * 	getRefColumns: (table: TTable) => any[];
  * 	defaultOnDelete?: "cascade" | "set null" | "restrict" | "no action";
  * }} config
@@ -163,22 +83,22 @@ export function buildCodeFkUtils(config) {
 		colFkKey = config.defaultColKey,
 		...props
 	}) => {
-		/** @type {TTable} */
-		let table;
-		if (tableCache.has(config.cacheKey)) {
-			table = tableCache.get(config.cacheKey);
-		} else {
-			table = config.getTable();
-			tableCache.set(config.cacheKey, table);
-		}
+		// /** @type {TTable} */
+		// let table;
+		// if (tableCache.has(config.cacheKey)) {
+		// 	table = tableCache.get(config.cacheKey);
+		// } else {
+		// 	table = config.table();
+		// 	tableCache.set(config.cacheKey, table);
+		// }
 
-		const foreignColumns = config.getRefColumns(table);
+		const foreignColumns = config.getRefColumns(config.table);
 
 		return [
 			foreignKey({
 				tName: props.tName,
 				cols: [props.cols[colFkKey]],
-				// @ts-ignore
+				// @ts-expect-error
 				foreignColumns,
 			}).onDelete(onDelete),
 			index({ tName: props.tName, cols: [props.cols[colFkKey]] }),
@@ -194,7 +114,7 @@ export function buildCodeFkUtils(config) {
  * 	cacheKey: string;
  * 	defaultColKey: string;
  * 	defaultColName: string;
- * 	getTable: () => TTable;
+ * 	table: TTable;
  * 	getRefColumns: (table: TTable) => any[];
  * 	defaultOnDelete?: "cascade" | "set null" | "restrict" | "no action";
  * }} config
@@ -203,8 +123,7 @@ export function buildLocaleKeyFkUtils(config) {
 	/**
 	 * @param {{ name?: string }} [props]
 	 */
-	const fkCol = ({ name = config.defaultColName } = {}) =>
-		textCols.localeKey(name);
+	const fkCol = ({ name = config.defaultColName } = {}) => textCols.localeKey(name);
 
 	/**
 	 * @template {string} TTableName
@@ -221,22 +140,22 @@ export function buildLocaleKeyFkUtils(config) {
 		colFkKey = config.defaultColKey,
 		...props
 	}) => {
-		/** @type {TTable} */
-		let table;
-		if (tableCache.has(config.cacheKey)) {
-			table = tableCache.get(config.cacheKey);
-		} else {
-			table = config.getTable();
-			tableCache.set(config.cacheKey, table);
-		}
+		// /** @type {TTable} */
+		// let table;
+		// if (tableCache.has(config.cacheKey)) {
+		// 	table = tableCache.get(config.cacheKey);
+		// } else {
+		// 	table = config.getTable();
+		// 	tableCache.set(config.cacheKey, table);
+		// }
 
-		const foreignColumns = config.getRefColumns(table);
+		const foreignColumns = config.getRefColumns(config.table);
 
 		return [
 			foreignKey({
 				tName: props.tName,
 				cols: [props.cols[colFkKey]],
-				// @ts-ignore
+				// @ts-expect-error
 				foreignColumns,
 			}).onDelete(onDelete),
 			index({ tName: props.tName, cols: [props.cols[colFkKey]] }),

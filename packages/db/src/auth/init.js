@@ -1,5 +1,5 @@
 /**
- * @import { UsersProvider, SessionsProvider, PasswordResetSessionsProvider, UserEmailVerificationRequestsProvider, AuthStrategy, SessionValidationResult, AuthProvidersWithGetSessionUtils, AuthProvidersShape, AuthProvidersWithGetSessionProviders } from "@de100/auth-core/types";
+ * @import { UsersProvider, SessionsProvider, PasswordResetSessionsProvider, UserEmailVerificationRequestsProvider, AuthStrategy, SessionValidationResult, AuthProvidersWithGetSessionUtils, AuthProvidersShape, AuthProvidersWithGetSessionProviders } from "@de100/auth-shared/types";
  */
 
 import { dateLikeToDate } from "@de100/auth-core/utils/dates";

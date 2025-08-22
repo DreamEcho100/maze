@@ -3,9 +3,6 @@
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
-	"imports": {
-		"#*": "./src/*"
-	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -52,7 +49,7 @@
 	},
 	"license": "MIT",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsup src --format cjs,esm --dts",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "tsc",
 		"format:fix": "biome format ./src --write",
@@ -69,6 +66,7 @@
 	},
 	"dependencies": {
 		"@de100/auth-core": "workspace:^",
+		"@de100/auth-shared": "workspace:^",
 		"base32-crockford": "^0.0.6",
 		"byte-encodings": "^1.0.11",
 		"crockford-base32": "^2.0.0",
@@ -86,6 +84,20 @@
 		"@types/uuid-parse": "^1.0.2",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "catalog:",
+		"tsup": "^8.5.0",
 		"typescript": "catalog:"
-	}
+	},
+	"sideEffects": [
+		"./src/schema/_utils/cols/shared/foreign-keys/currency-code.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/employee-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/locale-key.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/member-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/org-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/org-locale-key.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/seo-metadata-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/user-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/user-job-profile-id.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/user-locale-key.js",
+		"./src/schema/_utils/cols/shared/foreign-keys/user-profile-id.js"
+	]
 }

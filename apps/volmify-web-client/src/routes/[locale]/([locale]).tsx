@@ -1,16 +1,8 @@
 // import { useRouter } from "@de100/i18n-solid-startjs/client";
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
-import { useI18n, useTranslations } from "@de100/i18n-solidjs";
-import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
 import { createSignal, For, type ParentProps, resetErrorBoundaries } from "solid-js";
-import Counter from "#components/Counter.jsx";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
-import ForgotPasswordPage from "#libs/auth/client/components/screens/forgot-password/page.jsx";
-import { useGetCurrentSessionQuery } from "#libs/auth/client/hooks/get-current-session.js";
-import { allowedLocales } from "#libs/i18n/constants.ts";
-import { cookieManager } from "#libs/js-cookies/index.ts";
 
 // async function testFn() {
 // 	"use server";
@@ -27,144 +19,144 @@ import { cookieManager } from "#libs/js-cookies/index.ts";
 // 	}
 // }
 
-// export default function Home() {
-// 	return "lol";
-// }
 export default function Home() {
-	const t = useTranslations();
-	const { locale } = useI18n();
-	// const t = useTranslations();
-	// const router = useRouter();
-
-	const getCurrentSessionQuery = useGetCurrentSessionQuery();
-
-	return (
-		<main>
-			<p>{`froms+["'](?!@)(?!.*.(?:ts|tsx|js|jsx)["']).*["']`}</p>
-			<QueryBoundary
-				query={getCurrentSessionQuery}
-				loadingFallback={<div class="loader">Loading session...</div>}
-				errorFallback={(err, retry) => (
-					<div>
-						<div class="error">{err.message}</div>
-						<button
-							type="button"
-							disabled={getCurrentSessionQuery.isRefetching || getCurrentSessionQuery.isSuccess}
-							onClick={() => {
-								retry();
-							}}
-						>
-							retry
-						</button>
-					</div>
-				)}
-			>
-				{(session) => (
-					<div>
-						<h2>Current Session</h2>
-						<pre>{JSON.stringify(session, null, 2)}</pre>
-					</div>
-				)}
-			</QueryBoundary>
-			<ForgotPasswordPage />
-			<Title>Hello World</Title>
-			<h1>Hello world!</h1>
-			{/* <User /> */}
-			<Counter />
-			<p>
-				Visit{" "}
-				<a href="https://start.solidjs.com" target="_blank" rel="noopener">
-					start.solidjs.com
-				</a>{" "}
-				to learn how to build SolidStart apps.
-			</p>
-			<br />
-			<hr />
-			<br />
-			<div>
-				<h1>{t("locale")}</h1>
-				<p>{t("greetings", { lastLoginDate: new Date(), name: "John" })}</p>
-				<p>Current locale: {locale()}</p>
-
-				<Link
-					href="/"
-					locale="en"
-					onMouseEnter={() => {
-						cookieManager.setCookie("forced-locale", "en", {
-							path: "/",
-							sameSite: "lax",
-						});
-					}}
-					onMouseLeave={() => {
-						cookieManager.deleteCookie("forced-locale", {
-							path: "/",
-							sameSite: "lax",
-						});
-					}}
-				>
-					Switch to English
-				</Link>
-				<Link
-					href="/"
-					locale="ar"
-					onMouseEnter={() => {
-						cookieManager.setCookie("forced-locale", "ar", {
-							path: "/",
-							sameSite: "lax",
-						});
-					}}
-					onMouseLeave={() => {
-						cookieManager.deleteCookie("forced-locale", {
-							path: "/",
-							sameSite: "lax",
-						});
-					}}
-				>
-					Switch to Arabic
-				</Link>
-				<select
-					// onChange={(e) => {
-					// 	// setLocale(e.target.value);
-					// 	router.push(`/${e.target.value}`, {
-					// 		replace: true,
-					// 		resolve: true,
-					// 		scroll: false,
-					// 		state: { locale: e.target.value },
-					// 	});
-					// 	// redirect(`/${e.target.value}`);
-					// }}
-					value={locale()}
-					// disabled={props.loading}
-					// class={props.class}
-				>
-					<option value="" disabled>
-						Select locale...
-					</option>
-					<For each={allowedLocales}>
-						{(localeItem) => (
-							<option value={localeItem}>
-								{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ??
-									localeItem}
-							</option>
-						)}
-					</For>
-				</select>
-			</div>
-			<br />
-			<hr />
-			<br />
-			<h2>Example - Post Viewer</h2>
-			<PostViewer sleep={1000} simulateError={false} />
-			<hr />
-			<h2>Example - Post Viewer with deferStream</h2>
-			<PostViewer deferStream sleep={1000} simulateError={false} initialPage={2} />
-			<hr />
-			<h2>Example - Post Viewer with deferStream and simulateError</h2>
-			<PostViewer deferStream sleep={1000} simulateError initialPage={2} />
-			<hr />
-		</main>
-	);
+	return "lol";
 }
+// export default function Home() {
+// 	const t = useTranslations();
+// 	const { locale } = useI18n();
+// 	// const t = useTranslations();
+// 	// const router = useRouter();
+
+// 	const getCurrentSessionQuery = useGetCurrentSessionQuery();
+
+// 	return (
+// 		<main>
+// 			<p>{`froms+["'](?!@)(?!.*.(?:ts|tsx|js|jsx)["']).*["']`}</p>
+// 			<QueryBoundary
+// 				query={getCurrentSessionQuery}
+// 				loadingFallback={<div class="loader">Loading session...</div>}
+// 				errorFallback={(err, retry) => (
+// 					<div>
+// 						<div class="error">{err.message}</div>
+// 						<button
+// 							type="button"
+// 							disabled={getCurrentSessionQuery.isRefetching || getCurrentSessionQuery.isSuccess}
+// 							onClick={() => {
+// 								retry();
+// 							}}
+// 						>
+// 							retry
+// 						</button>
+// 					</div>
+// 				)}
+// 			>
+// 				{(session) => (
+// 					<div>
+// 						<h2>Current Session</h2>
+// 						<pre>{JSON.stringify(session, null, 2)}</pre>
+// 					</div>
+// 				)}
+// 			</QueryBoundary>
+// 			<ForgotPasswordPage />
+// 			<Title>Hello World</Title>
+// 			<h1>Hello world!</h1>
+// 			{/* <User /> */}
+// 			<Counter />
+// 			<p>
+// 				Visit{" "}
+// 				<a href="https://start.solidjs.com" target="_blank" rel="noopener">
+// 					start.solidjs.com
+// 				</a>{" "}
+// 				to learn how to build SolidStart apps.
+// 			</p>
+// 			<br />
+// 			<hr />
+// 			<br />
+// 			<div>
+// 				<h1>{t("locale")}</h1>
+// 				<p>{t("greetings", { lastLoginDate: new Date(), name: "John" })}</p>
+// 				<p>Current locale: {locale()}</p>
+
+// 				<Link
+// 					href="/"
+// 					locale="en"
+// 					onMouseEnter={() => {
+// 						cookieManager.setCookie("forced-locale", "en", {
+// 							path: "/",
+// 							sameSite: "lax",
+// 						});
+// 					}}
+// 					onMouseLeave={() => {
+// 						cookieManager.deleteCookie("forced-locale", {
+// 							path: "/",
+// 							sameSite: "lax",
+// 						});
+// 					}}
+// 				>
+// 					Switch to English
+// 				</Link>
+// 				<Link
+// 					href="/"
+// 					locale="ar"
+// 					onMouseEnter={() => {
+// 						cookieManager.setCookie("forced-locale", "ar", {
+// 							path: "/",
+// 							sameSite: "lax",
+// 						});
+// 					}}
+// 					onMouseLeave={() => {
+// 						cookieManager.deleteCookie("forced-locale", {
+// 							path: "/",
+// 							sameSite: "lax",
+// 						});
+// 					}}
+// 				>
+// 					Switch to Arabic
+// 				</Link>
+// 				<select
+// 					// onChange={(e) => {
+// 					// 	// setLocale(e.target.value);
+// 					// 	router.push(`/${e.target.value}`, {
+// 					// 		replace: true,
+// 					// 		resolve: true,
+// 					// 		scroll: false,
+// 					// 		state: { locale: e.target.value },
+// 					// 	});
+// 					// 	// redirect(`/${e.target.value}`);
+// 					// }}
+// 					value={locale()}
+// 					// disabled={props.loading}
+// 					// class={props.class}
+// 				>
+// 					<option value="" disabled>
+// 						Select locale...
+// 					</option>
+// 					<For each={allowedLocales}>
+// 						{(localeItem) => (
+// 							<option value={localeItem}>
+// 								{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ??
+// 									localeItem}
+// 							</option>
+// 						)}
+// 					</For>
+// 				</select>
+// 			</div>
+// 			<br />
+// 			<hr />
+// 			<br />
+// 			<h2>Example - Post Viewer</h2>
+// 			<PostViewer sleep={1000} simulateError={false} />
+// 			<hr />
+// 			<h2>Example - Post Viewer with deferStream</h2>
+// 			<PostViewer deferStream sleep={1000} simulateError={false} initialPage={2} />
+// 			<hr />
+// 			<h2>Example - Post Viewer with deferStream and simulateError</h2>
+// 			<PostViewer deferStream sleep={1000} simulateError initialPage={2} />
+// 			<hr />
+// 		</main>
+// 	);
+// }
 
 /***************************** *****************************/
 /***************************** *****************************/

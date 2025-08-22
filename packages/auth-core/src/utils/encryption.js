@@ -1,8 +1,8 @@
-if (typeof window !== "undefined") {
-	throw new Error(
-		"Passwords utilities should not be used in the browser. Use them only on the server side.",
-	);
-}
+// if (typeof window !== "undefined") {
+// 	throw new Error(
+// 		"Passwords utilities should not be used in the browser. Use them only on the server side.",
+// 	);
+// }
 
 import { DynamicBuffer } from "@oslojs/binary";
 import { decodeBase64 } from "@oslojs/encoding";
@@ -51,9 +51,7 @@ export function decrypt(encrypted) {
 	const decipher = createDecipheriv("aes-128-gcm", key, encrypted.slice(0, 16));
 	decipher.setAuthTag(encrypted.slice(encrypted.byteLength - 16));
 	const decrypted = new DynamicBuffer(0);
-	decrypted.write(
-		decipher.update(encrypted.slice(16, encrypted.byteLength - 16)),
-	);
+	decrypted.write(decipher.update(encrypted.slice(16, encrypted.byteLength - 16)));
 	decrypted.write(decipher.final());
 	return decrypted.bytes();
 }

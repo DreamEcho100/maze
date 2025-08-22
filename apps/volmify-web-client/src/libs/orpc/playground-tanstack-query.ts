@@ -1,10 +1,6 @@
 import { isDefinedError } from "@orpc/client";
-import {
-	useInfiniteQuery,
-	useMutation,
-	useQueryClient,
-} from "@tanstack/solid-query";
-import { orpc } from "#libs/orpc/index.ts";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/solid-query";
+import { orpc } from "#libs/orpc/index.js";
 
 const query = useInfiniteQuery(() =>
 	orpc.planet.list.infiniteOptions({

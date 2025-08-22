@@ -1,5 +1,5 @@
 /**
- * @import { ForeignKeyBuilder } from "drizzle-orm/gel-core";
+ * @import { ForeignKeyBuilder } from "drizzle-orm/pg-core";
  * @import { SQL } from "drizzle-orm";
  */
 
@@ -22,21 +22,13 @@ const defaultMaxLength = 55;
  * @param {string} separator - Separator between meaningful part and hash (default: '_')
  * @returns {string} Shortened string that's always the same for the same input
  */
-function deterministicShorten(
-	input,
-	maxLength = defaultMaxLength,
-	separator = "_",
-) {
+function deterministicShorten(input, maxLength = defaultMaxLength, separator = "_") {
 	if (input.length <= maxLength) {
 		return input;
 	}
 
 	// Create a deterministic hash of the input
-	const hash = crypto
-		.createHash("md5")
-		.update(input)
-		.digest("hex")
-		.substring(0, 8); // Use first 8 characters of hash
+	const hash = crypto.createHash("md5").update(input).digest("hex").substring(0, 8); // Use first 8 characters of hash
 
 	// Calculate how much space we have for the meaningful part
 	const hashPart = `${separator}${hash}`;
@@ -64,12 +56,7 @@ function deterministicShorten(
 	// If no complete words fit, use abbreviations
 	if (!meaningfulPart) {
 		meaningfulPart = parts
-			.map((part) =>
-				part.substring(
-					0,
-					Math.max(1, Math.floor(availableLength / parts.length)),
-				),
-			)
+			.map((part) => part.substring(0, Math.max(1, Math.floor(availableLength / parts.length))))
 			.join("_")
 			.substring(0, availableLength);
 	}
@@ -230,9 +217,7 @@ const buildConstraintName = (prefix, tName, columns) => {
 	const cleanColumnNames = columns
 		.map((col) => toCamelCase(createAbbreviation(col.name)))
 		.join("_");
-	return shortenConstraintName(
-		`${prefix}_${cleanTableName}_${cleanColumnNames}`,
-	);
+	return shortenConstraintName(`${prefix}_${cleanTableName}_${cleanColumnNames}`);
 };
 
 /*
@@ -354,9 +339,7 @@ export const index = (props) => {
  * }} props
  */
 export const multiIndexes = (props) => {
-	return props.colsGrps.map((item) =>
-		index({ tName: props.tName, cols: item.cols }),
-	);
+	return props.colsGrps.map((item) => index({ tName: props.tName, cols: item.cols }));
 };
 
 /**
@@ -401,9 +384,7 @@ export const check = (props) => {
 	return ck(
 		shortenConstraintName(
 			`ck_${toCamelCase(createAbbreviation(props.tName))}${
-				props.postfix
-					? `_${toCamelCase(createAbbreviation(props.postfix))}`
-					: ""
+				props.postfix ? `_${toCamelCase(createAbbreviation(props.postfix))}` : ""
 			}`,
 		),
 		props.condition,

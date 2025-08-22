@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/solid-query";
-import { orpc } from "#libs/orpc/index.ts";
+import { orpc } from "#libs/orpc/index.js";
 
 export function CreatePlanetMutationForm() {
 	const queryClient = useQueryClient();
@@ -28,8 +28,7 @@ export function CreatePlanetMutationForm() {
 					const form = new FormData(e.target as HTMLFormElement);
 
 					const name = form.get("name") as string;
-					const description =
-						(form.get("description") as string | null) ?? undefined;
+					const description = (form.get("description") as string | null) ?? undefined;
 					const image = form.get("image") as File;
 
 					mutation.mutate({
