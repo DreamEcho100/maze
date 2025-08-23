@@ -8,8 +8,8 @@ import {
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
 } from "@de100/db/auth/init";
+import { getSessionOptionsBasics } from "#libs/auth/server/utils.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
 
 /**
  * @param {{
@@ -42,7 +42,8 @@ export async function signupAction(input) {
 	}
 
 	switch (result.messageCode) {
-		case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED.messageCode:
+		case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED
+			.messageCode:
 			await redirect("/auth/2fa/setup");
 			return result;
 		default:

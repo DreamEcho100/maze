@@ -3,13 +3,13 @@ import { REGISTER_MESSAGES_ERRORS } from "@de100/auth-shared/constants";
 import {
 	authStrategy,
 	createOneEmailVerificationRequests,
-	createOneIdSync,
+	// createOneIdSync,
 	createOneUser,
 	deleteOneEmailVerificationRequestsByUserId,
 	findOneUserByEmail,
 } from "@de100/db/auth/init";
+import { getSessionOptionsBasics } from "#libs/auth/server/utils.js";
 import { redirect } from "#libs/i18n/server/utils.ts";
-import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
 
 /**
  * @param {{

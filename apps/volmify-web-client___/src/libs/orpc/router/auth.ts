@@ -11,7 +11,7 @@ import {
 	findOneUserByEmail,
 } from "@de100/db/auth/init";
 // import { buildRedirectConfig } from "node_modules/@de100/i18n-solid-startjs/src/server/index.ts";
-import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
+import { getSessionOptionsBasics } from "#libs/auth/server/utils.js";
 import { CredentialSchema, TokenSchema } from "../../schemas/auth.ts";
 import { UserSchema } from "../../schemas/user.ts";
 import { authed, pub } from "./_root.ts";

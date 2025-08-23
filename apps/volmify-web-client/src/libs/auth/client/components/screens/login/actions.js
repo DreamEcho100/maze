@@ -6,7 +6,7 @@ import {
 	findOneUserByEmail,
 	getOneUserPasswordHash,
 } from "@de100/db/auth/init";
-import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
+import { getSessionOptionsBasics } from "#libs/auth/server/utils.js";
 // import { getSessionOptionsBasics } from "#libs/server/get-session-options-basics.js";
 
 /**

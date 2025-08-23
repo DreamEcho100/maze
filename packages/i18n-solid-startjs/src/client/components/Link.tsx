@@ -1,14 +1,18 @@
 import { useI18n } from "@de100/i18n-solidjs";
 import { A as SolidA, useLocation } from "@solidjs/router";
 import type { ComponentProps } from "solid-js";
-import { createMemo, splitProps, untrack } from "solid-js";
+import { createMemo, splitProps } from "solid-js";
 import { parsePathname } from "#utils";
 
 type LinkProps = ComponentProps<typeof SolidA>;
 
 function parseLinkType(href: string) {
 	// If href is already absolute or external, pass it through
-	if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+	if (
+		href.startsWith("http") ||
+		href.startsWith("mailto:") ||
+		href.startsWith("tel:")
+	) {
 		return "absolute|external";
 	}
 
@@ -40,7 +44,8 @@ function getLinkConfig(props: {
 	}
 
 	// Determine which locale to use
-	const targetLocale = props.locale ?? props.currentLocale ?? props.defaultLocale;
+	const targetLocale =
+		props.locale ?? props.currentLocale ?? props.defaultLocale;
 
 	// If href starts with a slash, it's an absolute path
 	if (props.href.startsWith("/")) {
@@ -122,16 +127,14 @@ export function I18nA(
 			{...otherProps}
 			href={config().href}
 			onClick={(e) => {
-				untrack(() => {
-					// @ts-expect-error
-					props.onClick?.(e);
-					// const targetLocale = computedHref().targetLocale;
+				// @ts-expect-error
+				otherProps.onClick?.(e);
+				// const targetLocale = computedHref().targetLocale;
 
-					if (config().targetLocale && i18n.locale !== config().targetLocale) {
-						// Update locale in context if it changes
-						i18n.setLocale(config().targetLocale);
-					}
-				});
+				if (config().targetLocale && i18n.locale !== config().targetLocale) {
+					// Update locale in context if it changes
+					i18n.setLocale(config().targetLocale);
+				}
 			}}
 		/>
 	);
