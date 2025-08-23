@@ -1,286 +1,21 @@
-// import type { LanguageMessages } from "@de100/i18n";
-// import { initI18n } from "@de100/i18n";
-// import type { ParentComponent } from "solid-js";
-// import { createContext, createMemo, createSignal, For, useContext } from "solid-js";
-
-// export const name = "@de100/i18n-solidjs";
-
-// type BaseTranslationState = ReturnType<typeof initI18n>;
-
-// interface I18nState {
-// 	locale: string;
-// 	defaultLocale: string;
-// 	allowedLocales: string[] | readonly string[];
-// 	fallbackLocale: string | string[];
-// 	translations: Record<Lowercase<string>, LanguageMessages>;
-// 	loadTranslations?: (props: {
-// 		locale: string;
-// 	}) =>
-// 		| Record<Lowercase<string>, LanguageMessages>
-// 		| Promise<Record<Lowercase<string>, LanguageMessages>>;
-// 	isLoadingTranslations: boolean;
-// 	setIsLoadingTranslations: (isLoading: boolean) => void;
-// 	t: BaseTranslationState["t"];
-// 	clearCache: BaseTranslationState["clearCache"];
-// }
-
-// interface I18nActions {
-// 	setLocale: (locale: string) => Promise<void>;
-// 	init: (props: {
-// 		locale: string;
-// 		defaultLocale: string;
-// 		allowedLocales: string[] | readonly string[];
-// 		fallbackLocale: string | string[];
-// 		translations: Record<Lowercase<string>, LanguageMessages>;
-// 	}) => void;
-// }
-
-// function createI18nStore() {
-// 	const [state, setState] = createSignal<I18nState>({
-// 		locale: "",
-// 		defaultLocale: "",
-// 		allowedLocales: [],
-// 		fallbackLocale: "",
-// 		translations: {},
-// 		t: (key: string) => key, // Safe fallback
-// 		clearCache: () => void 0, // Safe fallback
-// 		loadTranslations: async () => {
-// 			throw new Error("Translations not loaded. Please initialize translations first.");
-// 		},
-// 		isLoadingTranslations: false,
-// 		setIsLoadingTranslations: (isLoading: boolean) => {
-// 			setState((prev) => ({
-// 				...prev,
-// 				isLoadingTranslations: isLoading,
-// 			}));
-// 		},
-// 	});
-
-// 	const callInterrupt = {
-// 		id: 0,
-// 	};
-
-// 	const setLocale = async (locale: string) => {
-// 		const currentState = state();
-// 		if (!currentState.allowedLocales.includes(locale)) {
-// 			throw new Error(`Locale "${locale}" is not allowed.`);
-// 		}
-// 		let translations = currentState.translations;
-// 		if (currentState.loadTranslations) {
-// 			const currentId = ++callInterrupt.id;
-// 			currentState.setIsLoadingTranslations(true);
-
-// 			const newTranslations = await currentState.loadTranslations({
-// 				locale,
-// 			});
-// 			if (currentId !== callInterrupt.id) {
-// 				// If a new call was made, ignore this one
-// 				// setIsLoadingTranslations(false);
-// 				// No need to set loading state again, it will be handled by the next call
-// 				console.warn(`Locale loading interrupted for "${locale}".`);
-// 				return;
-// 			}
-// 			currentState.setIsLoadingTranslations(false);
-// 			if (!translations) {
-// 				throw new Error(`Translations for locale "${locale}" not found.`);
-// 			}
-// 			translations = { ...translations, ...newTranslations };
-// 		}
-
-// 		init({
-// 			locale: locale,
-// 			defaultLocale: currentState.defaultLocale,
-// 			allowedLocales: currentState.allowedLocales,
-// 			translations,
-// 			fallbackLocale: currentState.fallbackLocale,
-// 			loadTranslations: currentState.loadTranslations,
-// 		});
-// 	};
-
-// 	const init = (props: {
-// 		locale: string;
-// 		defaultLocale: string;
-// 		allowedLocales: string[] | readonly string[];
-// 		fallbackLocale: string | string[];
-// 		translations: Record<Lowercase<string>, LanguageMessages>;
-// 		loadTranslations?: (props: {
-// 			locale: string;
-// 		}) =>
-// 			| Record<Lowercase<string>, LanguageMessages>
-// 			| Promise<Record<Lowercase<string>, LanguageMessages>>;
-// 	}) => {
-// 		const initRes = initI18n({
-// 			locale: props.locale,
-// 			fallbackLocale: props.fallbackLocale,
-// 			translations: props.translations,
-// 		});
-
-// 		setState({
-// 			locale: initRes.locale,
-// 			defaultLocale: props.defaultLocale,
-// 			allowedLocales: props.allowedLocales,
-// 			fallbackLocale: props.fallbackLocale,
-// 			translations: props.translations,
-// 			t: initRes.t,
-// 			clearCache: initRes.clearCache,
-// 			loadTranslations: props.loadTranslations,
-// 			isLoadingTranslations: false,
-// 			setIsLoadingTranslations: (isLoading: boolean) => {
-// 				setState((prev) => ({
-// 					...prev,
-// 					isLoadingTranslations: isLoading,
-// 				}));
-// 			},
-// 		});
-// 	};
-
-// 	return {
-// 		state,
-// 		actions: {
-// 			setLocale,
-// 			init,
-// 		},
-// 	};
-// }
-
-// const globalI18nStore = createI18nStore();
-
-// const I18nContext = createContext<{ state: () => I18nState; actions: I18nActions }>();
-
-// export const I18nProvider: ParentComponent<{
-// 	locale: string;
-// 	defaultLocale: string;
-// 	allowedLocales: string[] | readonly string[];
-// 	translations: Record<Lowercase<string>, LanguageMessages>;
-// 	fallbackLocale: string | string[];
-// 	isNew?: boolean;
-// 	loadTranslations?: (props: {
-// 		locale: string;
-// 	}) =>
-// 		| Record<Lowercase<string>, LanguageMessages>
-// 		| Promise<Record<Lowercase<string>, LanguageMessages>>;
-// }> = (props) => {
-// 	const store = props.isNew ? createI18nStore() : globalI18nStore;
-
-// 	// Initialize store
-// 	store.actions.init({
-// 		locale: props.locale,
-// 		defaultLocale: props.defaultLocale,
-// 		allowedLocales: props.allowedLocales,
-// 		fallbackLocale: props.fallbackLocale,
-// 		translations: props.translations,
-// 		loadTranslations: props.loadTranslations,
-// 	});
-
-// 	return (
-// 		<I18nContext.Provider value={{ state: store.state, actions: store.actions }}>
-// 			{props.children}
-// 		</I18nContext.Provider>
-// 	);
-// };
-
-// export function useI18nStore() {
-// 	const context = useContext(I18nContext);
-// 	if (!context) {
-// 		return { state: globalI18nStore.state, actions: globalI18nStore.actions };
-// 	}
-// 	return context;
-// }
-
-// export function setLocale() {
-// 	const { actions } = useI18nStore();
-// 	return actions.setLocale;
-// }
-
-// export function useLocale() {
-// 	return createMemo(() => globalI18nStore.state().locale);
-// }
-
-// export function useGetLocale() {
-// 	const { state } = useI18nStore();
-// 	return createMemo(() => state().locale);
-// }
-
-// export function useTranslations() {
-// 	const { state } = useI18nStore();
-// 	return createMemo(() => state().t);
-// }
-
-// interface UseTranslationReturn {
-// 	t: () => I18nState["t"];
-// 	locale: () => I18nState["locale"];
-// 	defaultLocale: () => I18nState["defaultLocale"];
-// 	allowedLocales: () => I18nState["allowedLocales"];
-// 	setLocale: I18nActions["setLocale"];
-// 	translations: () => I18nState["translations"];
-// 	loadTranslations?: I18nState["loadTranslations"];
-// 	clearCache: () => I18nState["clearCache"];
-// }
-
-// export function useI18n(): UseTranslationReturn {
-// 	const { state, actions } = useI18nStore();
-
-// 	return {
-// 		t: createMemo(() => state().t),
-// 		locale: createMemo(() => state().locale),
-// 		defaultLocale: createMemo(() => state().defaultLocale),
-// 		allowedLocales: createMemo(() => state().allowedLocales),
-// 		clearCache: createMemo(() => state().clearCache),
-// 		translations: createMemo(() => state().translations),
-// 		// loadTranslations: async () => {
-// 		// 	// This is a placeholder for any async loading logic if needed
-// 		// 	throw new Error("loadTranslations not implemented.");
-// 		// },
-// 		setLocale: actions.setLocale,
-// 	};
-// }
-
-// export function LocaleChooser(props: {
-// 	locales: string[];
-// 	loading?: boolean;
-// 	class?: string;
-// 	placeholder?: string;
-// }) {
-// 	const { setLocale, locale } = useI18n();
-
-// 	return (
-// 		<select
-// 			onChange={(e) => setLocale(e.target.value)}
-// 			value={locale()}
-// 			disabled={props.loading}
-// 			class={props.class}
-// 		>
-// 			<option value="" disabled>
-// 				{props.placeholder || "Select locale..."}
-// 			</option>
-// 			<For each={props.locales}>
-// 				{(localeItem) => (
-// 					<option value={localeItem}>
-// 						{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ?? localeItem}
-// 					</option>
-// 				)}
-// 			</For>
-// 		</select>
-// 	);
-// }
-
 import type { LanguageMessages } from "@de100/i18n";
-import { initI18n } from "@de100/i18n";
+import { generateI18nConfig } from "@de100/i18n";
 import type { ParentComponent } from "solid-js";
 import {
 	createContext,
-	createEffect,
 	createMemo,
+	createSignal,
 	For,
-	on,
+	untrack,
 	useContext,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export const name = "@de100/i18n-solidjs";
 
-type BaseTranslationState = ReturnType<typeof initI18n>;
+type BaseTranslationState = ReturnType<typeof generateI18nConfig>;
 
+// setLocale: (locale: string) => Promise<void>;
 interface I18nState {
 	locale: string;
 	localeDirMap: Record<string, "ltr" | "rtl">;
@@ -288,162 +23,177 @@ interface I18nState {
 	allowedLocales: string[] | readonly string[];
 	fallbackLocale: string | string[];
 	translations: Record<Lowercase<string>, LanguageMessages>;
+	// loadTranslations?: (props: {
+	// 	locale: string;
+	// }) =>
+	// 	| Record<Lowercase<string>, LanguageMessages>
+	// 	| Promise<Record<Lowercase<string>, LanguageMessages>>;
+	// isLoadingTranslations: boolean;
+	t: BaseTranslationState["t"];
+	clearCache: BaseTranslationState["clearCache"];
+	setLocale: (locale: string) => Promise<void>;
+	// setI18n: SetStoreFunction<I18nState>;
 	loadTranslations?: (props: {
 		locale: string;
 	}) =>
 		| Record<Lowercase<string>, LanguageMessages>
 		| Promise<Record<Lowercase<string>, LanguageMessages>>;
 	isLoadingTranslations: boolean;
-	t: BaseTranslationState["t"];
-	clearCache: BaseTranslationState["clearCache"];
+	// setIsLoadingTranslations: Setter<boolean>;
+	// setIsLoadingTranslations: (isLoading: boolean) => void;
 }
 
-interface I18nActions {
-	setLocale: (locale: string) => Promise<void>;
-	init: (
-		props: Pick<
-			I18nState,
-			| "locale"
-			| "localeDirMap"
-			| "defaultLocale"
-			| "allowedLocales"
-			| "fallbackLocale"
-			| "translations"
-			| "loadTranslations"
-		>,
-	) => void;
-	setIsLoadingTranslations: (isLoading: boolean) => void;
-}
+// const init = (
+// 	props: Pick<
+// 		I18nState,
+// 		| "locale"
+// 		| "localeDirMap"
+// 		| "defaultLocale"
+// 		| "allowedLocales"
+// 		| "fallbackLocale"
+// 		| "translations"
+// 		// | "loadTranslations"
+// 	>,
+// ) => {
+// 	const i18nConfig = generateI18nConfig({
+// 		locale: props.locale,
+// 		fallbackLocale: props.fallbackLocale,
+// 		translations: props.translations,
+// 	});
 
-function createI18nStore() {
-	const [state, setState] = createStore<I18nState>({
-		locale: "",
-		defaultLocale: "",
-		allowedLocales: [],
-		fallbackLocale: "",
-		translations: {},
-		t: (key: string) => key, // Safe fallback
-		clearCache: () => void 0, // Safe fallback
-		loadTranslations: async () => {
-			throw new Error(
-				"Translations not loaded. Please initialize translations first.",
-			);
-		},
-		isLoadingTranslations: false,
-		localeDirMap: {},
+// 	setState({
+// 		locale: i18nConfig.locale,
+// 		defaultLocale: props.defaultLocale,
+// 		allowedLocales: props.allowedLocales,
+// 		fallbackLocale: props.fallbackLocale,
+// 		translations: props.translations,
+// 		t: i18nConfig.t,
+// 		clearCache: i18nConfig.clearCache,
+// 		// loadTranslations: props.loadTranslations,
+// 		isLoadingTranslations: false,
+// 		localeDirMap: props.localeDirMap,
+// 	});
+// };
+
+function createI18nStore(
+	props: Pick<
+		I18nState,
+		| "locale"
+		| "localeDirMap"
+		| "defaultLocale"
+		| "allowedLocales"
+		| "fallbackLocale"
+		| "translations"
+		| "loadTranslations"
+	>,
+) {
+	const i18nConfig = generateI18nConfig({
+		locale: props.locale,
+		fallbackLocale: props.fallbackLocale,
+		translations: props.translations,
 	});
 
-	const callInterrupt = {
-		id: 0,
-	};
+	// setState({
+	// 	locale: i18nConfig.locale,
+	// 	defaultLocale: props.defaultLocale,
+	// 	allowedLocales: props.allowedLocales,
+	// 	fallbackLocale: props.fallbackLocale,
+	// 	translations: props.translations,
+	// 	t: i18nConfig.t,
+	// 	clearCache: i18nConfig.clearCache,
+	// 	// loadTranslations: props.loadTranslations,
+	// 	isLoadingTranslations: false,
+	// 	localeDirMap: props.localeDirMap,
+	// });
 
-	const setIsLoadingTranslations = (isLoading: boolean) => {
-		setState("isLoadingTranslations", isLoading);
-	};
+	const [i18n, setI18n] = createStore<I18nState>({
+		// locale: "",
+		// defaultLocale: "",
+		// allowedLocales: [],
+		// fallbackLocale: "",
+		// translations: {},
+		// t: (key: string) => key, // Safe fallback
+		// clearCache: () => void 0, // Safe fallback
+		// // loadTranslations: async () => {
+		// // 	throw new Error("Translations not loaded. Please initialize translations first.");
+		// // },
+		// // isLoadingTranslations: false,
+		// localeDirMap: {},
+		// // setIsLoadingTranslations: (isLoading: boolean) => {
+		// // 	setState("isLoadingTranslations", isLoading);
+		// // },
 
-	const setLocale = async (locale: string) => {
-		if (!state.allowedLocales.includes(locale)) {
-			throw new Error(`Locale "${locale}" is not allowed.`);
-		}
-
-		let translations = state.translations;
-		if (state.loadTranslations) {
-			const currentId = ++callInterrupt.id;
-			setIsLoadingTranslations(true);
-
-			const newTranslations = await state.loadTranslations({
-				locale,
-			});
-
-			if (currentId !== callInterrupt.id) {
-				// If a new call was made, ignore this one
-				console.warn(`Locale loading interrupted for "${locale}".`);
-				return;
-			}
-
-			if (!newTranslations) {
-				throw new Error(`Translations for locale "${locale}" not found.`);
-			}
-
-			translations = { ...translations, ...newTranslations };
-		}
-
-		const localeDir = state.localeDirMap[locale];
-		// document query select all elements with `data-i18n-lang-access` and `data-i18n-dir-access` and set them accordingly
-		for (const el of document.querySelectorAll<HTMLElement>(
-			"[data-i18n-lang-access], [data-i18n-dir-access]",
-		)) {
-			if (el.hasAttribute("data-i18n-lang-access")) {
-				el.setAttribute("lang", locale);
-			}
-
-			if (localeDir) {
-				if (el.hasAttribute("data-i18n-dir-access")) {
-					el.setAttribute("dir", localeDir);
+		locale: i18nConfig.locale,
+		defaultLocale: props.defaultLocale,
+		allowedLocales: props.allowedLocales,
+		fallbackLocale: props.fallbackLocale,
+		translations: props.translations,
+		t: i18nConfig.t,
+		clearCache: i18nConfig.clearCache,
+		// loadTranslations: props.loadTranslations,
+		localeDirMap: props.localeDirMap,
+		isLoadingTranslations: false,
+		loadTranslations: props.loadTranslations,
+		setLocale: async (locale: string) => {
+			untrack(async () => {
+				if (!i18n.allowedLocales.includes(locale)) {
+					throw new Error(`Locale "${locale}" is not allowed.`);
 				}
-			}
-		}
-
-		init({
-			locale: locale,
-			defaultLocale: state.defaultLocale,
-			allowedLocales: state.allowedLocales,
-			translations,
-			fallbackLocale: state.fallbackLocale,
-			loadTranslations: state.loadTranslations,
-			localeDirMap: state.localeDirMap,
-		});
-
-		if (state.loadTranslations) {
-			setIsLoadingTranslations(false);
-		}
-	};
-
-	const init = (
-		props: Pick<
-			I18nState,
-			| "locale"
-			| "localeDirMap"
-			| "defaultLocale"
-			| "allowedLocales"
-			| "fallbackLocale"
-			| "translations"
-			| "loadTranslations"
-		>,
-	) => {
-		const initRes = initI18n({
-			locale: props.locale,
-			fallbackLocale: props.fallbackLocale,
-			translations: props.translations,
-		});
-
-		setState({
-			locale: initRes.locale,
-			defaultLocale: props.defaultLocale,
-			allowedLocales: props.allowedLocales,
-			fallbackLocale: props.fallbackLocale,
-			translations: props.translations,
-			t: initRes.t,
-			clearCache: initRes.clearCache,
-			loadTranslations: props.loadTranslations,
-			isLoadingTranslations: false,
-			localeDirMap: props.localeDirMap,
-		});
-	};
-
-	return {
-		state,
-		actions: {
-			setLocale,
-			init,
-			setIsLoadingTranslations,
+				let translations = i18n.translations;
+				if (i18n.loadTranslations) {
+					const currentId = ++callInterrupt.id;
+					// i18n.setIsLoadingTranslations(true);
+					setI18n("isLoadingTranslations", true);
+					const newTranslations = await i18n.loadTranslations({
+						locale,
+					});
+					if (currentId !== callInterrupt.id) {
+						// If a new call was made, ignore this one
+						console.warn(`Locale loading interrupted for "${locale}".`);
+						return;
+					}
+					if (!newTranslations) {
+						throw new Error(`Translations for locale "${locale}" not found.`);
+					}
+					translations = { ...translations, ...newTranslations };
+				}
+				const localeDir = i18n.localeDirMap[locale];
+				// document query select all elements with `data-i18n-lang-access` and `data-i18n-dir-access` and set them accordingly
+				for (const el of document.querySelectorAll<HTMLElement>(
+					"[data-i18n-lang-access], [data-i18n-dir-access]",
+				)) {
+					if (el.hasAttribute("data-i18n-lang-access")) {
+						el.setAttribute("lang", locale);
+					}
+					if (localeDir) {
+						if (el.hasAttribute("data-i18n-dir-access")) {
+							el.setAttribute("dir", localeDir);
+						}
+					}
+				}
+				const i18nConfig = generateI18nConfig({
+					locale: locale,
+					fallbackLocale: props.fallbackLocale,
+					translations: translations,
+				});
+				setI18n("locale", i18nConfig.locale);
+				setI18n("clearCache", i18nConfig.clearCache);
+				setI18n("t", i18nConfig.t);
+				if (i18n.loadTranslations) {
+					// i18n.setIsLoadingTranslations(false);
+					setI18n("translations", translations);
+					setI18n("isLoadingTranslations", false);
+				}
+			});
 		},
-	};
+	});
+
+	return i18n;
 }
 
-const globalI18nStore = createI18nStore();
+// const globalI18nStore = createI18nStore();
 
-const I18nContext = createContext<{ state: I18nState; actions: I18nActions }>();
+const I18nContext = createContext<I18nState>();
 
 export const I18nProvider: ParentComponent<
 	Pick<
@@ -454,16 +204,15 @@ export const I18nProvider: ParentComponent<
 		| "allowedLocales"
 		| "translations"
 		| "fallbackLocale"
-		| "loadTranslations"
+		// | "loadTranslations"
 	> & {
 		isNew?: boolean;
 		localeParam?: string;
+		loadTranslations?: I18nState["loadTranslations"];
 	}
 > = (props) => {
-	const store = props.isNew ? createI18nStore() : globalI18nStore;
-
-	// Initialize store
-	store.actions.init({
+	// const store = props.isNew ? createI18nStore() : globalI18nStore;
+	const i18n = createI18nStore({
 		locale: props.locale,
 		defaultLocale: props.defaultLocale,
 		allowedLocales: props.allowedLocales,
@@ -472,96 +221,79 @@ export const I18nProvider: ParentComponent<
 		loadTranslations: props.loadTranslations,
 		localeDirMap: props.localeDirMap,
 	});
+	// const [isLoadingTranslations, setIsLoadingTranslations] = createSignal(false);
 
-	createEffect(
-		on(
-			() =>
-				!store.state.isLoadingTranslations &&
-				props.localeParam !== store.state.locale &&
-				props.localeParam,
-			(localeParam) => {
-				if (localeParam) {
-					store.actions.setLocale(localeParam);
-				}
-			},
-			{ defer: true },
-		),
-	);
+	// // createRenderEffect(() => {
+	// untrack(() => {
+	// 	// Initialize store
+	// 	store.actions.init({
+	// 		locale: props.locale,
+	// 		defaultLocale: props.defaultLocale,
+	// 		allowedLocales: props.allowedLocales,
+	// 		fallbackLocale: props.fallbackLocale,
+	// 		translations: props.translations,
+	// 		loadTranslations: props.loadTranslations,
+	// 		localeDirMap: props.localeDirMap,
+	// 	});
+	// });
+	// // });
+	// createEffect(
+	// 	on(
+	// 		() =>
+	// 			!store.state.isLoadingTranslations &&
+	// 			props.localeParam !== store.state.locale &&
+	// 			props.localeParam,
+	// 		(localeParam) => {
+	// 			if (localeParam) {
+	// 				untrack(() => {
+	// 					store.actions.setLocale(localeParam);
+	// 				});
+	// 			}
+	// 		},
+	// 		{ defer: true },
+	// 	),
+	// );
 
 	return (
-		<I18nContext.Provider
-			value={{ state: store.state, actions: store.actions }}
-		>
-			{props.children}
-		</I18nContext.Provider>
+		<I18nContext.Provider value={i18n}>{props.children}</I18nContext.Provider>
 	);
 };
 
-export function useI18nStore() {
+export function useI18n() {
 	const context = useContext(I18nContext);
 	if (!context) {
-		return { state: globalI18nStore.state, actions: globalI18nStore.actions };
+		throw new Error("useI18n must be used within an I18nProvider");
 	}
 	return context;
 }
 
-export function setLocale() {
-	return useI18nStore().actions.setLocale;
-}
-
-export function useLocale() {
-	return createMemo(() => globalI18nStore.state.locale);
-}
+const callInterrupt = {
+	id: 0,
+};
 
 export function useGetLocale() {
-	return () => useI18nStore().state.locale;
+	const i18n = useI18n();
+	return createMemo(() => i18n.locale);
 }
 
 // export function useTranslations() {
 // 	return () => useI18nStore().state.t;
 // }
 export function useTranslations() {
-	const { state } = useI18nStore();
+	const i18n = useI18n();
+	// const i18n = useI18n();
 
 	// return state.t; // Gets the function reference NOW, not later, losses reactivity
 
 	// Return a function that reactively accesses state.t each time it's called
 	return ((key, params) => {
-		return state.t(key, params); // ✅ Reactive access on each call
+		return i18n.t(key, params); // ✅ Reactive access on each call
 	}) as I18nState["t"] satisfies I18nState["t"];
 }
-
+// const useLocale = ()
 export function useIsLoadingTranslations() {
-	return () => useI18nStore().state.isLoadingTranslations;
-}
-
-interface UseTranslationReturn {
-	t: I18nState["t"];
-	locale: () => I18nState["locale"];
-	defaultLocale: () => I18nState["defaultLocale"];
-	allowedLocales: () => I18nState["allowedLocales"];
-	setLocale: I18nActions["setLocale"];
-	translations: () => I18nState["translations"];
-	loadTranslations?: I18nState["loadTranslations"];
-	clearCache: I18nState["clearCache"];
-	isLoadingTranslations: () => I18nState["isLoadingTranslations"];
-}
-
-export function useI18n(): UseTranslationReturn {
-	const { state, actions } = useI18nStore();
-
-	return {
-		t: ((key, params) => {
-			return state.t(key, params); // ✅ Reactive access on each call
-		}) as I18nState["t"] satisfies I18nState["t"],
-		locale: () => state.locale,
-		defaultLocale: () => state.defaultLocale,
-		allowedLocales: () => state.allowedLocales,
-		clearCache: state.clearCache,
-		translations: () => state.translations,
-		isLoadingTranslations: () => state.isLoadingTranslations,
-		setLocale: actions.setLocale,
-	};
+	const i18n = useI18n();
+	return createMemo(() => i18n.isLoadingTranslations);
 }
 
 export function LocaleChooser(props: {
@@ -570,13 +302,13 @@ export function LocaleChooser(props: {
 	class?: string;
 	placeholder?: string;
 }) {
-	const { setLocale, locale, isLoadingTranslations } = useI18n();
+	const i18n = useI18n();
 
 	return (
 		<select
-			onChange={(e) => setLocale(e.target.value)}
-			value={locale()}
-			disabled={props.loading || isLoadingTranslations()}
+			onChange={(e) => i18n.setLocale(e.target.value)}
+			value={i18n.locale}
+			disabled={props.loading || i18n.isLoadingTranslations}
 			class={props.class}
 		>
 			<option value="" disabled>

@@ -1,19 +1,11 @@
 import { useMutation } from "@tanstack/solid-query";
+import { forgotPasswordAction } from "./actions";
 // import { useMutation } from "@tanstack/solid-query";
 // import { forgotPasswordAction } from "./actions.js";
 
 export function ForgotPasswordForm() {
 	const mutation = useMutation(() => ({
-		mutationFn: async ({ email }) => {
-			"use server";
-			if (process.env.NODE_ENV === "development") {
-				console.log("___ forgotPasswordAction", email);
-			}
-			// return forgotPasswordAction({ email });
-			return {
-				message: `Password reset link sent to ${email}`,
-			};
-		},
+		mutationFn: forgotPasswordAction,
 	}));
 
 	return (

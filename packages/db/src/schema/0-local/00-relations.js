@@ -53,19 +53,6 @@ export const currencyRelations = relations(currency, ({ many }) => ({
 	orgsGiftCards: many(orgGiftCard),
 }));
 
-export const exchangeRateRelations = relations(exchangeRate, ({ one }) => ({
-	baseCurrency: one(currency, {
-		fields: [exchangeRate.baseCurrencyCode],
-		references: [currency.code],
-		relationName: "base_currency_rates",
-	}),
-	targetCurrency: one(currency, {
-		fields: [exchangeRate.targetCurrencyCode],
-		references: [currency.code],
-		relationName: "target_currency_rates",
-	}),
-}));
-
 export const localeRelations = relations(locale, ({ many }) => ({
 	seoAlternateUrls: many(seoMetadataAlternateUrl),
 	usersProfilesI18n: many(userProfileI18n),

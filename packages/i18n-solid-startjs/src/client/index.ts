@@ -15,12 +15,12 @@ export function useRouter() {
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	const { defaultLocale, allowedLocales } = useI18n();
+	const i18n = useI18n();
 
 	const currentLocale = createMemo(() => {
 		const { locale } = parsePathname(location.pathname, {
-			defaultLocale: defaultLocale(),
-			allowedLocales: allowedLocales(),
+			defaultLocale: i18n.defaultLocale,
+			allowedLocales: i18n.allowedLocales,
 		});
 		return locale;
 	});
@@ -39,7 +39,7 @@ export function useRouter() {
 				return navigate(href, navigateOptions);
 			}
 
-			const selectedLocale = locale ?? currentLocale() ?? defaultLocale();
+			const selectedLocale = locale ?? currentLocale() ?? i18n.defaultLocale;
 
 			if (href.startsWith("/")) {
 				return navigate(`/${selectedLocale}${href}`, navigateOptions);
@@ -47,8 +47,8 @@ export function useRouter() {
 
 			// Handle relative paths
 			const { restPath } = parsePathname(location.pathname, {
-				defaultLocale: defaultLocale(),
-				allowedLocales: allowedLocales(),
+				defaultLocale: i18n.defaultLocale,
+				allowedLocales: i18n.allowedLocales,
 			});
 
 			const basePath = restPath ? `/${restPath}` : "";
@@ -72,7 +72,7 @@ export function useRouter() {
 				return navigate(href, { ...navigateOptions, replace: true });
 			}
 
-			const selectedLocale = locale ?? currentLocale() ?? defaultLocale();
+			const selectedLocale = locale ?? currentLocale() ?? i18n.defaultLocale;
 
 			if (href.startsWith("/")) {
 				return navigate(`/${selectedLocale}${href}`, {
@@ -82,8 +82,8 @@ export function useRouter() {
 			}
 
 			const { restPath } = parsePathname(location.pathname, {
-				defaultLocale: defaultLocale(),
-				allowedLocales: allowedLocales(),
+				defaultLocale: i18n.defaultLocale,
+				allowedLocales: i18n.allowedLocales,
 			});
 
 			const basePath = restPath ? `/${restPath}` : "";
@@ -117,12 +117,12 @@ export function useRouter() {
 // Custom usePathname that returns path without locale
 export function usePathname() {
 	const location = useLocation();
-	const { defaultLocale, allowedLocales } = useI18n();
+	const i18n = useI18n();
 
 	return createMemo(() => {
 		const { restPath } = parsePathname(location.pathname, {
-			defaultLocale: defaultLocale(),
-			allowedLocales: allowedLocales(),
+			defaultLocale: i18n.defaultLocale,
+			allowedLocales: i18n.allowedLocales,
 		});
 		return `/${restPath || ""}`.replace(/\/+/g, "/");
 	});
@@ -131,14 +131,14 @@ export function usePathname() {
 // Get current locale from URL
 export function useGetLocale() {
 	const location = useLocation();
-	const { defaultLocale, allowedLocales } = useI18n();
+	const i18n = useI18n();
 
 	return createMemo(() => {
 		const { locale } = parsePathname(location.pathname, {
-			defaultLocale: defaultLocale(),
-			allowedLocales: allowedLocales(),
+			defaultLocale: i18n.defaultLocale,
+			allowedLocales: i18n.allowedLocales,
 		});
-		return locale ?? defaultLocale();
+		return locale ?? i18n.defaultLocale;
 	});
 }
 

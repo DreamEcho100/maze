@@ -1,7 +1,7 @@
 "use client";
 
 import type { LanguageMessages } from "@de100/i18n";
-import { initI18n } from "@de100/i18n";
+import { generateI18nConfig } from "@de100/i18n";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import type { StoreApi } from "zustand";
@@ -10,7 +10,7 @@ import { mutative } from "zustand-mutative";
 
 export const name = "@de100/i18n-reactjs";
 
-type BaseTranslationState = ReturnType<typeof initI18n>;
+type BaseTranslationState = ReturnType<typeof generateI18nConfig>;
 interface State extends BaseTranslationState {
 	locale: string;
 	defaultLocale: string;
@@ -60,7 +60,7 @@ const createI18nStore: () => StoreApi<State & Actions> = () =>
 				const state = get();
 				state.defaultLocale = props.defaultLocale;
 				state.allowedLocales = props.allowedLocales;
-				const initRes = initI18n({
+				const initRes = generateI18nConfig({
 					locale: props.locale,
 					fallbackLocale: props.fallbackLocale,
 					translations: props.translations,

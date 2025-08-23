@@ -2,12 +2,6 @@
 
 import type { LanguageMessages } from "@de100/i18n";
 import { query, redirect as solidRedirect } from "@solidjs/router";
-// import { cookies, headers } from "next/headers.js";
-// import {
-// 	// permanentRedirect as solidPermanentRedirect,
-// 	// redirect as solidRedirect,
-// 	RedirectType,
-// } from "next/navigation";
 import { getCookie, getHeader, setCookie } from "vinxi/http";
 import { parsePathname } from "#utils";
 import type { Locale } from "./config";

@@ -1,4 +1,4 @@
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+// import { A } from "@de100/i18n-solid-startjs/client/components/Link";
 import { revalidate } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.jsx";
@@ -36,7 +36,7 @@ export function AuthVerifyEmail() {
 							query.refetch();
 						}}
 					/>
-					<Link href="/settings">Change your email</Link>
+					{/* <A href="/settings">Change your email</A> */}
 				</>
 			)}
 		</QueryBoundary>

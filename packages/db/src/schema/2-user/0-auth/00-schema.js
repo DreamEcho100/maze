@@ -3,15 +3,12 @@
  */
 // ## user
 
-import { eq, sql } from "drizzle-orm";
-import { jsonb, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { sharedCols } from "../../_utils/cols/shared/index.js";
+import { jsonb, timestamp, varchar } from "drizzle-orm/pg-core";
 import { temporalCols } from "../../_utils/cols/temporal.js";
 import { textCols } from "../../_utils/cols/text.js";
 import { bytea } from "../../_utils/custom-fields.js";
 import { multiIndexes, uniqueIndex } from "../../_utils/helpers.js";
 import { table } from "../../_utils/tables.js";
-import { localeKeyFkCol, localeKeyFkExtraConfig } from "../../0-local/0_utils/index.js";
 import { userTableName } from "../_utils/index.js";
 import { userIdFkCol, userIdFkExtraConfig } from "../0_utils/index.js";
 

@@ -312,6 +312,8 @@ export const updateOneUserTOTPKey = async (props, options) => {
 };
 /** @type {UsersProvider['verifyOneEmailIfMatches']} */
 export const verifyOneUserEmailIfMatches = async (props, options) => {
+	console.log("__ verifyOneUserEmailIfMatches props", props);
+	console.log("__ verifyOneUserEmailIfMatches options", options);
 	const _db =
 		/** @type {Parameters<Parameters<typeof db.transaction>[0]>[0]|undefined} */ (
 			options?.tx
@@ -390,25 +392,38 @@ export const createOneSession = async (props) => {
 };
 /** @type {SessionsProvider['findOneWithUser']} */
 export const findOneSessionWithUser = async (sessionId) => {
-	return db.query.userSession
-		.findFirst({
-			with: { user: { columns: userReturnSchema } },
-			columns: sessionReturnSchema,
-			where: and(
-				eq(dbSchema.userSession.id, sessionId),
-				isNull(dbSchema.userSession.revokedAt),
-			),
-		})
-		.then(async (result) => {
-			if (!result) return null;
-			// Check if token is expired
-			if (Date.now() >= result.expiresAt.getTime()) {
-				await revokeOneSessionById(result.id);
-				return null;
-			}
-			const { user, ...session } = result;
-			return { session, user };
-		});
+	return (
+		db.query.userSession
+			.findFirst({
+				with: { user: { columns: userReturnSchema } },
+				columns: sessionReturnSchema,
+				where: and(
+					eq(dbSchema.userSession.id, sessionId),
+					isNull(dbSchema.userSession.revokedAt),
+				),
+			})
+			// db
+			// 	.select({
+			// 		...sessionReturnTemplate,
+			// 	})
+			// 	.from(dbSchema.userSession)
+			// 	.leftJoin(dbSchema.user, eq(dbSchema.userSession.userId, dbSchema.user.id))
+			// 	.where(and(eq(dbSchema.userSession.id, sessionId), isNull(dbSchema.userSession.revokedAt)))
+			.then(async (result) => {
+				if (!result) return null;
+				// Check if token is expired
+				if (Date.now() >= result.expiresAt.getTime()) {
+					await revokeOneSessionById(result.id);
+					return null;
+				}
+				const { user, ...session } = result;
+				return { session, user };
+			})
+			.catch((error) => {
+				console.error("Error in findOneSessionWithUser:", error);
+				throw error;
+			})
+	);
 };
 /** @type {SessionsProvider['extendOneExpirationDate']} */
 export const extendOneSessionExpirationDate = async (props, options) => {

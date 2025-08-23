@@ -41,6 +41,8 @@
 
 import { defineConfig } from "@solidjs/start/config";
 
+// import devtools from "solid-devtools/vite";
+
 // import topLevelAwait from "vite-plugin-top-level-await";
 // import { visualizer } from "rollup-plugin-visualizer";
 // import topLevelAwait from "vite-plugin-top-level-await";
@@ -59,6 +61,18 @@ const coerceEnvVarToBoolean = (value: string | undefined, defaultValue = false):
 
 export default defineConfig({
 	vite: {
+		// plugins: [
+		// 	devtools({
+		// 		/* features options - all disabled by default */
+		// 		autoname: true, // e.g. enable autoname
+		// 		// pass `true` or an object with options
+		// 		locator: {
+		// 			targetIDE: "vscode",
+		// 			componentLocation: true,
+		// 			jsxLocation: true,
+		// 		},
+		// 	}),
+		// ],
 		// plugins: [
 		// 	// TODO: remove `as any`
 		// 	topLevelAwait() as any,

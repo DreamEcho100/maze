@@ -1,4 +1,4 @@
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 // import { ForgotPasswordForm } from "./components.jsx";
 
 export default function ForgotPasswordPage() {
@@ -6,7 +6,7 @@ export default function ForgotPasswordPage() {
 		<>
 			<h1>Forgot your password?</h1>
 			{/* <ForgotPasswordForm /> */}
-			<Link href="/auth/login">Sign in</Link>
+			<I18nA href="/auth/login">Sign in</I18nA>
 		</>
 	);
 }

@@ -17,12 +17,17 @@ import { generateGetCurrentAuthSessionProps } from "./utils.js";
 export async function getCurrentSession(props) {
 	"use server";
 
-	return getCurrentAuthSession(
-		await generateGetCurrentAuthSessionProps({
-			reqHeaders: props?.reqHeaders,
-			canMutateCookies: props?.canMutateCookies,
-		}),
-	);
+	try {
+		return getCurrentAuthSession(
+			await generateGetCurrentAuthSessionProps({
+				reqHeaders: props?.reqHeaders,
+				canMutateCookies: props?.canMutateCookies,
+			}),
+		);
+	} catch (error) {
+		console.error("Error in getCurrentSession:", error);
+		return { session: null, user: null, metadata: null };
+	}
 }
 
 // export const sessionUtils = generateSessionUtils({

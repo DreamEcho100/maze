@@ -1,4 +1,4 @@
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+// import { A } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useQuery } from "@tanstack/solid-query";
 import { validateNonOrInvalidAuthQuery } from "../../queries.js";
 import { authRoutesConfig } from "../../routes-config.js";
@@ -14,8 +14,8 @@ export function AuthLogin() {
 		<>
 			<h1>Sign in</h1>
 			<LoginForm isPending={query.isPending} errorMessage={query.error?.message} />
-			<Link href={authRoutesConfig.register.path}>Create an account</Link>
-			<Link href={authRoutesConfig.forgotPassword.path}>Forgot password?</Link>
+			{/* <A href={authRoutesConfig.register.path}>Create an account</A>
+			<A href={authRoutesConfig.forgotPassword.path}>Forgot password?</A> */}
 		</>
 	);
 }

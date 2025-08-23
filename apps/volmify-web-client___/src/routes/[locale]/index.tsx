@@ -1,6 +1,6 @@
 // import { useRouter } from "@de100/i18n-solid-startjs/client";
 
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useI18n, useTranslations } from "@de100/i18n-solidjs";
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
@@ -12,6 +12,8 @@ import ForgotPasswordPage from "#libs/auth/client/components/screens/forgot-pass
 import { useGetCurrentSessionQuery } from "#libs/auth/client/hooks/get-current-session.js";
 import { allowedLocales } from "#libs/i18n/constants.ts";
 import { cookieManager } from "#libs/js-cookies/index.ts";
+
+// import "../../styles/app.css";
 
 // async function testFn() {
 // 	"use server";
@@ -33,7 +35,7 @@ import { cookieManager } from "#libs/js-cookies/index.ts";
 // }
 export default function Home() {
 	const t = useTranslations();
-	const { locale } = useI18n();
+	const i18n = useI18n();
 	// const t = useTranslations();
 	// const router = useRouter();
 
@@ -85,9 +87,9 @@ export default function Home() {
 			<div>
 				<h1>{t("locale")}</h1>
 				<p>{t("greetings", { lastLoginDate: new Date(), name: "John" })}</p>
-				<p>Current locale: {locale()}</p>
+				<p>Current locale: {i18n.locale}</p>
 
-				<Link
+				<I18nA
 					href="/"
 					locale="en"
 					onMouseEnter={() => {
@@ -104,8 +106,8 @@ export default function Home() {
 					}}
 				>
 					Switch to English
-				</Link>
-				<Link
+				</I18nA>
+				<I18nA
 					href="/"
 					locale="ar"
 					onMouseEnter={() => {
@@ -122,7 +124,7 @@ export default function Home() {
 					}}
 				>
 					Switch to Arabic
-				</Link>
+				</I18nA>
 				<select
 					// onChange={(e) => {
 					// 	// setLocale(e.target.value);
@@ -134,7 +136,7 @@ export default function Home() {
 					// 	});
 					// 	// redirect(`/${e.target.value}`);
 					// }}
-					value={locale()}
+					value={i18n.locale}
 					// disabled={props.loading}
 					// class={props.class}
 				>

@@ -4,7 +4,7 @@ import { createAsync, useParams } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
 import type { ParentProps } from "solid-js";
-import { createEffect, createRenderEffect, Show, Suspense, untrack } from "solid-js";
+import { Show, untrack } from "solid-js";
 import { queryClient } from "#libs/@tanstack/query/query-client.js";
 import SessionProvider from "#libs/auth/client/components/session-provider.js";
 // import { queryClient } from "#libs/@tanstack/query/query-client.js";
@@ -31,8 +31,6 @@ function I18nProviderWrapper(props: ParentProps) {
 
 			htmlElement.lang = localeTranslation.locale;
 			htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
-
-			console.log("___ htmlElement", htmlElement);
 		}
 	});
 

@@ -15,7 +15,6 @@ function i18nMiddleware(event: FetchEvent) {
 		api: true,
 		rpc: true,
 	};
-	console.log("___ 1 middleware ___ pathnameFirstSegment", pathnameFirstSegment);
 	// return redirect("/en");
 	// Skip middleware for static files and API routes
 	if (
@@ -25,14 +24,12 @@ function i18nMiddleware(event: FetchEvent) {
 	) {
 		return;
 	}
-	console.log("___ 2 middleware ___ pathnameFirstSegment", pathnameFirstSegment);
 	const { redirectUrl } = createI18nMiddlewareOnRequest({ event });
 
 	if (redirectUrl) {
 		return Response.redirect(redirectUrl, 301);
 	}
 	// //
-	// console.log("___ middleware ___ event.locals", event.locals);
 	// if (redirectValue) {
 	// 	return redirectValue;
 	// }

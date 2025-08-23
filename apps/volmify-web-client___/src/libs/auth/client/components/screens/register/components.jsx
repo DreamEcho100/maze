@@ -2,7 +2,7 @@ import { REGISTER_MESSAGES_ERRORS } from "@de100/auth-shared/constants";
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
-import { orpc } from "#libs/orpc/index.ts";
+import { orpc } from "#libs/orpc/index.js";
 import { authRoutesConfig } from "../../routes-config";
 
 /**
@@ -31,8 +31,7 @@ export function SignUpForm(props) {
 				}
 
 				switch (res.messageCode) {
-					case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED
-						.messageCode:
+					case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED.messageCode:
 						return router.push(authRoutesConfig.twoFactorSetup.path);
 				}
 			},
@@ -45,8 +44,7 @@ export function SignUpForm(props) {
 
 	const isPending = createMemo(() => props.isPending || mutation.isPending);
 	const errorMessage = createMemo(
-		() =>
-			mutation.data?.message ?? props.errorMessage ?? mutation.error?.message,
+		() => mutation.data?.message ?? props.errorMessage ?? mutation.error?.message,
 	);
 
 	return (
@@ -67,13 +65,7 @@ export function SignUpForm(props) {
 			}}
 		>
 			<label for="form-signup.name">Username</label>
-			<input
-				id="form-signup.name"
-				name="name"
-				required
-				minLength={4}
-				maxLength={31}
-			/>
+			<input id="form-signup.name" name="name" required minLength={4} maxLength={31} />
 			<br />
 			<label for="form-signup.display_name">Display Name</label>
 			<input
@@ -85,13 +77,7 @@ export function SignUpForm(props) {
 			/>
 			<br />
 			<label for="form-signup.email">Email</label>
-			<input
-				type="email"
-				id="form-signup.email"
-				name="email"
-				autocomplete="name"
-				required
-			/>
+			<input type="email" id="form-signup.email" name="email" autocomplete="name" required />
 			<br />
 			<label for="form-signup.password">Password</label>
 			<input

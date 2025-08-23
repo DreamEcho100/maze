@@ -4,7 +4,7 @@
 
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useQuery } from "@tanstack/solid-query";
-import { createEffect, createMemo, createRenderEffect, createSignal, onMount } from "solid-js";
+import { createMemo, createRenderEffect, createSignal, onMount } from "solid-js";
 import { getCurrentSessionQuery } from "../components/queries";
 import { authRoutesConfig } from "../components/routes-config";
 
@@ -66,7 +66,6 @@ export function useGetCurrentSessionQuery(props) {
 	// const navigate = useNavigate();
 	// _props;
 	// _navigate;
-	const isMounted = useIsMounted();
 	const router = useRouter();
 	const query = useQuery(() => ({
 		queryKey: getCurrentSessionQueryKey(),
@@ -128,12 +127,7 @@ export function useGetCurrentSessionQuery(props) {
 		refetchOnReconnect: true,
 		// @ts-expect-error
 		placeholderData: defaultData,
-		enabled: isMounted(),
 	}));
-
-	createEffect(() => {
-		console.log("___ isMounted", isMounted());
-	});
 
 	const sessionStatus = createMemo(() => query.data?.status);
 

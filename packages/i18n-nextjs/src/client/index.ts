@@ -1,12 +1,8 @@
 "use client";
 
-import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import {
-	usePathname as useNextPathname,
-	useRouter as useNextRouter,
-} from "next/navigation";
-
 import { useI18n } from "@de100/i18n-reactjs";
+import type { NavigateOptions } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { usePathname as useNextPathname, useRouter as useNextRouter } from "next/navigation";
 
 import { parsePathname } from "#utils";
 
@@ -42,12 +38,9 @@ export function useRouter() {
 				// countryCode?: string;
 			} = {},
 		) => {
-			const { defaultLocale, allowedLocales } = useI18n();
+			// const { defaultLocale, allowedLocales } = useI18n();
 
-			if (
-				href.startsWith("http") ||
-				/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)
-			) {
+			if (href.startsWith("http") || /^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
 				return nextRouter.push(href, options);
 			}
 
@@ -86,12 +79,9 @@ export function useRouter() {
 				// countryCode?: string;
 			} = {},
 		) => {
-			const { defaultLocale, allowedLocales } = useI18n();
+			// const { defaultLocale, allowedLocales } = useI18n();
 
-			if (
-				href.startsWith("http") ||
-				/^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)
-			) {
+			if (href.startsWith("http") || /^\/[a-z]{2}\/[a-z]{2}($|\/)/i.exec(href)) {
 				return nextRouter.replace(href, options);
 			}
 

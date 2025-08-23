@@ -1,11 +1,11 @@
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 import { revalidate } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.jsx";
 import { EmailVerificationForm, ResendEmailVerificationCodeForm } from "./components.jsx";
 import { routeData } from "./route-data.js";
 
-export function AuthVerifyEmail() {
+export function AuthVerifyEmailScreen() {
 	const query = useQuery(() => ({
 		queryKey: ["auth", routeData.key],
 		queryFn: () => routeData(),
@@ -36,7 +36,7 @@ export function AuthVerifyEmail() {
 							query.refetch();
 						}}
 					/>
-					<Link href="/settings">Change your email</Link>
+					<I18nA href="/settings">Change your email</I18nA>
 				</>
 			)}
 		</QueryBoundary>

@@ -32,7 +32,6 @@ export default createMiddleware({
 		}
 
 		const { response: i18nResponse } = createI18nMiddlewareOnRequest({ event });
-		console.log("___ middleware ___ event.locals", event.locals);
 		if (i18nResponse) {
 			return i18nResponse;
 		}

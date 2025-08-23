@@ -1,6 +1,5 @@
 {
 	"name": "example-basic",
-
 	"type": "module",
 	"scripts": {
 		"dev": "pnpm with-env vinxi dev",

@@ -1,7 +1,6 @@
 // ## user
 
 import { relations } from "drizzle-orm";
-import { locale } from "../0-local/00-schema.js";
 import { orgTeam } from "../3-org/2-team-and-department/schema.js";
 import {
 	orgMemberLearningProfile,
@@ -39,4 +38,30 @@ export const userRelations = relations(user, ({ many }) => ({
 
 	categories: many(userCategory),
 	categoriesI18n: many(userCategoryI18n),
+
+	//   // Auth
+	// sessions: many(userSession),
+	// emailVerifications: many(userEmailVerificationRequest),
+	// passwordResets: many(userPasswordResetSession),
+
+	// // Profile
+	// profile: one(userProfile, {
+	//     fields: [user.id],
+	//     references: [userProfile.userId],
+	// }),
+
+	// // Account
+	// account: one(account, {
+	//     fields: [user.id],
+	//     references: [account.userId],
+	// }),
+
+	// // Contact Info
+	// contactInfo: one(contactInfo, {
+	//     fields: [user.id],
+	//     references: [contactInfo.userId],
+	// }),
+
+	// // Organizations the user is a member of
+	// memberships: many(orgMember),
 }));

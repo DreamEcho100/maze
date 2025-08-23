@@ -1,1 +1,1 @@
-export const name = "i18n-nextjs";
+export const name = "i18n-solid-startjs";

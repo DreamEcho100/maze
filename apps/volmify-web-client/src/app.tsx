@@ -1,4 +1,4 @@
-import { Link } from "@de100/i18n-solid-startjs/client/components/Link";
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";

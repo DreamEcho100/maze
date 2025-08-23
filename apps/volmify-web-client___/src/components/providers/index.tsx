@@ -25,19 +25,19 @@ function I18nProviderWrapper(props: ParentProps) {
 	);
 	const params = useParams();
 
-	untrack(() => {
-		const localeTranslation = localeTranslationsRecourse();
-		if (typeof window !== "undefined" && localeTranslation) {
-			const htmlElement = document.documentElement;
+	// untrack(() => {
+	// 	const localeTranslation = localeTranslationsRecourse();
+	// 	if (typeof window !== "undefined" && localeTranslation) {
+	// 		const htmlElement = document.documentElement;
 
-			localeTranslation.locale;
+	// 		localeTranslation.locale;
 
-			htmlElement.lang = localeTranslation.locale;
-			htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
+	// 		htmlElement.lang = localeTranslation.locale;
+	// 		htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
 
-			console.log("___ htmlElement", htmlElement);
-		}
-	});
+	// 		console.log("___ htmlElement", htmlElement);
+	// 	}
+	// });
 
 	// createRenderEffect(() => {
 	// 	const localeTranslation = localeTranslationsRecourse();

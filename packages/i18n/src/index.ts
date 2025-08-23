@@ -342,7 +342,7 @@ const _PARAM_REGEX = /\{([^:}]+)(?::([^}]*))?\}/g;
 /**
  * Initialize the i18n system with locale configuration and translations
  */
-export function initI18n({
+export function generateI18nConfig({
 	locale,
 	// defaultLocale,
 	fallbackLocale,

@@ -4,11 +4,7 @@
  * @import { AuthProvidersShape, AuthProvidersWithGetSessionProviders, AuthProvidersWithGetSessionUtils, CookiesProvider, DynamicCookiesOptions, HeadersProvider, UserAgent } from "@de100/auth-shared/types";
  */
 import { dateLikeToDate } from "@de100/auth-core/utils/dates";
-import {
-	authStrategy,
-	createOneIdSync,
-	defaultSessionsHandlers,
-} from "@de100/db/auth/init";
+import { authStrategy, createOneIdSync, defaultSessionsHandlers } from "@de100/db/auth/init";
 import { getRequestEvent } from "solid-js/web";
 import { deleteCookie, getCookie, setCookie } from "vinxi/http";
 
@@ -126,9 +122,7 @@ export function getCookiesManager() {
 	"use server";
 	const requestEvent = getRequestEvent();
 	if (!requestEvent) {
-		throw new Error(
-			"No request event found. Ensure this is called within a request context.",
-		);
+		throw new Error("No request event found. Ensure this is called within a request context.");
 	}
 
 	const nativeEvent = requestEvent.nativeEvent;
@@ -157,9 +151,7 @@ export function getCookiesAndHeaders(reqHeaders) {
 	"use server";
 	const requestEvent = getRequestEvent();
 	if (!requestEvent) {
-		throw new Error(
-			"No request event found. Ensure this is called within a request context.",
-		);
+		throw new Error("No request event found. Ensure this is called within a request context.");
 	}
 
 	const cookies = getCookiesManager();
@@ -171,9 +163,7 @@ export function getCookiesAndHeaders(reqHeaders) {
 /**
  * @param {AuthProvidersWithGetSessionProviders} authProvidersFromInput
  */
-export function getDefaultSessionAndJWTFromAuthProviders(
-	authProvidersFromInput,
-) {
+export function getDefaultSessionAndJWTFromAuthProviders(authProvidersFromInput) {
 	"use server";
 
 	return {
@@ -181,8 +171,7 @@ export function getDefaultSessionAndJWTFromAuthProviders(
 		sessions: {
 			...authProvidersFromInput.sessions,
 			deleteOneById: authProvidersFromInput.sessions.deleteOneById,
-			extendOneExpirationDate:
-				authProvidersFromInput.sessions.extendOneExpirationDate,
+			extendOneExpirationDate: authProvidersFromInput.sessions.extendOneExpirationDate,
 			findOneWithUser: authProvidersFromInput.sessions.findOneWithUser,
 			revokeOneById: authProvidersFromInput.sessions.revokeOneById,
 			createOne: authProvidersFromInput.sessions.createOne,
@@ -265,8 +254,7 @@ export async function generateGetCurrentAuthSessionProps(props) {
 			sessions: {
 				...props.authProviders?.sessions,
 				deleteOneById: defaultSessionsHandlers.deleteOneById,
-				extendOneExpirationDate:
-					defaultSessionsHandlers.extendOneExpirationDate,
+				extendOneExpirationDate: defaultSessionsHandlers.extendOneExpirationDate,
 				findOneWithUser: defaultSessionsHandlers.findOneWithUser,
 				revokeOneById: defaultSessionsHandlers.revokeOneById,
 				createOne: defaultSessionsHandlers.createOne,
