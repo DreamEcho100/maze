@@ -3,6 +3,7 @@ import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useTranslations } from "@de100/i18n-solidjs";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo, Show } from "solid-js";
+import { useGetCurrentSessionQuery } from "#libs/auth/client/hooks/get-current-session.js";
 import { authRoutesConfig } from "../../routes-config.js";
 import { loginAction } from "./actions.js";
 
@@ -15,11 +16,14 @@ import { loginAction } from "./actions.js";
 export function LoginForm(props) {
 	const t = useTranslations();
 	const router = useRouter();
+	const getCurrentSessionQuery = useGetCurrentSessionQuery();
 	const mutation = useMutation(() => ({
 		mutationFn: loginAction,
 		onSuccess: (result) => {
 			if (result.type === "success") {
-				return router.push("/");
+				getCurrentSessionQuery.refetch();
+				router.push("/");
+				return;
 			}
 
 			switch (result.messageCode) {
