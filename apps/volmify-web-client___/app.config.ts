@@ -40,78 +40,125 @@
 // import commonjs from "@rollup/plugin-commonjs";
 
 import { defineConfig } from "@solidjs/start/config";
+
+// import topLevelAwait from "vite-plugin-top-level-await";
 // import { visualizer } from "rollup-plugin-visualizer";
 // import topLevelAwait from "vite-plugin-top-level-await";
+const coerceEnvVarToBoolean = (value: string | undefined, defaultValue = false): boolean => {
+	if (value === undefined) return defaultValue;
+	return (
+		value.toLowerCase() in
+		{
+			"1": true,
+			true: true,
+			yes: true,
+			on: true,
+		}
+	);
+};
 
 export default defineConfig({
-	// vite: {
-	// 	// esbuild: {
-	// 	// 	supported: {
-	// 	// 		"top-level-await": true, // Enable top-level await support
-	// 	// 	},
-	// 	// },
-	// 	// plugins: [
-	// 	// 	// /** @type {any} */ (topLevelAwait() as any),
-	// 	// 	// commonjs({
-	// 	// 	// 	dynamicRequireTargets: ["@de100/db"],
-	// 	// 	// }),
-	// 	// 	// ✅ Visualize what's in your bundles
-	// 	// 	// visualizer({
-	// 	// 	// 	filename: "dist/stats.html",
-	// 	// 	// 	open: true,
-	// 	// 	// 	gzipSize: true,
-	// 	// 	// 	template: "treemap", // or "sunburst", "network"
-	// 	// 	// }),
-	// 	// ],
-	// 	// build: {
-	// 	// 	commonjsOptions: {
-	// 	// 		transformMixedEsModules: true,
-	// 	// 	},
-	// 	// 	rollupOptions: {
-	// 	// 		external: ["oslo", "@node-rs/argon2-wasm32-wasi"],
-	// 	// 	},
-	// 	// },
-	// 	// ssr: {
-	// 	// 	// Externalize the entire auth-core package on the server
-	// 	// 	// This prevents server-only code from being bundled for client
-	// 	// 	external: ["@de100/auth-core"],
+	vite: {
+		// plugins: [
+		// 	// TODO: remove `as any`
+		// 	topLevelAwait() as any,
+		// ],
+		// esbuild: {
+		// 	supported: {
+		// 		"top-level-await": true, // Enable top-level await support
+		// 	},
+		// },
+		build: {
+			// minify: console.log("___ process.env", process.env) || false,
+			// target: "esnext",
+			minify: coerceEnvVarToBoolean(process.env.UNMINIFY_VOMIFY_CLIENT_BUNDLE, false)
+				? false
+				: "esbuild",
+			// target: "esnext",
+		},
+		// optimizeDeps: {
+		// 	esbuildOptions: {
+		// 		target: "esnext",
+		// 	},
+		// },
+		ssr: {
+			// target: "node",
+			optimizeDeps: {
+				esbuildOptions: {
+					target: "esnext",
+				},
+			},
+		},
+		// plugins: [
+		// 	// /** @type {any} */ (topLevelAwait() as any),
+		// 	// commonjs({
+		// 	// 	dynamicRequireTargets: ["@de100/db"],
+		// 	// }),
+		// 	// ✅ Visualize what's in your bundles
+		// 	// visualizer({
+		// 	// 	filename: "dist/stats.html",
+		// 	// 	open: true,
+		// 	// 	gzipSize: true,
+		// 	// 	template: "treemap", // or "sunburst", "network"
+		// 	// }),
+		// ],
+		// build: {
+		// 	commonjsOptions: {
+		// 		transformMixedEsModules: true,
+		// 	},
+		// 	rollupOptions: {
+		// 		external: ["oslo", "@node-rs/argon2-wasm32-wasi"],
+		// 	},
+		// },
+		// ssr: {
+		// 	// Externalize the entire auth-core package on the server
+		// 	// This prevents server-only code from being bundled for client
+		// 	external: ["@de100/auth-core"],
 
-	// 	// 	// BUT allow specific client-safe exports to be processed
-	// 	// 	noExternal: [
-	// 	// 		// Create a pattern or explicitly list client-safe exports
-	// 	// 		"@de100/auth-shared/constants",
-	// 	// 		"@de100/auth-shared/types", // if types are client-safe
-	// 	// 		"@de100/auth-shared/validations", // if validations are client-safe
-	// 	// 	],
-	// 	// },
+		// 	// BUT allow specific client-safe exports to be processed
+		// 	noExternal: [
+		// 		// Create a pattern or explicitly list client-safe exports
+		// 		"@de100/auth-shared/constants",
+		// 		"@de100/auth-shared/types", // if types are client-safe
+		// 		"@de100/auth-shared/validations", // if validations are client-safe
+		// 	],
+		// },
 
-	// 	// optimizeDeps: {
-	// 	// 	// Include client-safe parts for dev bundling
-	// 	// 	include: [
-	// 	// 		// Create a pattern or explicitly list client-safe exports
-	// 	// 		"@de100/auth-shared/constants",
-	// 	// 		"@de100/auth-shared/types", // if types are client-safe
-	// 	// 		"@de100/auth-shared/validations", // if validations are client-safe
-	// 	// 	],
-	// 	// },
+		// optimizeDeps: {
+		// 	// Include client-safe parts for dev bundling
+		// 	include: [
+		// 		// Create a pattern or explicitly list client-safe exports
+		// 		"@de100/auth-shared/constants",
+		// 		"@de100/auth-shared/types", // if types are client-safe
+		// 		"@de100/auth-shared/validations", // if validations are client-safe
+		// 	],
+		// },
 
-	// 	// optimizeDeps: {
-	// 	// 	include: ["@de100/db", "@de100/auth-core"],
-	// 	// },
+		// optimizeDeps: {
+		// 	include: ["@de100/db", "@de100/auth-core"],
+		// },
 
-	// 	// ssr: {
-	// 	// 	// Externalize server-only packages completely
-	// 	// 	external: ["@de100/auth-core", "@de100/db"],
+		// ssr: {
+		// 	// Externalize server-only packages completely
+		// 	external: ["@de100/auth-core", "@de100/db"],
 
-	// 	// 	// Only allow specific client-safe exports to be processed
-	// 	// 	noExternal: [
-	// 	// 		// Only truly client-safe utilities (no Node.js dependencies)
-	// 	// 		"@de100/auth-shared/constants",
-	// 	// 		"@de100/auth-shared/validations",
-	// 	// 		"@de100/auth-shared/types",
-	// 	// 		// Don't include any db exports - they all use Node.js
-	// 	// 	],
-	// 	// },
+		// 	// Only allow specific client-safe exports to be processed
+		// 	noExternal: [
+		// 		// Only truly client-safe utilities (no Node.js dependencies)
+		// 		"@de100/auth-shared/constants",
+		// 		"@de100/auth-shared/validations",
+		// 		"@de100/auth-shared/types",
+		// 		// Don't include any db exports - they all use Node.js
+		// 	],
+	},
+	server: {
+		esbuild: {
+			options: {
+				target: "esnext",
+			},
+		},
+		minify: !coerceEnvVarToBoolean(process.env.UNMINIFY_VOMIFY_CLIENT_BUNDLE, false),
+	},
 
 	// 	// build: {
 	// 	// 	// commonjsOptions: {
@@ -174,10 +221,4 @@ export default defineConfig({
 	// },
 	middleware: "src/middleware/index.ts",
 	ssr: true,
-	vite: {
-		build: {
-			minify: false,
-			target: 'esnext'
-		}
-	}
 });

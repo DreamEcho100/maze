@@ -2,7 +2,6 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";
 import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
 
-
 function i18nMiddleware(event: FetchEvent) {
 	// const { cookieName, headerName } = event.locals;
 	const url = new URL(event.request.url);
@@ -27,7 +26,11 @@ function i18nMiddleware(event: FetchEvent) {
 		return;
 	}
 	console.log("___ 2 middleware ___ pathnameFirstSegment", pathnameFirstSegment);
-	createI18nMiddlewareOnRequest({ event });
+	const { redirectUrl } = createI18nMiddlewareOnRequest({ event });
+
+	if (redirectUrl) {
+		return Response.redirect(redirectUrl, 301);
+	}
 	// //
 	// console.log("___ middleware ___ event.locals", event.locals);
 	// if (redirectValue) {

@@ -1,7 +1,7 @@
-// if (typeof window === "undefined") {
-// 	const initializeClient = (await import("./server")).initializeClient;
-// 	initializeClient();
-// }
+if (typeof window === "undefined") {
+	const initializeClient = (await import("./server")).initializeClient;
+	initializeClient();
+}
 
 /**
  * @import { RouterClient } from "@orpc/server";

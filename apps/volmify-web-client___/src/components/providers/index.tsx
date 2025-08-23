@@ -106,7 +106,6 @@ export default function Providers(props: ParentProps<{ locale?: AllowedLocale }>
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{props.children}
 			<I18nProviderWrapper>
 				<SessionProvider>{props.children}</SessionProvider>
 			</I18nProviderWrapper>

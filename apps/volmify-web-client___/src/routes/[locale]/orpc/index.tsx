@@ -1,5 +1,5 @@
-// import { CreatePlanetMutationForm } from "../../../components/orpc/mutation.tsx";
-// import { ListPlanetsQuery } from "../../../components/orpc/query.tsx";
+import { CreatePlanetMutationForm } from "#components/orpc/mutation.tsx";
+import { ListPlanetsQuery } from "#components/orpc/query.tsx";
 
 export default function Home() {
 	return (
@@ -9,9 +9,9 @@ export default function Home() {
 				You can visit the <a href="/api">Scalar API Reference</a> page.
 			</p>
 			<hr />
-			{/* <CreatePlanetMutationForm /> */}
+			<CreatePlanetMutationForm />
 			<hr />
-			{/* <ListPlanetsQuery /> */}
+			<ListPlanetsQuery />
 		</main>
 	);
 }
