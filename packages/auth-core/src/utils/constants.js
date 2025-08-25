@@ -17,13 +17,15 @@ export const INTERNAL_SERVER_ERROR = /** @type {const} */ ({
 	messageCode: "INTERNAL_SERVER_ERROR",
 });
 
+export const INVALID_CREDENTIALS = /** @type {const} */ ({
+	type: "error",
+	statusCode: 400,
+	message: "Invalid email or password",
+	messageCode: "INVALID_LOGIN_CREDENTIALS",
+});
+
 export const LOGIN_MESSAGES_ERRORS = /** @type {const} */ ({
-	INVALID_CREDENTIALS: {
-		type: "error",
-		statusCode: 400,
-		message: "Invalid email or password",
-		messageCode: "INVALID_LOGIN_CREDENTIALS",
-	},
+	INVALID_CREDENTIALS,
 	// OLD: ACCOUNT_DOES_NOT_EXIST
 	ACCOUNT_NOT_FOUND: {
 		type: "error",
@@ -680,88 +682,83 @@ export const VERIFY_PASSWORD_RESET_MESSAGES_SUCCESS = /** @type {const} */ ({
 	},
 });
 
-export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS =
-	/** @type {const} */ ({
-		// OLD: NOT_AUTHENTICATED
-		AUTHENTICATION_REQUIRED: {
-			type: "error",
-			statusCode: 401,
-			message: "Please complete email verification first",
-			messageCode: "AUTHENTICATION_REQUIRED",
-		},
-		// OLD: FORBIDDEN
-		ACCESS_DENIED: {
-			type: "error",
-			statusCode: 403,
-			message: "Access denied",
-			messageCode: "ACCESS_DENIED",
-		},
-		// OLD: INVALID_OR_MISSING_FIELDS
-		TOTP_CODE_REQUIRED: {
-			type: "error",
-			statusCode: 400,
-			message: "TOTP code is required",
-			messageCode: "TOTP_CODE_REQUIRED",
-		},
-		// OLD: INVALID_CODE
-		TOTP_CODE_INVALID: {
-			type: "error",
-			statusCode: 400,
-			message: "Invalid TOTP code",
-			messageCode: "TOTP_CODE_INVALID",
-		},
-	});
-export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS =
-	/** @type {const} */ ({
-		TWO_FACTOR_VERIFIED_SUCCESSFULLY: {
-			type: "success",
-			statusCode: 200,
-			message: "Two-factor authentication verified successfully",
-			messageCode: "TWO_FACTOR_VERIFIED_SUCCESSFULLY",
-		},
-	});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_ERRORS = /** @type {const} */ ({
+	// OLD: NOT_AUTHENTICATED
+	AUTHENTICATION_REQUIRED: {
+		type: "error",
+		statusCode: 401,
+		message: "Please complete email verification first",
+		messageCode: "AUTHENTICATION_REQUIRED",
+	},
+	// OLD: FORBIDDEN
+	ACCESS_DENIED: {
+		type: "error",
+		statusCode: 403,
+		message: "Access denied",
+		messageCode: "ACCESS_DENIED",
+	},
+	// OLD: INVALID_OR_MISSING_FIELDS
+	TOTP_CODE_REQUIRED: {
+		type: "error",
+		statusCode: 400,
+		message: "TOTP code is required",
+		messageCode: "TOTP_CODE_REQUIRED",
+	},
+	// OLD: INVALID_CODE
+	TOTP_CODE_INVALID: {
+		type: "error",
+		statusCode: 400,
+		message: "Invalid TOTP code",
+		messageCode: "TOTP_CODE_INVALID",
+	},
+});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_RECOVERY_CODE_MESSAGES_SUCCESS = /** @type {const} */ ({
+	TWO_FACTOR_VERIFIED_SUCCESSFULLY: {
+		type: "success",
+		statusCode: 200,
+		message: "Two-factor authentication verified successfully",
+		messageCode: "TWO_FACTOR_VERIFIED_SUCCESSFULLY",
+	},
+});
 
-export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS =
-	/** @type {const} */ ({
-		// OLD: NOT_AUTHENTICATED
-		AUTHENTICATION_REQUIRED: {
-			type: "error",
-			statusCode: 401,
-			message: "Please complete email verification first",
-			messageCode: "AUTHENTICATION_REQUIRED",
-		},
-		// OLD: FORBIDDEN
-		ACCESS_DENIED: {
-			type: "error",
-			statusCode: 403,
-			message: "Access denied",
-			messageCode: "ACCESS_DENIED",
-		},
-		// OLD: INVALID_OR_MISSING_FIELDS
-		TOTP_CODE_REQUIRED: {
-			type: "error",
-			statusCode: 400,
-			message: "TOTP code is required",
-			messageCode: "TOTP_CODE_REQUIRED",
-		},
-		// OLD: INVALID_RECOVERY_CODE
-		INVALID_TOTP_CODE: {
-			type: "error",
-			statusCode: 400,
-			message: "Invalid TOTP code",
-			messageCode: "INVALID_TOTP_CODE",
-		},
-	});
-export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS =
-	/** @type {const} */ ({
-		TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET: {
-			type: "success",
-			statusCode: 200,
-			message:
-				"Two-factor authentication verified successfully for password reset",
-			messageCode: "TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET",
-		},
-	});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_ERRORS = /** @type {const} */ ({
+	// OLD: NOT_AUTHENTICATED
+	AUTHENTICATION_REQUIRED: {
+		type: "error",
+		statusCode: 401,
+		message: "Please complete email verification first",
+		messageCode: "AUTHENTICATION_REQUIRED",
+	},
+	// OLD: FORBIDDEN
+	ACCESS_DENIED: {
+		type: "error",
+		statusCode: 403,
+		message: "Access denied",
+		messageCode: "ACCESS_DENIED",
+	},
+	// OLD: INVALID_OR_MISSING_FIELDS
+	TOTP_CODE_REQUIRED: {
+		type: "error",
+		statusCode: 400,
+		message: "TOTP code is required",
+		messageCode: "TOTP_CODE_REQUIRED",
+	},
+	// OLD: INVALID_RECOVERY_CODE
+	INVALID_TOTP_CODE: {
+		type: "error",
+		statusCode: 400,
+		message: "Invalid TOTP code",
+		messageCode: "INVALID_TOTP_CODE",
+	},
+});
+export const VERIFY_PASSWORD_RESET_2FA_VIA_TOTP_MESSAGES_SUCCESS = /** @type {const} */ ({
+	TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET: {
+		type: "success",
+		statusCode: 200,
+		message: "Two-factor authentication verified successfully for password reset",
+		messageCode: "TWO_FACTOR_VERIFIED_FOR_PASSWORD_RESET",
+	},
+});
 
 export const RESOLVE_AUTH_SESSION_MESSAGES_ERRORS = /** @type {const} */ ({
 	INVALID_OR_MISSING_FIELDS: {

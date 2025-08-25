@@ -12,9 +12,7 @@ export const formBoolSchema = z.union([
 	z.boolean(),
 	z.stringbool({ truthy: ["on"], falsy: ["off"] }),
 ]);
-export const codeSchema = z
-	.string()
-	.check(z.minLength(6), z.maxLength(8), z.regex(/^[\d\w]+$/));
+export const codeSchema = z.string().check(z.minLength(6), z.maxLength(8), z.regex(/^[\d\w]+$/));
 export const emailSchema = z.email();
 // z
 // .union([z.boolean(), z.string()])
@@ -29,8 +27,8 @@ export const emailSchema = z.email();
 
 export const RegisterServiceInputSchema = z.object({
 	email: emailSchema,
-	name: z.string().check(z.minLength(3), z.maxLength(32)),
-	displayName: z.string().check(z.minLength(3), z.maxLength(32)),
+	name: z.string().check(z.minLength(3), z.maxLength(128)),
+	displayName: z.string().check(z.minLength(3), z.maxLength(128)),
 	password: z.string().check(z.minLength(8)),
 	enable2FA:
 		// 	z.preprocess((value) => {
@@ -50,10 +48,11 @@ export const RegisterServiceInputSchema = z.object({
 		z.prefault(formBoolSchema, false),
 });
 
-export const loginServiceInputSchema = z.object({
+export const LoginServiceInputSchema = z.object({
 	email: emailSchema,
 	password: z.string().check(z.minLength(6)),
 });
+export const VerifyEmailServiceInputSchema = z.object({ code: codeSchema });
 
 export const resetPasswordServiceInputSchema = z.object({
 	password: z.string().check(z.minLength(8)),
@@ -71,7 +70,6 @@ export const updateIsTwoFactorServiceInputSchema = z.object({
 	isTwoFactorEnabled: formBoolSchema,
 });
 
-export const verifyEmailServiceInputSchema = z.object({ code: codeSchema });
 export const verifyPasswordReset2FAViaTOTPServiceInputSchema = z.object({
 	code: codeSchema,
 });
@@ -89,11 +87,9 @@ export const verifyPasswordResetEmailVerificationServiceSchemaInput = z.object({
 	code: codeSchema,
 });
 
-export const verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema = z.object(
-	{
-		code: codeSchema,
-	},
-);
+export const verifyPasswordReset2FAViaRecoveryCodeServiceInputSchema = z.object({
+	code: codeSchema,
+});
 
 export const adminRegisterServiceInputSchema = z.object({
 	// email: z.string().email(),

@@ -1,7 +1,9 @@
-/** @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider, DynamicCookiesOptions } from "@de100/auth-shared/types" */
+/**
+ *  @import { UserAgent, MultiErrorSingleSuccessResponse, SessionMetadata, CookiesProvider, UsersProvider, AuthStrategy, SessionsProvider, JWTProvider, DynamicCookiesOptions } from "@de100/auth-shared/types";
+ *  @import { LoginServiceInput } from "#utils/validations.js";
+ */
 
-import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "@de100/auth-shared/constants";
-import { loginServiceInputSchema } from "@de100/auth-shared/validations";
+import { LOGIN_MESSAGES_ERRORS, LOGIN_MESSAGES_SUCCESS } from "#utils/constants.js";
 import { verifyPasswordHash } from "#utils/passwords.js";
 import { createAuthSession } from "#utils/sessions/index.js";
 
@@ -9,7 +11,7 @@ import { createAuthSession } from "#utils/sessions/index.js";
  * Verifies the user's credentials and creates a session if valid.
  *
  * @param {object} props
- * @param {unknown} props.input
+ * @param {LoginServiceInput} props.input
  * @param {CookiesProvider} props.cookies - The cookies provider to access the session token.
  * @param {DynamicCookiesOptions} props.cookiesOptions - Options for the cookies, such as `sameSite`, `secure`, etc.
  * @param {string|null|undefined} props.ipAddress - Optional IP address for the session.
@@ -38,12 +40,7 @@ import { createAuthSession } from "#utils/sessions/index.js";
  * >}
  */
 export async function loginUserService(props) {
-	const input = loginServiceInputSchema.safeParse(props.input);
-	if (!input.success) {
-		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
-	}
-
-	const user = await props.authProviders.users.findOneByEmail(input.data.email);
+	const user = await props.authProviders.users.findOneByEmail(props.input.email);
 	if (!user) {
 		return LOGIN_MESSAGES_ERRORS.ACCOUNT_NOT_FOUND;
 	}
@@ -52,7 +49,7 @@ export async function loginUserService(props) {
 		return LOGIN_MESSAGES_ERRORS.USER_DOES_NOT_EXIST_OR_PASSWORD_NOT_SET;
 	}
 
-	const validPassword = await verifyPasswordHash(passwordHash, input.data.password);
+	const validPassword = await verifyPasswordHash(passwordHash, props.input.password);
 	if (!validPassword) {
 		return LOGIN_MESSAGES_ERRORS.INVALID_CREDENTIALS;
 	}

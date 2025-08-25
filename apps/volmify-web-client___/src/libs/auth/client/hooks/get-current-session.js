@@ -4,12 +4,7 @@
 
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useQuery } from "@tanstack/solid-query";
-import {
-	createMemo,
-	createRenderEffect,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { createMemo, createRenderEffect, createSignal, onMount } from "solid-js";
 import { getCurrentSessionQuery } from "../components/queries";
 import { authRoutesConfig } from "../components/routes-config";
 
@@ -137,10 +132,7 @@ export function useGetCurrentSessionQuery(props) {
 	const sessionStatus = createMemo(() => query.data?.status);
 
 	createRenderEffect(() => {
-		if (
-			!props?.required ||
-			sessionStatus() !== CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED
-		) {
+		if (!props?.required || sessionStatus() !== CLIENT_CURRENT_SESSION_STATUS.UNAUTHENTICATED) {
 			return;
 		}
 
