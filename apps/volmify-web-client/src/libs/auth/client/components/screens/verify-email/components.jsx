@@ -5,11 +5,10 @@ import {
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
+import { FormBuilder } from "#components/ui/form-builder.jsx";
+import { orpc } from "#libs/orpc/index.js";
 import { authRoutesConfig } from "../../routes-config.js";
-import {
-	resendEmailVerificationCodeAction,
-	verifyEmailAction,
-} from "./actions.js";
+import { resendEmailVerificationCodeAction, verifyEmailAction } from "./actions.js";
 
 /**
  * @param {{
@@ -19,52 +18,47 @@ import {
  */
 export function EmailVerificationForm(props) {
 	const router = useRouter();
-	const mutation = useMutation(() => ({
-		mutationFn: verifyEmailAction,
-		onSuccess: (result) => {
-			if (result.type === "success") {
-				return router.push(authRoutesConfig.verifyEmailSuccess.path);
-			}
+	const mutation = useMutation(() =>
+		orpc.auth.verifyEmail.mutationOptions({
+			onSuccess: (result) => {
+				if (result.type === "success") {
+					return router.push(authRoutesConfig.verifyEmailSuccess.path);
+				}
 
-			switch (result.messageCode) {
-				case VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED.messageCode:
-					return router.push(authRoutesConfig.login.path);
-				case VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED.messageCode:
-					return router.push(authRoutesConfig.login.path);
-				case VERIFY_EMAIL_MESSAGES_ERRORS
-					.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
-					return router.push(authRoutesConfig.verifyEmail.path);
-				case VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_INCOMPLETE
-					.messageCode:
-					return router.push(authRoutesConfig.twoFactorSetup.path);
-			}
-		},
-	}));
-
-	const isPending = createMemo(() => mutation.isPending || props.isPending);
-	const errorMessage = createMemo(
-		() =>
-			!isPending() &&
-			(mutation.error?.message ?? mutation.data?.message ?? props.errorMessage),
+				switch (result.messageCode) {
+					case VERIFY_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED.messageCode:
+						return router.push(authRoutesConfig.login.path);
+					case VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED.messageCode:
+						return router.push(authRoutesConfig.login.path);
+					case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
+						return router.push(authRoutesConfig.verifyEmail.path);
+					case VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_INCOMPLETE.messageCode:
+						return router.push(authRoutesConfig.twoFactorSetup.path);
+				}
+			},
+		}),
 	);
 
+	const isPending = createMemo(() => mutation.isPending || props.isPending);
+	const errorMessage = createMemo(() => mutation.status === "error" && mutation.error?.message);
+
 	return (
-		<form
-			onSubmit={(e) => {
-				e.preventDefault();
+		<FormBuilder
+			onSubmit={async ({ values }) => {
 				if (isPending()) return;
 
-				const formData = new FormData(e.currentTarget);
-				mutation.mutate({ code: formData.get("code") });
+				await mutation.mutateAsync({
+					code: values.code,
+				});
 			}}
-		>
-			<label for="form-verify.code">Code</label>
-			<input id="form-verify.code" name="code" required />
-			<button type="submit" aria-disabled={isPending()}>
-				Verify
-			</button>
-			<p>{errorMessage()}</p>
-		</form>
+			fields={[
+				{ name: "code", label: "Verification Code", required: true, minLength: 8, maxLength: 8 },
+			]}
+			actions={{
+				submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+			}}
+			error={errorMessage()}
+		/>
 	);
 }
 
@@ -77,45 +71,46 @@ export function EmailVerificationForm(props) {
  */
 export function ResendEmailVerificationCodeForm(props) {
 	const router = useRouter();
-	const mutation = useMutation(() => ({
-		mutationFn: () => resendEmailVerificationCodeAction(),
-		onSuccess: (result) => {
-			if (props.onSuccess) props.onSuccess();
+	const mutation = useMutation(() =>
+		orpc.auth.resendEmailVerificationCode.mutationOptions({
+			// mutationFn: () => resendEmailVerificationCodeAction(),
+			onSuccess: (result) => {
+				if (props.onSuccess) props.onSuccess();
 
-			if (result.type === "success") {
-				// return router.push(AUTH_URLS.SUCCESS_VERIFY_EMAIL);
-				// TODO: a success indicator on the resend button
-				return;
-			}
+				if (result.type === "success") {
+					// return router.push(AUTH_URLS.SUCCESS_VERIFY_EMAIL);
+					// TODO: a success indicator on the resend button
+					return;
+				}
 
-			switch (result.messageCode) {
-				case RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED.messageCode:
-				case RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED.messageCode:
-					// Add temp error messages on cookies
-					return router.push(authRoutesConfig.login.path);
-			}
-		},
-	}));
-
-	const isPending = createMemo(() => mutation.isPending || props.isPending);
-	const errorMessage = createMemo(
-		() => !isPending() && (mutation.error?.message ?? mutation.data?.message),
+				switch (result.messageCode) {
+					case RESEND_EMAIL_MESSAGES_ERRORS.AUTHENTICATION_REQUIRED.messageCode:
+					case RESEND_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED.messageCode:
+						// Add temp error messages on cookies
+						return router.push(authRoutesConfig.login.path);
+				}
+			},
+		}),
 	);
 
-	return (
-		<form
-			id={props.formId}
-			onSubmit={(e) => {
-				e.preventDefault();
-				if (isPending()) return;
+	const isPending = createMemo(() => mutation.isPending || props.isPending);
+	const errorMessage = createMemo(() => mutation.status === "error" && mutation.error?.message);
 
-				mutation.mutate();
+	return (
+		<FormBuilder
+			onSubmit={async () => {
+				if (isPending()) return;
+				await mutation.mutateAsync();
 			}}
-		>
-			<button type="submit" aria-disabled={isPending()}>
-				Resend code
-			</button>
-			<p>{errorMessage()}</p>
-		</form>
+			fields={[]}
+			// actions={{
+			// 	submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+			// }}
+			actions={{
+				submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+				resetBtn: false,
+			}}
+			error={errorMessage()}
+		/>
 	);
 }

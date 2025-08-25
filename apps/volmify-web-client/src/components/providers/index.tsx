@@ -1,38 +1,45 @@
 import { I18nProvider } from "@de100/i18n-solidjs";
-import { MetaProvider } from "@solidjs/meta";
 import { createAsync, useParams } from "@solidjs/router";
-import { QueryClientProvider } from "@tanstack/solid-query";
-import { SolidQueryDevtools } from "@tanstack/solid-query-devtools";
-import type { ParentProps } from "solid-js";
-import { Show, untrack } from "solid-js";
-import { queryClient } from "#libs/@tanstack/query/query-client.js";
+import { clientOnly } from "@solidjs/start";
+import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
+import { type ParentProps, Show, untrack } from "solid-js";
+import { getQueryClient } from "#libs/@tanstack/query/query-client.js";
 import SessionProvider from "#libs/auth/client/components/session-provider.js";
-// import { queryClient } from "#libs/@tanstack/query/query-client.js";
 import {
 	type AllowedLocale,
 	allowedLocales,
 	defaultLocale,
 	fallbackLocale,
+	LOCAL_STORAGE_KEY,
 	localeDirMap,
 } from "#libs/i18n/constants.ts";
 import { isAllowedLocale } from "#libs/i18n/is-allowed-locale.ts";
-import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
+import { getTranslationByLocalQuery } from "#libs/i18n/queries.ts";
+import { cookieManager } from "#libs/js-cookies/index.ts";
+
+const ClientOnlySolidQueryDevtools = clientOnly(() =>
+	import("@tanstack/solid-query-devtools").then((mod) => ({ default: mod.SolidQueryDevtools })),
+);
 
 function I18nProviderWrapper(props: ParentProps) {
-	const localeTranslationsRecourse = createAsync(() => getTranslationByLocal({ direct: true }));
+	const localeTranslationsRecourse = createAsync(() =>
+		getTranslationByLocalQuery({ direct: true }),
+	);
 	const params = useParams();
 
-	untrack(() => {
-		const localeTranslation = localeTranslationsRecourse();
-		if (typeof window !== "undefined" && localeTranslation) {
-			const htmlElement = document.documentElement;
+	// untrack(() => {
+	// 	const localeTranslation = localeTranslationsRecourse();
+	// 	if (typeof window !== "undefined" && localeTranslation) {
+	// 		const htmlElement = document.documentElement;
 
-			localeTranslation.locale;
+	// 		localeTranslation.locale;
 
-			htmlElement.lang = localeTranslation.locale;
-			htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
-		}
-	});
+	// 		htmlElement.lang = localeTranslation.locale;
+	// 		htmlElement.dir = localeDirMap[localeTranslation.locale] || "ltr";
+
+	// 		console.log("___ htmlElement", htmlElement);
+	// 	}
+	// });
 
 	// createRenderEffect(() => {
 	// 	const localeTranslation = localeTranslationsRecourse();
@@ -65,27 +72,24 @@ function I18nProviderWrapper(props: ParentProps) {
 							if (!isAllowedLocale(props.locale)) {
 								throw new Error(`props \`props.locale\` "${props.locale}" is not allowed.`);
 							}
-							const result = await getTranslationByLocal({
+							const result = await getTranslationByLocalQuery({
 								locale: props.locale,
 								direct: true,
 							});
 							if (!result) {
 								throw new Error("Failed to get the `getTranslationQuery` result");
 							}
-							// set cookie on the client
-							// cookieManager.setCookie("locale", props.locale, {
-							// 	path: "/",
-							// 	maxAge: 31536000, // 1 year
-							// 	sameSite: "lax",
-							// });
-							// cookieManager.setCookie("x-locale", props.locale, {
-							// 	path: "/",
-							// 	maxAge: 31536000, // 1 year
-							// 	sameSite: "lax",
-							// });
 							return { [props.locale]: result.translation };
 						}}
 						localeParam={params.locale}
+						onLocaleChange={(newLocale) => {
+							// set cookie on the client
+							cookieManager.setCookie(LOCAL_STORAGE_KEY, newLocale, {
+								path: "/",
+								maxAge: 31536000, // 1 year
+								sameSite: "lax",
+							});
+						}}
 					>
 						{/* {Math.random()} */}
 						{props.children}
@@ -97,15 +101,17 @@ function I18nProviderWrapper(props: ParentProps) {
 }
 
 export default function Providers(props: ParentProps<{ locale?: AllowedLocale }>) {
+	const queryClient = getQueryClient();
+
 	return (
-		<MetaProvider>
-			<QueryClientProvider client={queryClient}>
-				<I18nProviderWrapper>
-					<SessionProvider>{props.children}</SessionProvider>
-				</I18nProviderWrapper>
-				<SolidQueryDevtools initialIsOpen={false} />
-			</QueryClientProvider>
-		</MetaProvider>
+		<QueryClientProvider client={queryClient}>
+			<I18nProviderWrapper>
+				<SessionProvider>{props.children}</SessionProvider>
+			</I18nProviderWrapper>
+			{process.env.NODE_ENV === "development" && (
+				<ClientOnlySolidQueryDevtools initialIsOpen={false} />
+			)}
+		</QueryClientProvider>
 	);
 }
 

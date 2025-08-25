@@ -1,5 +1,43 @@
+import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
+import type { FetchEvent } from "@solidjs/start/server";
 import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
+
+function i18nMiddleware(event: FetchEvent) {
+	// const { cookieName, headerName } = event.locals;
+	const url = new URL(event.request.url);
+	const pathname = url.pathname;
+	const pathnameFirstSegment = pathname.split("/")[1];
+	const notAllowedMap = {
+		server: true,
+		_server: true,
+		_build: true,
+		assets: true,
+		api: true,
+		rpc: true,
+	};
+	// return redirect("/en");
+	// Skip middleware for static files and API routes
+	if (
+		pathnameFirstSegment &&
+		(pathnameFirstSegment in notAllowedMap || // Skip
+			pathnameFirstSegment.includes(".")) // Skip if it contains a dot (e.g., file extensions)
+	) {
+		return;
+	}
+	const { redirectUrl } = createI18nMiddlewareOnRequest({ event });
+
+	if (redirectUrl) {
+		// return Response.redirect(redirectUrl, 302);
+		return redirect(redirectUrl, {
+			status: 302,
+			headers: {
+				Location: redirectUrl,
+				"Cache-Control": "no-store",
+			},
+		});
+	}
+}
 
 // TODO: Look at
 // - <https://docs.solidjs.com/solid-start/guides/security#content-security-policy-csp>
@@ -7,35 +45,7 @@ import { createI18nMiddlewareOnRequest } from "#libs/i18n/server/middleware.ts";
 // - <https://docs.solidjs.com/solid-start/guides/security#csrf-cross-site-request-forgery>
 // more to see if we can improve security
 export default createMiddleware({
-	onRequest: (event) => {
-		// const { cookieName, headerName } = event.locals;
-
-		const url = new URL(event.request.url);
-		const pathname = url.pathname;
-
-		const pathnameFirstSegment = pathname.split("/")[1];
-		const notAllowedMap = {
-			server: true,
-			_server: true,
-			_build: true,
-			assets: true,
-			api: true,
-			rpc: true,
-		};
-		// Skip middleware for static files and API routes
-		if (
-			pathnameFirstSegment &&
-			(pathnameFirstSegment in notAllowedMap || // Skip
-				pathnameFirstSegment.includes(".")) // Skip if it contains a dot (e.g., file extensions)
-		) {
-			return;
-		}
-
-		const { response: i18nResponse } = createI18nMiddlewareOnRequest({ event });
-		if (i18nResponse) {
-			return i18nResponse;
-		}
-	},
+	onRequest: [i18nMiddleware],
 	// onBeforeResponse: (event) => {
 	// 	const endTime = Date.now();
 	// 	const duration = endTime - event.locals.startTime;

@@ -1,10 +1,10 @@
-// import { A } from "@de100/i18n-solid-startjs/client/components/Link";
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useQuery } from "@tanstack/solid-query";
 import { validateNonOrInvalidAuthQuery } from "../../queries.js";
 import { authRoutesConfig } from "../../routes-config.js";
 import { LoginForm } from "./components.jsx";
 
-export function AuthLogin() {
+export function AuthLoginScreen() {
 	const query = useQuery(() => ({
 		queryKey: ["auth", "validate-non-or-invalid-auth"],
 		queryFn: () => validateNonOrInvalidAuthQuery(),
@@ -14,8 +14,8 @@ export function AuthLogin() {
 		<>
 			<h1>Sign in</h1>
 			<LoginForm isPending={query.isPending} errorMessage={query.error?.message} />
-			{/* <A href={authRoutesConfig.register.path}>Create an account</A>
-			<A href={authRoutesConfig.forgotPassword.path}>Forgot password?</A> */}
+			<I18nA href={authRoutesConfig.register.path}>Create an account</I18nA>
+			<I18nA href={authRoutesConfig.forgotPassword.path}>Forgot password?</I18nA>
 		</>
 	);
 }

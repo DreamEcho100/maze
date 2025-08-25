@@ -136,9 +136,9 @@ function getShouldExtendRefreshAuthTokens(ctx) {
 	);
 	const expiresAt = dateLikeToNumber(ctx.validationResult.session.expiresAt);
 	const halfwayPoint = (expiresAt - lastCheckpointAt) * 0.5 + lastCheckpointAt;
-	const isFresh = Date.now() < halfwayPoint;
+	const isFresh = Date.now() < halfwayPoint; // More than 50% of the token lifetime is still left
 
-	return !isFresh;
+	return !isFresh; // Extend/regenerate if the token is stale (50% or more of its lifetime has been used)
 }
 
 /**
@@ -296,9 +296,7 @@ export async function resolveAuthSession(props) {
 	let newRefreshTokenDetails;
 	const shouldExtendRefreshAuthTokens =
 		!!props.shouldExtendRefreshAuthTokensOnNeed &&
-		getShouldExtendRefreshAuthTokens({
-			validationResult: validatedRefreshToken,
-		});
+		getShouldExtendRefreshAuthTokens({ validationResult: validatedRefreshToken });
 
 	if (shouldExtendRefreshAuthTokens) {
 		newRefreshTokenDetails = await regenerateRefreshAuthTokens({

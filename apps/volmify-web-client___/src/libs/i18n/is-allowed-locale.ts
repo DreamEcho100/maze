@@ -1,5 +1,0 @@
-import { type AllowedLocale, allowedLocalesLookup } from "./constants.ts";
-
-export function isAllowedLocale(locale: any): locale is AllowedLocale {
-	return typeof locale === "string" && locale in allowedLocalesLookup;
-}

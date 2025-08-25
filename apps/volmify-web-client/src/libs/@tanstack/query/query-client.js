@@ -16,7 +16,7 @@ export function createQueryClient() {
 					// 	return queryClient;
 					// },
 				},
-				experimental_prefetchInRender: true,
+				// experimental_prefetchInRender: true,
 			},
 			mutations: {
 				// retry: false,
@@ -44,4 +44,4 @@ export const getQueryClient = () => {
 	return (clientQueryClientSingleton ??= createQueryClient());
 };
 
-export const queryClient = getQueryClient();
+// export const queryClient = getQueryClient();

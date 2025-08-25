@@ -1,12 +1,12 @@
+import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
+import { Meta, Title } from "@solidjs/meta";
 import { type RouteDefinition, useParams } from "@solidjs/router";
 import { createMemo, type ParentProps, Suspense } from "solid-js";
 import Providers from "#components/providers/index.tsx";
-import { getTranslationByLocal } from "#libs/i18n/server/get-translation.ts";
-
-import "../app.css";
-import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
-import { Title } from "@solidjs/meta";
 import { authRoutesConfig } from "#libs/auth/client/components/routes-config.js";
+import { getTranslationByLocalQuery } from "#libs/i18n/queries.ts";
+
+// import "../styles/app.css";
 
 export default function LocalLayout(props: ParentProps) {
 	const params = useParams();
@@ -20,12 +20,14 @@ export default function LocalLayout(props: ParentProps) {
 		<Providers>
 			<Title>SolidStart - Basic</Title>
 			<header>
+				<Meta name="viewport" content="width=device-width, initial-scale=1" />
+				{/* <Link rel="stylesheet" href="/styles/app.css" /> */}
 				<I18nA href="/">Index</I18nA>
-				{/* <A href="/about">About</A>
-				<A href="/orpc">ORPC</A>
-				<A href={authRoutesConfig.login.path}>{authRoutesConfig.login.title}</A>
-				<A href={authRoutesConfig.verifyEmail.path}>{authRoutesConfig.verifyEmail.title}</A>
-				<A href={authRoutesConfig.register.path}>{authRoutesConfig.register.title}</A> */}
+				<I18nA href="/about">About</I18nA>
+				<I18nA href="/orpc">ORPC</I18nA>
+				<I18nA href={authRoutesConfig.login.path}>{authRoutesConfig.login.title}</I18nA>
+				<I18nA href={authRoutesConfig.verifyEmail.path}>{authRoutesConfig.verifyEmail.title}</I18nA>
+				<I18nA href={authRoutesConfig.register.path}>{authRoutesConfig.register.title}</I18nA>
 			</header>
 			<main>
 				<h1>Locale Layout</h1>
@@ -43,6 +45,6 @@ export const route = {
 	preload() {
 		// define preload function
 		console.log("Preloading locale layout...");
-		getTranslationByLocal({ direct: true });
+		getTranslationByLocalQuery({ direct: true });
 	},
 } satisfies RouteDefinition;

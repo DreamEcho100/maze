@@ -1,5 +1,5 @@
 import { getCookie, type HTTPEvent, setCookie } from "vinxi/http";
-import { type AllowedLocale, defaultLocale } from "../constants";
+import { type AllowedLocale, defaultLocale, LOCAL_STORAGE_KEY } from "../constants.ts";
 import { isAllowedLocale } from "../is-allowed-locale.ts";
 
 export function getLocaleFromAcceptLanguageHeader(headers: Headers) {
@@ -20,51 +20,43 @@ export function getLocaleFromAcceptLanguageHeader(headers: Headers) {
 }
 
 export function getLocaleFromCookies(nativeEvent: HTTPEvent) {
-	const cookieLocale = getCookie(nativeEvent, "locale");
-	const cookieXLocale = getCookie(nativeEvent, "x-locale");
-	return [cookieLocale, cookieXLocale] as const;
+	const cookieLocale = getCookie(nativeEvent, LOCAL_STORAGE_KEY);
+	return isAllowedLocale(cookieLocale) ? cookieLocale : undefined;
 }
 
 export function getForcedLocaleFromCookies(nativeEvent: HTTPEvent) {
-	const cookieLocale = getCookie(nativeEvent, "forced-locale");
-	return cookieLocale;
+	const cookieLocale = getCookie(nativeEvent, "tmp-locale");
+	return isAllowedLocale(cookieLocale) ? cookieLocale : undefined;
 }
 
 export function setLocaleInCookies(nativeEvent: HTTPEvent, locale: AllowedLocale) {
-	const [cookieLocale, cookieXLocale] = getLocaleFromCookies(nativeEvent);
+	const cookieLocale = getLocaleFromCookies(nativeEvent);
 	if (cookieLocale !== locale) {
-		setCookie(nativeEvent, "x-locale", locale, {
-			path: "/",
-			maxAge: 31536000, // 1 year
-			sameSite: "lax",
-		});
-	}
-	if (cookieXLocale !== locale) {
-		setCookie(nativeEvent, "locale", locale, {
+		setCookie(nativeEvent, LOCAL_STORAGE_KEY, locale, {
 			path: "/",
 			maxAge: 31536000, // 1 year
 			sameSite: "lax",
 		});
 	}
 }
-export function getLocaleFromHeaders(nativeEvent: HTTPEvent) {
-	const headers = nativeEvent.headers;
-	const headerLocale = headers.get("locale");
-	const headerXLocale = headers.get("x-locale");
-	return [headerLocale, headerXLocale] as const;
+export function getLocaleFromHeaders(headers: Headers) {
+	const localeValue = headers.get(LOCAL_STORAGE_KEY);
+	return isAllowedLocale(localeValue) ? localeValue : undefined;
 }
-export function setLocaleInHeaders(nativeEvent: HTTPEvent, locale: AllowedLocale) {
-	const headers = nativeEvent.headers;
-	const [headerLocale, headerXLocale] = getLocaleFromHeaders(nativeEvent);
-	if (headerLocale !== locale) {
-		headers.set("x-locale", locale);
-	}
-	if (headerXLocale !== locale) {
-		headers.set("x-locale", locale);
+export function setLocaleInHeaders(headers: Headers, locale: AllowedLocale) {
+	const localeValue = getLocaleFromHeaders(headers);
+	if (localeValue !== locale) {
+		headers.set(LOCAL_STORAGE_KEY, locale);
 	}
 }
 
-export type LocaleSource = "pathname" | "cookies" | "headers" | "accept-language" | "default";
+export type LocaleSource =
+	| "pathname"
+	| "cookie"
+	| "headers"
+	| "accept-language"
+	| "default"
+	| "forced-cookie";
 export const localeDeterminationStrategies: ((props: {
 	nativeEvent: HTTPEvent;
 	headers: Headers;
@@ -73,16 +65,16 @@ export const localeDeterminationStrategies: ((props: {
 	| {
 			localeSource: Exclude<LocaleSource, "default">;
 			foundLocale: AllowedLocale;
-			shouldSetCookie: boolean;
+			shouldStoreLocale: boolean;
 	  }
 	| undefined)[] = [
 	(props) => {
-		const forcedLocaleFromCookies = getForcedLocaleFromCookies(props.nativeEvent);
-		if (forcedLocaleFromCookies && isAllowedLocale(forcedLocaleFromCookies)) {
+		const localeValue = getForcedLocaleFromCookies(props.nativeEvent);
+		if (localeValue && isAllowedLocale(localeValue)) {
 			return {
-				localeSource: "cookies",
-				foundLocale: forcedLocaleFromCookies,
-				shouldSetCookie: false,
+				localeSource: "forced-cookie",
+				foundLocale: localeValue,
+				shouldStoreLocale: true,
 			};
 		}
 	},
@@ -90,55 +82,42 @@ export const localeDeterminationStrategies: ((props: {
 		if (!props.pathname) {
 			return;
 		}
-		const pathLocale = props.pathname.split("/")[1] as AllowedLocale;
-		if (isAllowedLocale(pathLocale)) {
+		const localeValue = props.pathname.split("/")[1] as AllowedLocale;
+		if (isAllowedLocale(localeValue)) {
 			return {
 				localeSource: "pathname",
-				foundLocale: pathLocale,
-				shouldSetCookie: true,
+				foundLocale: localeValue,
+				shouldStoreLocale: true,
 			};
 		}
 	},
 	(props) => {
-		const cookiesLocales = getLocaleFromCookies(props.nativeEvent);
-		const cookieLocale = cookiesLocales[0] ?? cookiesLocales[1];
-		if (cookieLocale && isAllowedLocale(cookieLocale)) {
+		const localeValue = getLocaleFromCookies(props.nativeEvent);
+		if (localeValue && isAllowedLocale(localeValue)) {
 			return {
-				localeSource: "cookies",
-				foundLocale: cookieLocale,
-				shouldSetCookie: true,
+				localeSource: "cookie",
+				foundLocale: localeValue,
+				shouldStoreLocale: true,
 			};
 		}
 	},
 	(props) => {
-		const headersLocales = getLocaleFromHeaders(props.nativeEvent);
-		const headerLocale = headersLocales[0] ?? headersLocales[1];
-		if (headerLocale && isAllowedLocale(headerLocale)) {
+		const localeValue = getLocaleFromHeaders(props.nativeEvent.headers);
+		if (localeValue && isAllowedLocale(localeValue)) {
 			return {
 				localeSource: "headers",
-				foundLocale: headerLocale,
-				shouldSetCookie: true,
+				foundLocale: localeValue,
+				shouldStoreLocale: true,
 			};
 		}
 	},
 	(props) => {
-		const headersLocales = getLocaleFromHeaders(props.nativeEvent);
-		const headerLocale = headersLocales[0] ?? headersLocales[1];
-		if (headerLocale && isAllowedLocale(headerLocale)) {
-			return {
-				localeSource: "headers",
-				foundLocale: headerLocale,
-				shouldSetCookie: true,
-			};
-		}
-	},
-	(props) => {
-		const acceptLanguageLocale = getLocaleFromAcceptLanguageHeader(props.headers);
-		if (acceptLanguageLocale) {
+		const localeValue = getLocaleFromAcceptLanguageHeader(props.headers);
+		if (localeValue) {
 			return {
 				localeSource: "accept-language",
-				foundLocale: acceptLanguageLocale,
-				shouldSetCookie: true,
+				foundLocale: localeValue,
+				shouldStoreLocale: true,
 			};
 		}
 	},
@@ -152,7 +131,7 @@ export function getServerLocale(props: {
 }): {
 	foundLocale: AllowedLocale;
 	localeSource: LocaleSource;
-	shouldSetCookie: boolean;
+	shouldStoreLocale: boolean;
 } {
 	for (const localeDeterminationStrategy of localeDeterminationStrategies) {
 		const result = localeDeterminationStrategy(props);
@@ -164,6 +143,6 @@ export function getServerLocale(props: {
 	return {
 		foundLocale: defaultLocale,
 		localeSource: "default",
-		shouldSetCookie: true,
+		shouldStoreLocale: true,
 	};
 }

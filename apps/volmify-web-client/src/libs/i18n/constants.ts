@@ -10,3 +10,4 @@ export const defaultLocale = "en";
 export const fallbackLocale = "en";
 
 export type AllowedLocale = (typeof allowedLocales)[number];
+export const LOCAL_STORAGE_KEY = "i18n-locale";

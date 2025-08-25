@@ -1,4 +1,10 @@
-import { me, signin, signup } from "./auth.ts";
+import {
+	login,
+	me,
+	register,
+	resendEmailVerificationCode,
+	verifyEmail,
+} from "./auth.ts";
 import {
 	createPlanet,
 	findPlanet,
@@ -9,8 +15,10 @@ import { sse } from "./sse.ts";
 
 export const router = {
 	auth: {
-		signup,
-		signin,
+		register,
+		login,
+		verifyEmail,
+		resendEmailVerificationCode,
 		me,
 	},
 

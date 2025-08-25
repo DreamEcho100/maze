@@ -186,3 +186,17 @@ export function useGetCurrentSessionQuery(props) {
 	// 	);
 	// });
 }
+
+// export function useInvalidateCurrentSession() {
+// 	const query = useQuery(() => ({
+// 		queryKey: getCurrentSessionQueryKey(),
+// 		queryFn: getCurrentSessionQuery,
+// 		enabled: false,
+// 	}));
+
+// 	const invalidate = async () => {
+// 		await query.refetch();
+// 	};
+
+// 	return invalidate;
+// }

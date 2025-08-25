@@ -4,12 +4,7 @@ import { I18nA } from "@de100/i18n-solid-startjs/client/components/Link";
 import { useI18n, useTranslations } from "@de100/i18n-solidjs";
 import { Title } from "@solidjs/meta";
 import { useQuery } from "@tanstack/solid-query";
-import {
-	createSignal,
-	For,
-	type ParentProps,
-	resetErrorBoundaries,
-} from "solid-js";
+import { createSignal, For, type ParentProps, resetErrorBoundaries } from "solid-js";
 import Counter from "#components/Counter.tsx";
 import { fetchPost, fetchUser } from "#libs/@tanstack/query/fake-api.ts";
 import { QueryBoundary } from "#libs/@tanstack/query/query-boundry.tsx";
@@ -57,10 +52,7 @@ export default function Home() {
 						<div class="error">{err.message}</div>
 						<button
 							type="button"
-							disabled={
-								getCurrentSessionQuery.isRefetching ||
-								getCurrentSessionQuery.isSuccess
-							}
+							disabled={getCurrentSessionQuery.isRefetching || getCurrentSessionQuery.isSuccess}
 							onClick={() => {
 								retry();
 							}}
@@ -101,13 +93,13 @@ export default function Home() {
 					href="/"
 					locale="en"
 					onMouseEnter={() => {
-						cookieManager.setCookie("forced-locale", "en", {
+						cookieManager.setCookie("tmp-locale", "en", {
 							path: "/",
 							sameSite: "lax",
 						});
 					}}
 					onMouseLeave={() => {
-						cookieManager.deleteCookie("forced-locale", {
+						cookieManager.deleteCookie("tmp-locale", {
 							path: "/",
 							sameSite: "lax",
 						});
@@ -119,13 +111,13 @@ export default function Home() {
 					href="/"
 					locale="ar"
 					onMouseEnter={() => {
-						cookieManager.setCookie("forced-locale", "ar", {
+						cookieManager.setCookie("tmp-locale", "ar", {
 							path: "/",
 							sameSite: "lax",
 						});
 					}}
 					onMouseLeave={() => {
-						cookieManager.deleteCookie("forced-locale", {
+						cookieManager.deleteCookie("tmp-locale", {
 							path: "/",
 							sameSite: "lax",
 						});
@@ -154,9 +146,8 @@ export default function Home() {
 					<For each={allowedLocales}>
 						{(localeItem) => (
 							<option value={localeItem}>
-								{new Intl.DisplayNames([localeItem], { type: "language" }).of(
-									localeItem,
-								) ?? localeItem}
+								{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ??
+									localeItem}
 							</option>
 						)}
 					</For>
@@ -169,12 +160,7 @@ export default function Home() {
 			<PostViewer sleep={1000} simulateError={false} />
 			<hr />
 			<h2>Example - Post Viewer with deferStream</h2>
-			<PostViewer
-				deferStream
-				sleep={1000}
-				simulateError={false}
-				initialPage={2}
-			/>
+			<PostViewer deferStream sleep={1000} simulateError={false} initialPage={2} />
 			<hr />
 			<h2>Example - Post Viewer with deferStream and simulateError</h2>
 			<PostViewer deferStream sleep={1000} simulateError initialPage={2} />
@@ -330,9 +316,7 @@ function Example(props: ParentProps<ExampleProps>) {
 			<div class="example__header">
 				<div class="example__title">{props.title}</div>
 				<div>[deferStream={String(props.deferStream || false)}]</div>
-				<div style={{ "margin-left": "10px" }}>
-					[simulated sleep: {props.sleep || 0}ms]
-				</div>
+				<div style={{ "margin-left": "10px" }}>[simulated sleep: {props.sleep || 0}ms]</div>
 			</div>
 
 			{props.children}
@@ -350,8 +334,7 @@ function PostViewer(props: ParentProps<PostViewerProps>) {
 			postId(),
 			{
 				sleep: props.sleep,
-				simulateError:
-					simulateError() || (simulateError() !== false && postId() === 5),
+				simulateError: simulateError() || (simulateError() !== false && postId() === 5),
 			},
 		] as const,
 		queryFn: ({ queryKey }) =>
@@ -365,11 +348,7 @@ function PostViewer(props: ParentProps<PostViewerProps>) {
 	}));
 
 	return (
-		<Example
-			title="Post Query"
-			deferStream={props.deferStream}
-			sleep={props.sleep}
-		>
+		<Example title="Post Query" deferStream={props.deferStream} sleep={props.sleep}>
 			<div style={{ "margin-top": "20px" }}>
 				<button
 					type="button"
@@ -449,16 +428,10 @@ export function userInfoQueryOpts(props?: UserInfoProps) {
 export function UserInfo(props: UserInfoProps) {
 	const [simulateError, setSimulateError] = createSignal(props.simulateError);
 
-	const query = useQuery(() =>
-		userInfoQueryOpts({ ...props, simulateError: simulateError() }),
-	);
+	const query = useQuery(() => userInfoQueryOpts({ ...props, simulateError: simulateError() }));
 
 	return (
-		<Example
-			title="User Query"
-			deferStream={props.deferStream}
-			sleep={props.sleep}
-		>
+		<Example title="User Query" deferStream={props.deferStream} sleep={props.sleep}>
 			<QueryBoundary
 				query={query}
 				loadingFallback={<div class="loader">loading user...</div>}

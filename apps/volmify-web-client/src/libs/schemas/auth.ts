@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "zod/v4-mini";
 
 export const CredentialSchema = z.object({
 	email: z.email(),

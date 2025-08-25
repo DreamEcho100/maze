@@ -1,29 +1,121 @@
+// import commonjs from "@rollup/plugin-commonjs";
+// import { defineConfig } from "@solidjs/start/config";
+// // import { visualizer } from "rollup-plugin-visualizer";
+// // import topLevelAwait from "vite-plugin-top-level-await";
+
+// export default defineConfig({
+// 	vite: {
+// 		esbuild: {
+// 			supported: {
+// 				"top-level-await": true, // Enable top-level await support
+// 			},
+// 		},
+// 		plugins: [
+// 			// /** @type {any} */ (topLevelAwait() as any),
+// 			commonjs(),
+// 			// visualizer({
+// 			// 	filename: "dist/stats.html",
+// 			// 	open: true,
+// 			// 	gzipSize: true,
+// 			// 	template: "treemap", // or "sunburst", "network"
+// 			// }),
+// 		],
+// 	},
+// 	server: {
+// 		// prerender: {
+// 		// 	crawlLinks: true,
+// 		// 	failOnError: true,
+// 		// },
+// 		// experimental: {
+// 		// 	asyncContext: true, // Disable async context for compatibility
+// 		// },
+// 	},
+// 	middleware: "./src/middleware/index.ts",
+// 	ssr: true,
+// });
+
 // import commonjs from "vite-plugin-commonjs"; // @rollup/plugin-commonjs
 // import commonjs from "@rollup/plugin-commonjs";
 
-import commonjs from "@rollup/plugin-commonjs";
+// import commonjs from "@rollup/plugin-commonjs";
+
 import { defineConfig } from "@solidjs/start/config";
-import { visualizer } from "rollup-plugin-visualizer";
-import topLevelAwait from "vite-plugin-top-level-await";
+
+// import devtools from "solid-devtools/vite";
+
+// import topLevelAwait from "vite-plugin-top-level-await";
+// import { visualizer } from "rollup-plugin-visualizer";
+// import topLevelAwait from "vite-plugin-top-level-await";
+const coerceEnvVarToBoolean = (value: string | undefined, defaultValue = false): boolean => {
+	if (value === undefined) return defaultValue;
+	return (
+		value.toLowerCase() in
+		{
+			"1": true,
+			true: true,
+			yes: true,
+			on: true,
+		}
+	);
+};
 
 export default defineConfig({
 	vite: {
-		esbuild: {
-			supported: {
-				"top-level-await": true, // Enable top-level await support
+		// plugins: [
+		// 	devtools({
+		// 		/* features options - all disabled by default */
+		// 		autoname: true, // e.g. enable autoname
+		// 		// pass `true` or an object with options
+		// 		locator: {
+		// 			targetIDE: "vscode",
+		// 			componentLocation: true,
+		// 			jsxLocation: true,
+		// 		},
+		// 	}),
+		// ],
+		// plugins: [
+		// 	// TODO: remove `as any`
+		// 	topLevelAwait() as any,
+		// ],
+		// esbuild: {
+		// 	supported: {
+		// 		"top-level-await": true, // Enable top-level await support
+		// 	},
+		// },
+		build: {
+			// minify: console.log("___ process.env", process.env) || false,
+			// target: "esnext",
+			minify: coerceEnvVarToBoolean(process.env.UNMINIFY_VOMIFY_CLIENT_BUNDLE, false)
+				? false
+				: "esbuild",
+			// target: "esnext",
+		},
+		// optimizeDeps: {
+		// 	esbuildOptions: {
+		// 		target: "esnext",
+		// 	},
+		// },
+		ssr: {
+			// target: "node",
+			optimizeDeps: {
+				esbuildOptions: {
+					target: "esnext",
+				},
 			},
 		},
-		plugins: [
-			/** @type {any} */ (topLevelAwait() as any),
-			commonjs(),
-			// ✅ Visualize what's in your bundles
-			visualizer({
-				filename: "dist/stats.html",
-				open: true,
-				gzipSize: true,
-				template: "treemap", // or "sunburst", "network"
-			}),
-		],
+		// plugins: [
+		// 	// /** @type {any} */ (topLevelAwait() as any),
+		// 	// commonjs({
+		// 	// 	dynamicRequireTargets: ["@de100/db"],
+		// 	// }),
+		// 	// ✅ Visualize what's in your bundles
+		// 	// visualizer({
+		// 	// 	filename: "dist/stats.html",
+		// 	// 	open: true,
+		// 	// 	gzipSize: true,
+		// 	// 	template: "treemap", // or "sunburst", "network"
+		// 	// }),
+		// ],
 		// build: {
 		// 	commonjsOptions: {
 		// 		transformMixedEsModules: true,
@@ -56,6 +148,10 @@ export default defineConfig({
 		// 	],
 		// },
 
+		// optimizeDeps: {
+		// 	include: ["@de100/db", "@de100/auth-core"],
+		// },
+
 		// ssr: {
 		// 	// Externalize server-only packages completely
 		// 	external: ["@de100/auth-core", "@de100/db"],
@@ -68,60 +164,75 @@ export default defineConfig({
 		// 		"@de100/auth-shared/types",
 		// 		// Don't include any db exports - they all use Node.js
 		// 	],
-		// },
-
-		// build: {
-		// 	// target: "esnext", // Use modern JS for better performance
-		// 	rollupOptions: {
-		// 		external: [
-		// 			// Node.js built-ins that should never be in client
-		// 			// "node:crypto",
-		// 			"node:module",
-		// 			"node:async_hooks",
-		// 			"crypto",
-		// 			"fs",
-		// 			"path",
-		// 			"net",
-		// 			"dns",
-		// 			"tls",
-		// 			"stream",
-		// 			"util",
-
-		// 			// Server-only packages
-		// 			"jsonwebtoken",
-		// 			"pg",
-		// 			"drizzle-orm",
-		// 			"@node-rs/argon2",
-		// 			"uuid",
-
-		// 			// Your server-only package exports
-		// 			"@de100/auth-core",
-		// 			"@de100/db",
-		// 			"@de100/auth-core/*",
-		// 			"@de100/db/*",
-		// 		],
-		// 	},
-		// },
-
-		// optimizeDeps: {
-		// 	// Exclude all server packages from pre-bundling
-		// 	exclude: ["@de100/auth-core", "@de100/db"],
-
-		// 	// Only include truly universal packages
-		// 	include: [
-		// 		"zod", // if used on client and doesn't import Node.js modules
-		// 	],
-		// },
 	},
 	server: {
-		// prerender: {
-		// 	crawlLinks: true,
-		// 	failOnError: true,
-		// },
-		// experimental: {
-		// 	asyncContext: true, // Disable async context for compatibility
-		// },
+		esbuild: {
+			options: {
+				target: "esnext",
+			},
+		},
+		minify: !coerceEnvVarToBoolean(process.env.UNMINIFY_VOMIFY_CLIENT_BUNDLE, false),
 	},
+
+	// 	// build: {
+	// 	// 	// commonjsOptions: {
+	// 	// 	// 	include: [/@de100\/db/, /@de100\/auth-core/, /node_modules/],
+	// 	// 	// },
+	// 	// },
+
+	// 	// build: {
+	// 	// 	// target: "esnext", // Use modern JS for better performance
+	// 	// 	rollupOptions: {
+	// 	// 		external: [
+	// 	// 			// Node.js built-ins that should never be in client
+	// 	// 			// "node:crypto",
+	// 	// 			"node:module",
+	// 	// 			"node:async_hooks",
+	// 	// 			"crypto",
+	// 	// 			"fs",
+	// 	// 			"path",
+	// 	// 			"net",
+	// 	// 			"dns",
+	// 	// 			"tls",
+	// 	// 			"stream",
+	// 	// 			"util",
+
+	// 	// 			// Server-only packages
+	// 	// 			"jsonwebtoken",
+	// 	// 			"pg",
+	// 	// 			"drizzle-orm",
+	// 	// 			"@node-rs/argon2",
+	// 	// 			"uuid",
+
+	// 	// 			// Your server-only package exports
+	// 	// 			"@de100/auth-core",
+	// 	// 			"@de100/db",
+	// 	// 			"@de100/auth-core/*",
+	// 	// 			"@de100/db/*",
+	// 	// 		],
+	// 	// 	},
+	// 	// },
+
+	// 	// optimizeDeps: {
+	// 	// 	// Exclude all server packages from pre-bundling
+	// 	// 	exclude: ["@de100/auth-core", "@de100/db"],
+
+	// 	// 	// Only include truly universal packages
+	// 	// 	include: [
+	// 	// 		"zod", // if used on client and doesn't import Node.js modules
+	// 	// 	],
+	// 	// },
+	// },
+	// server: {
+	// 	inlineDynamicImports: undefined,
+	// 	// prerender: {
+	// 	// 	crawlLinks: true,
+	// 	// 	failOnError: true,
+	// 	// },
+	// 	// experimental: {
+	// 	// 	asyncContext: true, // Disable async context for compatibility
+	// 	// },
+	// },
 	middleware: "src/middleware/index.ts",
 	ssr: true,
 });

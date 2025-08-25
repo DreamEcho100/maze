@@ -1,14 +1,7 @@
 import type { LanguageMessages } from "@de100/i18n";
 import { generateI18nConfig } from "@de100/i18n";
 import type { ParentComponent } from "solid-js";
-import {
-	createContext,
-	createMemo,
-	createSignal,
-	For,
-	untrack,
-	useContext,
-} from "solid-js";
+import { createContext, createMemo, createSignal, For, untrack, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export const name = "@de100/i18n-solidjs";
@@ -75,54 +68,27 @@ interface I18nState {
 // 	});
 // };
 
-function createI18nStore(
-	props: Pick<
-		I18nState,
-		| "locale"
-		| "localeDirMap"
-		| "defaultLocale"
-		| "allowedLocales"
-		| "fallbackLocale"
-		| "translations"
-		| "loadTranslations"
-	>,
-) {
+type CreateI18nStoreProps = Pick<
+	I18nState,
+	| "locale"
+	| "localeDirMap"
+	| "defaultLocale"
+	| "allowedLocales"
+	| "fallbackLocale"
+	| "translations"
+	| "loadTranslations"
+> & {
+	onLocaleChange?: (locale: string) => void;
+};
+
+function createI18nStore(props: CreateI18nStoreProps) {
 	const i18nConfig = generateI18nConfig({
 		locale: props.locale,
 		fallbackLocale: props.fallbackLocale,
 		translations: props.translations,
 	});
 
-	// setState({
-	// 	locale: i18nConfig.locale,
-	// 	defaultLocale: props.defaultLocale,
-	// 	allowedLocales: props.allowedLocales,
-	// 	fallbackLocale: props.fallbackLocale,
-	// 	translations: props.translations,
-	// 	t: i18nConfig.t,
-	// 	clearCache: i18nConfig.clearCache,
-	// 	// loadTranslations: props.loadTranslations,
-	// 	isLoadingTranslations: false,
-	// 	localeDirMap: props.localeDirMap,
-	// });
-
 	const [i18n, setI18n] = createStore<I18nState>({
-		// locale: "",
-		// defaultLocale: "",
-		// allowedLocales: [],
-		// fallbackLocale: "",
-		// translations: {},
-		// t: (key: string) => key, // Safe fallback
-		// clearCache: () => void 0, // Safe fallback
-		// // loadTranslations: async () => {
-		// // 	throw new Error("Translations not loaded. Please initialize translations first.");
-		// // },
-		// // isLoadingTranslations: false,
-		// localeDirMap: {},
-		// // setIsLoadingTranslations: (isLoading: boolean) => {
-		// // 	setState("isLoadingTranslations", isLoading);
-		// // },
-
 		locale: i18nConfig.locale,
 		defaultLocale: props.defaultLocale,
 		allowedLocales: props.allowedLocales,
@@ -184,6 +150,9 @@ function createI18nStore(
 					setI18n("translations", translations);
 					setI18n("isLoadingTranslations", false);
 				}
+				if (props.onLocaleChange) {
+					props.onLocaleChange(locale);
+				}
 			});
 		},
 	});
@@ -197,18 +166,18 @@ const I18nContext = createContext<I18nState>();
 
 export const I18nProvider: ParentComponent<
 	Pick<
-		I18nState,
+		CreateI18nStoreProps,
 		| "locale"
 		| "localeDirMap"
 		| "defaultLocale"
 		| "allowedLocales"
 		| "translations"
 		| "fallbackLocale"
-		// | "loadTranslations"
+		| "onLocaleChange"
+		| "loadTranslations"
 	> & {
 		isNew?: boolean;
 		localeParam?: string;
-		loadTranslations?: I18nState["loadTranslations"];
 	}
 > = (props) => {
 	// const store = props.isNew ? createI18nStore() : globalI18nStore;
@@ -220,6 +189,7 @@ export const I18nProvider: ParentComponent<
 		translations: props.translations,
 		loadTranslations: props.loadTranslations,
 		localeDirMap: props.localeDirMap,
+		onLocaleChange: props.onLocaleChange,
 	});
 	// const [isLoadingTranslations, setIsLoadingTranslations] = createSignal(false);
 
@@ -254,9 +224,7 @@ export const I18nProvider: ParentComponent<
 	// 	),
 	// );
 
-	return (
-		<I18nContext.Provider value={i18n}>{props.children}</I18nContext.Provider>
-	);
+	return <I18nContext.Provider value={i18n}>{props.children}</I18nContext.Provider>;
 };
 
 export function useI18n() {
@@ -317,9 +285,7 @@ export function LocaleChooser(props: {
 			<For each={props.locales}>
 				{(localeItem) => (
 					<option value={localeItem}>
-						{new Intl.DisplayNames([localeItem], { type: "language" }).of(
-							localeItem,
-						) ?? localeItem}
+						{new Intl.DisplayNames([localeItem], { type: "language" }).of(localeItem) ?? localeItem}
 					</option>
 				)}
 			</For>
