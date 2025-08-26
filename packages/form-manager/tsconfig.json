@@ -10,7 +10,8 @@
 		// "composite": true,
 		// "declarationMap": true,
 		"target": "ESNext",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"allowImportingTsExtensions": true
 	},
 	"include": ["./src/**/*.js", "./src/**/*.ts", "./tsup.config.ts"]
 }
