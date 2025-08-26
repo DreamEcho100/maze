@@ -5,10 +5,13 @@ import {
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
-import { FormBuilder } from "#components/ui/form-builder.jsx";
+import { FormBuilder } from "#components/ui/form-builder/index.jsx";
 import { orpc } from "#libs/orpc/index.js";
 import { authRoutesConfig } from "../../routes-config.js";
-import { resendEmailVerificationCodeAction, verifyEmailAction } from "./actions.js";
+import {
+	resendEmailVerificationCodeAction,
+	verifyEmailAction,
+} from "./actions.js";
 
 /**
  * @param {{
@@ -30,9 +33,11 @@ export function EmailVerificationForm(props) {
 						return router.push(authRoutesConfig.login.path);
 					case VERIFY_EMAIL_MESSAGES_ERRORS.ACCESS_DENIED.messageCode:
 						return router.push(authRoutesConfig.login.path);
-					case VERIFY_EMAIL_MESSAGES_ERRORS.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
+					case VERIFY_EMAIL_MESSAGES_ERRORS
+						.VERIFICATION_CODE_EXPIRED_WE_SENT_NEW_CODE.messageCode:
 						return router.push(authRoutesConfig.verifyEmail.path);
-					case VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_INCOMPLETE.messageCode:
+					case VERIFY_EMAIL_MESSAGES_ERRORS.TWO_FACTOR_SETUP_INCOMPLETE
+						.messageCode:
 						return router.push(authRoutesConfig.twoFactorSetup.path);
 				}
 			},
@@ -40,7 +45,9 @@ export function EmailVerificationForm(props) {
 	);
 
 	const isPending = createMemo(() => mutation.isPending || props.isPending);
-	const errorMessage = createMemo(() => mutation.status === "error" && mutation.error?.message);
+	const errorMessage = createMemo(
+		() => mutation.status === "error" && mutation.error?.message,
+	);
 
 	return (
 		<FormBuilder
@@ -52,10 +59,19 @@ export function EmailVerificationForm(props) {
 				});
 			}}
 			fields={[
-				{ name: "code", label: "Verification Code", required: true, minLength: 8, maxLength: 8 },
+				{
+					name: "code",
+					label: "Verification Code",
+					required: true,
+					minLength: 8,
+					maxLength: 8,
+				},
 			]}
 			actions={{
-				submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+				submitBtn: {
+					children: isPending() ? "Resending..." : "Resend",
+					disabled: isPending(),
+				},
 			}}
 			error={errorMessage()}
 		/>
@@ -94,7 +110,9 @@ export function ResendEmailVerificationCodeForm(props) {
 	);
 
 	const isPending = createMemo(() => mutation.isPending || props.isPending);
-	const errorMessage = createMemo(() => mutation.status === "error" && mutation.error?.message);
+	const errorMessage = createMemo(
+		() => mutation.status === "error" && mutation.error?.message,
+	);
 
 	return (
 		<FormBuilder
@@ -107,7 +125,10 @@ export function ResendEmailVerificationCodeForm(props) {
 			// 	submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
 			// }}
 			actions={{
-				submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+				submitBtn: {
+					children: isPending() ? "Resending..." : "Resend",
+					disabled: isPending(),
+				},
 				resetBtn: false,
 			}}
 			error={errorMessage()}

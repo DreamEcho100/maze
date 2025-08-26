@@ -84,7 +84,7 @@
 		"@types/uuid-parse": "^1.0.2",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "catalog:",
-		"tsup": "^8.5.0",
+		"tsup": "catalog:",
 		"typescript": "catalog:"
 	},
 	"sideEffects": [

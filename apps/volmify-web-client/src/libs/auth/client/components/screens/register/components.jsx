@@ -2,7 +2,7 @@ import { REGISTER_MESSAGES_ERRORS } from "@de100/auth-shared/constants";
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
-import { FormBuilder } from "#components/ui/form-builder.tsx";
+import { FormBuilder } from "#components/ui/form-builder/index.jsx";
 import { orpc } from "#libs/orpc/index.js";
 import { authRoutesConfig } from "../../routes-config";
 
@@ -26,7 +26,8 @@ export function SignUpForm(props) {
 				}
 
 				switch (res.messageCode) {
-					case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED.messageCode:
+					case REGISTER_MESSAGES_ERRORS.TWO_FACTOR_VALIDATION_OR_SETUP_REQUIRED
+						.messageCode:
 						return router.push(authRoutesConfig.twoFactorSetup.path);
 				}
 
@@ -36,7 +37,9 @@ export function SignUpForm(props) {
 	);
 
 	const isPending = createMemo(() => props.isPending || mutation.isPending);
-	const errorMessage = createMemo(() => mutation.status === "error" && mutation.error?.message);
+	const errorMessage = createMemo(
+		() => mutation.status === "error" && mutation.error?.message,
+	);
 
 	return (
 		<FormBuilder
@@ -53,7 +56,13 @@ export function SignUpForm(props) {
 				});
 			}}
 			fields={[
-				{ name: "name", label: "Username", required: true, minLength: 3, maxLength: 128 },
+				{
+					name: "name",
+					label: "Username",
+					required: true,
+					minLength: 3,
+					maxLength: 128,
+				},
 				{
 					name: "displayName",
 					label: "Display Name",
@@ -61,7 +70,13 @@ export function SignUpForm(props) {
 					minLength: 3,
 					maxLength: 128,
 				},
-				{ type: "email", name: "email", label: "Email", required: true, autocomplete: "email" },
+				{
+					type: "email",
+					name: "email",
+					label: "Email",
+					required: true,
+					autocomplete: "email",
+				},
 				{
 					type: "password",
 					name: "password",
@@ -72,7 +87,10 @@ export function SignUpForm(props) {
 				{ ft: "checkbox", name: "enable2FA", label: "Enable 2FA" },
 			]}
 			actions={{
-				submitBtn: { children: isPending() ? "Resending..." : "Resend", disabled: isPending() },
+				submitBtn: {
+					children: isPending() ? "Resending..." : "Resend",
+					disabled: isPending(),
+				},
 			}}
 			error={errorMessage()}
 		/>

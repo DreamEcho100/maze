@@ -1,11 +1,23 @@
+/**
+ * @import {
+ * 	LabelProps,
+ * 	InputFieldProps,
+ * 	TextAreaFieldProps,
+ *  SelectFieldProps,
+ * 	CheckboxFieldProps,
+ * 	RadioGroupFieldProps,
+ * 	FormBuilderProps,
+ * 	FormDescriptionProps,
+ * 	HandleOnReset
+ * } from "./types.ts"
+ */
+
 import {
 	createMemo,
 	createSignal,
 	createUniqueId,
 	For,
-	type JSX,
 	Match,
-	mergeProps,
 	onCleanup,
 	Show,
 	Switch,
@@ -15,45 +27,22 @@ import {
 
 // Solid.js + TypeScript
 
-type LabelProps = JSX.LabelHTMLAttributes<HTMLLabelElement>;
-function Label(props: LabelProps) {
+/** @param {LabelProps} props  */
+function Label(props) {
 	// biome-ignore lint/a11y/noLabelWithoutControl: <explanation>
 	return <label {...props} />;
 }
 
-interface FormFieldBaseProps {
-	label?: string | LabelProps;
-	name: string;
-	description?: string | JSX.HTMLAttributes<HTMLDivElement>;
-}
-
-type InputFieldProps = JSX.InputHTMLAttributes<HTMLInputElement>;
-function InputField(props: InputFieldProps) {
+/** @param {InputFieldProps} props  */
+function InputField(props) {
 	return <input {...props} />;
 }
-type TextAreaFieldProps = JSX.TextareaHTMLAttributes<HTMLTextAreaElement>;
-function TextAreaField(props: TextAreaFieldProps) {
+/** @param {TextAreaFieldProps} props  */
+function TextAreaField(props) {
 	return <textarea {...props} />;
 }
-interface SelectFieldProps extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
-	options: (
-		| ({
-				ft?: "option";
-				label: string;
-				value: string;
-		  } & JSX.OptionHTMLAttributes<HTMLOptionElement>)
-		| {
-				ft: "optgroup";
-				label: string;
-				options: ({
-					ft?: "option";
-					label: string;
-					value: string;
-				} & JSX.OptionHTMLAttributes<HTMLOptionElement>)[];
-		  }
-	)[];
-}
-function SelectField(props: SelectFieldProps) {
+/** @param {SelectFieldProps} props  */
+function SelectField(props) {
 	return (
 		<select {...props}>
 			{props.options.map((option) =>
@@ -70,18 +59,12 @@ function SelectField(props: SelectFieldProps) {
 		</select>
 	);
 }
-type CheckboxFieldProps = JSX.InputHTMLAttributes<HTMLInputElement> & {};
-function CheckboxField(props: CheckboxFieldProps) {
+/** @param {CheckboxFieldProps} props  */
+function CheckboxField(props) {
 	return <input type="checkbox" {...props} />;
 }
-interface RadioGroupFieldProps extends JSX.FieldsetHTMLAttributes<HTMLFieldSetElement> {
-	options: ({
-		ft?: "radio";
-		label: string;
-		value: string;
-	} & JSX.InputHTMLAttributes<HTMLInputElement>)[];
-}
-function RadioGroupField(props: RadioGroupFieldProps) {
+/** @param {RadioGroupFieldProps} props  */
+function RadioGroupField(props) {
 	const [otherProps, fieldProps] = splitProps(props, ["options"]);
 
 	return (
@@ -123,15 +106,6 @@ function RadioGroupField(props: RadioGroupFieldProps) {
 // 	ft: "search";
 // };
 
-type FormField = (
-	| (InputFieldProps & { ft?: "input" })
-	| (TextAreaFieldProps & { ft: "textarea" })
-	| (SelectFieldProps & { ft: "select" })
-	| (CheckboxFieldProps & { ft: "checkbox" })
-	| (RadioGroupFieldProps & { ft: "radio-group" })
-) &
-	FormFieldBaseProps;
-
 /*
 # FormBuilder Todos
 
@@ -164,13 +138,12 @@ Note: some of the following will need to wait until integrate with the custom fo
 
 */
 
-interface FormDescriptionProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> {
-	id?: string;
-	generateId?: () => string | undefined;
-	style?: JSX.CSSProperties;
-}
-function FormDescription(props: FormDescriptionProps) {
-	const [otherProps, descriptionProps] = splitProps(props, ["id", "generateId"]);
+/** @param {FormDescriptionProps} props  */
+function FormDescription(props) {
+	const [otherProps, descriptionProps] = splitProps(props, [
+		"id",
+		"generateId",
+	]);
 	const descriptionById = createMemo(() =>
 		otherProps && typeof otherProps === "object" && "id" in otherProps
 			? (otherProps.id ?? otherProps.generateId?.())
@@ -182,8 +155,8 @@ function FormDescription(props: FormDescriptionProps) {
 			when={descriptionById()}
 			fallback={
 				<div style={{ border: "1px solid red", padding: "0.5rem" }}>
-					Warning: Form description is missing an ID. Please provide an ID or use the generateId
-					prop.
+					Warning: Form description is missing an ID. Please provide an ID or
+					use the generateId prop.
 				</div>
 			}
 		>
@@ -192,8 +165,9 @@ function FormDescription(props: FormDescriptionProps) {
 	);
 }
 
+/** @type {HandleOnReset} */
 // biome-ignore lint/correctness/noUnusedVariables: <explanation>
-function handleOnReset(el: HTMLFormElement, accessor?: () => () => void) {
+function handleOnReset(el, accessor) {
 	if (!accessor) return;
 
 	const onReset = () => {
@@ -204,26 +178,8 @@ function handleOnReset(el: HTMLFormElement, accessor?: () => () => void) {
 	onCleanup(() => el.removeEventListener("reset", onReset));
 }
 
-export function FormBuilder(
-	props: {
-		onSubmit: (submitProps: {
-			values: any;
-			event: SubmitEvent & {
-				currentTarget: HTMLFormElement;
-				target: Element;
-			};
-		}) => void | Promise<void>;
-		fields?: FormField[];
-		actions?: {
-			submitBtn?: JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
-				children?: JSX.ButtonHTMLAttributes<HTMLButtonElement>["children"];
-			};
-			resetBtn?: JSX.ButtonHTMLAttributes<HTMLButtonElement> | boolean;
-		};
-		description?: string | FormDescriptionProps;
-		error?: string | FormDescriptionProps | null | false;
-	} & Omit<JSX.FormHTMLAttributes<HTMLFormElement>, "onSubmit" | "children">,
-) {
+/** @param {FormBuilderProps} props  */
+export function FormBuilder(props) {
 	const [otherProps, formProps] = splitProps(props, [
 		"onSubmit",
 		"fields",
@@ -247,7 +203,8 @@ export function FormBuilder(
 		otherProps.error ? `${formId()}--error` : undefined,
 	);
 	const formAriaDescribedby = createMemo(() => {
-		const ids: string[] = [];
+		/** @type {string[]} */
+		const ids = [];
 		if (formProps["aria-describedby"]) ids.push(formProps["aria-describedby"]);
 
 		const descriptionId = descriptionById();
@@ -274,8 +231,9 @@ export function FormBuilder(
 			</Match>
 			<Match
 				when={
-					!!(otherProps.description && typeof otherProps.description === "object") &&
-					otherProps.description
+					!!(
+						otherProps.description && typeof otherProps.description === "object"
+					) && otherProps.description
 				}
 			>
 				{(description) => (
@@ -283,7 +241,11 @@ export function FormBuilder(
 						aria-live="assertive"
 						{...description}
 						id={descriptionById()}
-						style={{ color: "red", "margin-top": "0.5rem", ...description().style }}
+						style={{
+							color: "red",
+							"margin-top": "0.5rem",
+							...description().style,
+						}}
 					>
 						{description().children}
 					</FormDescription>
@@ -306,7 +268,10 @@ export function FormBuilder(
 				)}
 			</Match>
 			<Match
-				when={!!(otherProps.error && typeof otherProps.error === "object") && otherProps.error}
+				when={
+					!!(otherProps.error && typeof otherProps.error === "object") &&
+					otherProps.error
+				}
 			>
 				{(error) => (
 					<FormDescription
@@ -326,16 +291,27 @@ export function FormBuilder(
 		<div>
 			<Switch>
 				<Match
-					when={typeof otherProps.actions?.resetBtn === "boolean" && otherProps.actions?.resetBtn}
+					when={
+						typeof otherProps.actions?.resetBtn === "boolean" &&
+						otherProps.actions?.resetBtn
+					}
 				>
 					{(resetBtn) => resetBtn() && <button type="reset">Reset</button>}
 				</Match>
 				<Match
-					when={typeof otherProps.actions?.resetBtn === "object" && otherProps.actions?.resetBtn}
+					when={
+						typeof otherProps.actions?.resetBtn === "object" &&
+						otherProps.actions?.resetBtn
+					}
 				>
 					{(resetBtn) => (
-						<button {...(typeof resetBtn() === "object" ? resetBtn() : {})} type="reset">
-							{typeof resetBtn() === "object" ? (resetBtn().children ?? "Reset") : "Reset"}
+						<button
+							{...(typeof resetBtn() === "object" ? resetBtn() : {})}
+							type="reset"
+						>
+							{typeof resetBtn() === "object"
+								? (resetBtn().children ?? "Reset")
+								: "Reset"}
 						</button>
 					)}
 				</Match>
@@ -347,35 +323,50 @@ export function FormBuilder(
 	);
 
 	const formFields = (
-		<Show when={otherProps.fields && otherProps.fields.length > 0 && otherProps.fields}>
+		<Show
+			when={
+				otherProps.fields && otherProps.fields.length > 0 && otherProps.fields
+			}
+		>
 			{(fields) => (
 				<fieldset>
 					<For each={fields()}>
 						{(field) => {
-							const controlId = field.id ?? `${formId()}--${field.name}`;
+							const controlId = createMemo(
+								() => field.id ?? `${formId()}--${field.name}`,
+							);
 
-							const labelComp =
-								field.label && typeof field.label === "string" ? (
-									<label for={field.name}>{field.label}</label>
-								) : !field.label ? null : typeof field.label === "string" ? (
-									<Label for={field.name}>{field.label}</Label>
-								) : (
-									<Label {...field.label} for={field.name} />
-								);
+							const labelComp = (
+								<Switch>
+									<Match when={typeof field.label === "string" && field.label}>
+										{(label) => <label for={controlId()}>{label()}</label>}
+									</Match>
+									<Match
+										when={
+											!!field.label &&
+											typeof field.label === "object" &&
+											field.label
+										}
+									>
+										{(label) => <Label {...label()} for={controlId()} />}
+									</Match>
+									{/* <Match when={!field.label}>{null}</Match> */}
+								</Switch>
+							);
 
 							return (
 								<div>
 									{labelComp}
 									{field.ft === "textarea" ? (
-										<TextAreaField {...field} id={controlId} />
+										<TextAreaField {...field} id={controlId()} />
 									) : field.ft === "select" ? (
-										<SelectField {...field} id={controlId} />
+										<SelectField {...field} id={controlId()} />
 									) : field.ft === "checkbox" ? (
-										<CheckboxField {...field} id={controlId} />
+										<CheckboxField {...field} id={controlId()} />
 									) : field.ft === "radio-group" ? (
-										<RadioGroupField {...field} id={controlId} />
+										<RadioGroupField {...field} id={controlId()} />
 									) : (
-										<InputField {...field} id={controlId} />
+										<InputField {...field} id={controlId()} />
 									)}
 								</div>
 							);
@@ -394,7 +385,8 @@ export function FormBuilder(
 					setIsIdle(false);
 					event.preventDefault();
 					const formData = new FormData(event.currentTarget);
-					const values: any = {};
+					/** @type {any} */
+					const values = {};
 					formData.forEach((value, key) => {
 						values[key] = value;
 					});
@@ -406,7 +398,13 @@ export function FormBuilder(
 			use:handleOnReset={() => setIsIdle(true)}
 			aria-describedby={formAriaDescribedby()}
 			data-submit-state={
-				isSubmitPending() ? "pending" : otherProps.error ? "dirty" : isIdle() ? "idle" : "submitted"
+				isSubmitPending()
+					? "pending"
+					: otherProps.error
+						? "dirty"
+						: isIdle()
+							? "idle"
+							: "submitted"
 			}
 		>
 			{formDescription}

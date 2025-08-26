@@ -2,7 +2,7 @@ import { LOGIN_MESSAGES_ERRORS } from "@de100/auth-shared/constants";
 import { useRouter } from "@de100/i18n-solid-startjs/client";
 import { useMutation } from "@tanstack/solid-query";
 import { createMemo } from "solid-js";
-import { FormBuilder } from "#components/ui/form-builder.jsx";
+import { FormBuilder } from "#components/ui/form-builder/index.jsx";
 import { useGetCurrentSessionQuery } from "#libs/auth/client/hooks/get-current-session.js";
 import { orpc } from "#libs/orpc/index.js";
 import { authRoutesConfig } from "../../routes-config.js";

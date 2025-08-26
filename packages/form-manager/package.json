@@ -1,0 +1,34 @@
+{
+	"name": "@de100/form-manager",
+	"version": "0.0.13",
+	"description": "A form state management for fields validations and errors",
+	"keywords": [
+		"form",
+		"manage"
+	],
+	"license": "MIT",
+	"readme": "./README.md",
+	"sideEffects": false,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": "./dist/index.js"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
+		"@de100/tsconfig": "workspace:*",
+		"@standard-schema/spec": "catalog:",
+		"tsup": "catalog:",
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"old:build": "cross-env NODE_ENV=production tsup",
+		"old:dev": "pnpm run build -- --watch",
+		"build": "tsup src --format cjs,esm --dts",
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "tsc",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src"
+	}
+}
