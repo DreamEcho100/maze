@@ -1,10 +1,11 @@
-import type { FormMangerErrors } from "../form-manger/errors.ts";
+// form-manger/under-discussion-todo/trie.ts
+import type { FormManagerError } from "../form-manger/errors.ts";
 import type { FormFieldOptions } from "../form-manger/field-options.ts";
-import type { FormManger } from "../form-manger/index.ts";
+import type { FormManager } from "../form-manger/index.ts";
 import type {
+	FormValidationEvent,
 	NestedPath,
 	NestedPathValue,
-	ValidationEvents,
 	ValuesShape,
 } from "../shared.ts";
 
@@ -207,7 +208,7 @@ export interface EnhancedValidationOptions<
 		  };
 
 	allowedOnEvent?: {
-		[key in ValidationEvents]?: boolean;
+		[key in FormValidationEvent]?: boolean;
 	};
 
 	/** Fields that should trigger validation of this field */
@@ -230,7 +231,7 @@ export interface EnhancedValidationOptions<
 	};
 
 	/** When to validate this field */
-	mode?: ValidationEvents | "onChange";
+	mode?: FormValidationEvent | "onChange";
 
 	/** Debounce time for async validation (ms) */
 	asyncDebounceMs?: number;
@@ -243,22 +244,23 @@ export interface EnhancedValidationOptions<
  * Enhanced FormFieldOptions with updated validation
  */
 export interface EnhancedFormFieldOptions<
+	Values extends ValuesShape,
+	Key extends NestedPath<Values>,
 	Value,
 	ValidValue,
-	Values extends ValuesShape,
-> extends Omit<FormFieldOptions<Value, ValidValue, Values>, "validation"> {
+> extends Omit<FormFieldOptions<Values, Key, Value, ValidValue>, "validation"> {
 	validation?: EnhancedValidationOptions<Value, ValidValue, Values>;
 }
 
 /**
  * Enhanced form manager with path operations
  */
-export interface EnhancedFormManger<
+export interface EnhancedFormManager<
 	Values extends ValuesShape,
 	Schema,
 	SubmissionResult = unknown,
 	SubmissionError = unknown,
-> extends FormManger<Values, Schema, SubmissionResult, SubmissionError> {
+> extends FormManager<Values, Schema, SubmissionResult, SubmissionError> {
 	/** Path management operations */
 	paths: PathOperations<Values, Schema>;
 
@@ -270,13 +272,14 @@ export interface EnhancedFormManger<
 		/** Existing field properties */
 		options: {
 			[Key in NestedPath<Values>]?: EnhancedFormFieldOptions<
+				Values,
+				Key,
 				NestedPathValue<Values, Key>,
-				NestedPathValue<Schema, Key>,
-				Values
+				NestedPathValue<Schema, Key>
 			>;
 		};
 		modified: Set<NestedPath<Values>>;
-		errors: FormMangerErrors<Schema>;
+		errors: { [Path in NestedPath<Schema>]?: FormManagerError<Path> };
 		dirty: Set<NestedPath<Values>>;
 		touched: Set<NestedPath<Values>>;
 		validating: Set<NestedPath<Values>>;
@@ -300,9 +303,10 @@ export interface EnhancedFormManger<
 		getOptions: <Path extends NestedPath<Values>>(
 			path: Path,
 		) => EnhancedFormFieldOptions<
+			Values,
+			Path,
 			NestedPathValue<Values, Path>,
-			NestedPathValue<Schema, Path>,
-			Values
+			NestedPathValue<Schema, Path>
 		>;
 	};
 
@@ -312,7 +316,7 @@ export interface EnhancedFormManger<
 		validateForm: () => Promise<boolean>;
 		setError: <T extends NestedPath<Schema>>(
 			name: T,
-			error: { message: string; validationEvent: ValidationEvents } | null,
+			error: { message: string; validationEvent: FormValidationEvent } | null,
 		) => void;
 		clearErrors: (names?: NestedPath<Schema>[]) => void;
 	};

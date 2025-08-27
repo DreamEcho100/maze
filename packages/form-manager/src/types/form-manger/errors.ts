@@ -1,9 +1,11 @@
-import type { NestedPath, ValidationEvents } from "../shared";
+// form-manger/errors.ts
+import type { FormValidationEvent } from "../shared.ts";
 
-export type FormMangerErrors<Schema> = {
-	[Key in NestedPath<Schema>]?: {
-		name: Key;
-		message: string | null;
-		validationEvent: ValidationEvents;
-	};
-};
+export interface FormManagerError<Path extends string> {
+	/** The error message of the issue. */
+	readonly message: string | null;
+	/** The path of the issue, if any. */
+	readonly path: Path; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
+	/** The validation event that triggered the issue, if any. */
+	readonly validationEvent: FormValidationEvent;
+}

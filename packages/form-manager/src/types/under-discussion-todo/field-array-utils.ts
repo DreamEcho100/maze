@@ -1,3 +1,5 @@
+// form-manger/under-discussion-todo/field-array-utils.ts
+
 import type { NestedPath, NestedPathValue, ValuesShape } from "../shared";
 
 type PotentialArr = any[] | ReadonlyArray<any> | undefined | null;
@@ -8,6 +10,10 @@ type GetPotentialArrVal<T extends PotentialArr> = T extends ReadonlyArray<
 	: T extends Array<infer U>
 		? U
 		: never;
+
+// type PotentialArr = unknown[] | ReadonlyArray<unknown> | null | undefined;
+// type GetArrayItem<T> = T extends ReadonlyArray<infer U> ? U : T extends Array<infer U> ? U : never;
+
 export interface FormManagerWithFieldArrays<Values extends ValuesShape> {
 	/** Field array management with trie-optimized operations */
 	fieldArrays: {
