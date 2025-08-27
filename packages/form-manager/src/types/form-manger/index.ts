@@ -65,6 +65,10 @@ export type Submission<
 	  }
 );
 
+export interface Config {
+	maxDepthForNestedPath: 1000;
+}
+
 export interface FormManager<
 	Values extends ValuesShape,
 	Schema,
@@ -210,9 +214,9 @@ export interface FormManager<
 			first?: NestedPath<Schema>;
 
 			/** Parses an error into the internal structure */
-			parse: (props: { error: unknown; path?: NestedPath<Schema> }) => void;
+			parse?: (props: { error: unknown; path?: NestedPath<Schema> }) => void;
 			/** Formats an error into a user-facing string */
-			format: (error: unknown, validationEvent: FormValidationEvent) => string;
+			format?: (error: unknown, validationEvent: FormValidationEvent) => string;
 		};
 
 		/** 🔹 Derived flags (booleans derived from sets above) */

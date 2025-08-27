@@ -16,33 +16,62 @@ type IntegerString<T> = T extends `${number}`
 		? never // Reject if it contains a decimal
 		: T
 	: never;
-export type NestedPath<T, P extends string = ""> = T extends readonly [
-	// Tuple branch
-	any,
-	...any[],
-]
-	? {
-			[K in IntegerString<keyof T>]: T[K] extends Record<PropertyKey, any> // T & `${number}`
-				? JoinPath<P, K> | NestedPath<T[K], JoinPath<P, K>>
-				: JoinPath<P, K>;
-		}[IntegerString<keyof T>] // T & `${number}`
-	: // Array branch
-		T extends (infer U)[]
-		? // NOTE: we use `bigint` because `number` causes issues like accidentally allowing decimals so it can allow excessive paths
-			// e.g. `{ a: string[] }` with path `a`, `a.0`, `a.1`, but also `a.1.5` which is not desired
-			// Sometimes the "wrong" solution is the right solution! :D
-				| JoinPath<P, bigint>
-				| (U extends Record<PropertyKey, any>
-						? NestedPath<U, JoinPath<P, number>>
-						: never)
-		: // Object branch
-			{
-				[K in keyof T]: NonNullable<T[K]> extends Record<PropertyKey, any>
-					?
-							| JoinPath<P, K & string>
-							| NestedPath<NonNullable<T[K]>, JoinPath<P, K & string>>
-					: JoinPath<P, K & string>;
-			}[keyof T & string];
+
+export interface Config {
+	// So the user can configure/override this if needed
+	maxDepthForNestedPath: 24; // default is 24, can be increased if needed
+}
+
+export type CreateDepthArray<
+	N extends number,
+	R extends unknown[] = [],
+> = R["length"] extends N ? R : CreateDepthArray<N, [unknown, ...R]>;
+type DepthArray = CreateDepthArray<Config["maxDepthForNestedPath"]>;
+// <https://www.esveo.com/en/blog/how-to-workaround-the-max-recursion-depth-in-typescript/>
+// <https://medium.com/@wastecleaner/advanced-typescript-depth-control-of-recursive-structures-b2c66ef0af95>
+// <https://herringtondarkholme.github.io/2023/04/30/typescript-magic/>
+export type NestedPath<
+	T,
+	Path extends string = "",
+	// NOTE:
+	// Type-level recursion depth tracking to prevent infinite recursion
+	// Used on some places here to avoid the error:
+	// "Type instantiation is excessively deep and possibly infinite. ts(2589)"
+	CurrentDepth extends unknown[] = // Config["maxDepthForNestedArr"],
+	DepthArray,
+> = CurrentDepth extends [any, ...infer DepthRest]
+	? // Tuple branch
+		T extends readonly [any, ...any[]]
+		? {
+				[K in IntegerString<keyof T>]: T[K] extends Record<PropertyKey, any> // T & `${number}`
+					? // NOTE: Not providing `DepthRest` here didn't cause issues in practice
+						JoinPath<Path, K> | NestedPath<T[K], JoinPath<Path, K>>
+					: JoinPath<Path, K>;
+			}[IntegerString<keyof T>] // T & `${number}`
+		: // Array branch
+			T extends (infer U)[]
+			? // NOTE: we use `bigint` because `number` causes issues like accidentally allowing decimals so it can allow excessive paths
+				// e.g. `{ a: string[] }` with path `a`, `a.0`, `a.1`, but also `a.1.5` which is not desired
+				// Sometimes the "wrong" solution is the right solution! :D
+				// Credits to <https://stackoverflow.com/a/61199349/13961420>
+					| JoinPath<Path, bigint>
+					| (U extends Record<PropertyKey, any>
+							? NestedPath<U, JoinPath<Path, bigint>, DepthRest>
+							: never)
+			: // Object branch
+				{
+					[K in keyof T]: NonNullable<T[K]> extends Record<PropertyKey, any>
+						?
+								| JoinPath<Path, K & string>
+								| NestedPath<
+										NonNullable<T[K]>,
+										JoinPath<Path, K & string>,
+										DepthRest
+								  >
+						: JoinPath<Path, K & string>;
+				}[keyof T & string]
+	: never;
+
 // type Test_1_NestedPath = NestedPath<{ a: { b: { c: [ { e: string } ] } }; d: number[] }>; // Expected: "a" | "a.b" | "a.b.c" | "a.b.c.0" | "a.b.c.0.e" | "d" | "d.0"
 //    //^?
 // const test_1_1 = "a.b.c.0.e" satisfies Test_1_NestedPath; // ok
