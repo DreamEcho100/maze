@@ -39,13 +39,15 @@ interface Level<LevelName extends string, Value = any> {
 			| "union-item"
 			| "object-property"
 			| "tuple-item"
-			| "array-token-item"]?: boolean;
+			| "array-token-item"
+			| "marked-never"]?: boolean;
 	} & {
 		"intersection-item"?: {
 			[path: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 		};
 	};
 }
+interface TempLevel extends Level<"temp"> {}
 interface NeverLevel extends Level<"never"> {}
 interface PrimitiveLevelBase<Value> extends Level<"primitive", Value> {
 	coerce?: boolean;
@@ -92,27 +94,32 @@ type PrimitiveLevel =
 
 interface ObjectLevel extends Level<"object", Record<string, any>> {
 	required?: boolean;
-	// shape: Record<string, ResolverConfigShape>; // Need to find a way to reference the main type here
+	shape: Record<string, ResolverConfigShape>;
 }
 interface ArrayLevel extends Level<"array", any[]> {
 	required?: boolean;
 	minLength?: number;
 	maxLength?: number;
+	items: ResolverConfigShape; // Need to find a way to reference the main type here
 }
 interface TupleLevel extends Level<"tuple", any[]> {
 	required?: boolean;
 	exactLength?: number;
 	minLength?: number;
 	maxLength?: number;
+	items: ResolverConfigShape[];
 }
 interface UnionLevel extends Level<"union"> {
 	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
+	options: ResolverConfigShape[];
+	discriminator?: string;
 }
 interface IntersectionLevel extends Level<"intersection"> {
 	// left: ResolverConfigShape; // Need to find a way to reference the main type here
 	// right: ResolverConfigShape; // Need to find a way to reference the main type here
-	left: (value: any) => Promise<ValidationResult<string, any>>;
-	right: (value: any) => Promise<ValidationResult<string, any>>;
+	// left: (value: any) => Promise<ValidationResult<string, any>>;
+	// right: (value: any) => Promise<ValidationResult<string, any>>;
+	parts: ResolverConfigShape[];
 }
 
 interface ResolverConfigBase {
@@ -122,6 +129,7 @@ interface ResolverConfigBase {
 
 type ResolverConfigShape = ResolverConfigBase &
 	(
+		| TempLevel
 		| NeverLevel
 		| PrimitiveLevel
 		| ObjectLevel
@@ -201,7 +209,7 @@ function pushToAcc(props: {
 		props.acc.pathToResolverConfig[props.path];
 	let isNew = true;
 
-	if (levelConfig) {
+	if (levelConfig && levelConfig.level !== "temp") {
 		isNew = false;
 		// already exists
 		// This could happen here because:
@@ -214,33 +222,251 @@ function pushToAcc(props: {
 		//	 - For unions, we might want to create a new `union-item` config that contains both the existing and the new one as options
 		//	 - For intersections, we might want to create a new `intersection-item` config that contains both the existing and the new one as left and right
 
-		if (props.metadata) {
-			// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-			const metadata = (levelConfig.metadata ??= {});
-			for (const key in props.metadata) {
-				metadata[key] = props.metadata[key];
-			}
-		}
+		// if (props.metadata) {
+		// 	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+		// 	const metadata = (levelConfig.metadata ??= {});
+		// 	for (const key in props.metadata) {
+		// 		metadata[key] = props.metadata[key];
+		// 	}
+		// }
 
 		// if (levelConfig.metadata["union-item"]) {
 		// 	// merge options
 		// 	// How to merge options?
 		// }
 
-		const pathIntersectionItemConfig =
+		const pathIntersectionItemConfigPower =
 			levelConfig.metadata["intersection-item"][props.path];
-		const newIntersectionItemConfig =
+		const newIntersectionItemConfigPower =
 			props.inheritMetadata["intersection-item"]?.[props.path];
-		if (pathIntersectionItemConfig) {
+		if (pathIntersectionItemConfigPower) {
 			// TODO:
 			// Need to adjust the existing code so there be a level of intersection-item
 			// And has the `branches` property that contains the different branches
 			// And resolve them with zod's `intersect` method and validate them properly
+			if (newIntersectionItemConfigPower) {
+				// const minBranchPower = Math.min(
+				// 	pathIntersectionItemConfigPower,
+				// 	newIntersectionItemConfigPower,
+				// );
+
+				let left: ResolverConfigShape;
+				let right: ResolverConfigShape;
+
+				if (pathIntersectionItemConfigPower < newIntersectionItemConfigPower) {
+					left = levelConfig;
+					right = props.levelConfig;
+				} else {
+					left = props.levelConfig;
+					right = levelConfig;
+				}
+
+				/*
+Great, now we’re digging into the *guts* of Zod’s behavior. Let’s break this down carefully, because how `intersection` works depends on what’s being intersected.
+
+---
+
+### 🔹 General Rule
+
+* `z.intersection(A, B)` returns a schema that validates values that pass **both** `A` and `B`.
+* It doesn’t always *merge* types (like TS structural merge). Instead:
+
+  * For **objects** → structural merge (shape merging with right-precedence).
+  * For everything else → run both validators, return the **right-side’s parsed value** (with constraints from both).
+
+---
+*/
+				/*
+
+### 🔹 Case by Case
+
+#### 1. **Objects**
+
+```ts
+const A = z.object({ a: z.string(), c: z.string() })
+const B = z.object({ b: z.number(), c: z.number() })
+const AB = z.intersection(A, B)
+```
+
+* Runtime: requires `{ a: string, b: number, c: ??? }` where `c` must satisfy *both* `string` and `number` → impossible unless coercion involved.
+* Static type: `{ a: string } & { b: number } & { c: string & number }` (which collapses `c` to `never` in TS).
+* Merge strategy: shape keys are merged, and if a key exists in both, Zod builds an **intersection schema for that key**.
+
+✅ **Objects = structural merge**.
+
+---
+*/
+				if (left.level === "object" && right.level === "object") {
+				} else if (left.level === "array" && right.level === "array") {
+					/*
+
+#### 2. **Arrays**
+
+```ts
+const A = z.array(z.string())
+const B = z.array(z.number())
+const AB = z.intersection(A, B)
+```
+
+* Runtime: input must be an array where every element satisfies **both** `z.string()` and `z.number()` → impossible.
+* Type: `(string[]) & (number[]) = never[]`.
+* Behavior: no structural merge → it just validates against both schemas.
+
+✅ **Arrays = element-wise intersection check, but usually impossible unless overlapping coercion**.
+
+---
+*/
+					// Usually impossible unless overlapping coercion
+				}
+				/*
+
+#### 3. **Records**
+
+```ts
+const A = z.record(z.string())
+const B = z.record(z.number())
+const AB = z.intersection(A, B)
+```
+
+* Runtime: object keys must map to values that satisfy both → value type = `string & number = never`.
+* So only empty objects `{}` succeed.
+* Type: `Record<string, string> & Record<string, number> = Record<string, never>`.
+
+✅ **Records = value-type intersection**.
+
+---
+*/
+				// else if (left.level === "record" && right.level === "record") {
+				// }
+				/*
+
+#### 4. **Tuples**
+
+```ts
+const A = z.tuple([z.string(), z.number()])
+const B = z.tuple([z.string(), z.boolean()])
+const AB = z.intersection(A, B)
+```
+
+* Runtime: must satisfy both → tuple length must match both. If they differ → fail.
+* For same length → element-wise intersection.
+* Example:
+
+  * First element: `z.string() & z.string()` → `z.string()`.
+  * Second element: `z.number() & z.boolean()` → impossible.
+
+✅ **Tuples = element-wise intersection**.
+
+---
+*/
+				if (left.level === "tuple" && right.level === "tuple") {
+				} else if (
+					/*
+
+#### 5. **Primitives**
+
+```ts
+const A = z.string().min(2)
+const B = z.string().regex(/^[a-z]+$/)
+const AB = z.intersection(A, B)
+```
+
+* Both are strings, so:
+
+  * Runtime: must be string with length ≥2 AND matching regex.
+  * Type: just `string`.
+* If primitives differ (`string` vs `number`) → impossible.
+
+✅ **Primitives = merged validator constraints** if same base type, otherwise impossible.
+
+---
+*/
+					left.level === "primitive" &&
+					right.level === "primitive" &&
+					left.type === right.type
+				) {
+				} else if (left.level === "union" && right.level === "union") {
+					/*
+
+#### 6. **Unions**
+
+```ts
+const A = z.union([z.string(), z.number()])
+const B = z.union([z.number(), z.boolean()])
+const AB = z.intersection(A, B)
+```
+
+* Runtime: must pass both unions → effectively an intersection of sets.
+
+  * SetA = {string, number}, SetB = {number, boolean}
+  * Result = {number}.
+* Type: `string | number` & `number | boolean` → `number`.
+
+✅ **Union intersection = overlap of options**.
+
+---
+*/
+				} else if (
+					/*
+
+#### 7. **Intersections of intersections**
+
+```ts
+const A = z.string().min(1)
+const B = z.string().regex(/a/)
+const C = z.string().max(5)
+const ABC = z.intersection(z.intersection(A, B), C)
+```
+
+* Runtime: all constraints combine.
+* Type: still `string`.
+
+✅ **Intersections chain constraints**.
+
+---
+*/
+					left.level === "intersection" &&
+					right.level === "intersection"
+				) {
+				} else {
+					/*
+
+### 🔹 Summary Table
+
+| Type             | Strategy                                                 |
+| ---------------- | -------------------------------------------------------- |
+| **Object**       | Merge keys, recurse, key conflicts = nested intersection |
+| **Array**        | Element-wise intersection, usually impossible            |
+| **Record**       | Value-type intersection, usually impossible              |
+| **Tuple**        | Element-wise, must match lengths                         |
+| **Primitive**    | Merge constraints if same base, else impossible          |
+| **Union**        | Set intersection (overlapping members only)              |
+| **Intersection** | Combine constraints recursively                          |
+
+---
+
+👉 So:
+
+* **Objects are special** → structural merging.
+* Everything else is **just: must pass both validators** (right schema’s value wins).
+
+---
+
+Do you want me to show you **the actual Zod internal code** (simplified) for how it computes intersections for objects vs non-objects? That way you’ll see exactly where it bails vs merges.
+*/
+					// never
+					levelConfig.metadata = {
+						...levelConfig.metadata,
+						"marked-never": true,
+					};
+				}
+			}
 		}
 
 		return { resolverConfig: levelConfig, isNew };
 	}
 
+	levelConfig = props.levelConfig satisfies ResolverConfigShape;
 	if (levelConfig.metadata["union-item"]) {
 		// merge options
 		// How to merge options?
@@ -250,8 +476,6 @@ function pushToAcc(props: {
 			"intersection-item": props.inheritMetadata["intersection-item"],
 		};
 	}
-
-	levelConfig = props.levelConfig satisfies ResolverConfigShape;
 	if (props.metadata) {
 		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 		const metadata = (levelConfig.metadata ??= {});
@@ -274,6 +498,17 @@ const schemaPathCache = new WeakMap<
 	}
 >();
 
+/*
+NOTE: `schema._zod.def.*` **is needed** since it interacts will with TS
+The following are not enough:
+From Zod docs:
+	- `schema.describe()` - human label `Returns a new instance that has been registered in z.globalRegistry with the specified description` 
+	- `schema.isNullable()`: @deprecated Try safe-parsing null (this is what isNullable does internally)
+	- ``schema.isOptional()``: @deprecated Try safe-parsing undefined (this is what isOptional does internally)
+`schema.unwrap()` - will work only for for some types so the recursive functionality is needed anyway
+`pushToAcc` is needed to easily access the accumulator by path and use it when needed instead of always recursing or looping through the whole thing again and again
+`inheritMetadata` is needed for properly handling and passing `intersection-item` and `union-item` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
+*/
 function zodResolverImpl(
 	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>,
 	ctx: {
@@ -283,6 +518,7 @@ function zodResolverImpl(
 		acc: {
 			paths: string[];
 			pathToResolverConfig: Record<string, ResolverConfigShape>;
+			resolverConfig: ResolverConfigShape;
 		};
 		default?: any;
 		isOptional?: boolean;
@@ -291,40 +527,48 @@ function zodResolverImpl(
 ): {
 	paths: string[];
 	pathToResolverConfig: Record<string, ResolverConfigShape>;
+	finalResolverConfig: ResolverConfigShape;
 } {
-	const currentParent = ctx.currentParent || "";
+	const currentParent = ctx.currentParent;
 	/** Unwrap ZodDefault, ZodOptional, and ZodNullable to get to the core schema **/
 	if (schema instanceof z.core.$ZodDefault) {
-		// unwrap default to get the actual schema
-		// defaultValue = schema._zod.def.defaultValue
 		schema = schema._zod.def.innerType;
-		zodResolverImpl(schema, {
-			acc: ctx.acc,
-			currentParent,
-			...ctx,
-			default: schema._zod.def.defaultValue,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: zodResolverImpl(schema, {
+				acc: ctx.acc,
+				currentParent,
+				...ctx,
+				default: schema._zod.def.defaultValue,
+			}).finalResolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodOptional) {
-		zodResolverImpl(schema.unwrap(), {
-			acc: ctx.acc,
-			currentParent,
-			...ctx,
-			metadata: { ...(ctx?.metadata || {}), optional: true },
-			isOptional: true,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: zodResolverImpl(schema.unwrap(), {
+				acc: ctx.acc,
+				currentParent,
+				...ctx,
+				metadata: { ...(ctx?.metadata || {}), optional: true },
+				isOptional: true,
+			}).finalResolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodNullable) {
-		zodResolverImpl(schema.unwrap(), {
-			acc: ctx.acc,
-			currentParent,
-			...ctx,
-			metadata: { ...(ctx?.metadata || {}), nullable: true },
-			isNullable: true,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: zodResolverImpl(schema.unwrap(), {
+				acc: ctx.acc,
+				currentParent,
+				...ctx,
+				metadata: { ...(ctx?.metadata || {}), nullable: true },
+				isNullable: true,
+			}).finalResolverConfig,
+		};
 	}
 	/* End unwrap **/
 
@@ -342,10 +586,26 @@ function zodResolverImpl(
 		let coerce = false;
 
 		if (schema instanceof z.ZodLiteral) {
-			regex = new RegExp(`^${schema._zod.def.values.join("|")}$`);
+			regex = new RegExp(
+				`^${schema._zod.def.values
+					.map((v) =>
+						// Need to escape special regex characters if the literal is a string
+						typeof v === "string"
+							? v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+							: String(v),
+					)
+					.join("|")}$`,
+			);
 		} else if (schema instanceof z.ZodEnum) {
 			regex = new RegExp(
-				`^${Object.values(schema._zod.def.entries).join("|")}$`,
+				`^${Object.values(schema._zod.def.entries)
+					.map((v) =>
+						// Need to escape special regex characters if the enum value is a string
+						typeof v === "string"
+							? v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+							: String(v),
+					)
+					.join("|")}$`,
 			);
 		} else {
 			coerce = schema._zod.def.coerce;
@@ -376,15 +636,18 @@ function zodResolverImpl(
 			coerce,
 		};
 
-		pushToAcc({
-			acc: ctx.acc,
-			path: currentParent,
-			schema,
-			levelConfig,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				path: currentParent,
+				schema,
+				levelConfig,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodNumber) {
 		const isRequired = !ctx?.isOptional && !ctx?.isNullable;
@@ -421,16 +684,18 @@ function zodResolverImpl(
 			coerce: schema.def.coerce,
 		};
 
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
-
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodDate) {
 		const isRequired = !ctx?.isOptional && !ctx?.isNullable;
@@ -464,16 +729,18 @@ function zodResolverImpl(
 			coerce: schema.def.coerce,
 		};
 
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
-
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodBoolean) {
 		const isRequired = !ctx?.isOptional && !ctx?.isNullable;
@@ -488,15 +755,18 @@ function zodResolverImpl(
 			},
 			coerce: schema.def.coerce,
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	/** End primitives **/
 
@@ -514,6 +784,9 @@ function zodResolverImpl(
 			}
 		}
 
+		const tokenNextParent = currentParent
+			? `${currentParent}.${ARRAY_ITEM_TOKEN}`
+			: ARRAY_ITEM_TOKEN;
 		const levelConfig: ResolverConfigBase & ArrayLevel = {
 			level: "array",
 			path: currentParent,
@@ -524,27 +797,26 @@ function zodResolverImpl(
 			validate(value) {
 				return customValidate(value, currentParent, { schema });
 			},
+			// To make sure we also cover the array item token path
+			items: zodResolverImpl(schema.element, {
+				acc: ctx.acc,
+				currentParent: tokenNextParent,
+				metadata: { "array-item": true, "array-token-item": true },
+				inheritMetadata: ctx.inheritMetadata,
+			}).finalResolverConfig,
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
-
-		const tokenNextParent = currentParent
-			? `${currentParent}.${ARRAY_ITEM_TOKEN}`
-			: ARRAY_ITEM_TOKEN;
-		// To make sure we also cover the array item token path
-		zodResolverImpl(schema.element, {
-			acc: ctx.acc,
-			currentParent: tokenNextParent,
-			metadata: { "array-item": true, "array-token-item": true },
-			inheritMetadata: ctx.inheritMetadata,
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodObject) {
 		const isRequired = !ctx?.isOptional && !ctx?.isNullable;
@@ -556,27 +828,32 @@ function zodResolverImpl(
 			validate(value) {
 				return customValidate(value, currentParent, { schema });
 			},
+			shape: {}, // To be filled below
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
 
 		const shape = schema.shape;
 		for (const key in shape) {
 			const nextParent = currentParent ? `${currentParent}.${key}` : key;
-			zodResolverImpl(shape[key], {
+			levelConfig.shape[key] = zodResolverImpl(shape[key], {
 				acc: ctx.acc,
 				currentParent: nextParent,
 				metadata: { object: true, "object-property": true },
 				inheritMetadata: ctx.inheritMetadata,
-			});
+			}).finalResolverConfig;
 		}
-		return ctx.acc;
+
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodTuple) {
 		const isRequired = !ctx?.isOptional && !ctx?.isNullable;
@@ -602,15 +879,8 @@ function zodResolverImpl(
 			validate(value) {
 				return customValidate(value, currentParent, { schema });
 			},
+			items: new Array(schema.def.items.length).fill(null) as any[],
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
 
 		const items = schema.def.items;
 		for (let index = 0; index < items.length; index++) {
@@ -619,14 +889,26 @@ function zodResolverImpl(
 				? `${currentParent}.${index}`
 				: String(index);
 
-			zodResolverImpl(item, {
+			levelConfig.items[index] = zodResolverImpl(item, {
 				acc: ctx.acc,
 				currentParent: indexedNextParent,
 				metadata: { tuple: true, "tuple-item": true },
 				inheritMetadata: ctx.inheritMetadata,
-			});
+			}).finalResolverConfig;
 		}
-		return ctx.acc;
+
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	// unions, intersections, etc. - recurse into options
 	if (schema instanceof z.ZodUnion) {
@@ -639,17 +921,12 @@ function zodResolverImpl(
 			validate(value) {
 				return customValidate(value, currentParent, { schema });
 			},
+			options: new Array(schema.options.length).fill(null) as any[],
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
 
-		for (const opt of schema.options) {
+		// TODO: How to populate the options properly?
+		for (let index = 0; index < schema.options.length; index++) {
+			const opt = schema.options[index];
 			zodResolverImpl(opt, {
 				acc: ctx.acc,
 				currentParent,
@@ -657,7 +934,18 @@ function zodResolverImpl(
 				inheritMetadata: ctx.inheritMetadata,
 			});
 		}
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	if (schema instanceof z.ZodIntersection) {
 		// Is this needed?!!
@@ -668,52 +956,59 @@ function zodResolverImpl(
 			path: currentParent,
 			required: isRequired,
 			default: ctx?.default,
-			left: (value) =>
-				customValidate(value, currentParent, {
-					schema: schema.def.left,
-				}),
-			right: (value) =>
-				customValidate(value, currentParent, {
-					schema: schema.def.right,
-				}),
+			// left: (value) =>
+			// 	customValidate(value, currentParent, {
+			// 		schema: schema.def.left,
+			// 	}),
+			// right: (value) =>
+			// 	customValidate(value, currentParent, {
+			// 		schema: schema.def.right,
+			// 	}),
+			parts: [
+				// needs to adjust the returned `acc` to return the final shape of `zodResolverImpl` in general, maybe on a field called `finalSchema` or something
+				// This will help for future cases
+				zodResolverImpl(schema.def.left, {
+					acc: ctx.acc,
+					currentParent,
+					metadata: { "intersection-item": "left" },
+					inheritMetadata: {
+						...(ctx.inheritMetadata || {}),
+						"intersection-item": {
+							...(ctx.inheritMetadata?.["intersection-item"] || {}),
+							[currentParent]: 0,
+						},
+					},
+				}).finalResolverConfig,
+				zodResolverImpl(schema.def.right, {
+					acc: ctx.acc,
+					currentParent,
+					metadata: { "intersection-item": "right" },
+					inheritMetadata: {
+						...(ctx.inheritMetadata || {}),
+						"intersection-item": {
+							...(ctx.inheritMetadata?.["intersection-item"] || {}),
+							[currentParent]: 1,
+						},
+					},
+				}).finalResolverConfig,
+			],
 			validate(value) {
 				return customValidate(value, currentParent, { schema });
 			},
 		};
-		pushToAcc({
-			acc: ctx.acc,
-			levelConfig,
-			path: currentParent,
-			schema,
-			metadata: ctx?.metadata,
-			inheritMetadata: ctx.inheritMetadata,
-		});
 
-		zodResolverImpl(schema.def.left, {
-			acc: ctx.acc,
-			currentParent,
-			metadata: { "intersection-item": "left" },
-			inheritMetadata: {
-				...(ctx.inheritMetadata || {}),
-				"intersection-item": {
-					...(ctx.inheritMetadata?.["intersection-item"] || {}),
-					[currentParent]: 0,
-				},
-			},
-		});
-		zodResolverImpl(schema.def.right, {
-			acc: ctx.acc,
-			currentParent,
-			metadata: { "intersection-item": "right" },
-			inheritMetadata: {
-				...(ctx.inheritMetadata || {}),
-				"intersection-item": {
-					...(ctx.inheritMetadata?.["intersection-item"] || {}),
-					[currentParent]: 1,
-				},
-			},
-		});
-		return ctx.acc;
+		return {
+			paths: ctx.acc.paths,
+			pathToResolverConfig: ctx.acc.pathToResolverConfig,
+			finalResolverConfig: pushToAcc({
+				acc: ctx.acc,
+				levelConfig,
+				path: currentParent,
+				schema,
+				metadata: ctx?.metadata,
+				inheritMetadata: ctx.inheritMetadata,
+			}).resolverConfig,
+		};
 	}
 	/** End complex types **/
 
@@ -740,7 +1035,26 @@ function zodResolverImpl(
 	// - ZodSymbol
 
 	console.warn("Unhandled schema type:", schema);
-	return ctx.acc;
+	// return ctx.acc;
+	return {
+		paths: ctx.acc.paths,
+		pathToResolverConfig: ctx.acc.pathToResolverConfig,
+		finalResolverConfig: pushToAcc({
+			acc: ctx.acc,
+			levelConfig: {
+				level: "never",
+				path: currentParent,
+				validate(value) {
+					// return customValidate(value, currentParent, { schema });
+					throw new Error("Not implemented");
+				},
+			},
+			inheritMetadata: ctx.inheritMetadata,
+			path: currentParent,
+			schema,
+			metadata: ctx?.metadata,
+		}).resolverConfig,
+	};
 }
 
 /**
@@ -763,7 +1077,18 @@ function zodResolver(
 	}
 
 	const result = zodResolverImpl(schema, {
-		acc: { paths: [], pathToResolverConfig: {} },
+		acc: {
+			paths: [],
+			pathToResolverConfig: {},
+			resolverConfig: {
+				level: "temp",
+				path: "",
+				metadata: {},
+				validate() {
+					throw new Error("Not implemented");
+				},
+			},
+		},
 		currentParent: "",
 		inheritMetadata: {},
 	});
