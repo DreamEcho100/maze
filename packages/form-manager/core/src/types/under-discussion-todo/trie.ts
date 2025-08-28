@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // form-manger/under-discussion-todo/trie.ts
 import type { FormManagerError } from "../form-manger/errors.ts";
 import type { FormFieldOptions } from "../form-manger/field-options.ts";

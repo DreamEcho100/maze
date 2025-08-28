@@ -1,0 +1,56 @@
+{
+	"name": "@de100/form-manager-core",
+	"version": "0.0.13",
+	"description": "A form state management for fields validations and errors",
+	"keywords": [
+		"form",
+		"manage"
+	],
+	"license": "MIT",
+	"readme": "./README.md",
+	"sideEffects": false,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		"./constants": {
+			"types": "./dist/constants.d.ts",
+			"default": "./src/constants.js"
+		},
+		"./shared": {
+			"types": "./dist/types/shared.d.ts",
+			"default": "./src/types/shared.ts"
+		},
+		"./types/form-manger/errors": {
+			"types": "./dist/types/form-manger/errors.d.ts",
+			"default": "./src/types/form-manger/errors.ts"
+		},
+		"./types/form-manger/field-options": {
+			"types": "./dist/types/form-manger/field-options.d.ts",
+			"default": "./src/types/form-manger/field-options.ts"
+		},
+		"./types/form-manger/index": {
+			"types": "./dist/types/form-manger/index.d.ts",
+			"default": "./src/types/form-manger/index.ts",
+			"require": "./src/types/form-manger/index.ts",
+			"import": "./src/types/form-manger/index.ts"
+		}
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
+		"@de100/tsconfig": "workspace:*",
+		"@standard-schema/spec": "catalog:",
+		"tsup": "catalog:",
+		"typescript": "catalog:"
+	},
+	"scripts": {
+		"old:build": "cross-env NODE_ENV=production tsup",
+		"old:dev": "pnpm run build -- --watch",
+		"old:2:build": "tsup src --format cjs,esm --dts",
+		"build": "tsc",
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "tsc",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src"
+	}
+}

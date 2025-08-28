@@ -1,0 +1,37 @@
+{
+	"name": "@de100/form-manager-resolver-zod",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"imports": {
+		"#*": "./src/*"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"license": "MIT",
+	"scripts": {
+		"build": "tsc",
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "tsc",
+		"format:fix": "biome format ./src --write",
+		"format:check": "biome format ./src",
+		"lint": "dotenv -v SKIP_ENV_VALIDATION=1 biome lint ./src",
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@de100/biome-config": "workspace:*",
+		"@de100/form-manager-core": "workspace:*",
+		"@de100/tsconfig": "workspace:*",
+		"typescript": "catalog:"
+	},
+	"prettier": "@de100/prettier-config",
+	"dependencies": {
+		"zod": "catalog:"
+	},
+	"description": "",
+	"main": "index.js",
+	"keywords": [],
+	"author": ""
+}

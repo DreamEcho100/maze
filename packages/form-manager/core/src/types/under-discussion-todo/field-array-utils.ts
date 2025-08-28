@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // form-manger/under-discussion-todo/field-array-utils.ts
 
 import type { NestedPath, NestedPathValue, ValuesShape } from "../shared";

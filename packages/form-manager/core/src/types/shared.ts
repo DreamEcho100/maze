@@ -1,4 +1,6 @@
-import type { FORM_VALIDATION_EVENTS } from "../constants";
+import type { ARRAY_ITEM_TOKEN, FORM_VALIDATION_EVENTS } from "../constants";
+
+export type ArrayItemToken = typeof ARRAY_ITEM_TOKEN;
 
 // form-manger/shared.ts
 export type ValuesShape = Record<string, any>;
@@ -19,7 +21,7 @@ type IntegerString<T> = T extends `${number}`
 
 export interface Config {
 	// So the user can configure/override this if needed
-	maxDepthForNestedPath: 24; // default is 24, can be increased if needed
+	maxDepthForNestedPath: 10; // default is 24, can be increased if needed
 }
 
 export type CreateDepthArray<
@@ -54,11 +56,19 @@ export type NestedPath<
 				// e.g. `{ a: string[] }` with path `a`, `a.0`, `a.1`, but also `a.1.5` which is not desired
 				// Sometimes the "wrong" solution is the right solution! :D
 				// Credits to <https://stackoverflow.com/a/61199349/13961420>
-					| JoinPath<Path, bigint>
+					| JoinPath<Path, bigint | ArrayItemToken>
 					| (U extends Record<PropertyKey, any>
-							? NestedPath<U, JoinPath<Path, bigint>, DepthRest>
+							? NestedPath<
+									U,
+									JoinPath<Path, bigint | ArrayItemToken>,
+									DepthRest
+								>
 							: never)
-			: // Object branch
+			: // | JoinPath<Path, ArrayItemToken>
+				// | (T[number] extends Record<PropertyKey, any>
+				// 		? NestedPath<T[number], JoinPath<Path, ArrayItemToken>, Rest>
+				// 		: never)
+				// Object branch
 				{
 					[K in keyof T]: NonNullable<T[K]> extends Record<PropertyKey, any>
 						?
@@ -71,25 +81,67 @@ export type NestedPath<
 						: JoinPath<Path, K & string>;
 				}[keyof T & string]
 	: never;
+// Split approach - divide and conquer
+// 1. Split into specialized types for different structures
 
-// type Test_1_NestedPath = NestedPath<{ a: { b: { c: [ { e: string } ] } }; d: number[] }>; // Expected: "a" | "a.b" | "a.b.c" | "a.b.c.0" | "a.b.c.0.e" | "d" | "d.0"
-//    //^?
-// const test_1_1 = "a.b.c.0.e" satisfies Test_1_NestedPath; // ok
-// const test_1_2 = "d" satisfies Test_1_NestedPath ; // ok// ok
-// const test_1_3 = "d.0" satisfies Test_1_NestedPath ; // ok
-// type Test_2_NestedPath = NestedPath<[0, { a: {c:0} }]>; // Expected: "0" | "1" | "1.a" | "1.a.c"
-//     //^?
-// const test_2_1 = "1.a.c" satisfies Test_2_NestedPath; // ok
-// const test_2_2 = "0" satisfies Test_2_NestedPath; // ok
-// const test_2_3 = "1.a" satisfies Test_2_NestedPath; // ok
-// const test_2_4 = "1" satisfies Test_2_NestedPath; // ok
-// type Test_3_NestedPath = NestedPath<{ a:  { b: string[] } }>; // Expected: "a" | "a.b" | "a.b.0"
-//     //^?
-// const test_3_1 = "a" satisfies Test_3_NestedPath; // ok
-// const test_3_2 = "a.b.2" satisfies Test_3_NestedPath // ok
-// const test_3_3 = "a.b.ddd" satisfies Test_3_NestedPath // should error, ok
-// const test_3_4 = "a.b.3.4" satisfies Test_3_NestedPath // should error, and it doesn't, not ok
-// const test_3_5 = "a.b.3.4.5" satisfies Test_3_NestedPath // should error, ok
+// // Object paths
+// export type NestedObjectPath<
+// 	T,
+// 	Path extends string = "",
+// 	Depth extends unknown[] = DepthArray,
+// > = Depth extends [unknown, ...infer Rest]
+// 	? {
+// 			[K in keyof T & string]: NonNullable<T[K]> extends Record<
+// 				PropertyKey,
+// 				any
+// 			>
+// 				?
+// 						| JoinPath<Path, K>
+// 						| NestedObjectPath<NonNullable<T[K]>, JoinPath<Path, K>, Rest>
+// 				: JoinPath<Path, K>;
+// 		}[keyof T & string]
+// 	: never;
+
+// // Array paths
+// export type NestedArrayPath<
+// 	T extends any[],
+// 	Path extends string = "",
+// 	Depth extends unknown[] = DepthArray,
+// > = Depth extends [unknown, ...infer Rest]
+// 	?
+// 			| JoinPath<Path, bigint>
+// 			| (T[number] extends Record<PropertyKey, any>
+// 					? NestedPath<T[number], JoinPath<Path, bigint>, Rest>
+// 					: never)
+// 			| JoinPath<Path, ArrayItemToken>
+// 			| (T[number] extends Record<PropertyKey, any>
+// 					? NestedPath<T[number], JoinPath<Path, ArrayItemToken>, Rest>
+// 					: never)
+// 	: never;
+
+// // Tuple paths
+// export type NestedTuplePath<
+// 	T extends readonly any[],
+// 	Path extends string = "",
+// 	Depth extends unknown[] = DepthArray,
+// > = Depth extends [unknown, ...infer Rest]
+// 	? {
+// 			[K in IntegerString<keyof T>]: T[K] extends Record<PropertyKey, any>
+// 				? JoinPath<Path, K> | NestedPath<T[K], JoinPath<Path, K>, Rest>
+// 				: JoinPath<Path, K>;
+// 		}[IntegerString<keyof T>]
+// 	: never;
+
+// // Main type becomes a dispatcher
+// export type NestedPath<
+// 	T,
+// 	Path extends string = "",
+// 	Depth extends unknown[] = DepthArray,
+// > = T extends readonly [any, ...any[]]
+// 	? NestedTuplePath<T, Path, Depth>
+// 	: T extends any[]
+// 		? NestedArrayPath<T, Path, Depth>
+// 		: NestedObjectPath<T, Path, Depth>;
 
 type HasNull<T> = null extends T ? true : false;
 type HasUndefined<T> = undefined extends T ? true : false;
