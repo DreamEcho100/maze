@@ -1,7 +1,5 @@
 {
-	"extends": [
-		"../../biome.json"
-	],
+	"extends": ["@de100/biome-config/base.json"],
 	"files": {
 		"includes": ["!dist", "!**/_ignore"]
 	}
