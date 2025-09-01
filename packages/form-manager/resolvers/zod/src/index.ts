@@ -258,6 +258,7 @@ interface InheritedMetadata {
 	"union-item-descendant"?: {
 		paths: Set<string>;
 	};
+	"marked-never"?: boolean;
 }
 
 interface ZodResolverAcc {
@@ -306,9 +307,13 @@ function updateIntersectionItemResolverConfigs(props: {
 			return existingConfig;
 		} else {
 			try {
-				// @ts-expect-error
-				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+				// We will override the existing config to be of never type
+				// Since if we do `"marked-never": true` it won't be logical
+				// `"marked-never": true` will be used outside for the descendent if there is though
+				// To avoid losing the other paths, metadata, and information
 				// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+				// @ts-ignore
+				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 				return (props.acc.pathToNode[props.newConfig[FIELD_CONFIG].path][
 					FIELD_CONFIG
 				] = {
@@ -365,12 +370,18 @@ function pushToAcc(props: {
 				existingConfig: existingNode,
 				newConfig: props.node,
 			});
+
+			if (existingNode[FIELD_CONFIG].level === "never") {
+				// If it was marked as never, we need to update the inheritedMetadata to have marked-never true
+				props.inheritedMetadata["marked-never"] = true;
+			}
 		}
 
 		if (
 			existingNode[FIELD_CONFIG].level &&
 			existingNode[FIELD_CONFIG].level === "union-item"
 		) {
+			// TODO: needs to check the `marked-never`
 			// Merge union-item options
 			const itemsToPush =
 				props.node[FIELD_CONFIG].level === "union-item"
@@ -383,14 +394,18 @@ function pushToAcc(props: {
 	}
 
 	let newNode = props.node;
-	if (props.currentAttributes || props.inheritedMetadata) {
-		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-		const metadata = (newNode[FIELD_CONFIG].metadata ??= {});
+
+	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+	const metadata = (newNode[FIELD_CONFIG].metadata ??= {});
+	if (props.currentAttributes) {
 		for (const key in props.currentAttributes) {
 			// @ts-expect-error
 			// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 			metadata[key] = props.currentAttributes[key];
 		}
+	}
+
+	if (props.inheritedMetadata) {
 		if (props.inheritedMetadata["intersection-item"]) {
 			metadata["intersection-item"] =
 				props.inheritedMetadata["intersection-item"];
@@ -438,6 +453,13 @@ function pushToAcc(props: {
 					},
 				} satisfies ResolverConfigBase & UnionItemLevel,
 			};
+		}
+
+		// Instead of overriding the config level to be of never type
+		// we will just mark it as never and handle it in the validation phase
+		// to avoid losing the other paths, metadata, and information
+		if (props.inheritedMetadata["marked-never"]) {
+			metadata["marked-never"] = true;
 		}
 	}
 
