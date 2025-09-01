@@ -325,7 +325,7 @@ interface ZodResolverAcc {
  * Update it on the `pathToResolverConfig` by using the `path`
  * @warning it's not accounting for "union-item" yet or recursive compatible intersections
  */
-function updateIntersectionItemResolverConfigs(props: {
+function resolveIntersectionItemConfig(props: {
 	acc: ZodResolverAcc;
 	existingConfig?: TrieNode;
 	newConfig: TrieNode;
@@ -397,6 +397,45 @@ function updateIntersectionItemResolverConfigs(props: {
 	return props.newConfig;
 }
 
+/**
+ * Attach the child node to the current parent node based on the parent node level
+ * It's handled on the `pushToAcc` function
+ * @returns the current parent node after attaching the child node, or the child node itself if no parent node is provided
+ */
+function attachChildToParentNode(props: {
+	currentParentNode?: TrieNode;
+	childKey?: string | number;
+	childNode: TrieNode;
+}): TrieNode {
+	if (!props.currentParentNode || !props.childKey) {
+		return props.childNode;
+	}
+
+	const parentConfig = props.currentParentNode[FIELD_CONFIG];
+	if (parentConfig.level === "object") {
+		props.currentParentNode[props.childKey!] ??= props.childNode;
+	} else if (parentConfig.level === "array") {
+		if (props.childKey !== ARRAY_ITEM_TOKEN) {
+			throw new Error(
+				`Array parent can only have "${ARRAY_ITEM_TOKEN}" as child key, got "${props.childKey}"`,
+			);
+		}
+		props.currentParentNode[props.childKey] ??= props.childNode;
+	} else if (parentConfig.level === "tuple") {
+		if (typeof props.childKey !== "number") {
+			throw new Error(
+				`Tuple parent can only have numeric keys as child key, got "${props.childKey}"`,
+			);
+		}
+		props.currentParentNode[props.childKey] ??= props.childNode;
+	} else {
+		throw new Error(
+			`Parent node must be of level "object", "array", or "tuple" to attach child nodes, got "${parentConfig.level}"`,
+		);
+	}
+	return props.currentParentNode;
+}
+
 function pushToAcc(props: {
 	path: string;
 	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
@@ -404,6 +443,8 @@ function pushToAcc(props: {
 	node: TrieNode;
 	currentAttributes?: CurrentAttributes;
 	inheritedMetadata: InheritedMetadata;
+	currentParentNode?: TrieNode;
+	childKey?: string | number;
 }): ZodResolverAcc & { isNew: boolean } {
 	let existingNode: TrieNode | undefined = props.acc.pathToNode[props.path];
 	let isNew = true;
@@ -413,7 +454,7 @@ function pushToAcc(props: {
 
 		if (existingNode.metadata?.["intersection-item"]) {
 			//
-			existingNode = updateIntersectionItemResolverConfigs({
+			existingNode = resolveIntersectionItemConfig({
 				acc: props.acc,
 				existingConfig: existingNode,
 				newConfig: props.node,
@@ -442,7 +483,6 @@ function pushToAcc(props: {
 	}
 
 	let newNode = props.node;
-
 	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 	const metadata = (newNode[FIELD_CONFIG].metadata ??= {});
 	if (props.currentAttributes) {
@@ -522,6 +562,11 @@ function pushToAcc(props: {
 
 	// props.acc.paths.push(props.path);
 	props.acc.pathToNode[props.path] = newNode;
+	attachChildToParentNode({
+		currentParentNode: props.currentParentNode,
+		childKey: props.childKey,
+		childNode: newNode,
+	});
 	return { node: newNode, isNew, pathToNode: props.acc.pathToNode };
 }
 
@@ -559,11 +604,17 @@ The system looks as it is because I'm trying different ways before changing the 
 function zodResolverImpl(
 	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>,
 	ctx: {
-		currentParent: string;
-		currentParentSegments: (string | number)[];
+		//
+		currentParentPth: string;
+		currentParentPathSegments: (string | number)[];
+		currentParentNode?: TrieNode;
+		childKey?: string | number;
+		//
 		currentAttributes?: CurrentAttributes;
 		inheritedMetadata: InheritedMetadata;
+		//
 		acc: ZodResolverAcc;
+
 		default?: any;
 		optional?: boolean;
 		nullable?: boolean;
@@ -571,8 +622,8 @@ function zodResolverImpl(
 		// isNullable?: boolean;
 	},
 ): ZodResolverAcc {
-	const currentParent = ctx.currentParent;
-	const currentParentSegments = ctx.currentParentSegments;
+	const currentParentPath = ctx.currentParentPth;
+	const currentParentPathSegments = ctx.currentParentPathSegments;
 	/** Unwrap ZodDefault, ZodOptional, and ZodNullable to get to the core schema **/
 	if (schema instanceof z.ZodDefault) {
 		const defaultValue = schema.def.defaultValue;
@@ -658,11 +709,16 @@ function zodResolverImpl(
 		}
 
 		const config: ResolverConfigBase & StringPrimitiveLevel = {
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			validate: (value, options) =>
 				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
+					{
+						value,
+						currentParent: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema,
+					},
 					options,
 				),
 			level: "primitive",
@@ -679,11 +735,13 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				path: currentParent,
+				path: currentParentPath,
 				schema,
 				node: { [FIELD_CONFIG]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -707,11 +765,16 @@ function zodResolverImpl(
 		}
 
 		const config: ResolverConfigBase & NumberPrimitiveLevel = {
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			validate: (value, options) =>
 				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
+					{
+						value,
+						currentParent: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema,
+					},
 					options,
 				),
 			level: "primitive",
@@ -731,10 +794,12 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -755,11 +820,16 @@ function zodResolverImpl(
 			}
 		}
 		const config: ResolverConfigBase & DatePrimitiveLevel = {
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			validate: (value, options) =>
 				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
+					{
+						value,
+						currentParent: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema,
+					},
 					options,
 				),
 			level: "primitive",
@@ -778,10 +848,12 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -789,13 +861,18 @@ function zodResolverImpl(
 		const config: ResolverConfigBase & BooleanPrimitiveLevel = {
 			level: "primitive",
 			type: "boolean",
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			presence: calcPresence(ctx),
 			default: ctx.default,
 			validate: (value, options) =>
 				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
+					{
+						value,
+						currentParent: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema,
+					},
 					options,
 				),
 			coerce: schema.def.coerce,
@@ -805,10 +882,12 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -828,72 +907,97 @@ function zodResolverImpl(
 			}
 		}
 
-		const tokenNextParent = currentParent
-			? `${currentParent}.${ARRAY_ITEM_TOKEN}`
+		const tokenNextParent = currentParentPath
+			? `${currentParentPath}.${ARRAY_ITEM_TOKEN}`
 			: ARRAY_ITEM_TOKEN;
 		const tokenNextParentSegments = [
-			...currentParentSegments,
+			...currentParentPathSegments,
 			ARRAY_ITEM_TOKEN,
 		];
-		const config: ResolverConfigBase & ArrayLevel = {
-			level: "array",
-			path: currentParent,
-			pathSegments: currentParentSegments,
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			minLength,
-			maxLength,
-			validate: (value, options) =>
-				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
-					options,
-				),
-			// To make sure we also cover the array item token path
-			items: zodResolverImpl(schema.element, {
-				acc: ctx.acc,
-				currentParent: tokenNextParent,
-				currentParentSegments: tokenNextParentSegments,
-				currentAttributes: { "array-token-item": true },
-				inheritedMetadata: ctx.inheritedMetadata,
-			}).node,
+		const node: TrieNode = {
+			[FIELD_CONFIG]: {
+				level: "array",
+				path: currentParentPath,
+				pathSegments: currentParentPathSegments,
+				presence: calcPresence(ctx),
+				default: ctx.default,
+				minLength,
+				maxLength,
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParent: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema,
+						},
+						options,
+					),
+				// To make sure we also cover the array item token path
+				items: zodResolverImpl(schema.element, {
+					acc: ctx.acc,
+					currentParentPth: tokenNextParent,
+					currentParentPathSegments: tokenNextParentSegments,
+					currentAttributes: { "array-token-item": true },
+					inheritedMetadata: ctx.inheritedMetadata,
+					get currentParentNode() {
+						return node;
+					},
+					childKey: ARRAY_ITEM_TOKEN,
+				}).node,
+			} as ResolverConfigBase & ArrayLevel,
 		};
+
 		return {
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				node,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
 	if (schema instanceof z.ZodObject) {
-		const config: ResolverConfigBase & ObjectLevel = {
-			level: "object",
-			path: currentParent,
-			pathSegments: currentParentSegments,
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			validate: (value, options) =>
-				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
-					options,
-				),
-			shape: {}, // To be filled below
+		const node = {
+			[FIELD_CONFIG]: {
+				level: "object",
+				path: currentParentPath,
+				pathSegments: currentParentPathSegments,
+				presence: calcPresence(ctx),
+				default: ctx.default,
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParent: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema,
+						},
+						options,
+					),
+				shape: {}, // To be filled below
+			} as ResolverConfigBase & ObjectLevel,
 		};
 
 		const shape = schema.shape;
 		for (const key in shape) {
-			const nextParent = currentParent ? `${currentParent}.${key}` : key;
-			const nextParentSegments = [...currentParentSegments, key];
-			config.shape[key] = zodResolverImpl(shape[key], {
+			const nextParent = currentParentPath
+				? `${currentParentPath}.${key}`
+				: key;
+			const nextParentSegments = [...currentParentPathSegments, key];
+			node[FIELD_CONFIG].shape[key] = zodResolverImpl(shape[key], {
 				acc: ctx.acc,
-				currentParent: nextParent,
-				currentParentSegments: nextParentSegments,
+				currentParentPth: nextParent,
+				currentParentPathSegments: nextParentSegments,
 				currentAttributes: { "object-property": true },
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: node,
+				childKey: key,
 			}).node;
 		}
 
@@ -901,11 +1005,13 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				node,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -921,37 +1027,46 @@ function zodResolverImpl(
 			minLength = schema.def.items.length;
 			maxLength = schema.def.items.length;
 		}
-		const config: ResolverConfigBase & TupleLevel = {
-			level: "tuple",
-			path: currentParent,
-			pathSegments: currentParentSegments,
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			exactLength,
-			minLength,
-			maxLength,
-			validate: (value, options) =>
-				customValidate(
-					{ value, currentParent, currentParentSegments, schema },
-					options,
-				),
-			items: new Array(schema.def.items.length).fill(null),
+		const node = {
+			[FIELD_CONFIG]: {
+				level: "tuple",
+				path: currentParentPath,
+				pathSegments: currentParentPathSegments,
+				presence: calcPresence(ctx),
+				default: ctx.default,
+				exactLength,
+				minLength,
+				maxLength,
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParent: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema,
+						},
+						options,
+					),
+				items: new Array(schema.def.items.length).fill(null),
+			} as ResolverConfigBase & TupleLevel,
 		};
 
 		const items = schema.def.items;
 		for (let index = 0; index < items.length; index++) {
 			const item = items[index]!;
-			const indexedNextParent = currentParent
-				? `${currentParent}.${index}`
+			const indexedNextParent = currentParentPath
+				? `${currentParentPath}.${index}`
 				: String(index);
-			const indexedNextParentSegments = [...currentParentSegments, index];
+			const indexedNextParentSegments = [...currentParentPathSegments, index];
 
-			config.items[index] = zodResolverImpl(item, {
+			node[FIELD_CONFIG].items[index] = zodResolverImpl(item, {
 				acc: ctx.acc,
-				currentParent: indexedNextParent,
-				currentParentSegments: indexedNextParentSegments,
+				currentParentPth: indexedNextParent,
+				currentParentPathSegments: indexedNextParentSegments,
 				currentAttributes: { "tuple-direct-item": true },
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: node,
+				childKey: index,
 			}).node;
 		}
 
@@ -960,11 +1075,13 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				node,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -982,8 +1099,8 @@ function zodResolverImpl(
 		// collect all branches into one UnionItemLevel
 		const config = {
 			level: "union-item",
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			options: [],
 			metadata: {
 				"union-item-descendant": { originDivergencePathToInfo },
@@ -1021,19 +1138,21 @@ function zodResolverImpl(
 				};
 			},
 		} satisfies ResolverConfigBase & UnionItemLevel;
-		originDivergencePathToInfo[currentParent] = {
-			originDivergencePath: currentParent,
-			originDivergencePathSegments: currentParentSegments,
-			paths: new Set([currentParent]),
+		originDivergencePathToInfo[currentParentPath] = {
+			originDivergencePath: currentParentPath,
+			originDivergencePathSegments: currentParentPathSegments,
+			paths: new Set([currentParentPath]),
 		};
 
 		const node = pushToAcc({
 			acc: ctx.acc,
 			node: { [FIELD_CONFIG]: config },
-			path: currentParent,
+			path: currentParentPath,
 			schema,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
+			currentParentNode: ctx.currentParentNode,
+			childKey: ctx.childKey,
 		}).node;
 
 		for (let index = 0; index < schema.options.length; index++) {
@@ -1041,13 +1160,15 @@ function zodResolverImpl(
 			if (opt) {
 				zodResolverImpl(opt, {
 					acc: ctx.acc,
-					currentParent,
-					currentParentSegments: currentParentSegments,
+					currentParentPth: currentParentPath,
+					currentParentPathSegments: currentParentPathSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
 						"union-item-descendant": { originDivergencePathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
+					currentParentNode: ctx.currentParentNode,
+					childKey: ctx.childKey,
 				});
 				// Note: no need to push to options here since it's done in the `pushToAcc` function
 				// Since all options are pushed to the same path, they will be merged there on the options array
@@ -1068,32 +1189,36 @@ function zodResolverImpl(
 		// **Left** is processed first so its metadata has lower priority than the right one
 		zodResolverImpl(schema.def.left, {
 			acc: ctx.acc,
-			currentParent,
-			currentParentSegments: currentParentSegments,
+			currentParentPth: currentParentPath,
+			currentParentPathSegments: currentParentPathSegments,
 			// currentAttributes: { "intersection-item": "left" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
 				"intersection-item": {
 					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
-					[currentParent]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
+					[currentParentPath]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
 				},
 			},
 			currentAttributes: ctx.currentAttributes,
+			currentParentNode: ctx.currentParentNode,
+			childKey: ctx.childKey,
 		});
 
 		// **Right** is processed second so its metadata has higher priority than the left one
 		const right = zodResolverImpl(schema.def.right, {
 			acc: ctx.acc,
-			currentParent,
-			currentParentSegments: currentParentSegments,
+			currentParentPth: currentParentPath,
+			currentParentPathSegments: currentParentPathSegments,
 			// currentAttributes: { "intersection-item": "right" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
 				"intersection-item": {
 					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
-					[currentParent]: 1,
+					[currentParentPath]: 1,
 				},
 			},
+			currentParentNode: ctx.currentParentNode,
+			childKey: ctx.childKey,
 		});
 
 		// They will be merged in the `pushToAcc` function when adding to the accumulator by path
@@ -1126,8 +1251,8 @@ function zodResolverImpl(
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
 		const config: ResolverConfigBase & UnknownLevel = {
 			level: "unknown",
-			path: currentParent,
-			pathSegments: currentParentSegments,
+			path: currentParentPath,
+			pathSegments: currentParentPathSegments,
 			validate: async (value) => ({ result: { value } }), // Accept anything
 		};
 		return {
@@ -1136,10 +1261,12 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParent,
+				path: currentParentPath,
 				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
 			}).node,
 		};
 	}
@@ -1162,17 +1289,19 @@ function zodResolverImpl(
 			node: {
 				[FIELD_CONFIG]: {
 					level: "never",
-					path: currentParent,
-					pathSegments: currentParentSegments,
+					path: currentParentPath,
+					pathSegments: currentParentPathSegments,
 					validate() {
 						throw new Error("Not implemented");
 					},
 				},
 			},
 			inheritedMetadata: ctx.inheritedMetadata,
-			path: currentParent,
+			path: currentParentPath,
 			schema,
 			currentAttributes: ctx.currentAttributes,
+			currentParentNode: ctx.currentParentNode,
+			childKey: ctx.childKey,
 		}).node,
 	};
 }
@@ -1204,23 +1333,27 @@ function zodResolver(
 		return schemaPathCache.get(schema)!;
 	}
 
+	const rootNode: TrieNode = {
+		[FIELD_CONFIG]: {
+			level: "temp-root",
+			path: "",
+			pathSegments: [],
+			validate() {
+				throw new Error("Not implemented");
+			},
+		},
+	};
+
 	const result = zodResolverImpl(schema, {
 		acc: {
 			pathToNode: {},
-			node: {
-				[FIELD_CONFIG]: {
-					level: "temp-root",
-					path: "",
-					pathSegments: [],
-					validate() {
-						throw new Error("Not implemented");
-					},
-				},
-			},
+			node: rootNode,
 		},
-		currentParent: "",
-		currentParentSegments: [],
+		currentParentPth: "",
+		currentParentPathSegments: [],
 		inheritedMetadata: {},
+		currentParentNode: undefined,
+		childKey: undefined,
 	});
 	schemaPathCache.set(schema, result);
 	return result;
