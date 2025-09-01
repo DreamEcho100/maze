@@ -412,26 +412,34 @@ function attachChildToParentNode(props: {
 	}
 
 	const parentConfig = props.currentParentNode[FIELD_CONFIG];
-	if (parentConfig.level === "object") {
-		props.currentParentNode[props.childKey!] ??= props.childNode;
-	} else if (parentConfig.level === "array") {
-		if (props.childKey !== ARRAY_ITEM_TOKEN) {
+	switch (parentConfig.level) {
+		case "object": {
+			props.currentParentNode[props.childKey] ??= props.childNode;
+			break;
+		}
+		case "array": {
+			if (props.childKey !== ARRAY_ITEM_TOKEN) {
+				throw new Error(
+					`Array parent can only have "${ARRAY_ITEM_TOKEN}" as child key, got "${props.childKey}"`,
+				);
+			}
+			props.currentParentNode[props.childKey] ??= props.childNode;
+			break;
+		}
+		case "tuple": {
+			if (typeof props.childKey !== "number") {
+				throw new Error(
+					`Tuple parent can only have numeric keys as child key, got "${props.childKey}"`,
+				);
+			}
+			props.currentParentNode[props.childKey] ??= props.childNode;
+			break;
+		}
+		default: {
 			throw new Error(
-				`Array parent can only have "${ARRAY_ITEM_TOKEN}" as child key, got "${props.childKey}"`,
+				`Parent node must be of level "object", "array", or "tuple" to attach child nodes, got "${parentConfig.level}"`,
 			);
 		}
-		props.currentParentNode[props.childKey] ??= props.childNode;
-	} else if (parentConfig.level === "tuple") {
-		if (typeof props.childKey !== "number") {
-			throw new Error(
-				`Tuple parent can only have numeric keys as child key, got "${props.childKey}"`,
-			);
-		}
-		props.currentParentNode[props.childKey] ??= props.childNode;
-	} else {
-		throw new Error(
-			`Parent node must be of level "object", "array", or "tuple" to attach child nodes, got "${parentConfig.level}"`,
-		);
 	}
 	return props.currentParentNode;
 }
