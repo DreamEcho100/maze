@@ -1,6 +1,15 @@
+// It's isn't about Zod semantics — it's about making a common interface that different schema validators can be transformed for form ergonomics.
+// So we can have a common ground for different schema validators to work with the form manager.
+// And keep form state agnostic of the validator library.
 import z from "zod/v4";
 
 export const name = "form-manager-resolver-zod";
+
+interface PathSegment {
+	/** The key representing a path segment. */
+	readonly key: PropertyKey;
+}
+type PathSegmentItem = PropertyKey | PathSegment;
 
 const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
 type FormValidationEvent = "input" | "blur" | "touch" | "submit";
@@ -9,8 +18,7 @@ interface FormManagerError<Path extends string> {
 	/* readonly */ message: string | null;
 	/** The path of the issue, if any. */
 	/* readonly */ path: Path; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
-	// /** The validation event that triggered the issue, if any. */
-	// /* readonly */validationEvent: FormValidationEvent;
+	readonly pathSegments: readonly PathSegmentItem[];
 }
 
 interface SuccessResult<Output> {
@@ -27,13 +35,17 @@ interface FailureResult<Path extends string> {
 type ValidationResult<Path extends string, ValidValue> =
 	| SuccessResult<ValidValue>
 	| FailureResult<Path>;
+interface ValidateOptions {
+	/** The validation event that triggered the validation. */
+	validationEvent: FormValidationEvent;
+}
 
 type Presence = "required" | "optional" | "nullable" | "nullish";
 
 interface Level<LevelName extends string, Value = any> {
 	level: LevelName;
 	path: string;
-	pathSegments: (string | number)[];
+	pathSegments: PathSegmentItem[];
 	// required?: boolean;
 	presence?: Presence;
 	default?: Value;
@@ -48,7 +60,15 @@ interface Level<LevelName extends string, Value = any> {
 			[path: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 		};
 		"union-item-descendant"?: {
-			paths: Set<string>;
+			// paths: Set<string>;
+			originDivergencePathToInfo: Record<
+				string,
+				{
+					originDivergencePath: string;
+					originDivergencePathSegments: PathSegmentItem[];
+					paths: Set<string>;
+				}
+			>;
 		};
 	};
 }
@@ -118,7 +138,7 @@ interface TupleLevel extends Level<"tuple", any[]> {
 interface UnionItemLevel extends Level<"union-item"> {
 	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
 	// validateToOption: (value: any) => Promise<{
-	// 	optionIndex: number | null;
+	// 	| null;
 	// 	result: ValidationResult<string, any>;
 	// }>;
 	options: TrieNode[];
@@ -135,13 +155,17 @@ interface UnionItemLevel extends Level<"union-item"> {
 interface ValidateReturnShape {
 	result: ValidationResult<any, any>;
 	metadata?: {
-		type: "union-item";
-		firstValidOptionIndex?: number;
+		// /** The validation event that triggered the validation, if any. */
+		/* readonly */ validationEvent: FormValidationEvent;
+		"union-item"?: { firstValidOptionIndex: number };
 	};
 }
 
 interface ResolverConfigBase {
-	validate: (value: any) => Promise<ValidateReturnShape>;
+	validate: (
+		value: any,
+		options: ValidateOptions,
+	) => Promise<ValidateReturnShape>;
 }
 
 type ResolverConfigShape = ResolverConfigBase &
@@ -205,33 +229,48 @@ function getByPath(
 /* End Trie structure */
 
 async function customValidate(
-	value: any,
-	currentParent: string,
-	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>,
+	props: {
+		value: any;
+		currentParent: string;
+		currentParentSegments: PathSegmentItem[];
+		schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
+	},
+	options: ValidateOptions,
 ): Promise<ValidateReturnShape> {
 	try {
-		const result = await schema["~standard"].validate(value);
+		const result = await props.schema["~standard"].validate(props.value);
 
 		if ("issues" in result && result.issues) {
 			return {
 				result: {
 					issues: result.issues.map((issue) => ({
 						message: issue.message,
-						path: issue.path?.join(".") || currentParent,
+						path: issue.path?.join(".") || props.currentParent,
+						pathSegments: issue.path || props.currentParentSegments,
 					})),
 				},
 			};
 		}
 
 		if ("value" in result) {
-			return { result: { value: result.value } };
+			return {
+				result: { value: result.value },
+				metadata: { validationEvent: options.validationEvent },
+			};
 		}
 
 		// This case should never happen with proper Zod usage
 		return {
 			result: {
-				issues: [{ message: "Unknown validation error", path: currentParent }],
+				issues: [
+					{
+						message: "Unknown validation error",
+						path: props.currentParent,
+						pathSegments: props.currentParentSegments,
+					},
+				],
 			},
+			metadata: { validationEvent: options.validationEvent },
 		};
 	} catch (error) {
 		// Handle sync validation errors
@@ -241,10 +280,12 @@ async function customValidate(
 					{
 						message:
 							error instanceof Error ? error.message : "Validation failed",
-						path: currentParent,
+						path: props.currentParent,
+						pathSegments: props.currentParentSegments,
 					},
 				],
 			},
+			metadata: { validationEvent: options.validationEvent },
 		};
 	}
 }
@@ -256,7 +297,18 @@ interface InheritedMetadata {
 		[path: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 	};
 	"union-item-descendant"?: {
-		paths: Set<string>;
+		// originDivergencePath: string;
+		// originDivergencePathSegments: PathSegmentItem[];
+		// paths: Set<string>;
+		// paths: Set<string>;
+		originDivergencePathToInfo: Record<
+			string,
+			{
+				originDivergencePath: string;
+				originDivergencePathSegments: PathSegmentItem[];
+				paths: Set<string>;
+			}
+		>;
 	};
 	"marked-never"?: boolean;
 }
@@ -321,22 +373,18 @@ function updateIntersectionItemResolverConfigs(props: {
 					path: existingConfig[FIELD_CONFIG].path,
 					pathSegments: existingConfig[FIELD_CONFIG].pathSegments,
 					metadata: { ...existingConfig.metadata, "marked-never": true },
-					validate: async () => ({
-						result: {
-							issues: [
-								{
-									message: "Incompatible intersection",
-									path: existingConfig.path,
-								},
-							],
-						},
-						metadata: undefined,
-					}),
+					validate: async (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParent: existingConfig[FIELD_CONFIG].path,
+								currentParentSegments:
+									existingConfig[FIELD_CONFIG].pathSegments,
+								schema: z.never(),
+							},
+							options,
+						),
 				} satisfies ResolverConfigShape);
-				// TODO:
-				// Will need some special handling for incompatible intersection levels that are not primitives
-				// Since they are incompatible, their children should be removed or marked as never as well
-				// Maybe once we implement the `Trie` structure for the paths, it will be easier to handle this?!!
 			} catch (error) {
 				console.error(error);
 				throw error;
@@ -411,7 +459,11 @@ function pushToAcc(props: {
 				props.inheritedMetadata["intersection-item"];
 		}
 
-		if (props.inheritedMetadata["union-item-descendant"]) {
+		const unionItemDescendant =
+			props.inheritedMetadata["union-item-descendant"];
+		if (unionItemDescendant) {
+			// // Will this be used?
+			// const originPath = unionItemDescendant.originDivergencePathToInfo[props.path]!;
 			const oldNode = newNode;
 			newNode = {
 				[FIELD_CONFIG]: {
@@ -420,35 +472,40 @@ function pushToAcc(props: {
 					path: oldNode[FIELD_CONFIG].path,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
 					metadata: {
-						"union-item-descendant":
-							props.inheritedMetadata["union-item-descendant"],
-						...(oldNode.metadata || {}),
+						"union-item-descendant": unionItemDescendant,
 					},
-					async validate(value): Promise<ValidateReturnShape> {
+					async validate(value, options): Promise<ValidateReturnShape> {
 						for (let i = 0; i < this.options.length; i++) {
 							const opt = this.options[i];
 							if (!opt) {
 								console.warn(`\`${this.path}.options[${i}]\` is undefined`);
 								continue;
 							}
-							const { result } = await opt[FIELD_CONFIG].validate(value);
+							const { result } = await opt[FIELD_CONFIG].validate(
+								value,
+								options,
+							);
 							if (!("issues" in result)) {
 								return {
 									result,
-									metadata: { type: "union-item", firstValidOptionIndex: i },
+									metadata: {
+										validationEvent: options.validationEvent,
+										"union-item": { firstValidOptionIndex: i },
+									},
 								}; // success
 							}
 						}
 						return {
 							result: {
 								issues: [
-									{ message: "No union option matched", path: this.path },
+									{
+										message: "No union option matched",
+										path: this.path,
+										pathSegments: this.pathSegments,
+									},
 								],
 							},
-							metadata: {
-								type: "union-item",
-								firstValidOptionIndex: undefined,
-							},
+							metadata: { validationEvent: options.validationEvent },
 						};
 					},
 				} satisfies ResolverConfigBase & UnionItemLevel,
@@ -521,7 +578,6 @@ function zodResolverImpl(
 		const defaultValue = schema.def.defaultValue;
 		schema = schema.def.innerType;
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: zodResolverImpl(schema, {
 				...ctx,
@@ -532,7 +588,6 @@ function zodResolverImpl(
 	}
 	if (schema instanceof z.ZodOptional) {
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: zodResolverImpl(schema.unwrap(), {
 				...ctx,
@@ -542,7 +597,6 @@ function zodResolverImpl(
 	}
 	if (schema instanceof z.ZodNullable) {
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: zodResolverImpl(schema.unwrap(), {
 				...ctx,
@@ -606,9 +660,11 @@ function zodResolverImpl(
 		const config: ResolverConfigBase & StringPrimitiveLevel = {
 			path: currentParent,
 			pathSegments: currentParentSegments,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			level: "primitive",
 			type: "string",
 			presence: calcPresence(ctx),
@@ -620,7 +676,6 @@ function zodResolverImpl(
 		};
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -654,9 +709,11 @@ function zodResolverImpl(
 		const config: ResolverConfigBase & NumberPrimitiveLevel = {
 			path: currentParent,
 			pathSegments: currentParentSegments,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			level: "primitive",
 			type: "number",
 			presence: calcPresence(ctx),
@@ -670,7 +727,6 @@ function zodResolverImpl(
 		};
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -701,9 +757,11 @@ function zodResolverImpl(
 		const config: ResolverConfigBase & DatePrimitiveLevel = {
 			path: currentParent,
 			pathSegments: currentParentSegments,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			level: "primitive",
 			type: "date",
 			presence: calcPresence(ctx),
@@ -716,7 +774,6 @@ function zodResolverImpl(
 		};
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -736,13 +793,14 @@ function zodResolverImpl(
 			pathSegments: currentParentSegments,
 			presence: calcPresence(ctx),
 			default: ctx.default,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			coerce: schema.def.coerce,
 		};
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -785,9 +843,11 @@ function zodResolverImpl(
 			default: ctx.default,
 			minLength,
 			maxLength,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			// To make sure we also cover the array item token path
 			items: zodResolverImpl(schema.element, {
 				acc: ctx.acc,
@@ -798,7 +858,6 @@ function zodResolverImpl(
 			}).node,
 		};
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -817,9 +876,11 @@ function zodResolverImpl(
 			pathSegments: currentParentSegments,
 			presence: calcPresence(ctx),
 			default: ctx.default,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			shape: {}, // To be filled below
 		};
 
@@ -837,7 +898,6 @@ function zodResolverImpl(
 		}
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -870,9 +930,11 @@ function zodResolverImpl(
 			exactLength,
 			minLength,
 			maxLength,
-			validate(value) {
-				return customValidate(value, currentParent, schema);
-			},
+			validate: (value, options) =>
+				customValidate(
+					{ value, currentParent, currentParentSegments, schema },
+					options,
+				),
 			items: new Array(schema.def.items.length).fill(null),
 		};
 
@@ -913,6 +975,10 @@ function zodResolverImpl(
 		schema instanceof z.ZodUnion
 		// || schema instanceof z.ZodDiscriminatedUnion
 	) {
+		const originDivergencePathToInfo = {
+			...ctx.inheritedMetadata["union-item-descendant"]
+				?.originDivergencePathToInfo,
+		};
 		// collect all branches into one UnionItemLevel
 		const config = {
 			level: "union-item",
@@ -920,37 +986,46 @@ function zodResolverImpl(
 			pathSegments: currentParentSegments,
 			options: [],
 			metadata: {
-				"union-item-descendant": {
-					paths: ctx.inheritedMetadata["union-item-descendant"]?.paths
-						? new Set(ctx.inheritedMetadata["union-item-descendant"].paths)
-						: new Set(),
-				},
+				"union-item-descendant": { originDivergencePathToInfo },
 				...ctx.currentAttributes,
 			} satisfies Level<any>["metadata"],
-			async validate(value) {
+			async validate(value, options): Promise<ValidateReturnShape> {
 				for (let i = 0; i < this.options.length; i++) {
 					const opt = this.options[i];
 					if (!opt) {
 						console.warn(`\`${this.path}.options[${i}]\` is undefined`);
 						continue;
 					}
-					const { result } = await opt[FIELD_CONFIG].validate(value);
+					const { result } = await opt[FIELD_CONFIG].validate(value, options);
 					if (!("issues" in result)) {
 						return {
 							result,
-							metadata: { type: "union-item", firstValidOptionIndex: i },
+							metadata: {
+								validationEvent: options.validationEvent,
+								"union-item": { firstValidOptionIndex: i },
+							},
 						}; // success
 					}
 				}
 				return {
 					result: {
-						issues: [{ message: "No union option matched", path: this.path }],
+						issues: [
+							{
+								message: "No union option matched",
+								path: this.path,
+								pathSegments: this.pathSegments,
+							},
+						],
 					},
-					metadata: { type: "union-item", firstValidOptionIndex: undefined },
+					metadata: { validationEvent: options.validationEvent },
 				};
 			},
 		} satisfies ResolverConfigBase & UnionItemLevel;
-		config.metadata["union-item-descendant"].paths.add(currentParent);
+		originDivergencePathToInfo[currentParent] = {
+			originDivergencePath: currentParent,
+			originDivergencePathSegments: currentParentSegments,
+			paths: new Set([currentParent]),
+		};
 
 		const node = pushToAcc({
 			acc: ctx.acc,
@@ -970,11 +1045,7 @@ function zodResolverImpl(
 					currentParentSegments: currentParentSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
-						"union-item-descendant": {
-							paths: ctx.inheritedMetadata["union-item-descendant"]
-								? new Set(ctx.inheritedMetadata["union-item-descendant"].paths)
-								: new Set(),
-						},
+						"union-item-descendant": { originDivergencePathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
 				});
@@ -991,8 +1062,8 @@ function zodResolverImpl(
 		};
 	}
 
-	// TODO: Since we know that from this point on it will be an intersection, we can collect all path to the next parts in case we need to do some special handling for recursive marking as never or other stuff
-	// Or just leave it as is and handle when refactoring to Trie structures
+	//NOTE: work on discriminated union is in progress
+
 	if (schema instanceof z.ZodIntersection) {
 		// **Left** is processed first so its metadata has lower priority than the right one
 		zodResolverImpl(schema.def.left, {
@@ -1106,7 +1177,6 @@ function zodResolverImpl(
 	};
 }
 
-// Consider memoization
 const schemaPathCache = new WeakMap<
 	z.ZodTypeAny | z.core.$ZodType<any, any, any>,
 	{
@@ -1156,9 +1226,6 @@ function zodResolver(
 	return result;
 }
 
-// TODO: Inconsistent naming: Mix of levelConfig, resolverConfig, newLevelConfig
-// TODO: Complex nested conditionals: The primitive type handling is repetitive
-
 const userSchema = z.object({
 	name: z.string().min(1),
 	age: z.number().min(0),
@@ -1185,18 +1252,167 @@ console.log(
 	}),
 );
 
+// TODO: Complex nested conditionals: The primitive type handling is repetitive
+// TODO: regex for lightweight pattern usage.
+// TODO: enum/literal arrays for UI-friendly strict matching.
+
+/*
+| Missing piece                      | Impact                             | Minimal patch                                          |
+| ---------------------------------- | ---------------------------------- | ------------------------------------------------------ |
+| **Discriminated-union resolution** | runtime still tries *all* branches | add `if (ZodDiscriminatedUnion)` branch                |
+| **Effects / Refine / Transform**   | rules are lost                     | wrap schema in `zodResolverImpl(schema._def.inner, …)` |
+| **HTML helper**                    | consumer must build attrs manually | export `getNativeAttrs(config)`                        |
+| **Bundle split**                   | one big file                       | ship `@form-manager/zod` entry                         |
+*/
+
+/*
+On-demand walking: no upfront memory, but repeated traversals.
+Cached schema at leaf: faster single lookups, but you store potentially thousands of redundant schema instances if your form is large.
+✅ Rule of thumb: cache only if (1) you expect lots of hot field-level validations, and (2) schemas are lightweight to clone/compile. Otherwise, just walk.
+*/
+
+/*
+
+---
+
+### ✅ Strengths
+
+* **Trie + symbol key design**: Smart choice. Keeps storage lightweight and flexible while still supporting structured paths and metadata.
+* **Unwrapping strategy** (`ZodOptional`, `ZodNullable`, `ZodDefault`): This is exactly how you want to normalize schemas before deeper recursion.
+* **Push-to-accumulator abstraction**: Good separation of concerns between collecting nodes and handling merging. You've already anticipated intersections, unions, metadata inheritance.
+* **Custom validate**: Nice wrapper around Zod's internal validation. You're controlling error shaping consistently (`path`, `message`), which will make your form lib predictable.
+* **PathSegments array**: You're storing both segments and the joined string—this is the right move for cheap traversal plus easy display/debug.
+* **Future-facing metadata**: You've left room for `"intersection-item"`, `"union-item-descendant"`, `"marked-never"`, etc. This gives you hooks for optimizations without changing core types later.
+
+---
+
+### 🚀 Big Picture
+
+What you've got already puts you ahead of most form libs:
+
+* **Structured trie of resolver configs** (most libs stop at flat rules).
+* **Intersection + union merging with metadata inheritance** (rarely supported properly).
+* **Path-segmented metadata** for precise control (super powerful for form UIs).
+
+If you add:
+
+1. Proper **deep merging for intersections**.
+2. **Branch tagging for union options**.
+3. Optional **lazy union resolution**.
+
+👉 You'll have one of the most **precise and scalable schema-to-form resolution engines** out there.
+
+---
+
+*/
+/*
+This is really strong groundwork — you've essentially built the **normalization layer** that most form libraries hide away but desperately need. Let me answer in the exact frame you asked:
+
+---
+
+## 🔑 How your implementation benefits form state logic
+
+1. **Validator-agnostic abstraction**
+
+   * By dissolving Zod into a `ResolverConfigShape` + trie, your form manager isn't married to Zod's AST.
+   * This opens the door to plugging in Yup, Valibot, JSON Schema, etc. with the same state logic. Other libraries (React Hook Form, Formik) are tied to specific mental models and have to bolt on adapters — you've designed it from the ground up.
+
+2. **Trie-based path lookup**
+
+   * You can do **O(depth)** lookups for any field.
+   * This means efficient per-field validation, metadata retrieval, default injection, etc. without scanning the whole schema.
+   * RHF and Vest rely heavily on string maps (`{ "user.address.street": ... }`). Your approach adds structure and makes path propagation (e.g., `intersection`, `union`) tractable.
+
+3. **Rich metadata inheritance**
+
+   * The `inheritedMetadata` propagation (intersection flags, union origins, marked-never) gives you fine-grained control over how schema semantics bubble down.
+   * That's a level of fidelity missing in most form libs. They flatten things and lose these distinctions, forcing devs to patch around edge cases.
+
+4. **Presence + coercion + defaults tracking**
+
+   * You're not just validating; you're extracting **constraints + ergonomics** (optional/nullable/nullish, coercion flags, default values).
+   * This enables better UI affordances (autofilling defaults, optional indicators, disabling fields when `never`, etc.).
+
+---
+
+## 📊 What you already share with other good form libs
+
+* **Field-level validation** (`customValidate` → `safeParse`) similar to RHF's resolver API.
+* **Unified error shape** (`FormManagerError`) much like Yup → RHF → `FieldError`.
+* **Event-driven validation pipeline** (`input`, `blur`, `submit`) like Final Form and Vest.
+* **Cached path mapping** (`pathToNode`) for fast lookups, same spirit as RHF's `fieldsRef`.
+
+---
+
+## 🚀 What stands out vs other libs
+
+1. **Intersection + union fidelity**
+
+   * Most form libs punt on these cases ("we don't support unions, please normalize your schema").
+   * You're designing *actual structural handling* (union-item descendants, intersection propagation). This is rare.
+
+2. **Never-level marking**
+
+   * Instead of throwing or losing context, you keep nodes alive but annotated as `never`.
+   * That's clever: it preserves schema shape and metadata while still signaling runtime impossibility.
+
+3. **Path segments + symbolic tokens** (`@@__ARRAY_ITEM__@@`)
+
+   * Allows proper differentiation of `"user.0"` vs `"user[@@ARRAY_ITEM@@]"`.
+   * Makes recursive traversal deterministic.
+   * Other libs mostly treat everything as flattened strings, which breaks down for tuples, arrays, and advanced composites.
+
+---
+
+## ⚠️ What it still lacks (core-side)
+
+1. **Union discrimination strategy**
+
+   * Right now, you're accumulating union options. But devs will need clear ergonomics: *when do I know which branch to take?*
+   * RHF avoids this problem by forcing "single branch validation." You're closer to supporting *real discriminated unions*, but you'll need a caching or path-aware discriminator mechanism.
+
+2. **Normalization of issues**
+
+   * You're returning Zod's messages mostly raw. If this is meant to be validator-agnostic, you'll want a **common error language** (codes, reasons, severity levels) instead of just `message: string`.
+
+3. **Performance strategies**
+
+   * Your design is extensible, but union/intersection traversal can blow up in large schemas.
+   * You'll want *lazy evaluation* (don't expand a union's branches until necessary) and *memoization* (cache merged intersection configs by path).
+   * Right now everything is eagerly constructed.
+
+4. **Form-state diffs**
+
+   * You're building the resolver layer. But you'll also need to consider how it integrates with actual state updates:
+
+     * Detect touched/dirty/changed paths
+     * Map validation events back into form state
+   * That glue is what makes Final Form or RHF "feel fast."
+
+---
+
+✅ **Summary**:
+Your file is already doing more than most adapters in existing libs: instead of flattening validators into "field → resolver," you're building a structural representation (`TrieNode`) that preserves semantics (intersection, union, presence). That's a competitive differentiator.
+
+What's missing is mostly polish for ergonomics (issue normalization, union discrimination strategy) and performance safeguards (lazy resolution + caching).
+
+---
+
+Would you like me to give you a **side-by-side table** comparing your current design to React Hook Form, Formik, and Final Form, so you can see exactly where you're ahead and where you're behind?
+*/
+
 //
 // Notes
 // Union & Intersection merging
 // Right now, you have TODOs around merging union-item and intersection-item metadata/config. This is a big one:
-// Union: each path should map to multiple possible schemas. You’ll need either an options: ResolverConfigShape[] array or a tagged type.
-// Intersection: each path should merge all constraints. But min/max collisions or type incompatibilities can’t always be resolved statically. You may need a dual left/right config like you started.
-// If you skip this, you’ll get misleading metadata (union-item path may appear stricter/looser than reality).
+// Union: each path should map to multiple possible schemas. You'll need either an options: ResolverConfigShape[] array or a tagged type.
+// Intersection: each path should merge all constraints. But min/max collisions or type incompatibilities can't always be resolved statically. You may need a dual left/right config like you started.
+// If you skip this, you'll get misleading metadata (union-item path may appear stricter/looser than reality).
 // Effects / Transformations / Refinements
 // You have TODOs for ZodEffects, ZodPipeline, ZodBranded, etc. Right now these would get lost → but they often contain the most important runtime logic.
-// E.g. z.string().refine(isEmail) → your minLength/maxLength extraction looks fine, but the real validation logic lives in .refine. If you drop it, you’ll end up with false positives in your form.
+// E.g. z.string().refine(isEmail) → your minLength/maxLength extraction looks fine, but the real validation logic lives in .refine. If you drop it, you'll end up with false positives in your form.
 // Over-aggressive Regex for Enum/Literal
-// You’re converting literals/enums into regex patterns:
+// You're converting literals/enums into regex patterns:
 // regex = new RegExp(`^${schema._zod.def.values.join("|")}$`)
 // That works but:
 // ZodEnum is already enumerable — you can just set metadata.enum = [...].
@@ -1205,15 +1421,15 @@ console.log(
 // 🕳️ The Ugly (Hidden Traps)
 //
 // Zod private internals (schema._zod.def, check._zod)
-// You’re digging into Zod’s private defs. That’s not stable across versions (v4 → v5 will probably break).
-// 👉 Safer: use Zod’s .describe(), .isOptional(), .isNullable(), or PR a feature upstream to expose richer metadata. Otherwise, you’ll constantly be chasing internal refactors.
+// You're digging into Zod's private defs. That's not stable across versions (v4 → v5 will probably break).
+// 👉 Safer: use Zod's .describe(), .isOptional(), .isNullable(), or PR a feature upstream to expose richer metadata. Otherwise, you'll constantly be chasing internal refactors.
 //
 // Validation result path mismatch
-// You’re mapping issue.path.join(".") to currentParent, but Zod sometimes returns array indices (e.g. ["addresses", 0, "street"]). Joining with "." is fine, but doesn’t align with your @@__ARRAY_ITEM__@@ abstraction.
-// 👉 You’ll need a mapping layer: ["addresses", number, "street"] → addresses.${ARRAY_ITEM_TOKEN}.street.
+// You're mapping issue.path.join(".") to currentParent, but Zod sometimes returns array indices (e.g. ["addresses", 0, "street"]). Joining with "." is fine, but doesn't align with your @@__ARRAY_ITEM__@@ abstraction.
+// 👉 You'll need a mapping layer: ["addresses", number, "street"] → addresses.${ARRAY_ITEM_TOKEN}.street.
 //
 // Schema identity cache
-// Using WeakMap<ZodType, ResolverResult> means two semantically identical schemas created separately will produce two different caches. That’s fine for perf but makes caching less predictable if users build schemas dynamically each render. You might need hash-based memoization for serious perf scenarios.
+// Using WeakMap<ZodType, ResolverResult> means two semantically identical schemas created separately will produce two different caches. That's fine for perf but makes caching less predictable if users build schemas dynamically each render. You might need hash-based memoization for serious perf scenarios.
 //
 //
 // 🚀 Suggestions for Next Steps
@@ -1229,7 +1445,7 @@ console.log(
 // }
 //
 //
-// That way you don’t just flatten into metadata — you preserve the recursive structure.
+// That way you don't just flatten into metadata — you preserve the recursive structure.
 //
 // Preserve Coercion
 // Add coerce: true to primitive configs. For .date(), maybe capture coercion type (string → Date).
@@ -1244,7 +1460,7 @@ console.log(
 // required → required attribute
 //
 // min, max on numbers/dates → same
-// That’ll let you plug into <input> without writing custom logic later.
+// That'll let you plug into <input> without writing custom logic later.
 //
 // Handle Effects & Refinements
 // At minimum: keep them in metadata.refinements: Array<(val) => boolean> or wrap them in the validate() function instead of discarding.
@@ -1255,7 +1471,7 @@ console.log(
 // arrays of keys (like Zod does: ["addresses", 0, "street"])
 //
 // or dot notation + tokens (addresses.${ARRAY_ITEM_TOKEN}.street)
-// But don’t mix them. It’ll simplify downstream consumers.
+// But don't mix them. It'll simplify downstream consumers.
 
 /*
 - Do we really need to merge and create new objects?
@@ -1370,7 +1586,7 @@ interface TaggedUnionMetaRegistry {
 			recomputeCb: (
 				tagValues: TagValue[] | undefined, // undefined for router rebuild
 				ctx: { getFormValue: (path: string) => any },
-			) => Promise<{ optionIndex: number; snapshot?: ResolvedOptionSnapshot }>;
+			) => Promise<{  snapshot?: ResolvedOptionSnapshot }>;
 			lastComputedAt?: number;
 		};
 	};
