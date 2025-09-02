@@ -42,13 +42,24 @@ interface ValidateOptions {
 
 type Presence = "required" | "optional" | "nullable" | "nullish";
 
-interface Level<LevelName extends string, Value = any> {
+interface Level<
+	LevelName extends string,
+	NativeRules extends Record<string, any> = {},
+	Path extends string = string,
+	Value = unknown,
+> {
 	level: LevelName;
 	path: string;
 	pathSegments: PathSegmentItem[];
-	// required?: boolean;
-	presence?: Presence;
+	rules: NativeRules;
 	default?: Value;
+	validateOnEvent?: {
+		[key in FormValidationEvent]?: boolean;
+	};
+	validate: (
+		value: any,
+		options: ValidateOptions,
+	) => Promise<ValidateReturnShape<Path, Value>>;
 	metadata?: {
 		[key in
 			| "object-property"
@@ -73,43 +84,84 @@ interface Level<LevelName extends string, Value = any> {
 	};
 }
 interface TempRootLevel extends Level<"temp-root"> {}
-interface NeverLevel extends Level<"never"> {}
-interface UnknownLevel extends Level<"unknown"> {}
-interface PrimitiveLevelBase<Value> extends Level<"primitive", Value> {
-	coerce?: boolean;
-}
-interface StringPrimitiveLevel extends PrimitiveLevelBase<string> {
+interface NeverLevel<Path extends string = string>
+	extends Level<"never", {}, Path, never> {}
+interface UnknownLevel<Path extends string = string>
+	extends Level<
+		"unknown",
+		{ default?: string; presence: Presence },
+		Path,
+		unknown
+	> {}
+interface PrimitiveLevelBase<
+	NativeRules extends Record<string, any>,
+	Path extends string = string,
+	Value = unknown,
+> extends Level<
+		"primitive",
+		NativeRules & { coerce?: boolean; presence: Presence },
+		Path,
+		Value
+	> {}
+interface StringPrimitiveLevel<Path extends string = string>
+	extends PrimitiveLevelBase<
+		{
+			default?: string;
+			minLength?: number;
+			maxLength?: number;
+			regex?: RegExp;
+		},
+		Path,
+		string
+	> {
 	type: "string";
-	minLength?: number;
-	maxLength?: number;
-	regex?: RegExp;
-	metadata?: PrimitiveLevelBase<string>["metadata"] & {
+	metadata?: PrimitiveLevelBase<any>["metadata"] & {
 		enum?: string[];
 		"native-enum"?: Record<string, string | number>;
 		literal?: string | number | boolean | null;
 	};
 }
-interface NumberPrimitiveLevel extends PrimitiveLevelBase<number> {
+interface NumberPrimitiveLevel<Path extends string = string>
+	extends PrimitiveLevelBase<
+		{
+			default?: number;
+			min?: number;
+			inclusiveMin?: boolean;
+			max?: number;
+			inclusiveMax?: boolean;
+			int?: boolean;
+			multipleOf?: number | bigint;
+		},
+		Path,
+		number
+	> {
 	type: "number";
-	min?: number;
-	inclusiveMin?: boolean;
-	max?: number;
-	inclusiveMax?: boolean;
-	int?: boolean;
-	metadata?: PrimitiveLevelBase<string>["metadata"] & {
+	metadata?: PrimitiveLevelBase<any>["metadata"] & {
 		enum?: number[];
 		"native-enum"?: Record<string, string | number>;
 		literal?: string | number | boolean | null;
 	};
 }
-interface DatePrimitiveLevel extends PrimitiveLevelBase<Date> {
+
+type DateLike = Date | string | number;
+interface DatePrimitiveLevel<
+	Path extends string = string,
+	ValidValue = DateLike,
+> extends PrimitiveLevelBase<
+		{
+			default?: Date;
+			min?: Date;
+			inclusiveMin?: boolean;
+			max?: Date;
+			inclusiveMax?: boolean;
+		},
+		Path,
+		ValidValue
+	> {
 	type: "date";
-	min?: Date;
-	inclusiveMin?: boolean;
-	max?: Date;
-	inclusiveMax?: boolean;
 }
-interface BooleanPrimitiveLevel extends PrimitiveLevelBase<boolean> {
+interface BooleanPrimitiveLevel<Path extends string = string>
+	extends PrimitiveLevelBase<{ default?: boolean }, Path, boolean> {
 	type: "boolean";
 }
 type PrimitiveLevel =
@@ -118,42 +170,59 @@ type PrimitiveLevel =
 	| DatePrimitiveLevel
 	| BooleanPrimitiveLevel;
 
-interface ObjectLevel extends Level<"object", Record<string, any>> {
-	required?: boolean;
+interface ObjectLevel<
+	Path extends string = string,
+	ValidValue = Record<string, any>,
+> extends Level<
+		"object",
+		{
+			default?: Record<string, any>;
+			presence: Presence;
+		},
+		Path,
+		ValidValue
+	> {
 	shape: Record<string, TrieNode>;
 }
-interface ArrayLevel extends Level<"array", any[]> {
-	required?: boolean;
-	minLength?: number;
-	maxLength?: number;
+interface ArrayLevel<Path extends string = string, ValidValue = any[]>
+	extends Level<
+		"array",
+		{
+			default?: any[];
+			presence: Presence;
+			minLength?: number;
+			maxLength?: number;
+		},
+		Path,
+		ValidValue
+	> {
 	items: TrieNode; // Need to find a way to reference the main type here
 }
-interface TupleLevel extends Level<"tuple", any[]> {
-	required?: boolean;
-	exactLength?: number;
-	minLength?: number;
-	maxLength?: number;
+interface TupleLevel<Path extends string = string, ValidValue = any[]>
+	extends Level<
+		"tuple",
+		{
+			default?: any[];
+			presence: Presence;
+			exactLength?: number;
+			minLength?: number;
+			maxLength?: number;
+		},
+		Path,
+		ValidValue
+	> {
 	items: TrieNode[];
 }
-interface UnionItemLevel extends Level<"union-item"> {
-	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
-	// validateToOption: (value: any) => Promise<{
-	// 	| null;
-	// 	result: ValidationResult<string, any>;
-	// }>;
+interface UnionItemLevel<Path extends string = string, ValidValue = unknown>
+	extends Level<"union-item", {}, Path, ValidValue> {
 	options: TrieNode[];
-	// discriminator?: string;
 }
-// interface IntersectionLevel extends Level<"intersection"> {
-// 	// left: ResolverConfigShape; // Need to find a way to reference the main type here
-// 	// right: ResolverConfigShape; // Need to find a way to reference the main type here
-// 	// left: (value: any) => Promise<ValidationResult<string, any>>;
-// 	// right: (value: any) => Promise<ValidationResult<string, any>>;
-// 	parts: ResolverConfigShape[];
-// }
 
-interface ValidateReturnShape {
-	result: ValidationResult<any, any>;
+interface ValidateReturnShape<
+	Path extends string = string,
+	ValidValue = unknown,
+> {
+	result: ValidationResult<Path, ValidValue>;
 	metadata?: {
 		// /** The validation event that triggered the validation, if any. */
 		/* readonly */ validationEvent: FormValidationEvent;
@@ -161,24 +230,15 @@ interface ValidateReturnShape {
 	};
 }
 
-interface ResolverConfigBase {
-	validate: (
-		value: any,
-		options: ValidateOptions,
-	) => Promise<ValidateReturnShape>;
-}
-
-type ResolverConfigShape = ResolverConfigBase &
-	(
-		| TempRootLevel
-		| UnknownLevel
-		| NeverLevel
-		| PrimitiveLevel
-		| ObjectLevel
-		| ArrayLevel
-		| TupleLevel
-		| UnionItemLevel
-	);
+type ResolverConfigShape =
+	| TempRootLevel
+	| UnknownLevel
+	| NeverLevel
+	| PrimitiveLevel
+	| ObjectLevel
+	| ArrayLevel
+	| TupleLevel
+	| UnionItemLevel;
 
 /* Trie structure for path-based storage and retrieval */
 const FIELD_CONFIG = Symbol("FIELD_CONFIG");
@@ -228,15 +288,15 @@ function getByPath(
 }
 /* End Trie structure */
 
-async function customValidate(
+async function customValidate<Path extends string = string, T = unknown>(
 	props: {
 		value: any;
-		currentParent: string;
+		currentParentPath: Path;
 		currentParentSegments: PathSegmentItem[];
 		schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
 	},
 	options: ValidateOptions,
-): Promise<ValidateReturnShape> {
+): Promise<ValidateReturnShape<Path, T>> {
 	try {
 		const result = await props.schema["~standard"].validate(props.value);
 
@@ -245,7 +305,7 @@ async function customValidate(
 				result: {
 					issues: result.issues.map((issue) => ({
 						message: issue.message,
-						path: issue.path?.join(".") || props.currentParent,
+						path: (issue.path?.join(".") || props.currentParentPath) as Path,
 						pathSegments: issue.path || props.currentParentSegments,
 					})),
 				},
@@ -254,7 +314,7 @@ async function customValidate(
 
 		if ("value" in result) {
 			return {
-				result: { value: result.value },
+				result: { value: result.value as unknown as T },
 				metadata: { validationEvent: options.validationEvent },
 			};
 		}
@@ -265,7 +325,7 @@ async function customValidate(
 				issues: [
 					{
 						message: "Unknown validation error",
-						path: props.currentParent,
+						path: props.currentParentPath,
 						pathSegments: props.currentParentSegments,
 					},
 				],
@@ -280,7 +340,7 @@ async function customValidate(
 					{
 						message:
 							error instanceof Error ? error.message : "Validation failed",
-						path: props.currentParent,
+						path: props.currentParentPath,
 						pathSegments: props.currentParentSegments,
 					},
 				],
@@ -327,36 +387,38 @@ interface ZodResolverAcc {
  */
 function resolveIntersectionItemConfig(props: {
 	acc: ZodResolverAcc;
-	existingConfig?: TrieNode;
-	newConfig: TrieNode;
+	existingNode?: TrieNode;
+	newNode: TrieNode;
 }): TrieNode {
-	const existingConfig = props.existingConfig;
-	if (existingConfig) {
+	const existingNode = props.existingNode;
+	if (existingNode) {
 		if (
-			existingConfig[FIELD_CONFIG].level ===
-				props.newConfig[FIELD_CONFIG].level &&
-			(existingConfig[FIELD_CONFIG].level !== "primitive" ||
-				(existingConfig[FIELD_CONFIG].level === "primitive" &&
-					existingConfig[FIELD_CONFIG].type ===
+			existingNode[FIELD_CONFIG].level === props.newNode[FIELD_CONFIG].level &&
+			(existingNode[FIELD_CONFIG].level !== "primitive" ||
+				(existingNode[FIELD_CONFIG].level === "primitive" &&
+					existingNode[FIELD_CONFIG].type ===
 						(
-							props.newConfig[FIELD_CONFIG] as ResolverConfigShape &
+							props.newNode[FIELD_CONFIG] as ResolverConfigShape &
 								PrimitiveLevel
 						).type))
 		) {
-			for (const key in props.newConfig) {
-				if (key === "metadata") {
-					// Merge metadata
-					existingConfig[FIELD_CONFIG].metadata = {
-						...(existingConfig[FIELD_CONFIG].metadata || {}),
-						...(props.newConfig.metadata || {}),
-					};
-				}
+			const newConfig = props.newNode[FIELD_CONFIG];
+			const existingConfig = existingNode[FIELD_CONFIG];
 
-				existingConfig[FIELD_CONFIG][key as keyof ResolverConfigShape] =
-					props.newConfig[FIELD_CONFIG][key as keyof ResolverConfigShape];
+			const newMetadata = props.newNode[FIELD_CONFIG].metadata;
+			if (newMetadata) {
+				existingConfig.metadata = {
+					...(existingConfig.metadata || {}),
+					...newMetadata,
+				};
+			}
+			for (const ruleKey in newConfig.rules) {
+				const element = (newConfig.rules as Record<string, any>)[ruleKey];
+				if (typeof element === "undefined") continue;
+				(existingConfig.rules as Record<string, any>)[ruleKey] = element;
 			}
 
-			return existingConfig;
+			return existingNode;
 		} else {
 			try {
 				// We will override the existing config to be of never type
@@ -366,20 +428,20 @@ function resolveIntersectionItemConfig(props: {
 				// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 				// @ts-ignore
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-				return (props.acc.pathToNode[props.newConfig[FIELD_CONFIG].path][
+				return (props.acc.pathToNode[props.newNode[FIELD_CONFIG].path][
 					FIELD_CONFIG
 				] = {
 					level: "never",
-					path: existingConfig[FIELD_CONFIG].path,
-					pathSegments: existingConfig[FIELD_CONFIG].pathSegments,
-					metadata: { ...existingConfig.metadata, "marked-never": true },
+					path: existingNode[FIELD_CONFIG].path,
+					pathSegments: existingNode[FIELD_CONFIG].pathSegments,
+					rules: {},
+					metadata: { ...existingNode.metadata, "marked-never": true },
 					validate: async (value, options) =>
-						customValidate(
+						customValidate<string, never>(
 							{
 								value,
-								currentParent: existingConfig[FIELD_CONFIG].path,
-								currentParentSegments:
-									existingConfig[FIELD_CONFIG].pathSegments,
+								currentParentPath: existingNode[FIELD_CONFIG].path,
+								currentParentSegments: existingNode[FIELD_CONFIG].pathSegments,
 								schema: z.never(),
 							},
 							options,
@@ -393,8 +455,8 @@ function resolveIntersectionItemConfig(props: {
 	}
 
 	// props.acc.paths.push(props.newConfig.path);
-	props.acc.pathToNode[props.newConfig[FIELD_CONFIG].path] = props.newConfig;
-	return props.newConfig;
+	props.acc.pathToNode[props.newNode[FIELD_CONFIG].path] = props.newNode;
+	return props.newNode;
 }
 
 /**
@@ -446,7 +508,6 @@ function attachChildToParentNode(props: {
 
 function pushToAcc(props: {
 	path: string;
-	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
 	acc: ZodResolverAcc;
 	node: TrieNode;
 	currentAttributes?: CurrentAttributes;
@@ -464,8 +525,8 @@ function pushToAcc(props: {
 			//
 			existingNode = resolveIntersectionItemConfig({
 				acc: props.acc,
-				existingConfig: existingNode,
-				newConfig: props.node,
+				existingNode: existingNode,
+				newNode: props.node,
 			});
 
 			if (existingNode[FIELD_CONFIG].level === "never") {
@@ -519,6 +580,7 @@ function pushToAcc(props: {
 					options: [oldNode],
 					path: oldNode[FIELD_CONFIG].path,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
+					rules: {},
 					metadata: {
 						"union-item-descendant": unionItemDescendant,
 					},
@@ -556,7 +618,7 @@ function pushToAcc(props: {
 							metadata: { validationEvent: options.validationEvent },
 						};
 					},
-				} satisfies ResolverConfigBase & UnionItemLevel,
+				} satisfies UnionItemLevel,
 			};
 		}
 
@@ -616,13 +678,18 @@ function zodResolverImpl(
 		currentParentPth: string;
 		currentParentPathSegments: (string | number)[];
 		currentParentNode?: TrieNode;
+		currentSchema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
 		childKey?: string | number;
 		//
 		currentAttributes?: CurrentAttributes;
 		inheritedMetadata: InheritedMetadata;
 		//
 		acc: ZodResolverAcc;
-
+		//
+		// Q: What to use in zod as a `parser` of the value before it's validated?
+		// ZodEffects? ZodPipe?
+		// parser
+		//
 		default?: any;
 		optional?: boolean;
 		nullable?: boolean;
@@ -716,27 +783,29 @@ function zodResolverImpl(
 			}
 		}
 
-		const config: ResolverConfigBase & StringPrimitiveLevel = {
+		const config: StringPrimitiveLevel = {
+			level: "primitive",
+			type: "string",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
+			rules: {
+				default: ctx.default,
+				presence: calcPresence(ctx),
+				minLength,
+				maxLength,
+				regex,
+				coerce,
+			},
 			validate: (value, options) =>
 				customValidate(
 					{
 						value,
-						currentParent: currentParentPath,
+						currentParentPath: currentParentPath,
 						currentParentSegments: currentParentPathSegments,
-						schema,
+						schema: ctx.currentSchema,
 					},
 					options,
 				),
-			level: "primitive",
-			type: "string",
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			minLength,
-			maxLength,
-			regex,
-			coerce,
 		};
 
 		return {
@@ -744,7 +813,6 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				path: currentParentPath,
-				schema,
 				node: { [FIELD_CONFIG]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -758,8 +826,9 @@ function zodResolverImpl(
 		let max: number | undefined;
 		let inclusiveMin: boolean | undefined;
 		let inclusiveMax: boolean | undefined;
-		// TODO: scan schema.def.checks and set int, multipleOf, finite when present.
-		const int: boolean | undefined = false;
+		let multipleOf: number | undefined;
+		// Q: Fo need to account for if `finite` when present? will it be useful?
+		const int: boolean = schema.format === "safeint";
 		if (schema.def.checks) {
 			for (const check of schema.def.checks) {
 				if (check instanceof z.core.$ZodCheckLessThan) {
@@ -768,33 +837,38 @@ function zodResolverImpl(
 				} else if (check instanceof z.core.$ZodCheckGreaterThan) {
 					min = check._zod.def.value as number;
 					inclusiveMin = check._zod.def.inclusive;
+				} else if (check instanceof z.core.$ZodCheckMultipleOf) {
+					multipleOf = check._zod.def.value as number;
 				}
 			}
 		}
 
-		const config: ResolverConfigBase & NumberPrimitiveLevel = {
+		const config: NumberPrimitiveLevel = {
+			level: "primitive",
+			type: "number",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
+			rules: {
+				default: ctx.default,
+				presence: calcPresence(ctx),
+				min,
+				max,
+				inclusiveMin,
+				inclusiveMax,
+				int,
+				multipleOf,
+				coerce: schema.def.coerce,
+			},
 			validate: (value, options) =>
 				customValidate(
 					{
 						value,
-						currentParent: currentParentPath,
+						currentParentPath: currentParentPath,
 						currentParentSegments: currentParentPathSegments,
-						schema,
+						schema: ctx.currentSchema,
 					},
 					options,
 				),
-			level: "primitive",
-			type: "number",
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			min,
-			max,
-			inclusiveMin,
-			inclusiveMax,
-			int,
-			coerce: schema.def.coerce,
 		};
 
 		return {
@@ -803,7 +877,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -827,28 +900,30 @@ function zodResolverImpl(
 				}
 			}
 		}
-		const config: ResolverConfigBase & DatePrimitiveLevel = {
+		const config: DatePrimitiveLevel = {
+			level: "primitive",
+			type: "date",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
+			rules: {
+				default: ctx.default,
+				presence: calcPresence(ctx),
+				min,
+				max,
+				inclusiveMin,
+				inclusiveMax,
+				coerce: schema.def.coerce,
+			},
 			validate: (value, options) =>
 				customValidate(
 					{
 						value,
-						currentParent: currentParentPath,
+						currentParentPath: currentParentPath,
 						currentParentSegments: currentParentPathSegments,
-						schema,
+						schema: ctx.currentSchema,
 					},
 					options,
 				),
-			level: "primitive",
-			type: "date",
-			presence: calcPresence(ctx),
-			default: ctx.default,
-			min,
-			max,
-			inclusiveMin,
-			inclusiveMax,
-			coerce: schema.def.coerce,
 		};
 
 		return {
@@ -857,7 +932,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -866,24 +940,26 @@ function zodResolverImpl(
 		};
 	}
 	if (schema instanceof z.ZodBoolean) {
-		const config: ResolverConfigBase & BooleanPrimitiveLevel = {
+		const config: BooleanPrimitiveLevel = {
 			level: "primitive",
 			type: "boolean",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			presence: calcPresence(ctx),
-			default: ctx.default,
+			rules: {
+				default: ctx.default,
+				presence: calcPresence(ctx),
+				coerce: schema.def.coerce,
+			},
 			validate: (value, options) =>
 				customValidate(
 					{
 						value,
-						currentParent: currentParentPath,
+						currentParentPath: currentParentPath,
 						currentParentSegments: currentParentPathSegments,
-						schema,
+						schema: ctx.currentSchema,
 					},
 					options,
 				),
-			coerce: schema.def.coerce,
 		};
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -891,7 +967,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -927,17 +1002,15 @@ function zodResolverImpl(
 				level: "array",
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
-				presence: calcPresence(ctx),
 				default: ctx.default,
-				minLength,
-				maxLength,
+				rules: { presence: calcPresence(ctx), minLength, maxLength },
 				validate: (value, options) =>
 					customValidate(
 						{
 							value,
-							currentParent: currentParentPath,
+							currentParentPath: currentParentPath,
 							currentParentSegments: currentParentPathSegments,
-							schema,
+							schema: ctx.currentSchema,
 						},
 						options,
 					),
@@ -948,12 +1021,13 @@ function zodResolverImpl(
 					currentParentPathSegments: tokenNextParentSegments,
 					currentAttributes: { "array-token-item": true },
 					inheritedMetadata: ctx.inheritedMetadata,
+					currentSchema: schema.element,
 					get currentParentNode() {
 						return node;
 					},
 					childKey: ARRAY_ITEM_TOKEN,
 				}).node,
-			} as ResolverConfigBase & ArrayLevel,
+			} as ArrayLevel,
 		};
 
 		return {
@@ -962,7 +1036,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node,
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -976,20 +1049,22 @@ function zodResolverImpl(
 				level: "object",
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
-				presence: calcPresence(ctx),
 				default: ctx.default,
+				rules: {
+					presence: calcPresence(ctx),
+				},
 				validate: (value, options) =>
 					customValidate(
 						{
 							value,
-							currentParent: currentParentPath,
+							currentParentPath: currentParentPath,
 							currentParentSegments: currentParentPathSegments,
-							schema,
+							schema: ctx.currentSchema,
 						},
 						options,
 					),
 				shape: {}, // To be filled below
-			} as ResolverConfigBase & ObjectLevel,
+			} as ObjectLevel,
 		};
 
 		const shape = schema.shape;
@@ -1003,6 +1078,7 @@ function zodResolverImpl(
 				currentParentPth: nextParent,
 				currentParentPathSegments: nextParentSegments,
 				currentAttributes: { "object-property": true },
+				currentSchema: shape[key],
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: node,
 				childKey: key,
@@ -1015,7 +1091,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node,
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1040,23 +1115,25 @@ function zodResolverImpl(
 				level: "tuple",
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
-				presence: calcPresence(ctx),
 				default: ctx.default,
-				exactLength,
-				minLength,
-				maxLength,
+				rules: {
+					presence: calcPresence(ctx),
+					exactLength,
+					minLength,
+					maxLength,
+				},
 				validate: (value, options) =>
 					customValidate(
 						{
 							value,
-							currentParent: currentParentPath,
+							currentParentPath: currentParentPath,
 							currentParentSegments: currentParentPathSegments,
-							schema,
+							schema: ctx.currentSchema,
 						},
 						options,
 					),
 				items: new Array(schema.def.items.length).fill(null),
-			} as ResolverConfigBase & TupleLevel,
+			} as TupleLevel,
 		};
 
 		const items = schema.def.items;
@@ -1072,6 +1149,7 @@ function zodResolverImpl(
 				currentParentPth: indexedNextParent,
 				currentParentPathSegments: indexedNextParentSegments,
 				currentAttributes: { "tuple-direct-item": true },
+				currentSchema: item,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: node,
 				childKey: index,
@@ -1085,7 +1163,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node,
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1110,42 +1187,56 @@ function zodResolverImpl(
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
 			options: [],
+			rules: { presence: calcPresence(ctx) },
 			metadata: {
 				"union-item-descendant": { originDivergencePathToInfo },
 				...ctx.currentAttributes,
 			} satisfies Level<any>["metadata"],
 			async validate(value, options): Promise<ValidateReturnShape> {
-				for (let i = 0; i < this.options.length; i++) {
-					const opt = this.options[i];
-					if (!opt) {
-						console.warn(`\`${this.path}.options[${i}]\` is undefined`);
-						continue;
-					}
-					const { result } = await opt[FIELD_CONFIG].validate(value, options);
-					if (!("issues" in result)) {
-						return {
-							result,
-							metadata: {
-								validationEvent: options.validationEvent,
-								"union-item": { firstValidOptionIndex: i },
-							},
-						}; // success
-					}
-				}
-				return {
-					result: {
-						issues: [
-							{
-								message: "No union option matched",
-								path: this.path,
-								pathSegments: this.pathSegments,
-							},
-						],
+				return customValidate(
+					{
+						value,
+						currentParentPath: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema: ctx.currentSchema,
 					},
-					metadata: { validationEvent: options.validationEvent },
-				};
+					options,
+				);
+				// The following is not needed since it's handled in the `customValidate` function above
+				// and also the options are pushed to the config in the accumulator so they will be available when needed
+				// and also it will be more efficient this way since we don't need to loop through the options again here
+				// and also it will handle the recursive union and intersection properly as well
+				// for (let i = 0; i < this.options.length; i++) {
+				// 	const opt = this.options[i];
+				// 	if (!opt) {
+				// 		console.warn(`\`${this.path}.options[${i}]\` is undefined`);
+				// 		continue;
+				// 	}
+				// 	const { result } = await opt[FIELD_CONFIG].validate(value, options);
+				// 	if (!("issues" in result)) {
+				// 		return {
+				// 			result,
+				// 			metadata: {
+				// 				validationEvent: options.validationEvent,
+				// 				"union-item": { firstValidOptionIndex: i },
+				// 			},
+				// 		}; // success
+				// 	}
+				// }
+				// return {
+				// 	result: {
+				// 		issues: [
+				// 			{
+				// 				message: "No union option matched",
+				// 				path: this.path,
+				// 				pathSegments: this.pathSegments,
+				// 			},
+				// 		],
+				// 	},
+				// 	metadata: { validationEvent: options.validationEvent },
+				// };
 			},
-		} satisfies ResolverConfigBase & UnionItemLevel;
+		} satisfies UnionItemLevel;
 		originDivergencePathToInfo[currentParentPath] = {
 			originDivergencePath: currentParentPath,
 			originDivergencePathSegments: currentParentPathSegments,
@@ -1156,7 +1247,6 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			node: { [FIELD_CONFIG]: config },
 			path: currentParentPath,
-			schema,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentParentNode: ctx.currentParentNode,
@@ -1176,6 +1266,7 @@ function zodResolverImpl(
 					},
 					currentAttributes: { ...ctx.currentAttributes },
 					currentParentNode: ctx.currentParentNode,
+					currentSchema: opt,
 					childKey: ctx.childKey,
 				});
 				// Note: no need to push to options here since it's done in the `pushToAcc` function
@@ -1209,6 +1300,8 @@ function zodResolverImpl(
 			},
 			currentAttributes: ctx.currentAttributes,
 			currentParentNode: ctx.currentParentNode,
+			// Q: Should we pass the current schema?!!
+			currentSchema: schema.def.left,
 			childKey: ctx.childKey,
 		});
 
@@ -1226,6 +1319,8 @@ function zodResolverImpl(
 				},
 			},
 			currentParentNode: ctx.currentParentNode,
+			// Q: Should we pass the current schema?!!
+			currentSchema: schema.def.right,
 			childKey: ctx.childKey,
 		});
 
@@ -1240,11 +1335,10 @@ function zodResolverImpl(
 
 	// TODO: The following will have need to be handled properly in the future
 	// - ZodEffects
-	// - ZodPipeline
+	// - ZodTransform
 	// - ZodBranded
 	// - ZodLazy
 	// - ZodCatch
-	// - ZodDefault
 	// - ZodPromise
 	// - ZodRecord
 	// - ZodMap
@@ -1256,12 +1350,42 @@ function zodResolverImpl(
 	// - ZodVoid
 	// - ZodSymbol
 
+	if (schema instanceof z.ZodPipe) {
+		const mainSchema = schema.in;
+		return {
+			pathToNode: ctx.acc.pathToNode,
+			node: zodResolverImpl(mainSchema, ctx).node,
+		};
+	}
+
+	// // Do I still need to handle ZodTransform?
+	// if ( schema instanceof z.ZodTransform) {
+	// 	const mainSchema = // ???
+	// 	return {
+	// 		pathToNode: ctx.acc.pathToNode,
+	// 		node: zodResolverImpl(mainSchema, ctx).node,
+	// 	};
+	// }
+
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
-		const config: ResolverConfigBase & UnknownLevel = {
+		const config: UnknownLevel = {
 			level: "unknown",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			validate: async (value) => ({ result: { value } }), // Accept anything
+			rules: {
+				presence: calcPresence(ctx),
+				default: ctx.default,
+			},
+			validate: async (value, options) =>
+				customValidate(
+					{
+						value,
+						currentParentPath: currentParentPath,
+						currentParentSegments: currentParentPathSegments,
+						schema: ctx.currentSchema,
+					},
+					options,
+				),
 		};
 		return {
 			// paths: ctx.acc.paths,
@@ -1270,7 +1394,6 @@ function zodResolverImpl(
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
 				path: currentParentPath,
-				schema,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1299,6 +1422,7 @@ function zodResolverImpl(
 					level: "never",
 					path: currentParentPath,
 					pathSegments: currentParentPathSegments,
+					rules: { presence: calcPresence(ctx) },
 					validate() {
 						throw new Error("Not implemented");
 					},
@@ -1306,7 +1430,6 @@ function zodResolverImpl(
 			},
 			inheritedMetadata: ctx.inheritedMetadata,
 			path: currentParentPath,
-			schema,
 			currentAttributes: ctx.currentAttributes,
 			currentParentNode: ctx.currentParentNode,
 			childKey: ctx.childKey,
@@ -1346,6 +1469,7 @@ function zodResolver(
 			level: "temp-root",
 			path: "",
 			pathSegments: [],
+			rules: { presence: "required" },
 			validate() {
 				throw new Error("Not implemented");
 			},
@@ -1360,6 +1484,7 @@ function zodResolver(
 		currentParentPth: "",
 		currentParentPathSegments: [],
 		inheritedMetadata: {},
+		currentSchema: schema,
 		currentParentNode: undefined,
 		childKey: undefined,
 	});
@@ -1548,7 +1673,7 @@ Would you like me to give you a **side-by-side table** comparing your current de
 // Intersection: each path should merge all constraints. But min/max collisions or type incompatibilities can't always be resolved statically. You may need a dual left/right config like you started.
 // If you skip this, you'll get misleading metadata (union-item path may appear stricter/looser than reality).
 // Effects / Transformations / Refinements
-// You have TODOs for ZodEffects, ZodPipeline, ZodBranded, etc. Right now these would get lost → but they often contain the most important runtime logic.
+// You have TODOs for ZodEffects, ZodPipe, ZodBranded, etc. Right now these would get lost → but they often contain the most important runtime logic.
 // E.g. z.string().refine(isEmail) → your minLength/maxLength extraction looks fine, but the real validation logic lives in .refine. If you drop it, you'll end up with false positives in your form.
 // Over-aggressive Regex for Enum/Literal
 // You're converting literals/enums into regex patterns:
