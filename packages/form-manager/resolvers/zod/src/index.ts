@@ -619,8 +619,36 @@ type ZodResolverTrieResult<
 													// “right wins” for conflicting keys; the type does the same.
 													ZodResolverTrieResult<L, L, PathAcc, Options> &
 														ZodResolverTrieResult<R, R, PathAcc, Options>
-												: //
-													{};
+												: ZodSchemaToUnwrap extends z.ZodPipe
+													? ZodResolverTrieResult<
+															ZodSchemaToUnwrap["_def"]["out"],
+															ZodSchemaToInfer, // Q: is this correct
+															PathAcc,
+															Options
+														>
+													: ZodSchemaToUnwrap extends z.ZodAny | z.ZodUnknown
+														? TrieNode<
+																FormFieldOptionUnknownLevel<
+																	PathAcc,
+																	z.input<ZodSchemaToInfer>,
+																	z.output<ZodSchemaToInfer>
+																>
+															>
+														: ZodSchemaToUnwrap extends z.ZodNever
+															? TrieNode<
+																	FormFieldOptionNeverLevel<
+																		never,
+																		never,
+																		PathAcc
+																	>
+																>
+															: TrieNode<
+																	FormFieldOptionUnknownLevel<
+																		PathAcc,
+																		z.input<ZodSchemaToInfer>,
+																		z.output<ZodSchemaToInfer>
+																	>
+																>;
 const zodSchemaTest = z
 	.object({
 		stringField: z
@@ -1814,14 +1842,22 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			node: {
 				[FIELD_CONFIG]: {
-					level: "never",
+					level: "unknown",
 					pathString: currentParentPathString,
 					pathSegments: currentParentPathSegments,
 					userMetadata: {},
 					validation: {
 						rules: { presence: calcPresence(ctx) },
-						validate() {
-							throw new Error("Not implemented");
+						validate(value, options) {
+							return customValidate(
+								{
+									value,
+									currentParentPathString: currentParentPathString,
+									currentParentSegments: currentParentPathSegments,
+									schema: ctx.currentSchema,
+								},
+								options,
+							);
 						},
 					},
 				},
