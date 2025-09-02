@@ -42,7 +42,13 @@ interface ValidateOptions {
 
 type Presence = "required" | "optional" | "nullable" | "nullish";
 
-interface Level<
+/**
+ * This is used by the user/dev to add a specific metadata to the field for further extension and functionalities.
+ */
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
+interface FormFieldOptionUserMetadata {}
+
+interface FormFieldOption<
 	LevelName extends string,
 	NativeRules extends Record<string, any> = {},
 	Path extends string = string,
@@ -51,15 +57,30 @@ interface Level<
 	level: LevelName;
 	path: string;
 	pathSegments: PathSegmentItem[];
-	rules: NativeRules;
 	default?: Value;
-	validateOnEvent?: {
-		[key in FormValidationEvent]?: boolean;
+	validation: {
+		rules: NativeRules;
+		onEvent?: {
+			[key in FormValidationEvent]?:
+				| boolean
+				| {
+						debounceMs?: number; // Debounce time in milliseconds, useful for "input" event
+						isDebounceLeading?: boolean; // Leading is a boolean indicating whether to trigger on the leading edge of the debounce interval, useful for handling immediate feedback scenarios and cases of when the user stops typing or interacting, default is false (only trailing aka after the user stops)
+				  };
+		};
+		validate: (
+			value: any,
+			options: ValidateOptions,
+		) => Promise<ValidateReturnShape<Path, Value>>;
+		isPending?: boolean;
 	};
-	validate: (
-		value: any,
-		options: ValidateOptions,
-	) => Promise<ValidateReturnShape<Path, Value>>;
+	isDirty?: boolean;
+	isTouched?: boolean;
+	isDisabled?: boolean;
+	isFocused?: boolean;
+	// Q: Any need for the following?
+	// tabIndex?: number;
+	userMetadata: FormFieldOptionUserMetadata;
 	metadata?: {
 		[key in
 			| "object-property"
@@ -83,28 +104,28 @@ interface Level<
 		};
 	};
 }
-interface TempRootLevel extends Level<"temp-root"> {}
-interface NeverLevel<Path extends string = string>
-	extends Level<"never", {}, Path, never> {}
-interface UnknownLevel<Path extends string = string>
-	extends Level<
+interface FormFieldOptionTempRootLevel extends FormFieldOption<"temp-root"> {}
+interface FormFieldOptionNeverLevel<Path extends string = string>
+	extends FormFieldOption<"never", {}, Path, never> {}
+interface FormFieldOptionUnknownLevel<Path extends string = string>
+	extends FormFieldOption<
 		"unknown",
 		{ default?: string; presence: Presence },
 		Path,
 		unknown
 	> {}
-interface PrimitiveLevelBase<
+interface FormFieldOptionPrimitiveLevelBase<
 	NativeRules extends Record<string, any>,
 	Path extends string = string,
 	Value = unknown,
-> extends Level<
+> extends FormFieldOption<
 		"primitive",
 		NativeRules & { coerce?: boolean; presence: Presence },
 		Path,
 		Value
 	> {}
-interface StringPrimitiveLevel<Path extends string = string>
-	extends PrimitiveLevelBase<
+interface FormFieldOptionStringPrimitiveLevel<Path extends string = string>
+	extends FormFieldOptionPrimitiveLevelBase<
 		{
 			default?: string;
 			minLength?: number;
@@ -115,14 +136,14 @@ interface StringPrimitiveLevel<Path extends string = string>
 		string
 	> {
 	type: "string";
-	metadata?: PrimitiveLevelBase<any>["metadata"] & {
+	metadata?: FormFieldOptionPrimitiveLevelBase<any>["metadata"] & {
 		enum?: string[];
 		"native-enum"?: Record<string, string | number>;
 		literal?: string | number | boolean | null;
 	};
 }
-interface NumberPrimitiveLevel<Path extends string = string>
-	extends PrimitiveLevelBase<
+interface FormFieldOptionNumberPrimitiveLevel<Path extends string = string>
+	extends FormFieldOptionPrimitiveLevelBase<
 		{
 			default?: number;
 			min?: number;
@@ -136,18 +157,18 @@ interface NumberPrimitiveLevel<Path extends string = string>
 		number
 	> {
 	type: "number";
-	metadata?: PrimitiveLevelBase<any>["metadata"] & {
+	metadata?: FormFieldOptionPrimitiveLevelBase<any>["metadata"] & {
 		enum?: number[];
 		"native-enum"?: Record<string, string | number>;
 		literal?: string | number | boolean | null;
 	};
 }
 
-type DateLike = Date | string | number;
-interface DatePrimitiveLevel<
+// type DateLike = Date | string | number;
+interface FormFieldOptionDatePrimitiveLevel<
 	Path extends string = string,
-	ValidValue = DateLike,
-> extends PrimitiveLevelBase<
+	ValidValue = Date,
+> extends FormFieldOptionPrimitiveLevelBase<
 		{
 			default?: Date;
 			min?: Date;
@@ -160,20 +181,24 @@ interface DatePrimitiveLevel<
 	> {
 	type: "date";
 }
-interface BooleanPrimitiveLevel<Path extends string = string>
-	extends PrimitiveLevelBase<{ default?: boolean }, Path, boolean> {
+interface FormFieldOptionBooleanPrimitiveLevel<Path extends string = string>
+	extends FormFieldOptionPrimitiveLevelBase<
+		{ default?: boolean },
+		Path,
+		boolean
+	> {
 	type: "boolean";
 }
-type PrimitiveLevel =
-	| StringPrimitiveLevel
-	| NumberPrimitiveLevel
-	| DatePrimitiveLevel
-	| BooleanPrimitiveLevel;
+type FormFieldOptionPrimitiveLevel =
+	| FormFieldOptionStringPrimitiveLevel
+	| FormFieldOptionNumberPrimitiveLevel
+	| FormFieldOptionDatePrimitiveLevel
+	| FormFieldOptionBooleanPrimitiveLevel;
 
-interface ObjectLevel<
+interface FormFieldOptionObjectLevel<
 	Path extends string = string,
 	ValidValue = Record<string, any>,
-> extends Level<
+> extends FormFieldOption<
 		"object",
 		{
 			default?: Record<string, any>;
@@ -184,8 +209,10 @@ interface ObjectLevel<
 	> {
 	shape: Record<string, TrieNode>;
 }
-interface ArrayLevel<Path extends string = string, ValidValue = any[]>
-	extends Level<
+interface FormFieldOptionArrayLevel<
+	Path extends string = string,
+	ValidValue = any[],
+> extends FormFieldOption<
 		"array",
 		{
 			default?: any[];
@@ -198,8 +225,10 @@ interface ArrayLevel<Path extends string = string, ValidValue = any[]>
 	> {
 	items: TrieNode; // Need to find a way to reference the main type here
 }
-interface TupleLevel<Path extends string = string, ValidValue = any[]>
-	extends Level<
+interface FormFieldOptionTupleLevel<
+	Path extends string = string,
+	ValidValue = any[],
+> extends FormFieldOption<
 		"tuple",
 		{
 			default?: any[];
@@ -213,8 +242,10 @@ interface TupleLevel<Path extends string = string, ValidValue = any[]>
 	> {
 	items: TrieNode[];
 }
-interface UnionItemLevel<Path extends string = string, ValidValue = unknown>
-	extends Level<"union-item", {}, Path, ValidValue> {
+interface FormFieldOptionUnionItemLevel<
+	Path extends string = string,
+	ValidValue = unknown,
+> extends FormFieldOption<"union-item", {}, Path, ValidValue> {
 	options: TrieNode[];
 }
 
@@ -231,14 +262,14 @@ interface ValidateReturnShape<
 }
 
 type ResolverConfigShape =
-	| TempRootLevel
-	| UnknownLevel
-	| NeverLevel
-	| PrimitiveLevel
-	| ObjectLevel
-	| ArrayLevel
-	| TupleLevel
-	| UnionItemLevel;
+	| FormFieldOptionTempRootLevel
+	| FormFieldOptionUnknownLevel
+	| FormFieldOptionNeverLevel
+	| FormFieldOptionPrimitiveLevel
+	| FormFieldOptionObjectLevel
+	| FormFieldOptionArrayLevel
+	| FormFieldOptionTupleLevel
+	| FormFieldOptionUnionItemLevel;
 
 /* Trie structure for path-based storage and retrieval */
 const FIELD_CONFIG = Symbol("FIELD_CONFIG");
@@ -399,7 +430,7 @@ function resolveIntersectionItemConfig(props: {
 					existingNode[FIELD_CONFIG].type ===
 						(
 							props.newNode[FIELD_CONFIG] as ResolverConfigShape &
-								PrimitiveLevel
+								FormFieldOptionPrimitiveLevel
 						).type))
 		) {
 			const newConfig = props.newNode[FIELD_CONFIG];
@@ -412,10 +443,13 @@ function resolveIntersectionItemConfig(props: {
 					...newMetadata,
 				};
 			}
-			for (const ruleKey in newConfig.rules) {
-				const element = (newConfig.rules as Record<string, any>)[ruleKey];
+			for (const ruleKey in newConfig.validation.rules) {
+				const element = (newConfig.validation.rules as Record<string, any>)[
+					ruleKey
+				];
 				if (typeof element === "undefined") continue;
-				(existingConfig.rules as Record<string, any>)[ruleKey] = element;
+				(existingConfig.validation.rules as Record<string, any>)[ruleKey] =
+					element;
 			}
 
 			return existingNode;
@@ -434,18 +468,22 @@ function resolveIntersectionItemConfig(props: {
 					level: "never",
 					path: existingNode[FIELD_CONFIG].path,
 					pathSegments: existingNode[FIELD_CONFIG].pathSegments,
-					rules: {},
+					userMetadata: {},
 					metadata: { ...existingNode.metadata, "marked-never": true },
-					validate: async (value, options) =>
-						customValidate<string, never>(
-							{
-								value,
-								currentParentPath: existingNode[FIELD_CONFIG].path,
-								currentParentSegments: existingNode[FIELD_CONFIG].pathSegments,
-								schema: z.never(),
-							},
-							options,
-						),
+					validation: {
+						rules: {},
+						validate: async (value, options) =>
+							customValidate<string, never>(
+								{
+									value,
+									currentParentPath: existingNode[FIELD_CONFIG].path,
+									currentParentSegments:
+										existingNode[FIELD_CONFIG].pathSegments,
+									schema: z.never(),
+								},
+								options,
+							),
+					},
 				} satisfies ResolverConfigShape);
 			} catch (error) {
 				console.error(error);
@@ -580,45 +618,51 @@ function pushToAcc(props: {
 					options: [oldNode],
 					path: oldNode[FIELD_CONFIG].path,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
-					rules: {},
+					userMetadata: {},
 					metadata: {
 						"union-item-descendant": unionItemDescendant,
 					},
-					async validate(value, options): Promise<ValidateReturnShape> {
-						for (let i = 0; i < this.options.length; i++) {
-							const opt = this.options[i];
-							if (!opt) {
-								console.warn(`\`${this.path}.options[${i}]\` is undefined`);
-								continue;
+					validation: {
+						rules: {},
+						async validate(value, options): Promise<ValidateReturnShape> {
+							const config = newNode[
+								FIELD_CONFIG
+							] as FormFieldOptionUnionItemLevel;
+							for (let i = 0; i < config.options.length; i++) {
+								const opt = config.options[i];
+								if (!opt) {
+									console.warn(`\`${config.path}.options[${i}]\` is undefined`);
+									continue;
+								}
+								const { result } = await opt[FIELD_CONFIG].validation.validate(
+									value,
+									options,
+								);
+								if (!("issues" in result)) {
+									return {
+										result,
+										metadata: {
+											validationEvent: options.validationEvent,
+											"union-item": { firstValidOptionIndex: i },
+										},
+									}; // success
+								}
 							}
-							const { result } = await opt[FIELD_CONFIG].validate(
-								value,
-								options,
-							);
-							if (!("issues" in result)) {
-								return {
-									result,
-									metadata: {
-										validationEvent: options.validationEvent,
-										"union-item": { firstValidOptionIndex: i },
-									},
-								}; // success
-							}
-						}
-						return {
-							result: {
-								issues: [
-									{
-										message: "No union option matched",
-										path: this.path,
-										pathSegments: this.pathSegments,
-									},
-								],
-							},
-							metadata: { validationEvent: options.validationEvent },
-						};
+							return {
+								result: {
+									issues: [
+										{
+											message: "No union option matched",
+											path: config.path,
+											pathSegments: config.pathSegments,
+										},
+									],
+								},
+								metadata: { validationEvent: options.validationEvent },
+							};
+						},
 					},
-				} satisfies UnionItemLevel,
+				} satisfies FormFieldOptionUnionItemLevel,
 			};
 		}
 
@@ -783,29 +827,32 @@ function zodResolverImpl(
 			}
 		}
 
-		const config: StringPrimitiveLevel = {
+		const config: FormFieldOptionStringPrimitiveLevel = {
 			level: "primitive",
 			type: "string",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			rules: {
-				default: ctx.default,
-				presence: calcPresence(ctx),
-				minLength,
-				maxLength,
-				regex,
-				coerce,
+			userMetadata: {},
+			validation: {
+				rules: {
+					default: ctx.default,
+					presence: calcPresence(ctx),
+					minLength,
+					maxLength,
+					regex,
+					coerce,
+				},
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					),
 			},
-			validate: (value, options) =>
-				customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				),
 		};
 
 		return {
@@ -843,32 +890,35 @@ function zodResolverImpl(
 			}
 		}
 
-		const config: NumberPrimitiveLevel = {
+		const config: FormFieldOptionNumberPrimitiveLevel = {
 			level: "primitive",
 			type: "number",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			rules: {
-				default: ctx.default,
-				presence: calcPresence(ctx),
-				min,
-				max,
-				inclusiveMin,
-				inclusiveMax,
-				int,
-				multipleOf,
-				coerce: schema.def.coerce,
+			userMetadata: {},
+			validation: {
+				rules: {
+					default: ctx.default,
+					presence: calcPresence(ctx),
+					min,
+					max,
+					inclusiveMin,
+					inclusiveMax,
+					int,
+					multipleOf,
+					coerce: schema.def.coerce,
+				},
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					),
 			},
-			validate: (value, options) =>
-				customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				),
 		};
 
 		return {
@@ -900,30 +950,33 @@ function zodResolverImpl(
 				}
 			}
 		}
-		const config: DatePrimitiveLevel = {
+		const config: FormFieldOptionDatePrimitiveLevel = {
 			level: "primitive",
 			type: "date",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			rules: {
-				default: ctx.default,
-				presence: calcPresence(ctx),
-				min,
-				max,
-				inclusiveMin,
-				inclusiveMax,
-				coerce: schema.def.coerce,
+			userMetadata: {},
+			validation: {
+				rules: {
+					default: ctx.default,
+					presence: calcPresence(ctx),
+					min,
+					max,
+					inclusiveMin,
+					inclusiveMax,
+					coerce: schema.def.coerce,
+				},
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					),
 			},
-			validate: (value, options) =>
-				customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				),
 		};
 
 		return {
@@ -940,26 +993,29 @@ function zodResolverImpl(
 		};
 	}
 	if (schema instanceof z.ZodBoolean) {
-		const config: BooleanPrimitiveLevel = {
+		const config: FormFieldOptionBooleanPrimitiveLevel = {
 			level: "primitive",
 			type: "boolean",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			rules: {
-				default: ctx.default,
-				presence: calcPresence(ctx),
-				coerce: schema.def.coerce,
+			userMetadata: {},
+			validation: {
+				rules: {
+					default: ctx.default,
+					presence: calcPresence(ctx),
+					coerce: schema.def.coerce,
+				},
+				validate: (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					),
 			},
-			validate: (value, options) =>
-				customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				),
 		};
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -1003,17 +1059,20 @@ function zodResolverImpl(
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
-				rules: { presence: calcPresence(ctx), minLength, maxLength },
-				validate: (value, options) =>
-					customValidate(
-						{
-							value,
-							currentParentPath: currentParentPath,
-							currentParentSegments: currentParentPathSegments,
-							schema: ctx.currentSchema,
-						},
-						options,
-					),
+				userMetadata: {},
+				validation: {
+					rules: { presence: calcPresence(ctx), minLength, maxLength },
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPath: currentParentPath,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
 				// To make sure we also cover the array item token path
 				items: zodResolverImpl(schema.element, {
 					acc: ctx.acc,
@@ -1027,7 +1086,7 @@ function zodResolverImpl(
 					},
 					childKey: ARRAY_ITEM_TOKEN,
 				}).node,
-			} as ArrayLevel,
+			} as FormFieldOptionArrayLevel,
 		};
 
 		return {
@@ -1050,21 +1109,24 @@ function zodResolverImpl(
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
-				rules: {
-					presence: calcPresence(ctx),
+				userMetadata: {},
+				validation: {
+					rules: {
+						presence: calcPresence(ctx),
+					},
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPath: currentParentPath,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
 				},
-				validate: (value, options) =>
-					customValidate(
-						{
-							value,
-							currentParentPath: currentParentPath,
-							currentParentSegments: currentParentPathSegments,
-							schema: ctx.currentSchema,
-						},
-						options,
-					),
 				shape: {}, // To be filled below
-			} as ObjectLevel,
+			} as FormFieldOptionObjectLevel,
 		};
 
 		const shape = schema.shape;
@@ -1116,24 +1178,26 @@ function zodResolverImpl(
 				path: currentParentPath,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
-				rules: {
-					presence: calcPresence(ctx),
-					exactLength,
-					minLength,
-					maxLength,
+				validation: {
+					rules: {
+						presence: calcPresence(ctx),
+						exactLength,
+						minLength,
+						maxLength,
+					},
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPath: currentParentPath,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
 				},
-				validate: (value, options) =>
-					customValidate(
-						{
-							value,
-							currentParentPath: currentParentPath,
-							currentParentSegments: currentParentPathSegments,
-							schema: ctx.currentSchema,
-						},
-						options,
-					),
 				items: new Array(schema.def.items.length).fill(null),
-			} as TupleLevel,
+			} as FormFieldOptionTupleLevel,
 		};
 
 		const items = schema.def.items;
@@ -1187,56 +1251,59 @@ function zodResolverImpl(
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
 			options: [],
-			rules: { presence: calcPresence(ctx) },
+			userMetadata: {},
 			metadata: {
 				"union-item-descendant": { originDivergencePathToInfo },
 				...ctx.currentAttributes,
-			} satisfies Level<any>["metadata"],
-			async validate(value, options): Promise<ValidateReturnShape> {
-				return customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				);
-				// The following is not needed since it's handled in the `customValidate` function above
-				// and also the options are pushed to the config in the accumulator so they will be available when needed
-				// and also it will be more efficient this way since we don't need to loop through the options again here
-				// and also it will handle the recursive union and intersection properly as well
-				// for (let i = 0; i < this.options.length; i++) {
-				// 	const opt = this.options[i];
-				// 	if (!opt) {
-				// 		console.warn(`\`${this.path}.options[${i}]\` is undefined`);
-				// 		continue;
-				// 	}
-				// 	const { result } = await opt[FIELD_CONFIG].validate(value, options);
-				// 	if (!("issues" in result)) {
-				// 		return {
-				// 			result,
-				// 			metadata: {
-				// 				validationEvent: options.validationEvent,
-				// 				"union-item": { firstValidOptionIndex: i },
-				// 			},
-				// 		}; // success
-				// 	}
-				// }
-				// return {
-				// 	result: {
-				// 		issues: [
-				// 			{
-				// 				message: "No union option matched",
-				// 				path: this.path,
-				// 				pathSegments: this.pathSegments,
-				// 			},
-				// 		],
-				// 	},
-				// 	metadata: { validationEvent: options.validationEvent },
-				// };
+			} satisfies FormFieldOption<any>["metadata"],
+			validation: {
+				rules: { presence: calcPresence(ctx) },
+				async validate(value, options): Promise<ValidateReturnShape> {
+					return customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					);
+					// The following is not needed since it's handled in the `customValidate` function above
+					// and also the options are pushed to the config in the accumulator so they will be available when needed
+					// and also it will be more efficient this way since we don't need to loop through the options again here
+					// and also it will handle the recursive union and intersection properly as well
+					// for (let i = 0; i < this.options.length; i++) {
+					// 	const opt = this.options[i];
+					// 	if (!opt) {
+					// 		console.warn(`\`${this.path}.options[${i}]\` is undefined`);
+					// 		continue;
+					// 	}
+					// 	const { result } = await opt[FIELD_CONFIG].validation.validate(value, options);
+					// 	if (!("issues" in result)) {
+					// 		return {
+					// 			result,
+					// 			metadata: {
+					// 				validationEvent: options.validationEvent,
+					// 				"union-item": { firstValidOptionIndex: i },
+					// 			},
+					// 		}; // success
+					// 	}
+					// }
+					// return {
+					// 	result: {
+					// 		issues: [
+					// 			{
+					// 				message: "No union option matched",
+					// 				path: this.path,
+					// 				pathSegments: this.pathSegments,
+					// 			},
+					// 		],
+					// 	},
+					// 	metadata: { validationEvent: options.validationEvent },
+					// };
+				},
 			},
-		} satisfies UnionItemLevel;
+		} satisfies FormFieldOptionUnionItemLevel;
 		originDivergencePathToInfo[currentParentPath] = {
 			originDivergencePath: currentParentPath,
 			originDivergencePathSegments: currentParentPathSegments,
@@ -1368,24 +1435,27 @@ function zodResolverImpl(
 	// }
 
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
-		const config: UnknownLevel = {
+		const config: FormFieldOptionUnknownLevel = {
 			level: "unknown",
 			path: currentParentPath,
 			pathSegments: currentParentPathSegments,
-			rules: {
-				presence: calcPresence(ctx),
-				default: ctx.default,
+			userMetadata: {},
+			validation: {
+				rules: {
+					presence: calcPresence(ctx),
+					default: ctx.default,
+				},
+				validate: async (value, options) =>
+					customValidate(
+						{
+							value,
+							currentParentPath: currentParentPath,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					),
 			},
-			validate: async (value, options) =>
-				customValidate(
-					{
-						value,
-						currentParentPath: currentParentPath,
-						currentParentSegments: currentParentPathSegments,
-						schema: ctx.currentSchema,
-					},
-					options,
-				),
 		};
 		return {
 			// paths: ctx.acc.paths,
@@ -1422,9 +1492,12 @@ function zodResolverImpl(
 					level: "never",
 					path: currentParentPath,
 					pathSegments: currentParentPathSegments,
-					rules: { presence: calcPresence(ctx) },
-					validate() {
-						throw new Error("Not implemented");
+					userMetadata: {},
+					validation: {
+						rules: { presence: calcPresence(ctx) },
+						validate() {
+							throw new Error("Not implemented");
+						},
 					},
 				},
 			},
@@ -1469,9 +1542,12 @@ function zodResolver(
 			level: "temp-root",
 			path: "",
 			pathSegments: [],
-			rules: { presence: "required" },
-			validate() {
-				throw new Error("Not implemented");
+			userMetadata: {},
+			validation: {
+				rules: { presence: "required" },
+				validate() {
+					throw new Error("Not implemented");
+				},
 			},
 		},
 	};

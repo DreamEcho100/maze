@@ -50,12 +50,12 @@ export interface FormFieldOptions<
 	isDirty?: boolean;
 	isTouched?: boolean;
 	isValidating?: boolean;
+	isFocused?: boolean;
 	events?: {
 		onInput?: (event: { target: { value: any } }) => void;
 		onBlur?: () => void;
 		onFocus?: () => void;
 	};
 	// focus: <T extends NestedPath<Values>>(name: T) => void;
-	isFocused?: boolean;
 	tabIndex?: number;
 }
