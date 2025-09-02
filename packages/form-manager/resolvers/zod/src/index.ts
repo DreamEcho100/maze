@@ -9,32 +9,33 @@ interface PathSegment {
 	/** The key representing a path segment. */
 	readonly key: PropertyKey;
 }
-type PathSegmentItem = PropertyKey | PathSegment;
+type PathSegmentItem = PropertyKey; //| PathSegment;
 
 const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
 type FormValidationEvent = "input" | "blur" | "touch" | "submit";
-interface FormManagerError<Path extends string> {
+interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The error message of the issue. */
-	/* readonly */ message: string | null;
+	message: string | null;
 	/** The path of the issue, if any. */
-	/* readonly */ path: Path; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
-	readonly pathSegments: readonly PathSegmentItem[];
+	pathString: string; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
+	pathSegments: PathAcc;
 }
 
 interface SuccessResult<Output> {
 	/** The typed output value. */
-	/* readonly */ value: Output;
+	value: Output;
 	/** The non-existent issues. */
-	/* readonly */ issues?: undefined;
+	issues?: undefined;
 }
 /** The result interface if validation fails. */
-interface FailureResult<Path extends string> {
+interface FailureResult<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The issues of failed validation. */
-	/* readonly */ issues: ReadonlyArray<FormManagerError<Path>>;
+	issues: ReadonlyArray<FormManagerError<PathAcc>>;
 }
-type ValidationResult<Path extends string, ValidValue> =
-	| SuccessResult<ValidValue>
-	| FailureResult<Path>;
+type ValidationResult<
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	ValidValue = unknown,
+> = SuccessResult<ValidValue> | FailureResult<PathAcc>;
 interface ValidateOptions {
 	/** The validation event that triggered the validation. */
 	validationEvent: FormValidationEvent;
@@ -48,16 +49,20 @@ type Presence = "required" | "optional" | "nullable" | "nullish";
 // biome-ignore lint/suspicious/noEmptyInterface: <explanation>
 interface FormFieldOptionUserMetadata {}
 
+type AnyRecord = Record<string, any>;
+type NeverRecord = Record<string, never>;
+
 interface FormFieldOption<
 	LevelName extends string,
-	NativeRules extends Record<string, any> = {},
-	Path extends string = string,
-	Value = unknown,
+	InputValue,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = [],
+	NativeRules extends AnyRecord = AnyRecord,
 > {
 	level: LevelName;
-	path: string;
+	pathString: string;
 	pathSegments: PathSegmentItem[];
-	default?: Value;
+	default?: InputValue;
 	validation: {
 		rules: NativeRules;
 		onEvent?: {
@@ -71,7 +76,7 @@ interface FormFieldOption<
 		validate: (
 			value: any,
 			options: ValidateOptions,
-		) => Promise<ValidateReturnShape<Path, Value>>;
+		) => Promise<ValidateReturnShape<PathAcc, OutputValue>>;
 		isPending?: boolean;
 	};
 	isDirty?: boolean;
@@ -89,10 +94,9 @@ interface FormFieldOption<
 			| "marked-never"]?: boolean;
 	} & {
 		"intersection-item"?: {
-			[path: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
+			[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 		};
 		"union-item-descendant"?: {
-			// paths: Set<string>;
 			originDivergencePathToInfo: Record<
 				string,
 				{
@@ -104,36 +108,61 @@ interface FormFieldOption<
 		};
 	};
 }
-interface FormFieldOptionTempRootLevel extends FormFieldOption<"temp-root"> {}
-interface FormFieldOptionNeverLevel<Path extends string = string>
-	extends FormFieldOption<"never", {}, Path, never> {}
-interface FormFieldOptionUnknownLevel<Path extends string = string>
-	extends FormFieldOption<
+interface FormFieldOptionTempRootLevel
+	extends FormFieldOption<"temp-root", string[], never, never, AnyRecord> {}
+interface FormFieldOptionNeverLevel<
+	InputValue = never,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	NativeRules extends Record<string, any> = AnyRecord,
+> extends FormFieldOption<
+		"never",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		NativeRules
+	> {}
+interface FormFieldOptionUnknownLevel<
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	InputValue = unknown,
+	OutputValue = InputValue,
+	NativeRules extends Record<string, any> = {
+		default?: string;
+		presence: Presence;
+	},
+> extends FormFieldOption<
 		"unknown",
-		{ default?: string; presence: Presence },
-		Path,
-		unknown
+		InputValue,
+		OutputValue,
+		PathAcc,
+		NativeRules
 	> {}
 interface FormFieldOptionPrimitiveLevelBase<
-	NativeRules extends Record<string, any>,
-	Path extends string = string,
-	Value = unknown,
+	InputValue = any,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	NativeRules extends Record<string, any> = AnyRecord,
 > extends FormFieldOption<
 		"primitive",
-		NativeRules & { coerce?: boolean; presence: Presence },
-		Path,
-		Value
+		InputValue,
+		OutputValue,
+		PathAcc,
+		NativeRules & { coerce?: boolean; presence: Presence }
 	> {}
-interface FormFieldOptionStringPrimitiveLevel<Path extends string = string>
-	extends FormFieldOptionPrimitiveLevelBase<
+interface FormFieldOptionStringPrimitiveLevel<
+	InputValue = string,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOptionPrimitiveLevelBase<
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
 			default?: string;
 			minLength?: number;
 			maxLength?: number;
 			regex?: RegExp;
-		},
-		Path,
-		string
+		}
 	> {
 	type: "string";
 	metadata?: FormFieldOptionPrimitiveLevelBase<any>["metadata"] & {
@@ -142,8 +171,14 @@ interface FormFieldOptionStringPrimitiveLevel<Path extends string = string>
 		literal?: string | number | boolean | null;
 	};
 }
-interface FormFieldOptionNumberPrimitiveLevel<Path extends string = string>
-	extends FormFieldOptionPrimitiveLevelBase<
+interface FormFieldOptionNumberPrimitiveLevel<
+	InputValue = number,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOptionPrimitiveLevelBase<
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
 			default?: number;
 			min?: number;
@@ -152,9 +187,7 @@ interface FormFieldOptionNumberPrimitiveLevel<Path extends string = string>
 			inclusiveMax?: boolean;
 			int?: boolean;
 			multipleOf?: number | bigint;
-		},
-		Path,
-		number
+		}
 	> {
 	type: "number";
 	metadata?: FormFieldOptionPrimitiveLevelBase<any>["metadata"] & {
@@ -166,26 +199,32 @@ interface FormFieldOptionNumberPrimitiveLevel<Path extends string = string>
 
 // type DateLike = Date | string | number;
 interface FormFieldOptionDatePrimitiveLevel<
-	Path extends string = string,
-	ValidValue = Date,
+	InputValue = Date,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > extends FormFieldOptionPrimitiveLevelBase<
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
 			default?: Date;
 			min?: Date;
 			inclusiveMin?: boolean;
 			max?: Date;
 			inclusiveMax?: boolean;
-		},
-		Path,
-		ValidValue
+		}
 	> {
 	type: "date";
 }
-interface FormFieldOptionBooleanPrimitiveLevel<Path extends string = string>
-	extends FormFieldOptionPrimitiveLevelBase<
-		{ default?: boolean },
-		Path,
-		boolean
+interface FormFieldOptionBooleanPrimitiveLevel<
+	InputValue = boolean,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOptionPrimitiveLevelBase<
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{ default?: boolean }
 	> {
 	type: "boolean";
 }
@@ -196,72 +235,89 @@ type FormFieldOptionPrimitiveLevel =
 	| FormFieldOptionBooleanPrimitiveLevel;
 
 interface FormFieldOptionObjectLevel<
-	Path extends string = string,
-	ValidValue = Record<string, any>,
+	InputValue = AnyRecord,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > extends FormFieldOption<
 		"object",
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
-			default?: Record<string, any>;
+			default?: InputValue;
 			presence: Presence;
-		},
-		Path,
-		ValidValue
+		}
 	> {
-	shape: Record<string, TrieNode>;
+	// No need to store `shape` since it won't help much and we're relaying mainly on the `TrieNode` data structure
+	// shape: Record<string, TrieNode>;
 }
 interface FormFieldOptionArrayLevel<
-	Path extends string = string,
-	ValidValue = any[],
+	InputValue = any[],
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > extends FormFieldOption<
 		"array",
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
 			default?: any[];
 			presence: Presence;
 			minLength?: number;
 			maxLength?: number;
-		},
-		Path,
-		ValidValue
+		}
 	> {
-	items: TrieNode; // Need to find a way to reference the main type here
+	// No need to store `items` since it won't help much and we're relaying mainly on the `TrieNode` data structure
+	// items: TrieNode; // Need to find a way to reference the main type here
 }
 interface FormFieldOptionTupleLevel<
-	Path extends string = string,
-	ValidValue = any[],
+	InputValue = any[],
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > extends FormFieldOption<
 		"tuple",
+		InputValue,
+		OutputValue,
+		PathAcc,
 		{
 			default?: any[];
 			presence: Presence;
 			exactLength?: number;
 			minLength?: number;
 			maxLength?: number;
-		},
-		Path,
-		ValidValue
+		}
 	> {
-	items: TrieNode[];
+	// No need to store `items` since it won't help much and we're relaying mainly on the `TrieNode` data structure
+	// items: TrieNode[];
 }
 interface FormFieldOptionUnionItemLevel<
-	Path extends string = string,
-	ValidValue = unknown,
-> extends FormFieldOption<"union-item", {}, Path, ValidValue> {
+	InputValue = unknown,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOption<
+		"union-item",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		NeverRecord
+	> {
+	// No need to store `options` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	options: TrieNode[];
 }
 
 interface ValidateReturnShape<
-	Path extends string = string,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	ValidValue = unknown,
 > {
-	result: ValidationResult<Path, ValidValue>;
+	result: ValidationResult<PathAcc, ValidValue>;
 	metadata?: {
 		// /** The validation event that triggered the validation, if any. */
-		/* readonly */ validationEvent: FormValidationEvent;
+		validationEvent: FormValidationEvent;
 		"union-item"?: { firstValidOptionIndex: number };
 	};
 }
 
-type ResolverConfigShape =
+type FormFieldOptionShape =
 	| FormFieldOptionTempRootLevel
 	| FormFieldOptionUnknownLevel
 	| FormFieldOptionNeverLevel
@@ -273,62 +329,393 @@ type ResolverConfigShape =
 
 /* Trie structure for path-based storage and retrieval */
 const FIELD_CONFIG = Symbol("FIELD_CONFIG");
-interface TrieNode {
-	// TrieNodeWithFields
-	[key: string]: TrieNode;
-}
-interface TrieNode {
-	// TrieNodeResolverConfig
-	[FIELD_CONFIG]: ResolverConfigShape;
-}
-function directInsert(node: TrieNode, rc: ResolverConfigShape) {
-	node[FIELD_CONFIG] = rc;
-}
-// function insertByPath(node: TrieNode, path: string, rc: ResolverConfigShape) {
-// 	const parts = path.split(".");
-// 	let current = node;
-
-// 	for (const part of parts) {
-// 		current = current[part] ??= {
-// 			[FIELD_CONFIG]: {
-// 				level: "temp-root",
-// 				path: "",
-// 				validate: async (value) => {
-// 					throw new Error("Not implemented");
-// 				}
-// 			},
-// 		};
-// 	}
-// 	current[FIELD_CONFIG] = rc;
+// interface TrieNode {
 // }
-function directGet(node: TrieNode): ResolverConfigShape | undefined {
-	return node[FIELD_CONFIG];
-}
-function getByPath(
-	node: TrieNode,
-	path: string,
-): ResolverConfigShape | undefined {
-	const parts = path.split(".");
-	let current: TrieNode | undefined = node;
-
-	for (const part of parts) {
-		current = current?.[part];
-		if (!current) return;
-	}
-	return current[FIELD_CONFIG];
-}
+type TrieNode<
+	Config extends FormFieldOptionShape = FormFieldOptionShape,
+	T = Record<string | number, TrieNode<any, any>>,
+> = T & {
+	[FIELD_CONFIG]: Config;
+};
 /* End Trie structure */
 
-async function customValidate<Path extends string = string, T = unknown>(
+type ZodAny = z.ZodTypeAny | z.core.$ZodType<any, any, any> | z.core.SomeType;
+
+type ZodCollectionType = z.ZodObject | z.ZodArray | z.ZodTuple;
+type FormFieldCollectionType =
+	| FormFieldOptionObjectLevel
+	| FormFieldOptionArrayLevel
+	| FormFieldOptionTupleLevel;
+type ZodTupleItemResolverMap<
+	T extends readonly ZodAny[],
+	PathAcc extends PathSegmentItem[] = [],
+	Options extends { isUnionItemDescendant?: boolean } = {},
+> = {
+	[K in keyof T as K extends `${number}` ? K : never]: ZodResolverTrieResult<
+		T[K] extends ZodAny ? T[K] : never,
+		T[K] extends ZodAny ? T[K] : never,
+		[...PathAcc, K extends `${infer TNum extends number}` ? TNum : never],
+		Options
+	>;
+};
+
+type GetFormFieldOptionGenericParams<TFormFieldOption> =
+	TFormFieldOption extends FormFieldOption<
+		infer LevelName,
+		infer InputValue,
+		infer OutputValue,
+		infer PathAcc,
+		infer NativeRules
+	>
+		? {
+				level: LevelName;
+				input: InputValue;
+				output: OutputValue;
+				pathAcc: PathAcc;
+				nativeRules: NativeRules;
+			}
+		: never;
+
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+type AttachCollectableTypeTrieNodesToUnionItemResolverMap<
+	Options extends readonly any[],
+	PathAcc extends PathSegmentItem[] = [],
+> = Prettify<
+	Options extends readonly (infer U)[]
+		? U extends z.ZodObject
+			? {
+					[key in keyof U["shape"]]: ZodResolverTrieResult<
+						U["shape"][key],
+						U["shape"][key],
+						[...PathAcc, Extract<key, string>],
+						{ isUnionItemDescendant: true }
+					>;
+				}
+			: U extends z.ZodArray
+				? {
+						[ARRAY_ITEM_TOKEN]: ZodResolverTrieResult<
+							U["element"],
+							U["element"],
+							[...PathAcc, typeof ARRAY_ITEM_TOKEN],
+							{ isUnionItemDescendant: true }
+						>;
+					}
+				: U extends z.ZodTuple
+					? ZodTupleItemResolverMap<
+							U["def"]["items"],
+							PathAcc,
+							{ isUnionItemDescendant: true }
+						>
+					: AnyRecord
+		: AnyRecord
+>;
+
+/*
+Prettify<
+	{
+		[K in keyof Options as K extends `${number}`
+			? Options[K] extends ZodCollectionType
+				? K
+				: never
+			: never]: Options[K] extends ZodCollectionType
+			? ZodResolverTrieResult<
+					Options[K],
+					Options[K],
+					PathAcc,
+					{ isUnionItemDescendant: true }
+				>
+			: never;
+	}[string | number]
+>;
+*/
+
+type ZodResolverTrieResult<
+	ZodSchemaToUnwrap extends ZodAny,
+	ZodSchemaToInfer extends ZodAny = ZodSchemaToUnwrap,
+	PathAcc extends PathSegmentItem[] = [],
+	Options extends { isUnionItemDescendant?: boolean } = {},
+> = ZodSchemaToUnwrap extends z.ZodDefault
+	? ZodResolverTrieResult<
+			ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+			ZodSchemaToInfer,
+			PathAcc
+		>
+	: ZodSchemaToUnwrap extends z.ZodOptional
+		? ZodResolverTrieResult<
+				ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+				ZodSchemaToInfer,
+				PathAcc
+			>
+		: ZodSchemaToUnwrap extends z.ZodNullable
+			? ZodResolverTrieResult<
+					ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+					ZodSchemaToInfer,
+					PathAcc
+				>
+			: ZodSchemaToUnwrap extends z.ZodString | z.ZodLiteral | z.ZodEnum
+				? TrieNode<
+						Options extends { isUnionItemDescendant: true }
+							? FormFieldOptionUnionItemLevel<
+									z.input<ZodSchemaToInfer>,
+									z.output<ZodSchemaToInfer>,
+									PathAcc
+								>
+							: FormFieldOptionStringPrimitiveLevel<
+									z.input<ZodSchemaToInfer>,
+									z.output<ZodSchemaToInfer>,
+									PathAcc
+								>
+					>
+				: ZodSchemaToUnwrap extends z.ZodNumber
+					? TrieNode<
+							Options extends { isUnionItemDescendant: true }
+								? FormFieldOptionUnionItemLevel<
+										z.input<ZodSchemaToInfer>,
+										z.output<ZodSchemaToInfer>,
+										PathAcc
+									>
+								: FormFieldOptionNumberPrimitiveLevel<
+										z.input<ZodSchemaToInfer>,
+										z.output<ZodSchemaToInfer>,
+										PathAcc
+									>
+						>
+					: ZodSchemaToUnwrap extends z.ZodBoolean
+						? TrieNode<
+								Options extends { isUnionItemDescendant: true }
+									? FormFieldOptionUnionItemLevel<
+											z.input<ZodSchemaToInfer>,
+											z.output<ZodSchemaToInfer>,
+											PathAcc
+										>
+									: FormFieldOptionBooleanPrimitiveLevel<
+											z.input<ZodSchemaToInfer>,
+											z.output<ZodSchemaToInfer>,
+											PathAcc
+										>
+							>
+						: ZodSchemaToUnwrap extends z.ZodDate
+							? TrieNode<
+									Options extends { isUnionItemDescendant: true }
+										? FormFieldOptionUnionItemLevel<
+												z.input<ZodSchemaToInfer>,
+												z.output<ZodSchemaToInfer>,
+												PathAcc
+											>
+										: FormFieldOptionDatePrimitiveLevel<
+												z.input<ZodSchemaToInfer>,
+												z.output<ZodSchemaToInfer>,
+												PathAcc
+											>
+								>
+							: ZodSchemaToUnwrap extends z.ZodObject
+								? TrieNode<
+										Options extends { isUnionItemDescendant: true }
+											? FormFieldOptionUnionItemLevel<
+													z.input<ZodSchemaToInfer>,
+													z.output<ZodSchemaToInfer>,
+													PathAcc
+												>
+											: FormFieldOptionObjectLevel<
+													z.input<ZodSchemaToInfer>,
+													z.output<ZodSchemaToInfer>,
+													PathAcc
+												>
+									> & {
+										[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverTrieResult<
+											ZodSchemaToUnwrap["shape"][key],
+											ZodSchemaToUnwrap["shape"][key],
+											[...PathAcc, Extract<key, string>],
+											Options
+										>;
+									}
+								: ZodSchemaToUnwrap extends z.ZodArray
+									? TrieNode<
+											Options extends { isUnionItemDescendant: true }
+												? FormFieldOptionUnionItemLevel<
+														z.input<ZodSchemaToInfer>,
+														z.output<ZodSchemaToInfer>,
+														PathAcc
+													>
+												: FormFieldOptionArrayLevel<
+														z.input<ZodSchemaToInfer>,
+														z.output<ZodSchemaToInfer>,
+														PathAcc
+													>
+										> & {
+											[ARRAY_ITEM_TOKEN]: ZodResolverTrieResult<
+												ZodSchemaToUnwrap["element"],
+												ZodSchemaToUnwrap["element"],
+												[...PathAcc, typeof ARRAY_ITEM_TOKEN],
+												Options
+											>;
+										}
+									: ZodSchemaToUnwrap extends z.ZodTuple
+										? TrieNode<
+												Options extends { isUnionItemDescendant: true }
+													? FormFieldOptionUnionItemLevel<
+															z.input<ZodSchemaToInfer>,
+															z.output<ZodSchemaToInfer>,
+															PathAcc
+														>
+													: FormFieldOptionTupleLevel<
+															z.input<ZodSchemaToInfer>,
+															z.output<ZodSchemaToInfer>,
+															PathAcc
+														>
+											> &
+												ZodTupleItemResolverMap<
+													ZodSchemaToUnwrap["def"]["items"],
+													PathAcc,
+													Options
+												>
+										: // ------------------------------------------------
+											//  UNION  (z.union([...]))
+											// ------------------------------------------------
+											// :
+											ZodSchemaToUnwrap extends z.ZodUnion<infer Options>
+											? TrieNode<
+													FormFieldOptionUnionItemLevel<
+														z.input<ZodSchemaToInfer>,
+														z.output<ZodSchemaToInfer>,
+														PathAcc
+													>
+												> &
+													AttachCollectableTypeTrieNodesToUnionItemResolverMap<
+														Options,
+														PathAcc
+													>
+											: //
+												// ZodSchemaToUnwrap extends z.ZodUnion<infer U>
+												// ? TrieNode<
+												// 		FormFieldOptionUnionItemLevel<
+												// 			z.input<ZodSchemaToInfer>,
+												// 			z.output<ZodSchemaToInfer>,
+												// 			PathAcc
+												// 		>
+												// 	> & {
+												// 		// expose branches under numeric keys so you can write:
+												// 		//   trie.unionField[0]  -> string branch
+												// 		//   trie.unionField[1]  -> number branch
+												// 		[K in keyof U as K extends `${number}`
+												// 			? K
+												// 			: never]: ZodResolverTrieResult<
+												// 			U[K],
+												// 			U[K],
+												// 			PathAcc,
+												// 			{ isUnionItemDescendant: true }
+												// 		>;
+												// 	}
+												// :
+												// ------------------------------------------------
+												//  INTERSECTION  (z.intersection(...))
+												// ------------------------------------------------
+												ZodSchemaToUnwrap extends z.ZodIntersection<
+														infer L,
+														infer R
+													>
+												? // Intersection = both sides at the same path; we simply merge the
+													// two branch results.  At runtime your resolver already does
+													// “right wins” for conflicting keys; the type does the same.
+													ZodResolverTrieResult<L, L, PathAcc, Options> &
+														ZodResolverTrieResult<R, R, PathAcc, Options>
+												: //
+													{};
+const zodSchemaTest = z
+	.object({
+		stringField: z
+			.string()
+			.min(2)
+			.max(5)
+			.regex(/^[a-z]+$/),
+		numberField: z.number().min(1).max(10).int(),
+		booleanField: z.boolean().default(true),
+		dateField: z.date().min(new Date("2020-01-01")).max(new Date("2030-12-31")),
+		nestedObject: z.object({
+			nestedString: z.string().optional(),
+			nestedNumber: z.number().nullable(),
+		}),
+		arrayField: z.array(z.string().min(1)).min(1).max(3),
+		arrayOfObjects: z.array(
+			z.object({
+				id: z.uuidv7(),
+				value: z.number().positive(),
+			}),
+		),
+		tupleField: z.tuple([
+			z.string(),
+			z.number().optional(),
+			z.boolean().default(false),
+		]),
+		unionField: z.union([z.string(), z.number(), z.boolean()]),
+		unionOfObjects: z.union([
+			z.object({ type: z.literal("A"), value: z.string() }),
+			z.object({ type: z.literal("B"), value: z.number() }),
+			z.object({ type: z.literal("C"), value: z.boolean() }),
+		]),
+		unionOfArrays: z.union([z.array(z.string()), z.array(z.number())]),
+		unionOfTuples: z.union([
+			z.tuple([z.string(), z.number()]),
+			z.tuple([z.boolean(), z.string()]),
+		]),
+		unionOfDifferent: z.union([z.string(), z.number()]),
+	})
+	.optional();
+type ZodSchemaTest = typeof zodSchemaTest;
+type ZodSchemaTestTrieResult = ZodResolverTrieResult<
+	ZodSchemaTest,
+	ZodSchemaTest
+>;
+//^?
+const zodSchemaTestTrieResult = {} as ZodSchemaTestTrieResult;
+zodSchemaTestTrieResult.stringField[FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.stringField[FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.nestedObject.nestedNumber[FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.arrayField[FIELD_CONFIG].level; // "array"
+zodSchemaTestTrieResult.arrayField[ARRAY_ITEM_TOKEN][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.arrayField[ARRAY_ITEM_TOKEN][FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.arrayOfObjects[FIELD_CONFIG].level; // "array"
+zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN][FIELD_CONFIG].level; // "object"
+zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN].value[FIELD_CONFIG]
+	.level; // "primitive"
+zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN].value[FIELD_CONFIG]
+	.type; // "number"
+zodSchemaTestTrieResult.tupleField[FIELD_CONFIG].level; // "tuple"
+zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].type; // "number"
+zodSchemaTestTrieResult.unionField[FIELD_CONFIG].level; // "union-item"
+zodSchemaTestTrieResult.unionOfArrays[0].level;
+zodSchemaTestTrieResult.unionOfArrays.options[0][FIELD_CONFIG].level; // "array"
+zodSchemaTestTrieResult.unionOfObjects.options;
+zodSchemaTestTrieResult.unionOfArrays.options[0][ARRAY_ITEM_TOKEN][FIELD_CONFIG]
+	.level; // "primitive"
+zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
+zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-item"
+zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "object"
+
+type T = { a: { b: { c: "d" } } } & { a: { b: { e: "f" } } };
+type X = T["a"]["b"]["c"];
+type Y = T["a"]["b"]["e"];
+
+async function customValidate<
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	T = unknown,
+>(
 	props: {
 		value: any;
-		currentParentPath: Path;
+		currentParentPathString: string;
 		currentParentSegments: PathSegmentItem[];
-		schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
+		schema: ZodAny;
 	},
 	options: ValidateOptions,
-): Promise<ValidateReturnShape<Path, T>> {
+): Promise<ValidateReturnShape<PathAcc, T>> {
 	try {
+		if (!("~standard" in props.schema)) {
+			throw new Error("Provided schema is not a valid Zod schema");
+		}
+
 		const result = await props.schema["~standard"].validate(props.value);
 
 		if ("issues" in result && result.issues) {
@@ -336,8 +723,9 @@ async function customValidate<Path extends string = string, T = unknown>(
 				result: {
 					issues: result.issues.map((issue) => ({
 						message: issue.message,
-						path: (issue.path?.join(".") || props.currentParentPath) as Path,
-						pathSegments: issue.path || props.currentParentSegments,
+						pathString: issue.path?.join(".") || props.currentParentPathString,
+						pathSegments: (issue.path ||
+							props.currentParentSegments) as PathAcc,
 					})),
 				},
 			};
@@ -356,8 +744,8 @@ async function customValidate<Path extends string = string, T = unknown>(
 				issues: [
 					{
 						message: "Unknown validation error",
-						path: props.currentParentPath,
-						pathSegments: props.currentParentSegments,
+						pathString: props.currentParentPathString,
+						pathSegments: props.currentParentSegments as PathAcc,
 					},
 				],
 			},
@@ -371,8 +759,8 @@ async function customValidate<Path extends string = string, T = unknown>(
 					{
 						message:
 							error instanceof Error ? error.message : "Validation failed",
-						path: props.currentParentPath,
-						pathSegments: props.currentParentSegments,
+						pathString: props.currentParentPathString,
+						pathSegments: props.currentParentSegments as PathAcc,
 					},
 				],
 			},
@@ -381,17 +769,11 @@ async function customValidate<Path extends string = string, T = unknown>(
 	}
 }
 
-// const z = await import('https://unpkg.com/zod@latest?module')
-
 interface InheritedMetadata {
 	"intersection-item"?: {
-		[path: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
+		[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 	};
 	"union-item-descendant"?: {
-		// originDivergencePath: string;
-		// originDivergencePathSegments: PathSegmentItem[];
-		// paths: Set<string>;
-		// paths: Set<string>;
 		originDivergencePathToInfo: Record<
 			string,
 			{
@@ -405,9 +787,6 @@ interface InheritedMetadata {
 }
 
 interface ZodResolverAcc {
-	// paths: string[];
-	// pathToResolverConfig: Record<string, ResolverConfigShape>;
-	// resolverConfig: ResolverConfigShape;
 	pathToNode: Record<string, TrieNode>;
 	node: TrieNode;
 }
@@ -429,7 +808,7 @@ function resolveIntersectionItemConfig(props: {
 				(existingNode[FIELD_CONFIG].level === "primitive" &&
 					existingNode[FIELD_CONFIG].type ===
 						(
-							props.newNode[FIELD_CONFIG] as ResolverConfigShape &
+							props.newNode[FIELD_CONFIG] as FormFieldOptionShape &
 								FormFieldOptionPrimitiveLevel
 						).type))
 		) {
@@ -462,21 +841,22 @@ function resolveIntersectionItemConfig(props: {
 				// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 				// @ts-ignore
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-				return (props.acc.pathToNode[props.newNode[FIELD_CONFIG].path][
+				return (props.acc.pathToNode[props.newNode[FIELD_CONFIG].pathString][
 					FIELD_CONFIG
 				] = {
 					level: "never",
-					path: existingNode[FIELD_CONFIG].path,
+					pathString: existingNode[FIELD_CONFIG].pathString,
 					pathSegments: existingNode[FIELD_CONFIG].pathSegments,
 					userMetadata: {},
 					metadata: { ...existingNode.metadata, "marked-never": true },
 					validation: {
 						rules: {},
 						validate: async (value, options) =>
-							customValidate<string, never>(
+							customValidate(
 								{
 									value,
-									currentParentPath: existingNode[FIELD_CONFIG].path,
+									currentParentPathString:
+										existingNode[FIELD_CONFIG].pathString,
 									currentParentSegments:
 										existingNode[FIELD_CONFIG].pathSegments,
 									schema: z.never(),
@@ -484,7 +864,7 @@ function resolveIntersectionItemConfig(props: {
 								options,
 							),
 					},
-				} satisfies ResolverConfigShape);
+				} satisfies FormFieldOptionShape);
 			} catch (error) {
 				console.error(error);
 				throw error;
@@ -492,8 +872,7 @@ function resolveIntersectionItemConfig(props: {
 		}
 	}
 
-	// props.acc.paths.push(props.newConfig.path);
-	props.acc.pathToNode[props.newNode[FIELD_CONFIG].path] = props.newNode;
+	props.acc.pathToNode[props.newNode[FIELD_CONFIG].pathString] = props.newNode;
 	return props.newNode;
 }
 
@@ -545,7 +924,7 @@ function attachChildToParentNode(props: {
 }
 
 function pushToAcc(props: {
-	path: string;
+	pathString: string;
 	acc: ZodResolverAcc;
 	node: TrieNode;
 	currentAttributes?: CurrentAttributes;
@@ -553,7 +932,8 @@ function pushToAcc(props: {
 	currentParentNode?: TrieNode;
 	childKey?: string | number;
 }): ZodResolverAcc & { isNew: boolean } {
-	let existingNode: TrieNode | undefined = props.acc.pathToNode[props.path];
+	let existingNode: TrieNode | undefined =
+		props.acc.pathToNode[props.pathString];
 	let isNew = true;
 
 	if (existingNode && existingNode[FIELD_CONFIG].level !== "temp-root") {
@@ -616,7 +996,7 @@ function pushToAcc(props: {
 				[FIELD_CONFIG]: {
 					level: "union-item",
 					options: [oldNode],
-					path: oldNode[FIELD_CONFIG].path,
+					pathString: oldNode[FIELD_CONFIG].pathString,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
 					userMetadata: {},
 					metadata: {
@@ -631,7 +1011,9 @@ function pushToAcc(props: {
 							for (let i = 0; i < config.options.length; i++) {
 								const opt = config.options[i];
 								if (!opt) {
-									console.warn(`\`${config.path}.options[${i}]\` is undefined`);
+									console.warn(
+										`\`${config.pathString}.options[${i}]\` is undefined`,
+									);
 									continue;
 								}
 								const { result } = await opt[FIELD_CONFIG].validation.validate(
@@ -645,7 +1027,7 @@ function pushToAcc(props: {
 											validationEvent: options.validationEvent,
 											"union-item": { firstValidOptionIndex: i },
 										},
-									}; // success
+									};
 								}
 							}
 							return {
@@ -653,7 +1035,7 @@ function pushToAcc(props: {
 									issues: [
 										{
 											message: "No union option matched",
-											path: config.path,
+											pathString: config.pathString,
 											pathSegments: config.pathSegments,
 										},
 									],
@@ -674,8 +1056,7 @@ function pushToAcc(props: {
 		}
 	}
 
-	// props.acc.paths.push(props.path);
-	props.acc.pathToNode[props.path] = newNode;
+	props.acc.pathToNode[props.pathString] = newNode;
 	attachChildToParentNode({
 		currentParentNode: props.currentParentNode,
 		childKey: props.childKey,
@@ -689,9 +1070,6 @@ interface CurrentAttributes {
 	"array-item"?: boolean;
 	"array-token-item"?: boolean;
 	"tuple-direct-item"?: boolean;
-	//
-	// "intersection-item": "left";
-	// "intersection-item": "right";
 }
 
 const calcPresence = (props?: {
@@ -716,13 +1094,13 @@ From Zod docs:
 The system looks as it is because I'm trying different ways before changing the data structure to a Trie like one, to support many advanced functionalities and to make propagation cheap, and yes the tokenization will play a huge role on it
 */
 function zodResolverImpl(
-	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>,
+	schema: ZodAny,
 	ctx: {
 		//
-		currentParentPth: string;
-		currentParentPathSegments: (string | number)[];
+		currentParentPathString: string;
+		currentParentPathSegments: PathSegmentItem[];
 		currentParentNode?: TrieNode;
-		currentSchema: z.ZodTypeAny | z.core.$ZodType<any, any, any>;
+		currentSchema: ZodAny;
 		childKey?: string | number;
 		//
 		currentAttributes?: CurrentAttributes;
@@ -730,18 +1108,15 @@ function zodResolverImpl(
 		//
 		acc: ZodResolverAcc;
 		//
-		// Q: What to use in zod as a `parser` of the value before it's validated?
-		// ZodEffects? ZodPipe?
-		// parser
-		//
 		default?: any;
 		optional?: boolean;
 		nullable?: boolean;
-		// isOptional?: boolean;
-		// isNullable?: boolean;
 	},
-): ZodResolverAcc {
-	const currentParentPath = ctx.currentParentPth;
+): {
+	pathToNode: Record<string, TrieNode>;
+	node: TrieNode;
+} {
+	const currentParentPathString = ctx.currentParentPathString;
 	const currentParentPathSegments = ctx.currentParentPathSegments;
 	/** Unwrap ZodDefault, ZodOptional, and ZodNullable to get to the core schema **/
 	if (schema instanceof z.ZodDefault) {
@@ -785,7 +1160,6 @@ function zodResolverImpl(
 		let minLength: number | undefined;
 		let maxLength: number | undefined;
 		let regex: RegExp | undefined;
-		// const coerce = schema instanceof z.ZodString && schema._zod.def.coerce;
 		let coerce: boolean | undefined;
 
 		if (schema instanceof z.ZodLiteral) {
@@ -814,8 +1188,6 @@ function zodResolverImpl(
 			coerce = schema.def.coerce;
 			if (schema.def.checks) {
 				for (const check of schema.def.checks) {
-					if (check._zod.def.check === "") {
-					}
 					if (check instanceof z.core.$ZodCheckMinLength) {
 						minLength = check._zod.def.minimum as number;
 					} else if (check instanceof z.core.$ZodCheckMaxLength) {
@@ -830,7 +1202,7 @@ function zodResolverImpl(
 		const config: FormFieldOptionStringPrimitiveLevel = {
 			level: "primitive",
 			type: "string",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			userMetadata: {},
 			validation: {
@@ -846,7 +1218,7 @@ function zodResolverImpl(
 					customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
@@ -859,7 +1231,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				node: { [FIELD_CONFIG]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -893,7 +1265,7 @@ function zodResolverImpl(
 		const config: FormFieldOptionNumberPrimitiveLevel = {
 			level: "primitive",
 			type: "number",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			userMetadata: {},
 			validation: {
@@ -912,7 +1284,7 @@ function zodResolverImpl(
 					customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
@@ -926,7 +1298,7 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -953,7 +1325,7 @@ function zodResolverImpl(
 		const config: FormFieldOptionDatePrimitiveLevel = {
 			level: "primitive",
 			type: "date",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			userMetadata: {},
 			validation: {
@@ -970,7 +1342,7 @@ function zodResolverImpl(
 					customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
@@ -984,7 +1356,7 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -996,7 +1368,7 @@ function zodResolverImpl(
 		const config: FormFieldOptionBooleanPrimitiveLevel = {
 			level: "primitive",
 			type: "boolean",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			userMetadata: {},
 			validation: {
@@ -1009,7 +1381,7 @@ function zodResolverImpl(
 					customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
@@ -1022,7 +1394,7 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1046,8 +1418,8 @@ function zodResolverImpl(
 			}
 		}
 
-		const tokenNextParent = currentParentPath
-			? `${currentParentPath}.${ARRAY_ITEM_TOKEN}`
+		const tokenNextParent = currentParentPathString
+			? `${currentParentPathString}.${ARRAY_ITEM_TOKEN}`
 			: ARRAY_ITEM_TOKEN;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
@@ -1056,7 +1428,7 @@ function zodResolverImpl(
 		const node: TrieNode = {
 			[FIELD_CONFIG]: {
 				level: "array",
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
 				userMetadata: {},
@@ -1066,35 +1438,36 @@ function zodResolverImpl(
 						customValidate(
 							{
 								value,
-								currentParentPath: currentParentPath,
+								currentParentPathString: currentParentPathString,
 								currentParentSegments: currentParentPathSegments,
 								schema: ctx.currentSchema,
 							},
 							options,
 						),
 				},
-				// To make sure we also cover the array item token path
-				items: zodResolverImpl(schema.element, {
-					acc: ctx.acc,
-					currentParentPth: tokenNextParent,
-					currentParentPathSegments: tokenNextParentSegments,
-					currentAttributes: { "array-token-item": true },
-					inheritedMetadata: ctx.inheritedMetadata,
-					currentSchema: schema.element,
-					get currentParentNode() {
-						return node;
-					},
-					childKey: ARRAY_ITEM_TOKEN,
-				}).node,
 			} as FormFieldOptionArrayLevel,
 		};
+		// // To make sure we also cover the array item token path
+		// node.items =
+		zodResolverImpl(schema.element, {
+			acc: ctx.acc,
+			currentParentPathString: tokenNextParent,
+			currentParentPathSegments: tokenNextParentSegments,
+			currentAttributes: { "array-token-item": true },
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentSchema: schema.element,
+			get currentParentNode() {
+				return node;
+			},
+			childKey: ARRAY_ITEM_TOKEN,
+		}).node;
 
 		return {
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
 				node,
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1106,7 +1479,7 @@ function zodResolverImpl(
 		const node = {
 			[FIELD_CONFIG]: {
 				level: "object",
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
 				userMetadata: {},
@@ -1118,7 +1491,7 @@ function zodResolverImpl(
 						customValidate(
 							{
 								value,
-								currentParentPath: currentParentPath,
+								currentParentPathString: currentParentPathString,
 								currentParentSegments: currentParentPathSegments,
 								schema: ctx.currentSchema,
 							},
@@ -1131,13 +1504,14 @@ function zodResolverImpl(
 
 		const shape = schema.shape;
 		for (const key in shape) {
-			const nextParent = currentParentPath
-				? `${currentParentPath}.${key}`
+			const nextParent = currentParentPathString
+				? `${currentParentPathString}.${key}`
 				: key;
 			const nextParentSegments = [...currentParentPathSegments, key];
-			node[FIELD_CONFIG].shape[key] = zodResolverImpl(shape[key], {
+			// node[FIELD_CONFIG].shape[key] =
+			zodResolverImpl(shape[key], {
 				acc: ctx.acc,
-				currentParentPth: nextParent,
+				currentParentPathString: nextParent,
 				currentParentPathSegments: nextParentSegments,
 				currentAttributes: { "object-property": true },
 				currentSchema: shape[key],
@@ -1152,7 +1526,7 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				node,
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1166,7 +1540,6 @@ function zodResolverImpl(
 		let maxLength: number | undefined;
 		if (schema.def.rest) {
 			minLength = schema.def.items.length;
-			// maxLength = undefined;
 		} else {
 			exactLength = schema.def.items.length;
 			minLength = schema.def.items.length;
@@ -1175,7 +1548,7 @@ function zodResolverImpl(
 		const node = {
 			[FIELD_CONFIG]: {
 				level: "tuple",
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
 				validation: {
@@ -1189,28 +1562,29 @@ function zodResolverImpl(
 						customValidate(
 							{
 								value,
-								currentParentPath: currentParentPath,
+								currentParentPathString: currentParentPathString,
 								currentParentSegments: currentParentPathSegments,
 								schema: ctx.currentSchema,
 							},
 							options,
 						),
 				},
-				items: new Array(schema.def.items.length).fill(null),
+				// items: new Array(schema.def.items.length).fill(null),
 			} as FormFieldOptionTupleLevel,
 		};
 
 		const items = schema.def.items;
 		for (let index = 0; index < items.length; index++) {
 			const item = items[index]!;
-			const indexedNextParent = currentParentPath
-				? `${currentParentPath}.${index}`
+			const indexedNextParent = currentParentPathString
+				? `${currentParentPathString}.${index}`
 				: String(index);
 			const indexedNextParentSegments = [...currentParentPathSegments, index];
 
-			node[FIELD_CONFIG].items[index] = zodResolverImpl(item, {
+			// node[FIELD_CONFIG].items[index] =
+			zodResolverImpl(item, {
 				acc: ctx.acc,
-				currentParentPth: indexedNextParent,
+				currentParentPathString: indexedNextParent,
 				currentParentPathSegments: indexedNextParentSegments,
 				currentAttributes: { "tuple-direct-item": true },
 				currentSchema: item,
@@ -1221,12 +1595,11 @@ function zodResolverImpl(
 		}
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
 				node,
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1248,72 +1621,39 @@ function zodResolverImpl(
 		// collect all branches into one UnionItemLevel
 		const config = {
 			level: "union-item",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			options: [],
 			userMetadata: {},
 			metadata: {
 				"union-item-descendant": { originDivergencePathToInfo },
 				...ctx.currentAttributes,
-			} satisfies FormFieldOption<any>["metadata"],
+			} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
 			validation: {
-				rules: { presence: calcPresence(ctx) },
+				rules: {},
 				async validate(value, options): Promise<ValidateReturnShape> {
 					return customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
 						options,
 					);
-					// The following is not needed since it's handled in the `customValidate` function above
-					// and also the options are pushed to the config in the accumulator so they will be available when needed
-					// and also it will be more efficient this way since we don't need to loop through the options again here
-					// and also it will handle the recursive union and intersection properly as well
-					// for (let i = 0; i < this.options.length; i++) {
-					// 	const opt = this.options[i];
-					// 	if (!opt) {
-					// 		console.warn(`\`${this.path}.options[${i}]\` is undefined`);
-					// 		continue;
-					// 	}
-					// 	const { result } = await opt[FIELD_CONFIG].validation.validate(value, options);
-					// 	if (!("issues" in result)) {
-					// 		return {
-					// 			result,
-					// 			metadata: {
-					// 				validationEvent: options.validationEvent,
-					// 				"union-item": { firstValidOptionIndex: i },
-					// 			},
-					// 		}; // success
-					// 	}
-					// }
-					// return {
-					// 	result: {
-					// 		issues: [
-					// 			{
-					// 				message: "No union option matched",
-					// 				path: this.path,
-					// 				pathSegments: this.pathSegments,
-					// 			},
-					// 		],
-					// 	},
-					// 	metadata: { validationEvent: options.validationEvent },
-					// };
 				},
 			},
-		} satisfies FormFieldOptionUnionItemLevel;
-		originDivergencePathToInfo[currentParentPath] = {
-			originDivergencePath: currentParentPath,
+		} as FormFieldOptionUnionItemLevel;
+		originDivergencePathToInfo[currentParentPathString] = {
+			originDivergencePath: currentParentPathString,
 			originDivergencePathSegments: currentParentPathSegments,
-			paths: new Set([currentParentPath]),
+			paths: new Set([currentParentPathString]),
 		};
 
 		const node = pushToAcc({
 			acc: ctx.acc,
 			node: { [FIELD_CONFIG]: config },
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentParentNode: ctx.currentParentNode,
@@ -1323,9 +1663,9 @@ function zodResolverImpl(
 		for (let index = 0; index < schema.options.length; index++) {
 			const opt = schema.options[index];
 			if (opt) {
-				zodResolverImpl(opt, {
+				config.options[index] = zodResolverImpl(opt, {
 					acc: ctx.acc,
-					currentParentPth: currentParentPath,
+					currentParentPathString: currentParentPathString,
 					currentParentPathSegments: currentParentPathSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
@@ -1335,7 +1675,7 @@ function zodResolverImpl(
 					currentParentNode: ctx.currentParentNode,
 					currentSchema: opt,
 					childKey: ctx.childKey,
-				});
+				}).node;
 				// Note: no need to push to options here since it's done in the `pushToAcc` function
 				// Since all options are pushed to the same path, they will be merged there on the options array
 				// with the correct order as well getting the config reference from the accumulator by path
@@ -1343,7 +1683,6 @@ function zodResolverImpl(
 		}
 
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node,
 		};
@@ -1355,14 +1694,14 @@ function zodResolverImpl(
 		// **Left** is processed first so its metadata has lower priority than the right one
 		zodResolverImpl(schema.def.left, {
 			acc: ctx.acc,
-			currentParentPth: currentParentPath,
+			currentParentPathString: currentParentPathString,
 			currentParentPathSegments: currentParentPathSegments,
 			// currentAttributes: { "intersection-item": "left" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
 				"intersection-item": {
 					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
-					[currentParentPath]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
+					[currentParentPathString]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
 				},
 			},
 			currentAttributes: ctx.currentAttributes,
@@ -1375,14 +1714,14 @@ function zodResolverImpl(
 		// **Right** is processed second so its metadata has higher priority than the left one
 		const right = zodResolverImpl(schema.def.right, {
 			acc: ctx.acc,
-			currentParentPth: currentParentPath,
+			currentParentPathString: currentParentPathString,
 			currentParentPathSegments: currentParentPathSegments,
 			// currentAttributes: { "intersection-item": "right" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
 				"intersection-item": {
 					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
-					[currentParentPath]: 1,
+					[currentParentPathString]: 1,
 				},
 			},
 			currentParentNode: ctx.currentParentNode,
@@ -1393,7 +1732,6 @@ function zodResolverImpl(
 
 		// They will be merged in the `pushToAcc` function when adding to the accumulator by path
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: right.node,
 		};
@@ -1401,21 +1739,19 @@ function zodResolverImpl(
 	/** End complex types **/
 
 	// TODO: The following will have need to be handled properly in the future
-	// - ZodEffects
-	// - ZodTransform
-	// - ZodBranded
-	// - ZodLazy
-	// - ZodCatch
-	// - ZodPromise
-	// - ZodRecord
-	// - ZodMap
-	// - ZodSet
-	// - ZodFunction
-	// - ZodDiscriminatedUnion
-	// - ZodBigInt
-	// - ZodNever
-	// - ZodVoid
-	// - ZodSymbol
+	// - z.ZodTransform
+	// - z.ZodLazy
+	// - z.ZodCatch
+	// - z.ZodPromise
+	// - z.ZodRecord
+	// - z.ZodMap
+	// - z.ZodSet
+	// - z.ZodFunction
+	// - z.ZodDiscriminatedUnion
+	// - z.ZodBigInt
+	// - z.ZodNever
+	// - z.ZodVoid
+	// - z.ZodSymbol
 
 	if (schema instanceof z.ZodPipe) {
 		const mainSchema = schema.in;
@@ -1425,7 +1761,7 @@ function zodResolverImpl(
 		};
 	}
 
-	// // Do I still need to handle ZodTransform?
+	// Q: Do we still need to handle ZodTransform?
 	// if ( schema instanceof z.ZodTransform) {
 	// 	const mainSchema = // ???
 	// 	return {
@@ -1437,7 +1773,7 @@ function zodResolverImpl(
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
 		const config: FormFieldOptionUnknownLevel = {
 			level: "unknown",
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			userMetadata: {},
 			validation: {
@@ -1449,7 +1785,7 @@ function zodResolverImpl(
 					customValidate(
 						{
 							value,
-							currentParentPath: currentParentPath,
+							currentParentPathString: currentParentPathString,
 							currentParentSegments: currentParentPathSegments,
 							schema: ctx.currentSchema,
 						},
@@ -1458,12 +1794,11 @@ function zodResolverImpl(
 			},
 		};
 		return {
-			// paths: ctx.acc.paths,
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
 				node: { [FIELD_CONFIG]: config },
-				path: currentParentPath,
+				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1472,25 +1807,15 @@ function zodResolverImpl(
 		};
 	}
 
-	// // For ZodEffects (transformations)
-	// if (schema instanceof z.ZodEffects) {
-	//   return zodResolverImpl(schema._def.schema, {
-	//     ...ctx,
-	//     // Note: You'll need to handle the transform/refine logic separately
-	//   });
-	// }
-
 	console.warn("Unhandled schema type:", schema);
-	// return ctx.acc;
 	return {
-		// paths: ctx.acc.paths,
 		pathToNode: ctx.acc.pathToNode,
 		node: pushToAcc({
 			acc: ctx.acc,
 			node: {
 				[FIELD_CONFIG]: {
 					level: "never",
-					path: currentParentPath,
+					pathString: currentParentPathString,
 					pathSegments: currentParentPathSegments,
 					userMetadata: {},
 					validation: {
@@ -1502,7 +1827,7 @@ function zodResolverImpl(
 				},
 			},
 			inheritedMetadata: ctx.inheritedMetadata,
-			path: currentParentPath,
+			pathString: currentParentPathString,
 			currentAttributes: ctx.currentAttributes,
 			currentParentNode: ctx.currentParentNode,
 			childKey: ctx.childKey,
@@ -1511,9 +1836,8 @@ function zodResolverImpl(
 }
 
 const schemaPathCache = new WeakMap<
-	z.ZodTypeAny | z.core.$ZodType<any, any, any>,
+	ZodAny,
 	{
-		// paths: string[];
 		node: Record<string, TrieNode>;
 	}
 >();
@@ -1525,12 +1849,19 @@ const schemaPathCache = new WeakMap<
  * - Maybe on the future on the `Trie` structure to optimize nested validations, conditions, etc down the path chain.
  * This is why there is a special token for array items: `@@__ARRAY_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
  */
-function zodResolver(
-	schema: z.ZodTypeAny | z.core.$ZodType<any, any, any>,
+function zodResolver<ZodSchema extends ZodAny>(
+	schema: ZodSchema,
 	options: { skipCache?: boolean } = {},
 ): {
-	// paths: string[];
 	node: Record<string, TrieNode>;
+	// This will be used
+	__?: {
+		// This will be used for the form fields options
+		input: z.input<ZodSchema>;
+		// This will be used for the validation final result
+		output: z.output<ZodSchema>;
+		// Q: But is there a case where we need to infer the _path_ output from a _trie node_?
+	};
 } {
 	// Preserving top-level cache only - no deeper than this to make sure we preserve the correct paths
 	if (!options.skipCache && schemaPathCache.has(schema)) {
@@ -1540,7 +1871,7 @@ function zodResolver(
 	const rootNode: TrieNode = {
 		[FIELD_CONFIG]: {
 			level: "temp-root",
-			path: "",
+			pathString: "",
 			pathSegments: [],
 			userMetadata: {},
 			validation: {
@@ -1557,7 +1888,7 @@ function zodResolver(
 			pathToNode: {},
 			node: rootNode,
 		},
-		currentParentPth: "",
+		currentParentPathString: "",
 		currentParentPathSegments: [],
 		inheritedMetadata: {},
 		currentSchema: schema,
@@ -1582,17 +1913,28 @@ const userSchema = z.object({
 const paths = zodResolver(userSchema);
 console.log(paths);
 
-console.log(
-	z.object({
-		name: z.string().min(0).max(10),
-		userName: z.coerce.string().min(0).max(10),
-		age: z.number().min(0).max(10),
-		age2: z.number().lt(5).gt(1),
-		age3: z.number().lte(5).gte(1),
-		birthDate: z.date().min(0).max(10),
-		birthDate2: z.coerce.date().min(0).max(10),
-	}),
-);
+const test = z.object({
+	name: z.string().min(0).max(10),
+	userName: z.coerce.string().min(0).max(10),
+	age: z.number().min(0).max(10),
+	age2: z.number().lt(5).gt(1),
+	age3: z.number().lte(5).gte(1),
+	birthDate: z.date().min(0).max(10),
+	birthDate2: z.coerce.date().min(0).max(10),
+	test1: z
+		.string()
+		.transform((val) => val.length)
+		.pipe(z.number()),
+	test2: z
+		.object({ a: z.string() })
+		.transform((val) => ({ b: val.a.length }))
+		.pipe(z.object({ b: z.number() })),
+});
+
+console.log(test);
+
+type TestInput = z.input<typeof test>;
+type TestOutput = z.input<typeof test>;
 
 // TODO: Complex nested conditionals: The primitive type handling is repetitive
 // TODO: regex for lightweight pattern usage.
