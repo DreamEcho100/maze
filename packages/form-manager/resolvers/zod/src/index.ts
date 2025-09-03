@@ -12,6 +12,35 @@ interface PathSegment {
 type PathSegmentItem = PropertyKey; //| PathSegment;
 
 const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
+/**
+ * This is used to represent the index of the union option that was valid during validation.
+ * For example:
+ * ```ts
+ * z.union([
+ *  z.object({ type: z.literal("A"), value: z.string() }),
+ * 	z.object({ type: z.literal("B"), value: z.number() }),
+ * 	z.object({ type: z.literal("C"), value: z.boolean() }),
+ * 	z.string(),
+ * ])
+ * ```
+ *
+ * Will have the following paths:
+ * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-item" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.0.value"` -> level: "primitive" -> type: "string"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.1.value"` -> level: "primitive" -> type: "number"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.2.value"` -> level: "primitive" -> type: "boolean"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@.3"` -> level: "primitive" -> type: "string"
+ *
+ * The root path represents the union item itself, while the numeric paths represent each option in the union.
+ * The index of the valid option during validation can be stored in the metadata for reference.
+ */
+const UNION_DESCENDANT_INDEX_TOKEN = "@@__UNION_DESCENDANT_INDEX__@@";
 type FormValidationEvent = "input" | "blur" | "touch" | "submit";
 interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The error message of the issue. */
@@ -649,6 +678,7 @@ type ZodResolverTrieResult<
 																		z.output<ZodSchemaToInfer>
 																	>
 																>;
+
 const zodSchemaTest = z
 	.object({
 		stringField: z
