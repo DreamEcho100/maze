@@ -12,10 +12,24 @@ interface PathSegment {
 type PathSegmentItem = PropertyKey; //| PathSegment;
 
 const FieldTokenMap = {
+	/**
+	 * This is used to represent the array item in the path.
+	 *
+	 * For example:
+	 *
+	 * ```ts
+	 * z.array(z.string())
+	 * ```
+	 *
+	 * Will have the following paths:
+	 * - `"@@__ARRAY_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
+	 */
 	arrItem: "@@__ARRAY_ITEM__@@",
 	/**
 	 * This is used to represent the index of the union option that was valid during validation.
+	 *
 	 * For example:
+	 *
 	 * ```ts
 	 * z.union([
 	 *  z.object({ type: z.literal("A"), value: z.string() }),
