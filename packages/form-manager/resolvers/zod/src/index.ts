@@ -25,7 +25,7 @@ const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
  * ```
  *
  * Will have the following paths:
- * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-item" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
+ * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
  * - `"@@__UNION_DESCENDANT_INDEX__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
  * - `"@@__UNION_DESCENDANT_INDEX__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
  * - `"@@__UNION_DESCENDANT_INDEX__@@.0.value"` -> level: "primitive" -> type: "string"
@@ -125,14 +125,14 @@ interface FormFieldOption<
 		"intersection-item"?: {
 			[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 		};
-		"union-item-descendant"?: {
-			originDivergencePathToInfo: Record<
+		"union-root-descendant"?: {
+			rootPathToInfo: Record<
 				string,
 				{
-					originDivergencePath: string;
-					originDivergencePathSegments: PathSegmentItem[];
+					rootPath: string;
+					rootPathSegments: PathSegmentItem[];
 					paths: Set<string>;
-				}
+				}[]
 			>;
 		};
 	};
@@ -319,18 +319,30 @@ interface FormFieldOptionTupleLevel<
 	// No need to store `items` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	// items: TrieNode[];
 }
-interface FormFieldOptionUnionItemLevel<
+interface FormFieldOptionUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > extends FormFieldOption<
-		"union-item",
+		"union-root",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		NeverRecord
 	> {
-	// No need to store `options` since it won't help much and we're relaying mainly on the `TrieNode` data structure
+	options: TrieNode[];
+}
+interface FormFieldOptionUnionDescendantLevel<
+	InputValue = unknown,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOption<
+		"union-descendant",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		NeverRecord
+	> {
 	options: TrieNode[];
 }
 
@@ -342,7 +354,7 @@ interface ValidateReturnShape<
 	metadata?: {
 		// /** The validation event that triggered the validation, if any. */
 		validationEvent: FormValidationEvent;
-		"union-item"?: { firstValidOptionIndex: number };
+		"union-descendant"?: { firstValidOptionIndex: number };
 	};
 }
 
@@ -354,7 +366,8 @@ type FormFieldOptionShape =
 	| FormFieldOptionObjectLevel
 	| FormFieldOptionArrayLevel
 	| FormFieldOptionTupleLevel
-	| FormFieldOptionUnionItemLevel;
+	| FormFieldOptionUnionRootLevel
+	| FormFieldOptionUnionDescendantLevel;
 
 /* Trie structure for path-based storage and retrieval */
 const FIELD_CONFIG = Symbol("FIELD_CONFIG");
@@ -378,7 +391,7 @@ type FormFieldCollectionType =
 type ZodTupleItemResolverMap<
 	T extends readonly ZodAny[],
 	PathAcc extends PathSegmentItem[] = [],
-	Options extends { isUnionItemDescendant?: boolean } = {},
+	Options extends { isUnionRootDescendant?: boolean } = {},
 > = {
 	[K in keyof T as K extends `${number}` ? K : never]: ZodResolverTrieResult<
 		T[K] extends ZodAny ? T[K] : never,
@@ -406,38 +419,52 @@ type GetFormFieldOptionGenericParams<TFormFieldOption> =
 		: never;
 
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
-type AttachCollectableTypeTrieNodesToUnionItemResolverMap<
+type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 	Options extends readonly any[],
 	PathAcc extends PathSegmentItem[] = [],
 > = Prettify<
-	Options extends readonly (infer U)[]
-		? U extends z.ZodObject
+	Options extends readonly (infer UnionItem)[]
+		? UnionItem extends z.ZodObject
 			? {
-					[key in keyof U["shape"]]: ZodResolverTrieResult<
-						U["shape"][key],
-						U["shape"][key],
+					[key in keyof UnionItem["shape"]]: ZodResolverTrieResult<
+						UnionItem["shape"][key],
+						UnionItem["shape"][key],
 						[...PathAcc, Extract<key, string>],
-						{ isUnionItemDescendant: true }
+						{ isUnionRootDescendant: true }
 					>;
 				}
-			: U extends z.ZodArray
+			: UnionItem extends z.ZodArray
 				? {
 						[ARRAY_ITEM_TOKEN]: ZodResolverTrieResult<
-							U["element"],
-							U["element"],
+							UnionItem["element"],
+							UnionItem["element"],
 							[...PathAcc, typeof ARRAY_ITEM_TOKEN],
-							{ isUnionItemDescendant: true }
+							{ isUnionRootDescendant: true }
 						>;
 					}
-				: U extends z.ZodTuple
+				: UnionItem extends z.ZodTuple
 					? ZodTupleItemResolverMap<
-							U["def"]["items"],
+							UnionItem["def"]["items"],
 							PathAcc,
-							{ isUnionItemDescendant: true }
+							{ isUnionRootDescendant: true }
 						>
 					: AnyRecord
 		: AnyRecord
->;
+> & {
+	[UNION_DESCENDANT_INDEX_TOKEN]: {
+		[K in keyof Options as K extends `${number}`
+			? K
+			: never]: ZodResolverTrieResult<
+			Options[K] extends z.ZodTypeAny | z.core.$ZodType<any, any, any>
+				? Options[K]
+				: never,
+			Options[K] extends z.ZodTypeAny | z.core.$ZodType<any, any, any>
+				? Options[K]
+				: never,
+			[...PathAcc, K extends `${infer TNum extends number}` ? TNum : never]
+		>;
+	};
+};
 
 /*
 Prettify<
@@ -451,7 +478,7 @@ Prettify<
 					Options[K],
 					Options[K],
 					PathAcc,
-					{ isUnionItemDescendant: true }
+					{ isUnionRootDescendant: true }
 				>
 			: never;
 	}[string | number]
@@ -462,7 +489,7 @@ type ZodResolverTrieResult<
 	ZodSchemaToUnwrap extends ZodAny,
 	ZodSchemaToInfer extends ZodAny = ZodSchemaToUnwrap,
 	PathAcc extends PathSegmentItem[] = [],
-	Options extends { isUnionItemDescendant?: boolean } = {},
+	Options extends { isUnionRootDescendant?: boolean } = {},
 > = ZodSchemaToUnwrap extends z.ZodDefault
 	? ZodResolverTrieResult<
 			ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
@@ -483,8 +510,8 @@ type ZodResolverTrieResult<
 				>
 			: ZodSchemaToUnwrap extends z.ZodString | z.ZodLiteral | z.ZodEnum
 				? TrieNode<
-						Options extends { isUnionItemDescendant: true }
-							? FormFieldOptionUnionItemLevel<
+						Options extends { isUnionRootDescendant: true }
+							? FormFieldOptionUnionDescendantLevel<
 									z.input<ZodSchemaToInfer>,
 									z.output<ZodSchemaToInfer>,
 									PathAcc
@@ -497,8 +524,8 @@ type ZodResolverTrieResult<
 					>
 				: ZodSchemaToUnwrap extends z.ZodNumber
 					? TrieNode<
-							Options extends { isUnionItemDescendant: true }
-								? FormFieldOptionUnionItemLevel<
+							Options extends { isUnionRootDescendant: true }
+								? FormFieldOptionUnionDescendantLevel<
 										z.input<ZodSchemaToInfer>,
 										z.output<ZodSchemaToInfer>,
 										PathAcc
@@ -511,8 +538,8 @@ type ZodResolverTrieResult<
 						>
 					: ZodSchemaToUnwrap extends z.ZodBoolean
 						? TrieNode<
-								Options extends { isUnionItemDescendant: true }
-									? FormFieldOptionUnionItemLevel<
+								Options extends { isUnionRootDescendant: true }
+									? FormFieldOptionUnionDescendantLevel<
 											z.input<ZodSchemaToInfer>,
 											z.output<ZodSchemaToInfer>,
 											PathAcc
@@ -525,8 +552,8 @@ type ZodResolverTrieResult<
 							>
 						: ZodSchemaToUnwrap extends z.ZodDate
 							? TrieNode<
-									Options extends { isUnionItemDescendant: true }
-										? FormFieldOptionUnionItemLevel<
+									Options extends { isUnionRootDescendant: true }
+										? FormFieldOptionUnionDescendantLevel<
 												z.input<ZodSchemaToInfer>,
 												z.output<ZodSchemaToInfer>,
 												PathAcc
@@ -539,8 +566,8 @@ type ZodResolverTrieResult<
 								>
 							: ZodSchemaToUnwrap extends z.ZodObject
 								? TrieNode<
-										Options extends { isUnionItemDescendant: true }
-											? FormFieldOptionUnionItemLevel<
+										Options extends { isUnionRootDescendant: true }
+											? FormFieldOptionUnionDescendantLevel<
 													z.input<ZodSchemaToInfer>,
 													z.output<ZodSchemaToInfer>,
 													PathAcc
@@ -560,8 +587,8 @@ type ZodResolverTrieResult<
 									}
 								: ZodSchemaToUnwrap extends z.ZodArray
 									? TrieNode<
-											Options extends { isUnionItemDescendant: true }
-												? FormFieldOptionUnionItemLevel<
+											Options extends { isUnionRootDescendant: true }
+												? FormFieldOptionUnionDescendantLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
@@ -581,8 +608,8 @@ type ZodResolverTrieResult<
 										}
 									: ZodSchemaToUnwrap extends z.ZodTuple
 										? TrieNode<
-												Options extends { isUnionItemDescendant: true }
-													? FormFieldOptionUnionItemLevel<
+												Options extends { isUnionRootDescendant: true }
+													? FormFieldOptionUnionDescendantLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc
@@ -604,20 +631,20 @@ type ZodResolverTrieResult<
 											// :
 											ZodSchemaToUnwrap extends z.ZodUnion<infer Options>
 											? TrieNode<
-													FormFieldOptionUnionItemLevel<
+													FormFieldOptionUnionDescendantLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
 												> &
-													AttachCollectableTypeTrieNodesToUnionItemResolverMap<
+													AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 														Options,
 														PathAcc
 													>
 											: //
 												// ZodSchemaToUnwrap extends z.ZodUnion<infer U>
 												// ? TrieNode<
-												// 		FormFieldOptionUnionItemLevel<
+												// 		FormFieldOptionUnionRootLevel<
 												// 			z.input<ZodSchemaToInfer>,
 												// 			z.output<ZodSchemaToInfer>,
 												// 			PathAcc
@@ -632,7 +659,7 @@ type ZodResolverTrieResult<
 												// 			U[K],
 												// 			U[K],
 												// 			PathAcc,
-												// 			{ isUnionItemDescendant: true }
+												// 			{ isUnionRootDescendant: true }
 												// 		>;
 												// 	}
 												// :
@@ -743,17 +770,29 @@ zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].type; // "number"
-zodSchemaTestTrieResult.unionField[FIELD_CONFIG].level; // "union-item"
+zodSchemaTestTrieResult.unionField[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[0].level;
-zodSchemaTestTrieResult.unionOfArrays.options[0][FIELD_CONFIG].level; // "array"
-zodSchemaTestTrieResult.unionOfObjects.options;
-zodSchemaTestTrieResult.unionOfArrays.options[0][ARRAY_ITEM_TOKEN][FIELD_CONFIG]
-	.level; // "primitive"
+zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][0][
+	ARRAY_ITEM_TOKEN
+][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][0][
+	ARRAY_ITEM_TOKEN
+][FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][1][
+	ARRAY_ITEM_TOKEN
+][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][1][
+	ARRAY_ITEM_TOKEN
+][FIELD_CONFIG].type; // "number"
+zodSchemaTestTrieResult.unionOfArrays[FIELD_CONFIG].level; // "union-root"
+zodSchemaTestTrieResult.unionOfArrays[ARRAY_ITEM_TOKEN][0][ARRAY_ITEM_TOKEN][
+	FIELD_CONFIG
+].level; // "primitive"
 zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
-zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-item"
+zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "object"
 
-type T = { a: { b: { c: "d" } } } & { a: { b: { e: "f" } } };
+type T = Prettify<{ a: { b: { c: "d" } } } & { a: { b: { e: "f" } } }>;
 type X = T["a"]["b"]["c"];
 type Y = T["a"]["b"]["e"];
 
@@ -831,14 +870,14 @@ interface InheritedMetadata {
 	"intersection-item"?: {
 		[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 	};
-	"union-item-descendant"?: {
-		originDivergencePathToInfo: Record<
+	"union-root-descendant"?: {
+		rootPathToInfo: Record<
 			string,
 			{
-				originDivergencePath: string;
-				originDivergencePathSegments: PathSegmentItem[];
+				rootPath: string;
+				rootPathSegments: PathSegmentItem[];
 				paths: Set<string>;
-			}
+			}[]
 		>;
 	};
 	"marked-never"?: boolean;
@@ -851,7 +890,7 @@ interface ZodResolverAcc {
 
 /**
  * Update it on the `pathToResolverConfig` by using the `path`
- * @warning it's not accounting for "union-item" yet or recursive compatible intersections
+ * @warning it's not accounting for "union-root" yet or recursive compatible intersections
  */
 function resolveIntersectionItemConfig(props: {
 	acc: ZodResolverAcc;
@@ -1013,12 +1052,12 @@ function pushToAcc(props: {
 
 		if (
 			existingNode[FIELD_CONFIG].level &&
-			existingNode[FIELD_CONFIG].level === "union-item"
+			existingNode[FIELD_CONFIG].level === "union-descendant"
 		) {
 			// TODO: needs to check the `marked-never`
-			// Merge union-item options
+			// Merge union-descendant options
 			const itemsToPush =
-				props.node[FIELD_CONFIG].level === "union-item"
+				props.node[FIELD_CONFIG].level === "union-descendant"
 					? props.node[FIELD_CONFIG].options
 					: [props.node];
 			existingNode[FIELD_CONFIG].options.push(...itemsToPush);
@@ -1044,28 +1083,28 @@ function pushToAcc(props: {
 				props.inheritedMetadata["intersection-item"];
 		}
 
-		const unionItemDescendant =
-			props.inheritedMetadata["union-item-descendant"];
-		if (unionItemDescendant) {
+		const unionRootDescendant =
+			props.inheritedMetadata["union-root-descendant"];
+		if (unionRootDescendant) {
 			// // Will this be used?
-			// const originPath = unionItemDescendant.originDivergencePathToInfo[props.path]!;
+			// const originPath = unionRootDescendant.rootPathToInfo[props.path]!;
 			const oldNode = newNode;
 			newNode = {
 				[FIELD_CONFIG]: {
-					level: "union-item",
+					level: "union-descendant",
 					options: [oldNode],
 					pathString: oldNode[FIELD_CONFIG].pathString,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
 					userMetadata: {},
 					metadata: {
-						"union-item-descendant": unionItemDescendant,
+						"union-root-descendant": unionRootDescendant,
 					},
 					validation: {
 						rules: {},
 						async validate(value, options): Promise<ValidateReturnShape> {
 							const config = newNode[
 								FIELD_CONFIG
-							] as FormFieldOptionUnionItemLevel;
+							] as FormFieldOptionUnionDescendantLevel;
 							for (let i = 0; i < config.options.length; i++) {
 								const opt = config.options[i];
 								if (!opt) {
@@ -1083,7 +1122,7 @@ function pushToAcc(props: {
 										result,
 										metadata: {
 											validationEvent: options.validationEvent,
-											"union-item": { firstValidOptionIndex: i },
+											"union-descendant": { firstValidOptionIndex: i },
 										},
 									};
 								}
@@ -1102,7 +1141,7 @@ function pushToAcc(props: {
 							};
 						},
 					},
-				} satisfies FormFieldOptionUnionItemLevel,
+				} satisfies FormFieldOptionUnionDescendantLevel,
 			};
 		}
 
@@ -1147,7 +1186,7 @@ From Zod docs:
 	- ``schema.isOptional()``: @deprecated Try safe-parsing undefined (this is what isOptional does internally)
 `schema.unwrap()` - will work only for for some types so the recursive functionality is needed anyway
 `pushToAcc` is needed to easily access the accumulator by path and use it when needed instead of always recursing or looping through the whole thing again and again
-`inheritedMetadata` is needed for properly handling and passing `intersection-item` and `union-item` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
+`inheritedMetadata` is needed for properly handling and passing `intersection-item` and `union-root` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
 
 The system looks as it is because I'm trying different ways before changing the data structure to a Trie like one, to support many advanced functionalities and to make propagation cheap, and yes the tokenization will play a huge role on it
 */
@@ -1666,25 +1705,24 @@ function zodResolverImpl(
 		};
 	}
 
-	// Q: How should the `currentAttributes` be handled for union-item and intersection-item? and should they be passed down to their children/resulting branches?
+	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
 
 	if (
 		schema instanceof z.ZodUnion
 		// || schema instanceof z.ZodDiscriminatedUnion
 	) {
-		const originDivergencePathToInfo = {
-			...ctx.inheritedMetadata["union-item-descendant"]
-				?.originDivergencePathToInfo,
+		const rootPathToInfo = {
+			...ctx.inheritedMetadata["union-root-descendant"]?.rootPathToInfo,
 		};
-		// collect all branches into one UnionItemLevel
+		// collect all branches into one UnionRootLevel
 		const config = {
-			level: "union-item",
+			level: "union-root",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			options: [],
 			userMetadata: {},
 			metadata: {
-				"union-item-descendant": { originDivergencePathToInfo },
+				"union-root-descendant": { rootPathToInfo },
 				...ctx.currentAttributes,
 			} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
 			validation: {
@@ -1701,12 +1739,14 @@ function zodResolverImpl(
 					);
 				},
 			},
-		} as FormFieldOptionUnionItemLevel;
-		originDivergencePathToInfo[currentParentPathString] = {
-			originDivergencePath: currentParentPathString,
-			originDivergencePathSegments: currentParentPathSegments,
+		} as FormFieldOptionUnionRootLevel;
+		rootPathToInfo[currentParentPathString] ??= [];
+
+		rootPathToInfo[currentParentPathString].push({
+			rootPath: currentParentPathString,
+			rootPathSegments: currentParentPathSegments,
 			paths: new Set([currentParentPathString]),
-		};
+		});
 
 		const node = pushToAcc({
 			acc: ctx.acc,
@@ -1727,13 +1767,41 @@ function zodResolverImpl(
 					currentParentPathSegments: currentParentPathSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
-						"union-item-descendant": { originDivergencePathToInfo },
+						"union-root-descendant": { rootPathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
 					currentParentNode: ctx.currentParentNode,
 					currentSchema: opt,
 					childKey: ctx.childKey,
 				}).node;
+				const currentParentIndexedTokenPath = currentParentPathString
+					? `${currentParentPathString}.${UNION_DESCENDANT_INDEX_TOKEN}.${index}`
+					: `${UNION_DESCENDANT_INDEX_TOKEN}.${index}`;
+				const currentParentIndexedTokenPathSegments = [
+					...currentParentPathSegments,
+					UNION_DESCENDANT_INDEX_TOKEN,
+					index,
+				];
+				zodResolverImpl(opt, {
+					acc: ctx.acc,
+					currentParentPathString: currentParentIndexedTokenPath,
+					currentParentPathSegments: currentParentIndexedTokenPathSegments,
+					inheritedMetadata: {
+						...ctx.inheritedMetadata,
+						"union-root-descendant": { rootPathToInfo },
+					},
+					currentAttributes: { ...ctx.currentAttributes },
+					currentParentNode: ctx.currentParentNode,
+					currentSchema: opt,
+					childKey: ctx.childKey,
+				});
+				// rootPathToInfo[currentParentIndexedPath] ??= [];
+				// rootPathToInfo[currentParentIndexedPath].push({
+				// 	rootPath: currentParentIndexedPath,
+				// 	rootPathSegments: currentParentIndexedPathSegments,
+				// 	paths: new Set([currentParentIndexedPath]),
+				// });
+
 				// Note: no need to push to options here since it's done in the `pushToAcc` function
 				// Since all options are pushed to the same path, they will be merged there on the options array
 				// with the correct order as well getting the config reference from the accumulator by path
@@ -2032,7 +2100,7 @@ Cached schema at leaf: faster single lookups, but you store potentially thousand
 * **Push-to-accumulator abstraction**: Good separation of concerns between collecting nodes and handling merging. You've already anticipated intersections, unions, metadata inheritance.
 * **Custom validate**: Nice wrapper around Zod's internal validation. You're controlling error shaping consistently (`path`, `message`), which will make your form lib predictable.
 * **PathSegments array**: You're storing both segments and the joined string—this is the right move for cheap traversal plus easy display/debug.
-* **Future-facing metadata**: You've left room for `"intersection-item"`, `"union-item-descendant"`, `"marked-never"`, etc. This gives you hooks for optimizations without changing core types later.
+* **Future-facing metadata**: You've left room for `"intersection-item"`, `"union-root-descendant"`, `"marked-never"`, etc. This gives you hooks for optimizations without changing core types later.
 
 ---
 
@@ -2097,7 +2165,7 @@ If you add:
 1. **Intersection + union fidelity**
 
    * Most form libs punt on these cases ("we don't support unions, please normalize your schema").
-   * You're designing *actual structural handling* (union-item descendants, intersection propagation). This is rare.
+   * You're designing *actual structural handling* (union-root descendants, intersection propagation). This is rare.
 
 2. **Never-level marking**
 
@@ -2152,10 +2220,10 @@ Would you like me to give you a **side-by-side table** comparing your current de
 //
 // Notes
 // Union & Intersection merging
-// Right now, you have TODOs around merging union-item and intersection-item metadata/config. This is a big one:
+// Right now, you have TODOs around merging union-root and intersection-item metadata/config. This is a big one:
 // Union: each path should map to multiple possible schemas. You'll need either an options: ResolverConfigShape[] array or a tagged type.
 // Intersection: each path should merge all constraints. But min/max collisions or type incompatibilities can't always be resolved statically. You may need a dual left/right config like you started.
-// If you skip this, you'll get misleading metadata (union-item path may appear stricter/looser than reality).
+// If you skip this, you'll get misleading metadata (union-root path may appear stricter/looser than reality).
 // Effects / Transformations / Refinements
 // You have TODOs for ZodEffects, ZodPipe, ZodBranded, etc. Right now these would get lost → but they often contain the most important runtime logic.
 // E.g. z.string().refine(isEmail) → your minLength/maxLength extraction looks fine, but the real validation logic lives in .refine. If you drop it, you'll end up with false positives in your form.
@@ -2238,9 +2306,9 @@ interface UnionLevel extends Level<"union"> {
 	discriminator?: string;
 }
 ```
-But `UnionItemLevel`
+But `UnionRootLevel`
 ```
-interface UnionItemLevel extends Level<"union-item"> {
+interface UnionRootLevel extends Level<"union-root"> {
 	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
 	options: ResolverConfigShape[];
 	divergentPathsOrigins?: string[]; // The paths that have different values for different options
@@ -2256,7 +2324,7 @@ interface UnionItemLevel extends Level<"union-item"> {
 - If there happen to be no `discriminator`, the extracted rules will be invalid to be used _(for a native form validation as an example)_, and will depend on the runtime validation to determine which option is valid.
 - If there is a `discriminator`, it will be used to determine which option is valid based on the value of the `discriminator` field and the option rules will be valid to be used _(for a native form validation as an example)_.
 - If it happen that this level is an `intersection-item` process is happening to it too, it will process the intersection with the options of the union.
-- `UnionItemLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionItemLevel`, so we can know which option it belongs to and what are the divergent paths points.
+- `UnionRootLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionRootLevel`, so we can know which option it belongs to and what are the divergent paths points.
 - I think the design of the schema should be the responsibility of the user/dev, and I have to just do some fallback and special handling for edge cases for a better DX, while maybe `warn` the user/dev in dev mode
 So it will be his responsibility to decide where to use unions vs discriminated union, what keys and where they're placed, etc.
 - `clientSafe` will be true if there in case of a union, there is a `discriminator` defined, otherwise it will be false.
@@ -2296,7 +2364,7 @@ interface TaggedUnionMetaRegistry {
 
 - If it happen that it's not a discriminated union, it will process it as a normal union and will have:
 ```
-interface UnionItemLevel extends Level<"union-item"> {
+interface UnionRootLevel extends Level<"union-root"> {
 	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
 	options: ResolverConfigShape[];
 }
@@ -2304,7 +2372,7 @@ interface UnionItemLevel extends Level<"union-item"> {
 - If there happen to be no `tag`, the extracted rules will be invalid to be used _(for a native form validation as an example)_, and will depend on the runtime validation to determine which option is valid.
 - If there is a `tag`, it will be used to determine which option is valid based on the value of the `discriminator` field and the option rules will be valid to be used _(for a native form validation as an example)_.
 - If it happen that this level is an `intersection-item` process is happening to it too, it will process the intersection with the options of the union.
-- `UnionItemLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionItemLevel`, so we can know which option it belongs to and what are the divergent paths points.
+- `UnionRootLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionRootLevel`, so we can know which option it belongs to and what are the divergent paths points.
 
 NOTE: I think the design of the schema should be the responsibility of the user/dev, and I have to just do some fallback and special handling for edge cases for a better DX, while maybe `warn` the user/dev in dev mode
 So it will be his responsibility to decide where to use unions vs discriminated union, what keys and where they're placed, etc.
