@@ -22,9 +22,9 @@ const FieldTokenMap = {
 	 * ```
 	 *
 	 * Will have the following paths:
-	 * - `"@@__ARRAY_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
+	 * - `"@@__FIELD_TOKEN_ARRAY_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
 	 */
-	arrItem: "@@__ARRAY_ITEM__@@",
+	arrayItem: "@@__FIELD_TOKEN_ARRAY_ITEM__@@",
 	/**
 	 * This is used to represent the index of the union option that was valid during validation.
 	 *
@@ -40,26 +40,26 @@ const FieldTokenMap = {
 	 * ```
 	 *
 	 * Will have the following paths:
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0.value"` -> level: "primitive" -> type: "string"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1.value"` -> level: "primitive" -> type: "number"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2.value"` -> level: "primitive" -> type: "boolean"
-	 * - `"@@__UNION_DESCENDANT_INDEX__@@.3"` -> level: "primitive" -> type: "string"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0.value"` -> level: "primitive" -> type: "string"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1.value"` -> level: "primitive" -> type: "number"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2.value"` -> level: "primitive" -> type: "boolean"
+	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.3"` -> level: "primitive" -> type: "string"
 	 *
 	 * The root path represents the union item itself, while the numeric paths represent each option in the union.
 	 * The index of the valid option during validation can be stored in the metadata for reference.
 	 */
-	unionDescendantIdx: "@@__UNION_DESCENDANT_INDEX__@@",
+	unionOptionOn: "@@__FIELD_TOKEN_UNION_OPTION_ON__@@",
 } as const;
 
-// const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
-// const UNION_DESCENDANT_INDEX_TOKEN = "@@__UNION_DESCENDANT_INDEX__@@";
+// const ARRAY_ITEM_TOKEN = "@@__FIELD_TOKEN_ARRAY_ITEM__@@";
+// const UNION_OPTION_ON_TOKEN = "@@__FIELD_TOKEN_UNION_OPTION_ON__@@";
 type FormValidationEvent = "input" | "blur" | "touch" | "submit";
 interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The error message of the issue. */
@@ -454,10 +454,10 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 				}
 			: UnionItem extends z.ZodArray
 				? {
-						[FieldTokenMap.arrItem]: ZodResolverTrieResult<
+						[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
 							UnionItem["element"],
 							UnionItem["element"],
-							[...PathAcc, typeof FieldTokenMap.arrItem],
+							[...PathAcc, typeof FieldTokenMap.arrayItem],
 							{ isUnionRootDescendant: true }
 						>;
 					}
@@ -470,7 +470,7 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 					: AnyRecord
 		: AnyRecord
 > & {
-	[FieldTokenMap.unionDescendantIdx]: {
+	[FieldTokenMap.unionOptionOn]: {
 		[K in keyof Options as K extends `${number}`
 			? K
 			: never]: ZodResolverTrieResult<
@@ -618,10 +618,10 @@ type ZodResolverTrieResult<
 														PathAcc
 													>
 										> & {
-											[FieldTokenMap.arrItem]: ZodResolverTrieResult<
+											[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
 												ZodSchemaToUnwrap["element"],
 												ZodSchemaToUnwrap["element"],
-												[...PathAcc, typeof FieldTokenMap.arrItem],
+												[...PathAcc, typeof FieldTokenMap.arrayItem],
 												Options
 											>;
 										}
@@ -776,15 +776,15 @@ zodSchemaTestTrieResult.stringField[FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.stringField[FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.arrayField[FIELD_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrItem][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrItem][FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrayItem][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrayItem][FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.arrayOfObjects[FIELD_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem][FIELD_CONFIG]
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrayItem][FIELD_CONFIG]
 	.level; // "object"
-zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem].value[
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrayItem].value[
 	FIELD_CONFIG
 ].level; // "primitive"
-zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem].value[
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrayItem].value[
 	FIELD_CONFIG
 ].type; // "number"
 zodSchemaTestTrieResult.tupleField[FIELD_CONFIG].level; // "tuple"
@@ -794,21 +794,21 @@ zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionField[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[0].level;
-zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][0][
-	FieldTokenMap.arrItem
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionOptionOn][0][
+	FieldTokenMap.arrayItem
 ][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][0][
-	FieldTokenMap.arrItem
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionOptionOn][0][
+	FieldTokenMap.arrayItem
 ][FIELD_CONFIG].type; // "string"
-zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][1][
-	FieldTokenMap.arrItem
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionOptionOn][1][
+	FieldTokenMap.arrayItem
 ][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][1][
-	FieldTokenMap.arrItem
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionOptionOn][1][
+	FieldTokenMap.arrayItem
 ][FIELD_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionOfArrays[FIELD_CONFIG].level; // "union-root"
-zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.arrItem][0][
-	FieldTokenMap.arrItem
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.arrayItem][0][
+	FieldTokenMap.arrayItem
 ][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-root"
@@ -1016,9 +1016,9 @@ function attachChildToParentNode(props: {
 			break;
 		}
 		case "array": {
-			if (props.childKey !== FieldTokenMap.arrItem) {
+			if (props.childKey !== FieldTokenMap.arrayItem) {
 				throw new Error(
-					`Array parent can only have "${FieldTokenMap.arrItem}" as child key, got "${props.childKey}"`,
+					`Array parent can only have "${FieldTokenMap.arrayItem}" as child key, got "${props.childKey}"`,
 				);
 			}
 			props.currentParentNode[props.childKey] ??= props.childNode;
@@ -1538,11 +1538,11 @@ function zodResolverImpl(
 		}
 
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${FieldTokenMap.arrItem}`
-			: FieldTokenMap.arrItem;
+			? `${currentParentPathString}.${FieldTokenMap.arrayItem}`
+			: FieldTokenMap.arrayItem;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			FieldTokenMap.arrItem,
+			FieldTokenMap.arrayItem,
 		];
 		const node: TrieNode = {
 			[FIELD_CONFIG]: {
@@ -1578,7 +1578,7 @@ function zodResolverImpl(
 			get currentParentNode() {
 				return node;
 			},
-			childKey: FieldTokenMap.arrItem,
+			childKey: FieldTokenMap.arrayItem,
 		}).node;
 
 		return {
@@ -1797,11 +1797,11 @@ function zodResolverImpl(
 					childKey: ctx.childKey,
 				}).node;
 				const currentParentIndexedTokenPath = currentParentPathString
-					? `${currentParentPathString}.${FieldTokenMap.unionDescendantIdx}.${index}`
-					: `${FieldTokenMap.unionDescendantIdx}.${index}`;
+					? `${currentParentPathString}.${FieldTokenMap.unionOptionOn}.${index}`
+					: `${FieldTokenMap.unionOptionOn}.${index}`;
 				const currentParentIndexedTokenPathSegments = [
 					...currentParentPathSegments,
-					FieldTokenMap.unionDescendantIdx,
+					FieldTokenMap.unionOptionOn,
 					index,
 				];
 				zodResolverImpl(opt, {
@@ -2003,7 +2003,7 @@ const schemaPathCache = new WeakMap<
  * - Be used by the form manager to validate fields based on their paths.
  * - Be used to get the field native rules for client-side validation (e.g. min, max, pattern, etc).
  * - Maybe on the future on the `Trie` structure to optimize nested validations, conditions, etc down the path chain.
- * This is why there is a special token for array items: `@@__ARRAY_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
+ * This is why there is a special token for array items: `@@__FIELD_TOKEN_ARRAY_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
  */
 function zodResolver<ZodSchema extends ZodAny>(
 	schema: ZodSchema,
@@ -2194,7 +2194,7 @@ If you add:
    * Instead of throwing or losing context, you keep nodes alive but annotated as `never`.
    * That's clever: it preserves schema shape and metadata while still signaling runtime impossibility.
 
-3. **Path segments + symbolic tokens** (`@@__ARRAY_ITEM__@@`)
+3. **Path segments + symbolic tokens** (`@@__FIELD_TOKEN_ARRAY_ITEM__@@`)
 
    * Allows proper differentiation of `"user.0"` vs `"user[@@ARRAY_ITEM@@]"`.
    * Makes recursive traversal deterministic.
@@ -2263,7 +2263,7 @@ Would you like me to give you a **side-by-side table** comparing your current de
 // 👉 Safer: use Zod's .describe(), .isOptional(), .isNullable(), or PR a feature upstream to expose richer metadata. Otherwise, you'll constantly be chasing internal refactors.
 //
 // Validation result path mismatch
-// You're mapping issue.path.join(".") to currentParent, but Zod sometimes returns array indices (e.g. ["addresses", 0, "street"]). Joining with "." is fine, but doesn't align with your @@__ARRAY_ITEM__@@ abstraction.
+// You're mapping issue.path.join(".") to currentParent, but Zod sometimes returns array indices (e.g. ["addresses", 0, "street"]). Joining with "." is fine, but doesn't align with your @@__FIELD_TOKEN_ARRAY_ITEM__@@ abstraction.
 // 👉 You'll need a mapping layer: ["addresses", number, "street"] → addresses.${ARRAY_ITEM_TOKEN}.street.
 //
 // Schema identity cache
