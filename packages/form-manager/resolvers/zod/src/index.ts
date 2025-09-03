@@ -11,36 +11,41 @@ interface PathSegment {
 }
 type PathSegmentItem = PropertyKey; //| PathSegment;
 
-const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
-/**
- * This is used to represent the index of the union option that was valid during validation.
- * For example:
- * ```ts
- * z.union([
- *  z.object({ type: z.literal("A"), value: z.string() }),
- * 	z.object({ type: z.literal("B"), value: z.number() }),
- * 	z.object({ type: z.literal("C"), value: z.boolean() }),
- * 	z.string(),
- * ])
- * ```
- *
- * Will have the following paths:
- * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
- * - `"@@__UNION_DESCENDANT_INDEX__@@.0.value"` -> level: "primitive" -> type: "string"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
- * - `"@@__UNION_DESCENDANT_INDEX__@@.1.value"` -> level: "primitive" -> type: "number"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
- * - `"@@__UNION_DESCENDANT_INDEX__@@.2.value"` -> level: "primitive" -> type: "boolean"
- * - `"@@__UNION_DESCENDANT_INDEX__@@.3"` -> level: "primitive" -> type: "string"
- *
- * The root path represents the union item itself, while the numeric paths represent each option in the union.
- * The index of the valid option during validation can be stored in the metadata for reference.
- */
-const UNION_DESCENDANT_INDEX_TOKEN = "@@__UNION_DESCENDANT_INDEX__@@";
+const FieldTokenMap = {
+	arrItem: "@@__ARRAY_ITEM__@@",
+	/**
+	 * This is used to represent the index of the union option that was valid during validation.
+	 * For example:
+	 * ```ts
+	 * z.union([
+	 *  z.object({ type: z.literal("A"), value: z.string() }),
+	 * 	z.object({ type: z.literal("B"), value: z.number() }),
+	 * 	z.object({ type: z.literal("C"), value: z.boolean() }),
+	 * 	z.string(),
+	 * ])
+	 * ```
+	 *
+	 * Will have the following paths:
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.0.value"` -> level: "primitive" -> type: "string"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.1.value"` -> level: "primitive" -> type: "number"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.2.value"` -> level: "primitive" -> type: "boolean"
+	 * - `"@@__UNION_DESCENDANT_INDEX__@@.3"` -> level: "primitive" -> type: "string"
+	 *
+	 * The root path represents the union item itself, while the numeric paths represent each option in the union.
+	 * The index of the valid option during validation can be stored in the metadata for reference.
+	 */
+	unionDescendantIdx: "@@__UNION_DESCENDANT_INDEX__@@",
+} as const;
+
+// const ARRAY_ITEM_TOKEN = "@@__ARRAY_ITEM__@@";
+// const UNION_DESCENDANT_INDEX_TOKEN = "@@__UNION_DESCENDANT_INDEX__@@";
 type FormValidationEvent = "input" | "blur" | "touch" | "submit";
 interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The error message of the issue. */
@@ -435,10 +440,10 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 				}
 			: UnionItem extends z.ZodArray
 				? {
-						[ARRAY_ITEM_TOKEN]: ZodResolverTrieResult<
+						[FieldTokenMap.arrItem]: ZodResolverTrieResult<
 							UnionItem["element"],
 							UnionItem["element"],
-							[...PathAcc, typeof ARRAY_ITEM_TOKEN],
+							[...PathAcc, typeof FieldTokenMap.arrItem],
 							{ isUnionRootDescendant: true }
 						>;
 					}
@@ -451,7 +456,7 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 					: AnyRecord
 		: AnyRecord
 > & {
-	[UNION_DESCENDANT_INDEX_TOKEN]: {
+	[FieldTokenMap.unionDescendantIdx]: {
 		[K in keyof Options as K extends `${number}`
 			? K
 			: never]: ZodResolverTrieResult<
@@ -599,10 +604,10 @@ type ZodResolverTrieResult<
 														PathAcc
 													>
 										> & {
-											[ARRAY_ITEM_TOKEN]: ZodResolverTrieResult<
+											[FieldTokenMap.arrItem]: ZodResolverTrieResult<
 												ZodSchemaToUnwrap["element"],
 												ZodSchemaToUnwrap["element"],
-												[...PathAcc, typeof ARRAY_ITEM_TOKEN],
+												[...PathAcc, typeof FieldTokenMap.arrItem],
 												Options
 											>;
 										}
@@ -757,14 +762,17 @@ zodSchemaTestTrieResult.stringField[FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.stringField[FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.arrayField[FIELD_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayField[ARRAY_ITEM_TOKEN][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.arrayField[ARRAY_ITEM_TOKEN][FIELD_CONFIG].type; // "string"
+zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrItem][FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrItem][FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.arrayOfObjects[FIELD_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN][FIELD_CONFIG].level; // "object"
-zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN].value[FIELD_CONFIG]
-	.level; // "primitive"
-zodSchemaTestTrieResult.arrayOfObjects[ARRAY_ITEM_TOKEN].value[FIELD_CONFIG]
-	.type; // "number"
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem][FIELD_CONFIG]
+	.level; // "object"
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem].value[
+	FIELD_CONFIG
+].level; // "primitive"
+zodSchemaTestTrieResult.arrayOfObjects[FieldTokenMap.arrItem].value[
+	FIELD_CONFIG
+].type; // "number"
 zodSchemaTestTrieResult.tupleField[FIELD_CONFIG].level; // "tuple"
 zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.tupleField[0][FIELD_CONFIG].type; // "string"
@@ -772,22 +780,22 @@ zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.tupleField[1][FIELD_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionField[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[0].level;
-zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][0][
-	ARRAY_ITEM_TOKEN
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][0][
+	FieldTokenMap.arrItem
 ][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][0][
-	ARRAY_ITEM_TOKEN
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][0][
+	FieldTokenMap.arrItem
 ][FIELD_CONFIG].type; // "string"
-zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][1][
-	ARRAY_ITEM_TOKEN
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][1][
+	FieldTokenMap.arrItem
 ][FIELD_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[UNION_DESCENDANT_INDEX_TOKEN][1][
-	ARRAY_ITEM_TOKEN
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.unionDescendantIdx][1][
+	FieldTokenMap.arrItem
 ][FIELD_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionOfArrays[FIELD_CONFIG].level; // "union-root"
-zodSchemaTestTrieResult.unionOfArrays[ARRAY_ITEM_TOKEN][0][ARRAY_ITEM_TOKEN][
-	FIELD_CONFIG
-].level; // "primitive"
+zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.arrItem][0][
+	FieldTokenMap.arrItem
+][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "object"
@@ -994,9 +1002,9 @@ function attachChildToParentNode(props: {
 			break;
 		}
 		case "array": {
-			if (props.childKey !== ARRAY_ITEM_TOKEN) {
+			if (props.childKey !== FieldTokenMap.arrItem) {
 				throw new Error(
-					`Array parent can only have "${ARRAY_ITEM_TOKEN}" as child key, got "${props.childKey}"`,
+					`Array parent can only have "${FieldTokenMap.arrItem}" as child key, got "${props.childKey}"`,
 				);
 			}
 			props.currentParentNode[props.childKey] ??= props.childNode;
@@ -1516,11 +1524,11 @@ function zodResolverImpl(
 		}
 
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${ARRAY_ITEM_TOKEN}`
-			: ARRAY_ITEM_TOKEN;
+			? `${currentParentPathString}.${FieldTokenMap.arrItem}`
+			: FieldTokenMap.arrItem;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			ARRAY_ITEM_TOKEN,
+			FieldTokenMap.arrItem,
 		];
 		const node: TrieNode = {
 			[FIELD_CONFIG]: {
@@ -1556,7 +1564,7 @@ function zodResolverImpl(
 			get currentParentNode() {
 				return node;
 			},
-			childKey: ARRAY_ITEM_TOKEN,
+			childKey: FieldTokenMap.arrItem,
 		}).node;
 
 		return {
@@ -1775,11 +1783,11 @@ function zodResolverImpl(
 					childKey: ctx.childKey,
 				}).node;
 				const currentParentIndexedTokenPath = currentParentPathString
-					? `${currentParentPathString}.${UNION_DESCENDANT_INDEX_TOKEN}.${index}`
-					: `${UNION_DESCENDANT_INDEX_TOKEN}.${index}`;
+					? `${currentParentPathString}.${FieldTokenMap.unionDescendantIdx}.${index}`
+					: `${FieldTokenMap.unionDescendantIdx}.${index}`;
 				const currentParentIndexedTokenPathSegments = [
 					...currentParentPathSegments,
-					UNION_DESCENDANT_INDEX_TOKEN,
+					FieldTokenMap.unionDescendantIdx,
 					index,
 				];
 				zodResolverImpl(opt, {
