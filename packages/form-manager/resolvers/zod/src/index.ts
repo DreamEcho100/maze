@@ -1,7 +1,7 @@
 // It's isn't about Zod semantics — it's about making a common interface that different schema validators can be transformed for form ergonomics.
 // So we can have a common ground for different schema validators to work with the form manager.
 // And keep form state agnostic of the validator library.
-import z from "zod/v4";
+import z, { literal } from "zod/v4";
 
 export const name = "form-manager-resolver-zod";
 
@@ -60,7 +60,7 @@ const FieldTokenMap = {
 
 // const ARRAY_ITEM_TOKEN = "@@__FIELD_TOKEN_ARRAY_ITEM__@@";
 // const UNION_OPTION_ON_TOKEN = "@@__FIELD_TOKEN_UNION_OPTION_ON__@@";
-type FormValidationEvent = "input" | "blur" | "touch" | "submit";
+type FormValidationEvent = "change" | "blur" | "touch" | "submit";
 interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The error message of the issue. */
 	message: string | null;
@@ -696,7 +696,7 @@ type ZodResolverTrieResult<
 														ZodResolverTrieResult<R, R, PathAcc, Options>
 												: ZodSchemaToUnwrap extends z.ZodPipe
 													? ZodResolverTrieResult<
-															ZodSchemaToUnwrap["_def"]["out"],
+															ZodSchemaToUnwrap["def"]["out"],
 															ZodSchemaToInfer, // Q: is this correct
 															PathAcc,
 															Options
@@ -1727,6 +1727,116 @@ function zodResolverImpl(
 		};
 	}
 
+	type TestTuple = [
+		{ key: null; value: "value for null" },
+		{ key: true; value: "value for true" },
+		{ key: false; value: "value for false" },
+		{ key: "a"; value: "value for a" },
+		{ key: "b"; value: "value for b" },
+		{ key: 1; value: "value for 1" },
+		{ key: 2; value: "value for 2" },
+		{ key: 3n; value: "value for 3n" },
+		{ key: 4n; value: "value for 4n" },
+		{ key: undefined; value: "value for undefined" },
+		{ key: "c" | 3 | 5n; value: "value for `'c' | 3 | 5n`" },
+	];
+
+	const Cat = z.object({
+		type: z.literal("cat"),
+		lives: z.number(),
+	});
+	const Dog = z.object({
+		type: z.literal("dog"),
+		barkVolume: z.number(),
+	});
+
+	const Pet = z.discriminatedUnion("type", [Cat, Dog]);
+
+	type Literal = string | number | bigint | boolean | null | undefined;
+	interface FormFieldOptionTaggedUnionRootLevel {
+		tagKey: string;
+		tagValueToOptionIndex: Map<Literal, number>;
+	}
+	type TagToOptionIndexMap<
+		Obj extends Record<PropertyKey, any>,
+		Tag extends Obj[PropertyKey],
+	> = Omit<Map<Literal, number>, "get"> & {
+		get<K extends Obj[Tag]>(key: K): Obj & { [key in Tag]: K };
+	};
+	const map = new Map() as TagToOptionIndexMap<TestTuple[number], "key">;
+	const res = map.get(5n).value;
+	function tagToOptionIndexSetGuard(
+		map: Map<Literal, any>,
+		literal: Literal,
+		optionIndex: number,
+	) {
+		if (map.has(literal)) {
+			throw new Error(
+				`Duplicate literal in discriminated union tag: ${literal}, option indexes: ${map.get(literal)} and ${optionIndex}`,
+			);
+		}
+	}
+
+	if (schema instanceof z.ZodDiscriminatedUnion) {
+		const tag = schema.def.discriminator;
+		const tagToOption: Map<Literal, number> = new Map();
+		for (let i = 0; i < schema.def.options.length; i++) {
+			const opt = schema.def.options[i];
+			if (!opt || !(opt instanceof z.ZodObject)) {
+				throw new Error("Discriminated union options must be ZodObject");
+			}
+
+			const tagSchema = opt.def.shape[tag];
+
+			if (tagSchema instanceof z.ZodLiteral) {
+				for (const literal of tagSchema.def.values) {
+					tagToOptionIndexSetGuard(tagToOption, literal, i);
+					tagToOption.set(literal, i);
+				}
+				continue;
+			}
+
+			if (tagSchema instanceof z.ZodEnum) {
+				for (const enumValue of Object.values(tagSchema.def.entries)) {
+					tagToOptionIndexSetGuard(tagToOption, enumValue, i);
+					tagToOption.set(enumValue, i);
+				}
+				continue;
+			}
+
+			if (tagSchema instanceof z.ZodUnion) {
+				for (const tagOpt of tagSchema.def.options) {
+					if (tagOpt instanceof z.ZodLiteral) {
+						for (const literal of tagOpt.def.values) {
+							tagToOptionIndexSetGuard(tagToOption, literal, i);
+							tagToOption.set(literal, i);
+						}
+						continue;
+					}
+
+					if (tagOpt instanceof z.ZodEnum) {
+						for (const enumValue of Object.values(tagOpt.def.entries)) {
+							tagToOptionIndexSetGuard(tagToOption, enumValue, i);
+							tagToOption.set(enumValue, i);
+						}
+						continue;
+					}
+
+					throw new Error(
+						// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+						// @ts-ignore
+						`Discriminated union discriminator/tag must if it happen to be a union too, it's members must be either ZodLiteral or ZodEnum, got ${tagOpt.def.typeName}`,
+					);
+				}
+				continue;
+			}
+
+			throw new Error(
+				`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
+			);
+		}
+	}
+
 	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
 
 	if (
@@ -2100,7 +2210,7 @@ type TestOutput = z.input<typeof test>;
 | Missing piece                      | Impact                             | Minimal patch                                          |
 | ---------------------------------- | ---------------------------------- | ------------------------------------------------------ |
 | **Discriminated-union resolution** | runtime still tries *all* branches | add `if (ZodDiscriminatedUnion)` branch                |
-| **Effects / Refine / Transform**   | rules are lost                     | wrap schema in `zodResolverImpl(schema._def.inner, …)` |
+| **Effects / Refine / Transform**   | rules are lost                     | wrap schema in `zodResolverImpl(schema.def.inner, …)` |
 | **HTML helper**                    | consumer must build attrs manually | export `getNativeAttrs(config)`                        |
 | **Bundle split**                   | one big file                       | ship `@form-manager/zod` entry                         |
 */
