@@ -99,20 +99,27 @@ interface FormFieldOptionUserMetadata {}
 
 type AnyRecord = Record<string, any>;
 type NeverRecord = Record<string, never>;
+type Literal = string | number | bigint | boolean | null | undefined;
+type TagToOptionIndexMap<
+	Arr extends readonly any[],
+	Tag extends keyof Arr[number],
+> = Omit<Map<Literal, number>, "get"> & {
+	get<K extends Literal>(key: K): z.infer<Arr[number]> & { [P in Tag]: K };
+};
 
 interface FormFieldOption<
 	LevelName extends string,
 	InputValue,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = [],
-	NativeRules extends AnyRecord = AnyRecord,
+	Rules extends AnyRecord = AnyRecord,
 > {
 	level: LevelName;
 	pathString: string;
 	pathSegments: PathSegmentItem[];
 	default?: InputValue;
 	validation: {
-		rules: NativeRules;
+		rules: Rules;
 		onEvent?: {
 			[key in FormValidationEvent]?:
 				| boolean
@@ -162,40 +169,28 @@ interface FormFieldOptionNeverLevel<
 	InputValue = never,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-	NativeRules extends Record<string, any> = AnyRecord,
-> extends FormFieldOption<
-		"never",
-		InputValue,
-		OutputValue,
-		PathAcc,
-		NativeRules
-	> {}
+	Rules extends Record<string, any> = AnyRecord,
+> extends FormFieldOption<"never", InputValue, OutputValue, PathAcc, Rules> {}
 interface FormFieldOptionUnknownLevel<
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	InputValue = unknown,
 	OutputValue = InputValue,
-	NativeRules extends Record<string, any> = {
+	Rules extends Record<string, any> = {
 		default?: string;
 		presence: Presence;
 	},
-> extends FormFieldOption<
-		"unknown",
-		InputValue,
-		OutputValue,
-		PathAcc,
-		NativeRules
-	> {}
+> extends FormFieldOption<"unknown", InputValue, OutputValue, PathAcc, Rules> {}
 interface FormFieldOptionPrimitiveLevelBase<
 	InputValue = any,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-	NativeRules extends Record<string, any> = AnyRecord,
+	Rules extends Record<string, any> = AnyRecord,
 > extends FormFieldOption<
 		"primitive",
 		InputValue,
 		OutputValue,
 		PathAcc,
-		NativeRules & { coerce?: boolean; presence: Presence }
+		Rules & { coerce?: boolean; presence: Presence }
 	> {}
 interface FormFieldOptionStringPrimitiveLevel<
 	InputValue = string,
@@ -342,14 +337,26 @@ interface FormFieldOptionUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	Rules extends
+		| {
+				tag: {
+					key: string;
+					valueToOptionIndex: Map<Literal, number>;
+				};
+		  }
+		| AnyRecord = AnyRecord,
 > extends FormFieldOption<
 		"union-root",
 		InputValue,
 		OutputValue,
 		PathAcc,
-		NeverRecord
+		Rules
 	> {
 	options: TrieNode[];
+	// tag: {
+	// 	key: string;
+	// 	valueToOptionIndex: Map<Literal, number>;
+	// };
 }
 interface FormFieldOptionUnionDescendantLevel<
 	InputValue = unknown,
@@ -426,14 +433,14 @@ type GetFormFieldOptionGenericParams<TFormFieldOption> =
 		infer InputValue,
 		infer OutputValue,
 		infer PathAcc,
-		infer NativeRules
+		infer Rules
 	>
 		? {
 				level: LevelName;
 				input: InputValue;
 				output: OutputValue;
 				pathAcc: PathAcc;
-				nativeRules: NativeRules;
+				nativeRules: Rules;
 			}
 		: never;
 
@@ -483,6 +490,25 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 			[...PathAcc, K extends `${infer TNum extends number}` ? TNum : never]
 		>;
 	};
+};
+
+type FindIndexOfZodType<
+	T extends readonly any[],
+	TU,
+	SizeAcc extends any[] = [],
+> = T extends [infer Head, ...infer Tail]
+	? z.infer<Head> extends TU
+		? SizeAcc["length"]
+		: FindIndexOfZodType<Tail, TU, [...SizeAcc, any]>
+	: never;
+type ZodTagValueMap<
+	Options extends readonly AnyRecord[],
+	TagKey extends string,
+> = Omit<Map<z.infer<Options[number]>[TagKey], number>, "get"> & {
+	get<TagValue extends z.infer<Options[number]>[TagKey]>(
+		key: TagValue,
+	): FindIndexOfZodType<Options, { [P in TagKey]: TagValue }>;
+	get(key: unknown): never;
 };
 
 /*
@@ -648,40 +674,32 @@ type ZodResolverTrieResult<
 											//  UNION  (z.union([...]))
 											// ------------------------------------------------
 											// :
-											ZodSchemaToUnwrap extends z.ZodUnion<infer Options>
+											ZodSchemaToUnwrap extends
+													| z.ZodUnion
+													| z.ZodDiscriminatedUnion
 											? TrieNode<
-													FormFieldOptionUnionDescendantLevel<
+													FormFieldOptionUnionRootLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
-														PathAcc
+														PathAcc,
+														ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion
+															? {
+																	tag: {
+																		key: ZodSchemaToUnwrap["def"]["discriminator"];
+																		valueToOptionIndex: ZodTagValueMap<
+																			ZodSchemaToUnwrap["def"]["options"],
+																			ZodSchemaToUnwrap["def"]["discriminator"]
+																		>;
+																	};
+																}
+															: NeverRecord
 													>
 												> &
 													AttachCollectableTypeTrieNodesToUnionRootResolverMap<
-														Options,
+														ZodSchemaToUnwrap["def"]["options"],
 														PathAcc
 													>
 											: //
-												// ZodSchemaToUnwrap extends z.ZodUnion<infer U>
-												// ? TrieNode<
-												// 		FormFieldOptionUnionRootLevel<
-												// 			z.input<ZodSchemaToInfer>,
-												// 			z.output<ZodSchemaToInfer>,
-												// 			PathAcc
-												// 		>
-												// 	> & {
-												// 		// expose branches under numeric keys so you can write:
-												// 		//   trie.unionField[0]  -> string branch
-												// 		//   trie.unionField[1]  -> number branch
-												// 		[K in keyof U as K extends `${number}`
-												// 			? K
-												// 			: never]: ZodResolverTrieResult<
-												// 			U[K],
-												// 			U[K],
-												// 			PathAcc,
-												// 			{ isUnionRootDescendant: true }
-												// 		>;
-												// 	}
-												// :
 												// ------------------------------------------------
 												//  INTERSECTION  (z.intersection(...))
 												// ------------------------------------------------
@@ -763,6 +781,12 @@ const zodSchemaTest = z
 			z.tuple([z.boolean(), z.string()]),
 		]),
 		unionOfDifferent: z.union([z.string(), z.number()]),
+		discriminatedUnion: z.discriminatedUnion("type", [
+			z.object({ type: z.literal("A"), value: z.string() }),
+			z.object({ type: z.literal("B"), value: z.number() }),
+			z.object({ type: z.literal("C"), value: z.boolean() }),
+			z.object({ type: z.undefined(), value: z.null() }),
+		]),
 	})
 	.optional();
 type ZodSchemaTest = typeof zodSchemaTest;
@@ -813,6 +837,11 @@ zodSchemaTestTrieResult.unionOfArrays[FieldTokenMap.arrayItem][0][
 zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "object"
+// NOTE: discriminated Union is still in progress
+const t =
+	zodSchemaTestTrieResult.discriminatedUnion[
+		FIELD_CONFIG
+	].validation.rules.tag.valueToOptionIndex.get(null); // { type: "A", value: string }
 
 type T = Prettify<{ a: { b: { c: "d" } } } & { a: { b: { e: "f" } } }>;
 type X = T["a"]["b"]["c"];
@@ -1198,6 +1227,17 @@ const calcPresence = (props?: {
 	(props &&
 		(props.optional ? "optional" : props.nullable ? "nullable" : undefined)) ||
 	"required";
+function tagToOptionIndexSetGuard(
+	map: Map<Literal, any>,
+	literal: Literal,
+	optionIndex: number,
+) {
+	if (map.has(literal)) {
+		throw new Error(
+			`Duplicate literal in discriminated union tag: ${literal}, option indexes: ${map.get(literal)} and ${optionIndex}`,
+		);
+	}
+}
 
 /*
 NOTE: `schema._zod.def.*` **is needed** since it interacts will with TS
@@ -1727,116 +1767,6 @@ function zodResolverImpl(
 		};
 	}
 
-	type TestTuple = [
-		{ key: null; value: "value for null" },
-		{ key: true; value: "value for true" },
-		{ key: false; value: "value for false" },
-		{ key: "a"; value: "value for a" },
-		{ key: "b"; value: "value for b" },
-		{ key: 1; value: "value for 1" },
-		{ key: 2; value: "value for 2" },
-		{ key: 3n; value: "value for 3n" },
-		{ key: 4n; value: "value for 4n" },
-		{ key: undefined; value: "value for undefined" },
-		{ key: "c" | 3 | 5n; value: "value for `'c' | 3 | 5n`" },
-	];
-
-	const Cat = z.object({
-		type: z.literal("cat"),
-		lives: z.number(),
-	});
-	const Dog = z.object({
-		type: z.literal("dog"),
-		barkVolume: z.number(),
-	});
-
-	const Pet = z.discriminatedUnion("type", [Cat, Dog]);
-
-	type Literal = string | number | bigint | boolean | null | undefined;
-	interface FormFieldOptionTaggedUnionRootLevel {
-		tagKey: string;
-		tagValueToOptionIndex: Map<Literal, number>;
-	}
-	type TagToOptionIndexMap<
-		Obj extends Record<PropertyKey, any>,
-		Tag extends Obj[PropertyKey],
-	> = Omit<Map<Literal, number>, "get"> & {
-		get<K extends Obj[Tag]>(key: K): Obj & { [key in Tag]: K };
-	};
-	const map = new Map() as TagToOptionIndexMap<TestTuple[number], "key">;
-	const res = map.get(5n).value;
-	function tagToOptionIndexSetGuard(
-		map: Map<Literal, any>,
-		literal: Literal,
-		optionIndex: number,
-	) {
-		if (map.has(literal)) {
-			throw new Error(
-				`Duplicate literal in discriminated union tag: ${literal}, option indexes: ${map.get(literal)} and ${optionIndex}`,
-			);
-		}
-	}
-
-	if (schema instanceof z.ZodDiscriminatedUnion) {
-		const tag = schema.def.discriminator;
-		const tagToOption: Map<Literal, number> = new Map();
-		for (let i = 0; i < schema.def.options.length; i++) {
-			const opt = schema.def.options[i];
-			if (!opt || !(opt instanceof z.ZodObject)) {
-				throw new Error("Discriminated union options must be ZodObject");
-			}
-
-			const tagSchema = opt.def.shape[tag];
-
-			if (tagSchema instanceof z.ZodLiteral) {
-				for (const literal of tagSchema.def.values) {
-					tagToOptionIndexSetGuard(tagToOption, literal, i);
-					tagToOption.set(literal, i);
-				}
-				continue;
-			}
-
-			if (tagSchema instanceof z.ZodEnum) {
-				for (const enumValue of Object.values(tagSchema.def.entries)) {
-					tagToOptionIndexSetGuard(tagToOption, enumValue, i);
-					tagToOption.set(enumValue, i);
-				}
-				continue;
-			}
-
-			if (tagSchema instanceof z.ZodUnion) {
-				for (const tagOpt of tagSchema.def.options) {
-					if (tagOpt instanceof z.ZodLiteral) {
-						for (const literal of tagOpt.def.values) {
-							tagToOptionIndexSetGuard(tagToOption, literal, i);
-							tagToOption.set(literal, i);
-						}
-						continue;
-					}
-
-					if (tagOpt instanceof z.ZodEnum) {
-						for (const enumValue of Object.values(tagOpt.def.entries)) {
-							tagToOptionIndexSetGuard(tagToOption, enumValue, i);
-							tagToOption.set(enumValue, i);
-						}
-						continue;
-					}
-
-					throw new Error(
-						// biome-ignore lint/suspicious/noTsIgnore: <explanation>
-						// @ts-ignore
-						`Discriminated union discriminator/tag must if it happen to be a union too, it's members must be either ZodLiteral or ZodEnum, got ${tagOpt.def.typeName}`,
-					);
-				}
-				continue;
-			}
-
-			throw new Error(
-				`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
-			);
-		}
-	}
-
 	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
 
 	if (
@@ -1853,6 +1783,7 @@ function zodResolverImpl(
 			pathSegments: currentParentPathSegments,
 			options: [],
 			userMetadata: {},
+			tag: undefined,
 			metadata: {
 				"union-root-descendant": { rootPathToInfo },
 				...ctx.currentAttributes,
@@ -1873,6 +1804,91 @@ function zodResolverImpl(
 			},
 		} as FormFieldOptionUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
+
+		// let tag: FormFieldOptionUnionRootLevel['tag'] | undefined;
+		if (schema instanceof z.ZodDiscriminatedUnion) {
+			config.validation.rules.tag = {
+				key: schema.def.discriminator,
+				valueToOptionIndex: new Map(),
+			};
+
+			// const tag.key = schema.def.discriminator;
+			// const tag.valueToOptionIndex: Map<Literal, number> = new Map();
+			for (let i = 0; i < schema.def.options.length; i++) {
+				const opt = schema.def.options[i];
+				if (!opt || !(opt instanceof z.ZodObject)) {
+					throw new Error("Discriminated union options must be ZodObject");
+				}
+
+				const tagSchema = opt.def.shape[config.validation.rules.tag.key];
+
+				if (tagSchema instanceof z.ZodLiteral) {
+					for (const literal of tagSchema.def.values) {
+						tagToOptionIndexSetGuard(
+							config.validation.rules.tag.valueToOptionIndex,
+							literal,
+							i,
+						);
+						config.validation.rules.tag.valueToOptionIndex.set(literal, i);
+					}
+					continue;
+				}
+
+				if (tagSchema instanceof z.ZodEnum) {
+					for (const enumValue of Object.values(tagSchema.def.entries)) {
+						tagToOptionIndexSetGuard(
+							config.validation.rules.tag.valueToOptionIndex,
+							enumValue,
+							i,
+						);
+						config.validation.rules.tag.valueToOptionIndex.set(enumValue, i);
+					}
+					continue;
+				}
+
+				if (tagSchema instanceof z.ZodUnion) {
+					for (const tagOpt of tagSchema.def.options) {
+						if (tagOpt instanceof z.ZodLiteral) {
+							for (const literal of tagOpt.def.values) {
+								tagToOptionIndexSetGuard(
+									config.validation.rules.tag.valueToOptionIndex,
+									literal,
+									i,
+								);
+								config.validation.rules.tag.valueToOptionIndex.set(literal, i);
+							}
+							continue;
+						}
+
+						if (tagOpt instanceof z.ZodEnum) {
+							for (const enumValue of Object.values(tagOpt.def.entries)) {
+								tagToOptionIndexSetGuard(
+									config.validation.rules.tag.valueToOptionIndex,
+									enumValue,
+									i,
+								);
+								config.validation.rules.tag.valueToOptionIndex.set(
+									enumValue,
+									i,
+								);
+							}
+							continue;
+						}
+
+						throw new Error(
+							// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+							// @ts-ignore
+							`Discriminated union discriminator/tag must if it happen to be a union too, it's members must be either ZodLiteral or ZodEnum, got ${tagOpt.def.typeName}`,
+						);
+					}
+					continue;
+				}
+
+				throw new Error(
+					`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
+				);
+			}
+		}
 
 		rootPathToInfo[currentParentPathString].push({
 			rootPath: currentParentPathString,
