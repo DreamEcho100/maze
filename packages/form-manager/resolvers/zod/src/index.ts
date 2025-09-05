@@ -114,13 +114,18 @@ interface FormFieldOption<
 	PathAcc extends PathSegmentItem[] = [],
 	Rules extends AnyRecord = AnyRecord,
 > {
+	//
 	level: LevelName;
 	pathString: string;
 	pathSegments: PathSegmentItem[];
+
+	// default value if applicable
 	default?: InputValue;
+	// The field constraints/rules derived from the schema
+	constraints: Rules;
+	// The main validation function for the field
 	validation: {
-		rules: Rules;
-		onEvent?: {
+		allowedOn?: {
 			[key in FormValidationEvent]?:
 				| boolean
 				| {
@@ -134,13 +139,17 @@ interface FormFieldOption<
 		) => Promise<ValidateReturnShape<PathAcc, OutputValue>>;
 		isPending?: boolean;
 	};
+
+	// State flags - these can be managed internally by the form manager or externally by the user/dev
+	// Is dirty means the value has been changed from its initial value
+	// Q: Should it be called `hasChanged`, `isModified`, or something else?
 	isDirty?: boolean;
+	// Is touched means the field has been focused and then blurred
 	isTouched?: boolean;
-	isDisabled?: boolean;
-	isFocused?: boolean;
-	// Q: Any need for the following?
-	// tabIndex?: number;
-	userMetadata: FormFieldOptionUserMetadata;
+	// Is valid means the field has been validated and is valid
+	isValid?: boolean;
+
+	// The metadata can be used to store additional information about the field that might be useful for rendering or other purposes
 	metadata?: {
 		[key in
 			| "object-property"
@@ -162,6 +171,23 @@ interface FormFieldOption<
 			>;
 		};
 	};
+	// User-defined metadata for further extension and functionalities
+	// For example, you can store UI-related metadata here like label, placeholder, description, etc.
+	userMetadata: FormFieldOptionUserMetadata;
+
+	// Q: Any of the following needed? Or can they be either derived from somewhere else or managed externally by the user/dev?
+	// tabIndex?: number;
+	// isFocused?: boolean;
+	// isReadOnly?: boolean;
+	// isDisabled?: boolean;
+	// isValidating?: boolean;
+	// displayName?: string;
+	// description?: string;
+	// placeholder?: string;
+	// isDynamic: boolean; // For array items, record properties
+	// isConditional: boolean;
+	// shouldDebounce: boolean;
+	// debounceMs?: number;
 }
 interface FormFieldOptionTempRootLevel
 	extends FormFieldOption<"temp-root", string[], never, never, AnyRecord> {}
@@ -341,6 +367,7 @@ interface FormFieldOptionUnionRootLevel<
 		| {
 				tag: {
 					key: string;
+					values: Set<Literal>;
 					valueToOptionIndex: Map<Literal, number>;
 				};
 		  }
@@ -350,7 +377,7 @@ interface FormFieldOptionUnionRootLevel<
 		InputValue,
 		OutputValue,
 		PathAcc,
-		Rules
+		Rules & { presence: Presence }
 	> {
 	options: TrieNode[];
 	// tag: {
@@ -682,12 +709,23 @@ type ZodResolverTrieResult<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc,
-														ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion
+														ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
+															infer Options
+														>
 															? {
 																	tag: {
 																		key: ZodSchemaToUnwrap["def"]["discriminator"];
+																		values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
+																			Options[number]
+																		>
+																			? Set<
+																					z.infer<
+																						Options[number]
+																					>[ZodSchemaToUnwrap["def"]["discriminator"]]
+																				>
+																			: Set<Literal>;
 																		valueToOptionIndex: ZodTagValueMap<
-																			ZodSchemaToUnwrap["def"]["options"],
+																			Options,
 																			ZodSchemaToUnwrap["def"]["discriminator"]
 																		>;
 																	};
@@ -838,10 +876,14 @@ zodSchemaTestTrieResult.unionOfObjects.type[FIELD_CONFIG].level;
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfObjects[FIELD_CONFIG].level; // "object"
 // NOTE: discriminated Union is still in progress
-const t =
+const discriminatedUnionValueToOptionIndexTest =
 	zodSchemaTestTrieResult.discriminatedUnion[
 		FIELD_CONFIG
-	].validation.rules.tag.valueToOptionIndex.get(null); // { type: "A", value: string }
+	].constraints.tag.valueToOptionIndex.get("C"); // { type: "A", value: string }
+const discriminatedUnionValuesTest = [
+	...zodSchemaTestTrieResult.discriminatedUnion[FIELD_CONFIG].constraints.tag
+		.values,
+]; // ( "A" | "B" | "C" | undefined )[]
 
 type T = Prettify<{ a: { b: { c: "d" } } } & { a: { b: { e: "f" } } }>;
 type X = T["a"]["b"]["c"];
@@ -970,13 +1012,10 @@ function resolveIntersectionItemConfig(props: {
 					...newMetadata,
 				};
 			}
-			for (const ruleKey in newConfig.validation.rules) {
-				const element = (newConfig.validation.rules as Record<string, any>)[
-					ruleKey
-				];
+			for (const ruleKey in newConfig.constraints) {
+				const element = (newConfig.constraints as Record<string, any>)[ruleKey];
 				if (typeof element === "undefined") continue;
-				(existingConfig.validation.rules as Record<string, any>)[ruleKey] =
-					element;
+				(existingConfig.constraints as Record<string, any>)[ruleKey] = element;
 			}
 
 			return existingNode;
@@ -995,10 +1034,8 @@ function resolveIntersectionItemConfig(props: {
 					level: "never",
 					pathString: existingNode[FIELD_CONFIG].pathString,
 					pathSegments: existingNode[FIELD_CONFIG].pathSegments,
-					userMetadata: {},
-					metadata: { ...existingNode.metadata, "marked-never": true },
+					constraints: {},
 					validation: {
-						rules: {},
 						validate: async (value, options) =>
 							customValidate(
 								{
@@ -1012,6 +1049,8 @@ function resolveIntersectionItemConfig(props: {
 								options,
 							),
 					},
+					metadata: { ...existingNode.metadata, "marked-never": true },
+					userMetadata: {},
 				} satisfies FormFieldOptionShape);
 			} catch (error) {
 				console.error(error);
@@ -1146,12 +1185,9 @@ function pushToAcc(props: {
 					options: [oldNode],
 					pathString: oldNode[FIELD_CONFIG].pathString,
 					pathSegments: oldNode[FIELD_CONFIG].pathSegments,
-					userMetadata: {},
-					metadata: {
-						"union-root-descendant": unionRootDescendant,
-					},
+					// Q: default: ctx.default, // Can we pass it from the root somehow? maybe also make it lazy calculated/computed and cached? or just ignore it for union-descendant? is there a use case that needs it and can't be handled easily otherwise?
+					constraints: {},
 					validation: {
-						rules: {},
 						async validate(value, options): Promise<ValidateReturnShape> {
 							const config = newNode[
 								FIELD_CONFIG
@@ -1192,6 +1228,10 @@ function pushToAcc(props: {
 							};
 						},
 					},
+					metadata: {
+						"union-root-descendant": unionRootDescendant,
+					},
+					userMetadata: {},
 				} satisfies FormFieldOptionUnionDescendantLevel,
 			};
 		}
@@ -1363,16 +1403,15 @@ function zodResolverImpl(
 			type: "string",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
-			userMetadata: {},
+			default: ctx.default,
+			constraints: {
+				presence: calcPresence(ctx),
+				minLength,
+				maxLength,
+				regex,
+				coerce,
+			},
 			validation: {
-				rules: {
-					default: ctx.default,
-					presence: calcPresence(ctx),
-					minLength,
-					maxLength,
-					regex,
-					coerce,
-				},
 				validate: (value, options) =>
 					customValidate(
 						{
@@ -1384,6 +1423,7 @@ function zodResolverImpl(
 						options,
 					),
 			},
+			userMetadata: {},
 		};
 
 		return {
@@ -1426,19 +1466,18 @@ function zodResolverImpl(
 			type: "number",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
-			userMetadata: {},
+			default: ctx.default,
+			constraints: {
+				presence: calcPresence(ctx),
+				min,
+				max,
+				inclusiveMin,
+				inclusiveMax,
+				int,
+				multipleOf,
+				coerce: schema.def.coerce,
+			},
 			validation: {
-				rules: {
-					default: ctx.default,
-					presence: calcPresence(ctx),
-					min,
-					max,
-					inclusiveMin,
-					inclusiveMax,
-					int,
-					multipleOf,
-					coerce: schema.def.coerce,
-				},
 				validate: (value, options) =>
 					customValidate(
 						{
@@ -1450,6 +1489,7 @@ function zodResolverImpl(
 						options,
 					),
 			},
+			userMetadata: {},
 		};
 
 		return {
@@ -1486,17 +1526,16 @@ function zodResolverImpl(
 			type: "date",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
-			userMetadata: {},
+			default: ctx.default,
+			constraints: {
+				presence: calcPresence(ctx),
+				min,
+				max,
+				inclusiveMin,
+				inclusiveMax,
+				coerce: schema.def.coerce,
+			},
 			validation: {
-				rules: {
-					default: ctx.default,
-					presence: calcPresence(ctx),
-					min,
-					max,
-					inclusiveMin,
-					inclusiveMax,
-					coerce: schema.def.coerce,
-				},
 				validate: (value, options) =>
 					customValidate(
 						{
@@ -1508,6 +1547,7 @@ function zodResolverImpl(
 						options,
 					),
 			},
+			userMetadata: {},
 		};
 
 		return {
@@ -1529,13 +1569,12 @@ function zodResolverImpl(
 			type: "boolean",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
-			userMetadata: {},
+			default: ctx.default,
+			constraints: {
+				presence: calcPresence(ctx),
+				coerce: schema.def.coerce,
+			},
 			validation: {
-				rules: {
-					default: ctx.default,
-					presence: calcPresence(ctx),
-					coerce: schema.def.coerce,
-				},
 				validate: (value, options) =>
 					customValidate(
 						{
@@ -1547,6 +1586,7 @@ function zodResolverImpl(
 						options,
 					),
 			},
+			userMetadata: {},
 		};
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -1590,9 +1630,8 @@ function zodResolverImpl(
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
-				userMetadata: {},
+				constraints: { presence: calcPresence(ctx), minLength, maxLength },
 				validation: {
-					rules: { presence: calcPresence(ctx), minLength, maxLength },
 					validate: (value, options) =>
 						customValidate(
 							{
@@ -1604,6 +1643,7 @@ function zodResolverImpl(
 							options,
 						),
 				},
+				userMetadata: {},
 			} as FormFieldOptionArrayLevel,
 		};
 		// // To make sure we also cover the array item token path
@@ -1641,11 +1681,8 @@ function zodResolverImpl(
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
-				userMetadata: {},
+				constraints: { presence: calcPresence(ctx) },
 				validation: {
-					rules: {
-						presence: calcPresence(ctx),
-					},
 					validate: (value, options) =>
 						customValidate(
 							{
@@ -1658,6 +1695,7 @@ function zodResolverImpl(
 						),
 				},
 				shape: {}, // To be filled below
+				userMetadata: {},
 			} as FormFieldOptionObjectLevel,
 		};
 
@@ -1710,13 +1748,13 @@ function zodResolverImpl(
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
 				default: ctx.default,
+				constraints: {
+					presence: calcPresence(ctx),
+					exactLength,
+					minLength,
+					maxLength,
+				},
 				validation: {
-					rules: {
-						presence: calcPresence(ctx),
-						exactLength,
-						minLength,
-						maxLength,
-					},
 					validate: (value, options) =>
 						customValidate(
 							{
@@ -1729,6 +1767,7 @@ function zodResolverImpl(
 						),
 				},
 				// items: new Array(schema.def.items.length).fill(null),
+				userMetadata: {},
 			} as FormFieldOptionTupleLevel,
 		};
 
@@ -1782,14 +1821,12 @@ function zodResolverImpl(
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
 			options: [],
-			userMetadata: {},
-			tag: undefined,
-			metadata: {
-				"union-root-descendant": { rootPathToInfo },
-				...ctx.currentAttributes,
-			} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
+			default: ctx.default,
+			constraints: {
+				tag: undefined,
+				presence: calcPresence(ctx),
+			},
 			validation: {
-				rules: {},
 				async validate(value, options): Promise<ValidateReturnShape> {
 					return customValidate(
 						{
@@ -1802,13 +1839,19 @@ function zodResolverImpl(
 					);
 				},
 			},
+			userMetadata: {},
+			metadata: {
+				"union-root-descendant": { rootPathToInfo },
+				...ctx.currentAttributes,
+			} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
 		} as FormFieldOptionUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
 
 		// let tag: FormFieldOptionUnionRootLevel['tag'] | undefined;
 		if (schema instanceof z.ZodDiscriminatedUnion) {
-			config.validation.rules.tag = {
+			config.constraints.tag = {
 				key: schema.def.discriminator,
+				values: new Set(),
 				valueToOptionIndex: new Map(),
 			};
 
@@ -1820,16 +1863,17 @@ function zodResolverImpl(
 					throw new Error("Discriminated union options must be ZodObject");
 				}
 
-				const tagSchema = opt.def.shape[config.validation.rules.tag.key];
+				const tagSchema = opt.def.shape[config.constraints.tag.key];
 
 				if (tagSchema instanceof z.ZodLiteral) {
 					for (const literal of tagSchema.def.values) {
 						tagToOptionIndexSetGuard(
-							config.validation.rules.tag.valueToOptionIndex,
+							config.constraints.tag.valueToOptionIndex,
 							literal,
 							i,
 						);
-						config.validation.rules.tag.valueToOptionIndex.set(literal, i);
+						config.constraints.tag.valueToOptionIndex.set(literal, i);
+						config.constraints.tag.values.add(literal);
 					}
 					continue;
 				}
@@ -1837,11 +1881,12 @@ function zodResolverImpl(
 				if (tagSchema instanceof z.ZodEnum) {
 					for (const enumValue of Object.values(tagSchema.def.entries)) {
 						tagToOptionIndexSetGuard(
-							config.validation.rules.tag.valueToOptionIndex,
+							config.constraints.tag.valueToOptionIndex,
 							enumValue,
 							i,
 						);
-						config.validation.rules.tag.valueToOptionIndex.set(enumValue, i);
+						config.constraints.tag.valueToOptionIndex.set(enumValue, i);
+						config.constraints.tag.values.add(enumValue);
 					}
 					continue;
 				}
@@ -1851,11 +1896,12 @@ function zodResolverImpl(
 						if (tagOpt instanceof z.ZodLiteral) {
 							for (const literal of tagOpt.def.values) {
 								tagToOptionIndexSetGuard(
-									config.validation.rules.tag.valueToOptionIndex,
+									config.constraints.tag.valueToOptionIndex,
 									literal,
 									i,
 								);
-								config.validation.rules.tag.valueToOptionIndex.set(literal, i);
+								config.constraints.tag.valueToOptionIndex.set(literal, i);
+								config.constraints.tag.values.add(literal);
 							}
 							continue;
 						}
@@ -1863,14 +1909,12 @@ function zodResolverImpl(
 						if (tagOpt instanceof z.ZodEnum) {
 							for (const enumValue of Object.values(tagOpt.def.entries)) {
 								tagToOptionIndexSetGuard(
-									config.validation.rules.tag.valueToOptionIndex,
+									config.constraints.tag.valueToOptionIndex,
 									enumValue,
 									i,
 								);
-								config.validation.rules.tag.valueToOptionIndex.set(
-									enumValue,
-									i,
-								);
+								config.constraints.tag.valueToOptionIndex.set(enumValue, i);
+								config.constraints.tag.values.add(enumValue);
 							}
 							continue;
 						}
@@ -1962,8 +2006,6 @@ function zodResolverImpl(
 		};
 	}
 
-	//NOTE: work on discriminated union is in progress
-
 	if (schema instanceof z.ZodIntersection) {
 		// **Left** is processed first so its metadata has lower priority than the right one
 		zodResolverImpl(schema.def.left, {
@@ -2049,12 +2091,9 @@ function zodResolverImpl(
 			level: "unknown",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
-			userMetadata: {},
+			default: ctx.default,
+			constraints: { presence: calcPresence(ctx) },
 			validation: {
-				rules: {
-					presence: calcPresence(ctx),
-					default: ctx.default,
-				},
 				validate: async (value, options) =>
 					customValidate(
 						{
@@ -2066,6 +2105,7 @@ function zodResolverImpl(
 						options,
 					),
 			},
+			userMetadata: {},
 		};
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -2092,8 +2132,9 @@ function zodResolverImpl(
 					pathString: currentParentPathString,
 					pathSegments: currentParentPathSegments,
 					userMetadata: {},
+					default: ctx.default,
+					constraints: { presence: calcPresence(ctx) },
 					validation: {
-						rules: { presence: calcPresence(ctx) },
 						validate(value, options) {
 							return customValidate(
 								{
@@ -2155,13 +2196,13 @@ function zodResolver<ZodSchema extends ZodAny>(
 			level: "temp-root",
 			pathString: "",
 			pathSegments: [],
-			userMetadata: {},
+			constraints: { presence: "required" },
 			validation: {
-				rules: { presence: "required" },
 				validate() {
 					throw new Error("Not implemented");
 				},
 			},
+			userMetadata: {},
 		},
 	};
 
