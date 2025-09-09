@@ -26,6 +26,29 @@ const FieldTokenMap = {
 	 */
 	arrayItem: "@@__FIELD_TOKEN_ARRAY_ITEM__@@",
 	/**
+	 * This is used to represent the direct property of an object in the path.
+	 * For example:
+	 * ```ts
+	 * z.record(z.string(), z.number())
+	 * ```
+	 * Will have the following
+	 * paths:
+	 * - `""` (root) -> level: "record" -> type: "Record<string, number>"
+	 * - `"@@__FIELD_TOKEN_RECORD_PROPERTY__@@` -> level: "primitive" -> type: "number"
+	 * The root path represents the record itself, while the token path represents any property in the record.
+	 * The actual property key will be dynamic and can be q valid property key _(e.g._ string, number or symbol).
+	 * The token is used to indicate that it's a direct property of the record.
+	 * This is useful for scenarios where you want to apply specific rules or validations to the properties of the record.
+	 * For example, you might want to enforce that all properties of the record are numbers greater than zero.
+	 * In such cases, you can use this token to identify and apply the necessary validations or rules.
+	 * Note that this token is not used for nested objects within the record. For nested objects, the actual property keys will be used in the path to accurately represent the structure of the data.
+	 * For example, if you have a record of objects like `z.record(z.string(), z.object({ age: z.number() }))`, the path for the `age` property would be something like `"someKey.age"`, where `someKey` is a dynamic key in the record.
+	 * This distinction helps in accurately representing the structure of the data and applying the appropriate validations or rules at different levels of the hierarchy.
+	 * This token is primarily for direct properties of the record itself.
+	 * It helps in scenarios where you want to apply rules or validations to the properties of the record as a whole, rather than to nested objects within the record.
+	 */
+	recordProperty: "@@__FIELD_TOKEN_RECORD_PROPERTY__@@",
+	/**
 	 * This is used to represent the index of the union option that was valid during validation.
 	 *
 	 * For example:
@@ -154,6 +177,7 @@ interface FormFieldOption<
 		[key in
 			| "object-property"
 			| "tuple-direct-item"
+			| "record-direct-property"
 			| "array-token-item"
 			| "marked-never"]?: boolean;
 	} & {
@@ -202,7 +226,6 @@ interface FormFieldOptionUnknownLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	Rules extends Record<string, any> = {
-		default?: string;
 		presence: Presence;
 	},
 > extends FormFieldOption<"unknown", InputValue, OutputValue, PathAcc, Rules> {}
@@ -227,7 +250,6 @@ interface FormFieldOptionStringPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			default?: string;
 			minLength?: number;
 			maxLength?: number;
 			regex?: RegExp;
@@ -249,7 +271,6 @@ interface FormFieldOptionNumberPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			default?: number;
 			min?: number;
 			inclusiveMin?: boolean;
 			max?: number;
@@ -276,7 +297,6 @@ interface FormFieldOptionDatePrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			default?: Date;
 			min?: Date;
 			inclusiveMin?: boolean;
 			max?: Date;
@@ -293,7 +313,7 @@ interface FormFieldOptionBooleanPrimitiveLevel<
 		InputValue,
 		OutputValue,
 		PathAcc,
-		{ default?: boolean }
+		{}
 	> {
 	type: "boolean";
 }
@@ -312,10 +332,7 @@ interface FormFieldOptionObjectLevel<
 		InputValue,
 		OutputValue,
 		PathAcc,
-		{
-			default?: InputValue;
-			presence: Presence;
-		}
+		{ presence: Presence }
 	> {
 	// No need to store `shape` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	// shape: Record<string, TrieNode>;
@@ -330,7 +347,6 @@ interface FormFieldOptionArrayLevel<
 		OutputValue,
 		PathAcc,
 		{
-			default?: any[];
 			presence: Presence;
 			minLength?: number;
 			maxLength?: number;
@@ -349,7 +365,6 @@ interface FormFieldOptionTupleLevel<
 		OutputValue,
 		PathAcc,
 		{
-			default?: any[];
 			presence: Presence;
 			exactLength?: number;
 			minLength?: number;
@@ -359,6 +374,20 @@ interface FormFieldOptionTupleLevel<
 	// No need to store `items` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	// items: TrieNode[];
 }
+
+interface FormFieldOptionRecordLevel<
+	InputValue = Record<PropertyKey, any>,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FormFieldOption<
+		"record",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{ presence: Presence }
+	> {}
+// z.record(z.string(), z.number()).def.keyType;
+// z.record(z.string(), z.number()).def.valueType;
 interface FormFieldOptionUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
@@ -435,12 +464,6 @@ type TrieNode<
 /* End Trie structure */
 
 type ZodAny = z.ZodTypeAny | z.core.$ZodType<any, any, any> | z.core.SomeType;
-
-type ZodCollectionType = z.ZodObject | z.ZodArray | z.ZodTuple;
-type FormFieldCollectionType =
-	| FormFieldOptionObjectLevel
-	| FormFieldOptionArrayLevel
-	| FormFieldOptionTupleLevel;
 type ZodTupleItemResolverMap<
 	T extends readonly ZodAny[],
 	PathAcc extends PathSegmentItem[] = [],
@@ -454,7 +477,7 @@ type ZodTupleItemResolverMap<
 	>;
 };
 
-type GetFormFieldOptionGenericParams<TFormFieldOption> =
+type FormFieldOptionGenericParams<TFormFieldOption> =
 	TFormFieldOption extends FormFieldOption<
 		infer LevelName,
 		infer InputValue,
@@ -475,35 +498,33 @@ type Prettify<T> = { [K in keyof T]: T[K] } & {};
 type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 	Options extends readonly any[],
 	PathAcc extends PathSegmentItem[] = [],
-> = Prettify<
-	Options extends readonly (infer UnionItem)[]
-		? UnionItem extends z.ZodObject
+> = (Options extends readonly (infer UnionItem)[]
+	? UnionItem extends z.ZodObject
+		? {
+				[key in keyof UnionItem["shape"]]: ZodResolverTrieResult<
+					UnionItem["shape"][key],
+					UnionItem["shape"][key],
+					[...PathAcc, Extract<key, string>],
+					{ isUnionRootDescendant: true }
+				>;
+			}
+		: UnionItem extends z.ZodArray
 			? {
-					[key in keyof UnionItem["shape"]]: ZodResolverTrieResult<
-						UnionItem["shape"][key],
-						UnionItem["shape"][key],
-						[...PathAcc, Extract<key, string>],
+					[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
+						UnionItem["element"],
+						UnionItem["element"],
+						[...PathAcc, typeof FieldTokenMap.arrayItem],
 						{ isUnionRootDescendant: true }
 					>;
 				}
-			: UnionItem extends z.ZodArray
-				? {
-						[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
-							UnionItem["element"],
-							UnionItem["element"],
-							[...PathAcc, typeof FieldTokenMap.arrayItem],
-							{ isUnionRootDescendant: true }
-						>;
-					}
-				: UnionItem extends z.ZodTuple
-					? ZodTupleItemResolverMap<
-							UnionItem["def"]["items"],
-							PathAcc,
-							{ isUnionRootDescendant: true }
-						>
-					: AnyRecord
-		: AnyRecord
-> & {
+			: UnionItem extends z.ZodTuple
+				? ZodTupleItemResolverMap<
+						UnionItem["def"]["items"],
+						PathAcc,
+						{ isUnionRootDescendant: true }
+					>
+				: AnyRecord
+	: AnyRecord) & {
 	[FieldTokenMap.unionOptionOn]: {
 		[K in keyof Options as K extends `${number}`
 			? K
@@ -538,25 +559,6 @@ type ZodTagValueMap<
 	get(key: unknown): never;
 };
 
-/*
-Prettify<
-	{
-		[K in keyof Options as K extends `${number}`
-			? Options[K] extends ZodCollectionType
-				? K
-				: never
-			: never]: Options[K] extends ZodCollectionType
-			? ZodResolverTrieResult<
-					Options[K],
-					Options[K],
-					PathAcc,
-					{ isUnionRootDescendant: true }
-				>
-			: never;
-	}[string | number]
->;
-*/
-
 type ZodResolverTrieResult<
 	ZodSchemaToUnwrap extends ZodAny,
 	ZodSchemaToInfer extends ZodAny = ZodSchemaToUnwrap,
@@ -564,19 +566,19 @@ type ZodResolverTrieResult<
 	Options extends { isUnionRootDescendant?: boolean } = {},
 > = ZodSchemaToUnwrap extends z.ZodDefault
 	? ZodResolverTrieResult<
-			ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+			ZodSchemaToUnwrap["def"]["innerType"],
 			ZodSchemaToInfer,
 			PathAcc
 		>
 	: ZodSchemaToUnwrap extends z.ZodOptional
 		? ZodResolverTrieResult<
-				ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+				ZodSchemaToUnwrap["def"]["innerType"],
 				ZodSchemaToInfer,
 				PathAcc
 			>
 		: ZodSchemaToUnwrap extends z.ZodNullable
 			? ZodResolverTrieResult<
-					ZodSchemaToUnwrap["_zod"]["def"]["innerType"],
+					ZodSchemaToUnwrap["def"]["innerType"],
 					ZodSchemaToInfer,
 					PathAcc
 				>
@@ -1424,6 +1426,7 @@ function zodResolverImpl(
 					),
 			},
 			userMetadata: {},
+			metadata: { ...ctx.currentAttributes },
 		};
 
 		return {
@@ -1452,6 +1455,7 @@ function zodResolverImpl(
 				if (check instanceof z.core.$ZodCheckLessThan) {
 					max = check._zod.def.value as number;
 					inclusiveMax = check._zod.def.inclusive;
+					// inclusiveMax = check._zod.def.when
 				} else if (check instanceof z.core.$ZodCheckGreaterThan) {
 					min = check._zod.def.value as number;
 					inclusiveMin = check._zod.def.inclusive;
@@ -1490,6 +1494,7 @@ function zodResolverImpl(
 					),
 			},
 			userMetadata: {},
+			metadata: { ...ctx.currentAttributes },
 		};
 
 		return {
@@ -1548,6 +1553,7 @@ function zodResolverImpl(
 					),
 			},
 			userMetadata: {},
+			metadata: { ...ctx.currentAttributes },
 		};
 
 		return {
@@ -1587,6 +1593,7 @@ function zodResolverImpl(
 					),
 			},
 			userMetadata: {},
+			metadata: { ...ctx.currentAttributes },
 		};
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -1644,6 +1651,7 @@ function zodResolverImpl(
 						),
 				},
 				userMetadata: {},
+				metadata: { ...ctx.currentAttributes },
 			} as FormFieldOptionArrayLevel,
 		};
 		// // To make sure we also cover the array item token path
@@ -1660,63 +1668,6 @@ function zodResolverImpl(
 			},
 			childKey: FieldTokenMap.arrayItem,
 		}).node;
-
-		return {
-			pathToNode: ctx.acc.pathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-			}).node,
-		};
-	}
-	if (schema instanceof z.ZodObject) {
-		const node = {
-			[FIELD_CONFIG]: {
-				level: "object",
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				default: ctx.default,
-				constraints: { presence: calcPresence(ctx) },
-				validation: {
-					validate: (value, options) =>
-						customValidate(
-							{
-								value,
-								currentParentPathString: currentParentPathString,
-								currentParentSegments: currentParentPathSegments,
-								schema: ctx.currentSchema,
-							},
-							options,
-						),
-				},
-				shape: {}, // To be filled below
-				userMetadata: {},
-			} as FormFieldOptionObjectLevel,
-		};
-
-		const shape = schema.shape;
-		for (const key in shape) {
-			const nextParent = currentParentPathString
-				? `${currentParentPathString}.${key}`
-				: key;
-			const nextParentSegments = [...currentParentPathSegments, key];
-			// node[FIELD_CONFIG].shape[key] =
-			zodResolverImpl(shape[key], {
-				acc: ctx.acc,
-				currentParentPathString: nextParent,
-				currentParentPathSegments: nextParentSegments,
-				currentAttributes: { "object-property": true },
-				currentSchema: shape[key],
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: node,
-				childKey: key,
-			}).node;
-		}
 
 		return {
 			pathToNode: ctx.acc.pathToNode,
@@ -1768,6 +1719,10 @@ function zodResolverImpl(
 				},
 				// items: new Array(schema.def.items.length).fill(null),
 				userMetadata: {},
+				metadata: {
+					isLazyChildren: true,
+					...ctx.currentAttributes,
+				} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
 			} as FormFieldOptionTupleLevel,
 		};
 
@@ -1779,17 +1734,37 @@ function zodResolverImpl(
 				: String(index);
 			const indexedNextParentSegments = [...currentParentPathSegments, index];
 
-			// node[FIELD_CONFIG].items[index] =
-			zodResolverImpl(item, {
-				acc: ctx.acc,
-				currentParentPathString: indexedNextParent,
-				currentParentPathSegments: indexedNextParentSegments,
-				currentAttributes: { "tuple-direct-item": true },
-				currentSchema: item,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: node,
-				childKey: index,
-			}).node;
+			// This is eagerly evaluating all tuple items
+			// zodResolverImpl(item, {
+			// 	acc: ctx.acc,
+			// 	currentParentPathString: indexedNextParent,
+			// 	currentParentPathSegments: indexedNextParentSegments,
+			// 	currentAttributes: { "tuple-direct-item": true },
+			// 	currentSchema: item,
+			// 	inheritedMetadata: ctx.inheritedMetadata,
+			// 	currentParentNode: node,
+			// 	childKey: index,
+			// }).node;
+			// If we want to make it lazy, we can just assign and use `Object.defineProperty` with getter
+			Object.defineProperty(node, index, {
+				enumerable: true,
+				configurable: true,
+				get: () => {
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+					return (node[index] = zodResolverImpl(item, {
+						acc: ctx.acc,
+						currentParentPathString: indexedNextParent,
+						currentParentPathSegments: indexedNextParentSegments,
+						currentAttributes: { "tuple-direct-item": true },
+						currentSchema: item,
+						inheritedMetadata: ctx.inheritedMetadata,
+						currentParentNode: node,
+						childKey: index,
+					}).node);
+				},
+			});
 		}
 
 		return {
@@ -1805,12 +1780,167 @@ function zodResolverImpl(
 			}).node,
 		};
 	}
+	if (schema instanceof z.ZodObject) {
+		const node = {
+			[FIELD_CONFIG]: {
+				level: "object",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: { presence: calcPresence(ctx) },
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				shape: {}, // To be filled below
+				userMetadata: {},
+				metadata: {
+					isLazyChildren: true,
+					...ctx.currentAttributes,
+				} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
+			} as FormFieldOptionObjectLevel,
+		};
+
+		const shape = schema.shape;
+		for (const key in shape) {
+			const nextParent = currentParentPathString
+				? `${currentParentPathString}.${key}`
+				: key;
+			const nextParentSegments = [...currentParentPathSegments, key];
+			// This is eagerly evaluating all properties
+			// zodResolverImpl(shape[key], {
+			// 	acc: ctx.acc,
+			// 	currentParentPathString: nextParent,
+			// 	currentParentPathSegments: nextParentSegments,
+			// 	currentAttributes: { "object-property": true },
+			// 	currentSchema: shape[key],
+			// 	inheritedMetadata: ctx.inheritedMetadata,
+			// 	currentParentNode: node,
+			// 	childKey: key,
+			// }).node;
+			// If we want to make it lazy, we can just assign and use `Object.defineProperty` with getter
+			Object.defineProperty(node, key, {
+				enumerable: true,
+				configurable: true,
+				get: () => {
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+					return (node[key] = zodResolverImpl(shape[key], {
+						acc: ctx.acc,
+						currentParentPathString: nextParent,
+						currentParentPathSegments: nextParentSegments,
+						currentAttributes: { "object-property": true },
+						currentSchema: shape[key],
+						inheritedMetadata: ctx.inheritedMetadata,
+						currentParentNode: node,
+						childKey: key,
+					}).node);
+				},
+			});
+		}
+
+		return {
+			pathToNode: ctx.acc.pathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
+	// if (schema instanceof z.ZodRecord) {
+	// 	let exactLength: number | undefined;
+	// 	let minLength: number | undefined;
+	// 	let maxLength: number | undefined;
+	// 	if (schema.def.rest) {
+	// 		minLength = schema.def.items.length;
+	// 	} else {
+	// 		exactLength = schema.def.items.length;
+	// 		minLength = schema.def.items.length;
+	// 		maxLength = schema.def.items.length;
+	// 	}
+	// 	const node = {
+	// 		[FIELD_CONFIG]: {
+	// 			level: "record",
+	// 			pathString: currentParentPathString,
+	// 			pathSegments: currentParentPathSegments,
+	// 			default: ctx.default,
+	// 			constraints: {
+	// 				presence: calcPresence(ctx),
+	// 				exactLength,
+	// 				minLength,
+	// 				maxLength,
+	// 			},
+	// 			validation: {
+	// 				validate: (value, options) =>
+	// 					customValidate(
+	// 						{
+	// 							value,
+	// 							currentParentPathString: currentParentPathString,
+	// 							currentParentSegments: currentParentPathSegments,
+	// 							schema: ctx.currentSchema,
+	// 						},
+	// 						options,
+	// 					),
+	// 			},
+	// 			// items: new Array(schema.def.items.length).fill(null),
+	// 			userMetadata: {},
+	// 		} as FormFieldOptionTupleLevel,
+	// 	};
+
+	// 	const items = schema.def.items;
+	// 	for (let index = 0; index < items.length; index++) {
+	// 		const item = items[index]!;
+	// 		const indexedNextParent = currentParentPathString
+	// 			? `${currentParentPathString}.${index}`
+	// 			: String(index);
+	// 		const indexedNextParentSegments = [...currentParentPathSegments, index];
+
+	// 		// node[FIELD_CONFIG].items[index] =
+	// 		zodResolverImpl(item, {
+	// 			acc: ctx.acc,
+	// 			currentParentPathString: indexedNextParent,
+	// 			currentParentPathSegments: indexedNextParentSegments,
+	// 			currentAttributes: { "tuple-direct-item": true },
+	// 			currentSchema: item,
+	// 			inheritedMetadata: ctx.inheritedMetadata,
+	// 			currentParentNode: node,
+	// 			childKey: index,
+	// 		}).node;
+	// 	}
+
+	// 	return {
+	// 		pathToNode: ctx.acc.pathToNode,
+	// 		node: pushToAcc({
+	// 			acc: ctx.acc,
+	// 			node,
+	// 			pathString: currentParentPathString,
+	// 			currentAttributes: ctx.currentAttributes,
+	// 			inheritedMetadata: ctx.inheritedMetadata,
+	// 			currentParentNode: ctx.currentParentNode,
+	// 			childKey: ctx.childKey,
+	// 		}).node,
+	// 	};
+	// }
 
 	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
 
 	if (
-		schema instanceof z.ZodUnion
-		// || schema instanceof z.ZodDiscriminatedUnion
+		schema instanceof z.ZodUnion ||
+		schema instanceof z.ZodDiscriminatedUnion
 	) {
 		const rootPathToInfo = {
 			...ctx.inheritedMetadata["union-root-descendant"]?.rootPathToInfo,
@@ -2063,11 +2193,13 @@ function zodResolverImpl(
 	// - z.ZodMap
 	// - z.ZodSet
 	// - z.ZodFunction
-	// - z.ZodDiscriminatedUnion
 	// - z.ZodBigInt
 	// - z.ZodNever
 	// - z.ZodVoid
 	// - z.ZodSymbol
+	// = z.ZodUndefined;
+	// = z.ZodNull;
+	// = z.ZodNullable;
 
 	if (schema instanceof z.ZodPipe) {
 		const mainSchema = schema.in;
