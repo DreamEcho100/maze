@@ -1,7 +1,7 @@
 // It's isn't about Zod semantics — it's about making a common interface that different schema validators can be transformed for form ergonomics.
 // So we can have a common ground for different schema validators to work with the form manager.
 // And keep form state agnostic of the validator library.
-import z, { literal } from "zod/v4";
+import z, { literal, record } from "zod/v4";
 
 export const name = "form-manager-resolver-zod";
 
@@ -449,6 +449,7 @@ type FormFieldOptionShape =
 	| FormFieldOptionUnknownLevel
 	| FormFieldOptionNeverLevel
 	| FormFieldOptionPrimitiveLevel
+	| FormFieldOptionRecordLevel
 	| FormFieldOptionObjectLevel
 	| FormFieldOptionArrayLevel
 	| FormFieldOptionTupleLevel
@@ -503,31 +504,40 @@ type AttachCollectableTypeTrieNodesToUnionRootResolverMap<
 	Options extends readonly any[],
 	PathAcc extends PathSegmentItem[] = [],
 > = (Options extends readonly (infer UnionItem)[]
-	? UnionItem extends z.ZodObject
+	? UnionItem extends z.ZodRecord
 		? {
-				[key in keyof UnionItem["shape"]]: ZodResolverTrieResult<
-					UnionItem["shape"][key],
-					UnionItem["shape"][key],
-					[...PathAcc, Extract<key, string>],
+				[FieldTokenMap.recordProperty]: ZodResolverTrieResult<
+					UnionItem["valueType"],
+					UnionItem["valueType"],
+					[...PathAcc, typeof FieldTokenMap.recordProperty],
 					{ isUnionRootDescendant: true }
 				>;
 			}
-		: UnionItem extends z.ZodArray
+		: UnionItem extends z.ZodObject
 			? {
-					[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
-						UnionItem["element"],
-						UnionItem["element"],
-						[...PathAcc, typeof FieldTokenMap.arrayItem],
+					[key in keyof UnionItem["shape"]]: ZodResolverTrieResult<
+						UnionItem["shape"][key],
+						UnionItem["shape"][key],
+						[...PathAcc, Extract<key, string>],
 						{ isUnionRootDescendant: true }
 					>;
 				}
-			: UnionItem extends z.ZodTuple
-				? ZodTupleItemResolverMap<
-						UnionItem["def"]["items"],
-						PathAcc,
-						{ isUnionRootDescendant: true }
-					>
-				: AnyRecord
+			: UnionItem extends z.ZodArray
+				? {
+						[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
+							UnionItem["element"],
+							UnionItem["element"],
+							[...PathAcc, typeof FieldTokenMap.arrayItem],
+							{ isUnionRootDescendant: true }
+						>;
+					}
+				: UnionItem extends z.ZodTuple
+					? ZodTupleItemResolverMap<
+							UnionItem["def"]["items"],
+							PathAcc,
+							{ isUnionRootDescendant: true }
+						>
+					: AnyRecord
 	: AnyRecord) & {
 	[FieldTokenMap.unionOptionOn]: {
 		[K in keyof Options as K extends `${number}`
@@ -586,7 +596,11 @@ type ZodResolverTrieResult<
 					ZodSchemaToInfer,
 					PathAcc
 				>
-			: ZodSchemaToUnwrap extends z.ZodString | z.ZodLiteral | z.ZodEnum
+			: ZodSchemaToUnwrap extends
+						| z.ZodString
+						| z.ZodLiteral
+						| z.ZodEnum
+						| z.ZodStringFormat
 				? TrieNode<
 						Options extends { isUnionRootDescendant: true }
 							? FormFieldOptionUnionDescendantLevel<
@@ -642,7 +656,10 @@ type ZodResolverTrieResult<
 												PathAcc
 											>
 								>
-							: ZodSchemaToUnwrap extends z.ZodObject
+							: // ------------------------------------------------
+								//  RECORD  (z.record(...))
+								// ------------------------------------------------
+								ZodSchemaToUnwrap extends z.ZodRecord
 								? TrieNode<
 										Options extends { isUnionRootDescendant: true }
 											? FormFieldOptionUnionDescendantLevel<
@@ -650,20 +667,25 @@ type ZodResolverTrieResult<
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
-											: FormFieldOptionObjectLevel<
+											: FormFieldOptionRecordLevel<
 													z.input<ZodSchemaToInfer>,
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
 									> & {
-										[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverTrieResult<
-											ZodSchemaToUnwrap["shape"][key],
-											ZodSchemaToUnwrap["shape"][key],
-											[...PathAcc, Extract<key, string>],
-											Options
+										[FieldTokenMap.recordProperty]: ZodResolverTrieResult<
+											ZodSchemaToUnwrap["valueType"],
+											ZodSchemaToUnwrap["valueType"],
+											[...PathAcc, typeof FieldTokenMap.recordProperty],
+											Options extends { isUnionRootDescendant: true }
+												? { isUnionRootDescendant: true }
+												: AnyRecord
 										>;
 									}
-								: ZodSchemaToUnwrap extends z.ZodArray
+								: // ------------------------------------------------
+									//  OBJECT  (z.object({...}))
+									// ------------------------------------------------
+									ZodSchemaToUnwrap extends z.ZodObject
 									? TrieNode<
 											Options extends { isUnionRootDescendant: true }
 												? FormFieldOptionUnionDescendantLevel<
@@ -671,20 +693,20 @@ type ZodResolverTrieResult<
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
-												: FormFieldOptionArrayLevel<
+												: FormFieldOptionObjectLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
 										> & {
-											[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
-												ZodSchemaToUnwrap["element"],
-												ZodSchemaToUnwrap["element"],
-												[...PathAcc, typeof FieldTokenMap.arrayItem],
+											[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverTrieResult<
+												ZodSchemaToUnwrap["shape"][key],
+												ZodSchemaToUnwrap["shape"][key],
+												[...PathAcc, Extract<key, string>],
 												Options
 											>;
 										}
-									: ZodSchemaToUnwrap extends z.ZodTuple
+									: ZodSchemaToUnwrap extends z.ZodArray
 										? TrieNode<
 												Options extends { isUnionRootDescendant: true }
 													? FormFieldOptionUnionDescendantLevel<
@@ -692,100 +714,121 @@ type ZodResolverTrieResult<
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
-													: FormFieldOptionTupleLevel<
+													: FormFieldOptionArrayLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
-											> &
-												ZodTupleItemResolverMap<
-													ZodSchemaToUnwrap["def"]["items"],
-													PathAcc,
+											> & {
+												[FieldTokenMap.arrayItem]: ZodResolverTrieResult<
+													ZodSchemaToUnwrap["element"],
+													ZodSchemaToUnwrap["element"],
+													[...PathAcc, typeof FieldTokenMap.arrayItem],
 													Options
-												>
-										: // ------------------------------------------------
-											//  UNION  (z.union([...]))
-											// ------------------------------------------------
-											// :
-											ZodSchemaToUnwrap extends
-													| z.ZodUnion
-													| z.ZodDiscriminatedUnion
+												>;
+											}
+										: ZodSchemaToUnwrap extends z.ZodTuple
 											? TrieNode<
-													FormFieldOptionUnionRootLevel<
-														z.input<ZodSchemaToInfer>,
-														z.output<ZodSchemaToInfer>,
-														PathAcc,
-														ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
-															infer Options
-														>
-															? {
-																	tag: {
-																		key: ZodSchemaToUnwrap["def"]["discriminator"];
-																		values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
-																			Options[number]
-																		>
-																			? Set<
-																					z.infer<
-																						Options[number]
-																					>[ZodSchemaToUnwrap["def"]["discriminator"]]
-																				>
-																			: Set<Literal>;
-																		valueToOptionIndex: ZodTagValueMap<
-																			Options,
-																			ZodSchemaToUnwrap["def"]["discriminator"]
-																		>;
-																	};
-																}
-															: NeverRecord
-													>
-												> &
-													AttachCollectableTypeTrieNodesToUnionRootResolverMap<
-														ZodSchemaToUnwrap["def"]["options"],
-														PathAcc
-													>
-											: //
-												// ------------------------------------------------
-												//  INTERSECTION  (z.intersection(...))
-												// ------------------------------------------------
-												ZodSchemaToUnwrap extends z.ZodIntersection<
-														infer L,
-														infer R
-													>
-												? // Intersection = both sides at the same path; we simply merge the
-													// two branch results.  At runtime your resolver already does
-													// “right wins” for conflicting keys; the type does the same.
-													ZodResolverTrieResult<L, L, PathAcc, Options> &
-														ZodResolverTrieResult<R, R, PathAcc, Options>
-												: ZodSchemaToUnwrap extends z.ZodPipe
-													? ZodResolverTrieResult<
-															ZodSchemaToUnwrap["def"]["out"],
-															ZodSchemaToInfer, // Q: is this correct
-															PathAcc,
-															Options
-														>
-													: ZodSchemaToUnwrap extends z.ZodAny | z.ZodUnknown
-														? TrieNode<
-																FormFieldOptionUnknownLevel<
-																	PathAcc,
-																	z.input<ZodSchemaToInfer>,
-																	z.output<ZodSchemaToInfer>
-																>
+													Options extends { isUnionRootDescendant: true }
+														? FormFieldOptionUnionDescendantLevel<
+																z.input<ZodSchemaToInfer>,
+																z.output<ZodSchemaToInfer>,
+																PathAcc
 															>
-														: ZodSchemaToUnwrap extends z.ZodNever
+														: FormFieldOptionTupleLevel<
+																z.input<ZodSchemaToInfer>,
+																z.output<ZodSchemaToInfer>,
+																PathAcc
+															>
+												> &
+													ZodTupleItemResolverMap<
+														ZodSchemaToUnwrap["def"]["items"],
+														PathAcc,
+														Options
+													>
+											: // ------------------------------------------------
+												//  UNION  (z.union([...]))
+												// ------------------------------------------------
+												// :
+												ZodSchemaToUnwrap extends
+														| z.ZodUnion
+														| z.ZodDiscriminatedUnion
+												? TrieNode<
+														FormFieldOptionUnionRootLevel<
+															z.input<ZodSchemaToInfer>,
+															z.output<ZodSchemaToInfer>,
+															PathAcc,
+															ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
+																infer Options
+															>
+																? {
+																		tag: {
+																			key: ZodSchemaToUnwrap["def"]["discriminator"];
+																			values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
+																				Options[number]
+																			>
+																				? Set<
+																						z.infer<
+																							Options[number]
+																						>[ZodSchemaToUnwrap["def"]["discriminator"]]
+																					>
+																				: Set<Literal>;
+																			valueToOptionIndex: ZodTagValueMap<
+																				Options,
+																				ZodSchemaToUnwrap["def"]["discriminator"]
+																			>;
+																		};
+																	}
+																: NeverRecord
+														>
+													> &
+														AttachCollectableTypeTrieNodesToUnionRootResolverMap<
+															ZodSchemaToUnwrap["def"]["options"],
+															PathAcc
+														>
+												: //
+													// ------------------------------------------------
+													//  INTERSECTION  (z.intersection(...))
+													// ------------------------------------------------
+													ZodSchemaToUnwrap extends z.ZodIntersection<
+															infer L,
+															infer R
+														>
+													? // Intersection = both sides at the same path; we simply merge the
+														// two branch results.  At runtime your resolver already does
+														// “right wins” for conflicting keys; the type does the same.
+														ZodResolverTrieResult<L, L, PathAcc, Options> &
+															ZodResolverTrieResult<R, R, PathAcc, Options>
+													: ZodSchemaToUnwrap extends z.ZodPipe
+														? ZodResolverTrieResult<
+																ZodSchemaToUnwrap["def"]["out"],
+																ZodSchemaToInfer, // Q: is this correct
+																PathAcc,
+																Options
+															>
+														: ZodSchemaToUnwrap extends z.ZodAny | z.ZodUnknown
 															? TrieNode<
-																	FormFieldOptionNeverLevel<
-																		never,
-																		never,
-																		PathAcc
-																	>
-																>
-															: TrieNode<
 																	FormFieldOptionUnknownLevel<
 																		PathAcc,
 																		z.input<ZodSchemaToInfer>,
 																		z.output<ZodSchemaToInfer>
 																	>
-																>;
+																>
+															: ZodSchemaToUnwrap extends z.ZodNever
+																? TrieNode<
+																		FormFieldOptionNeverLevel<
+																			never,
+																			never,
+																			PathAcc
+																		>
+																	>
+																: TrieNode<
+																		FormFieldOptionUnknownLevel<
+																			PathAcc,
+																			z.input<ZodSchemaToInfer>,
+																			z.output<ZodSchemaToInfer>
+																		>
+																	>;
 
 const zodSchemaTest = z
 	.object({
@@ -801,10 +844,18 @@ const zodSchemaTest = z
 			nestedString: z.string().optional(),
 			nestedNumber: z.number().nullable(),
 		}),
+		recordField: z.record(z.string(), z.number().min(0)),
+		recordOfObjects: z.record(
+			z.string().min(1),
+			z.object({
+				id: z.uuid({ version: "v7" }),
+				value: z.string().min(1),
+			}),
+		),
 		arrayField: z.array(z.string().min(1)).min(1).max(3),
 		arrayOfObjects: z.array(
 			z.object({
-				id: z.uuidv7(),
+				id: z.uuid({ version: "v7" }),
 				value: z.number().positive(),
 			}),
 		),
@@ -843,6 +894,21 @@ const zodSchemaTestTrieResult = {} as ZodSchemaTestTrieResult;
 zodSchemaTestTrieResult.stringField[FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.stringField[FIELD_CONFIG].type; // "string"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[FIELD_CONFIG].level; // "primitive"
+zodSchemaTestTrieResult.recordField[FIELD_CONFIG].level; // "record"
+zodSchemaTestTrieResult.recordField[FieldTokenMap.recordProperty][FIELD_CONFIG]
+	.level; // "primitive"
+zodSchemaTestTrieResult.recordField[FieldTokenMap.recordProperty][FIELD_CONFIG]
+	.type; // "number"
+zodSchemaTestTrieResult.recordOfObjects[FIELD_CONFIG].level; // "record"
+zodSchemaTestTrieResult.recordOfObjects[FieldTokenMap.recordProperty][
+	FIELD_CONFIG
+].level; // "object"
+zodSchemaTestTrieResult.recordOfObjects[FieldTokenMap.recordProperty].id[
+	FIELD_CONFIG
+].level; // "primitive"
+zodSchemaTestTrieResult.recordOfObjects[FieldTokenMap.recordProperty].id[
+	FIELD_CONFIG
+].type; // "string"
 zodSchemaTestTrieResult.arrayField[FIELD_CONFIG].level; // "array"
 zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrayItem][FIELD_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.arrayField[FieldTokenMap.arrayItem][FIELD_CONFIG].type; // "string"
@@ -1264,6 +1330,7 @@ interface CurrentAttributes {
 	"array-item"?: boolean;
 	"array-token-item"?: boolean;
 	"tuple-direct-item"?: boolean;
+	"record-direct-property"?: boolean;
 	isLazyChildren?: boolean;
 }
 
@@ -1361,7 +1428,9 @@ function zodResolverImpl(
 	if (
 		schema instanceof z.ZodString ||
 		schema instanceof z.ZodLiteral ||
-		schema instanceof z.ZodEnum
+		schema instanceof z.ZodEnum ||
+		schema instanceof z.ZodStringFormat
+		// ZodCustomStringFormat
 	) {
 		let minLength: number | undefined;
 		let maxLength: number | undefined;
@@ -1390,6 +1459,8 @@ function zodResolverImpl(
 					)
 					.join("|")}$`,
 			);
+		} else if (schema instanceof z.ZodStringFormat) {
+			regex = schema.def.pattern;
 		} else {
 			coerce = schema.def.coerce;
 			if (schema.def.checks) {
@@ -1727,7 +1798,7 @@ function zodResolverImpl(
 				metadata: {
 					isLazyChildren: true,
 					...ctx.currentAttributes,
-				} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
+				},
 			} as FormFieldOptionTupleLevel,
 		};
 
@@ -1791,6 +1862,77 @@ function zodResolverImpl(
 			}).node,
 		};
 	}
+	if (schema instanceof z.ZodRecord) {
+		// Extract key and value types
+		const keySchema = schema.def.keyType;
+		const valueSchema = schema.def.valueType;
+
+		// Create record node configuration
+		const node: TrieNode = {
+			[FIELD_CONFIG]: {
+				level: "record",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: {
+					presence: calcPresence(ctx),
+					// Store schema references for runtime operations
+					keySchema,
+					valueSchema,
+				},
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				userMetadata: {},
+				metadata: { ...ctx.currentAttributes },
+			} as FormFieldOptionRecordLevel,
+		};
+
+		// Create token path for the property template
+		const tokenNextParent = currentParentPathString
+			? `${currentParentPathString}.${FieldTokenMap.recordProperty}`
+			: FieldTokenMap.recordProperty;
+		const tokenNextParentSegments = [
+			...currentParentPathSegments,
+			FieldTokenMap.recordProperty,
+		];
+
+		// Process value type schema for the token path
+		zodResolverImpl(valueSchema, {
+			acc: ctx.acc,
+			currentParentPathString: tokenNextParent,
+			currentParentPathSegments: tokenNextParentSegments,
+			currentAttributes: { "record-direct-property": true },
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentSchema: valueSchema,
+			get currentParentNode() {
+				return node;
+			},
+			childKey: FieldTokenMap.recordProperty,
+		}).node;
+
+		return {
+			pathToNode: ctx.acc.pathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
 	if (schema instanceof z.ZodObject) {
 		const node = {
 			[FIELD_CONFIG]: {
@@ -1816,7 +1958,7 @@ function zodResolverImpl(
 				metadata: {
 					isLazyChildren: true,
 					...ctx.currentAttributes,
-				} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
+				},
 			} as FormFieldOptionObjectLevel,
 		};
 
@@ -1918,7 +2060,7 @@ function zodResolverImpl(
 			metadata: {
 				"union-root-descendant": { rootPathToInfo },
 				...ctx.currentAttributes,
-			} satisfies FormFieldOption<any, any, any, any, any>["metadata"],
+			},
 		} as FormFieldOptionUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
 
@@ -2134,6 +2276,19 @@ function zodResolverImpl(
 	// - z.ZodSymbol
 	// = z.ZodUndefined;
 	// = z.ZodNull;
+	// - z.ZodCustomStringFormat
+	// - z.ZodNumberFormat
+	// - z.ZodBigIntFormat
+	// - z.ZodLiteral
+	// - z.ZodFile
+	// - z.ZodPrefault
+	// - z.ZodNonOptional
+	// - z.ZodNaN
+	// - z.ZodCodec - which will support `z.stringbool` too.
+	// - z.ZodReadonly
+	// - z.ZodTemplateLiteral
+	// - z.ZodPromise
+	// - z.ZodCustom
 
 	if (schema instanceof z.ZodPipe) {
 		const mainSchema = schema.in;
