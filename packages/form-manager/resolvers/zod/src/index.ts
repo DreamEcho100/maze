@@ -130,6 +130,10 @@ type TagToOptionIndexMap<
 	get<K extends Literal>(key: K): z.infer<Arr[number]> & { [P in Tag]: K };
 };
 
+// Form values are separate from schema description
+// A Trie structure for efficient lookup
+// State manager integrations compatibility
+// Consistent mental model
 interface FormFieldOption<
 	LevelName extends string,
 	InputValue,
@@ -1751,8 +1755,6 @@ function zodResolverImpl(
 				enumerable: true,
 				configurable: true,
 				get: () => {
-					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
-					// @ts-ignore
 					const value = zodResolverImpl(item, {
 						acc: ctx.acc,
 						currentParentPathString: indexedNextParent,
@@ -1765,7 +1767,7 @@ function zodResolverImpl(
 					}).node;
 
 					Object.defineProperty(node, index, {
-						value: value,
+						value,
 						writable: true,
 						configurable: true,
 						enumerable: true,
@@ -1840,8 +1842,6 @@ function zodResolverImpl(
 				enumerable: true,
 				configurable: true,
 				get: () => {
-					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
-					// @ts-ignore
 					const value = zodResolverImpl(shape[key], {
 						acc: ctx.acc,
 						currentParentPathString: nextParent,
@@ -1854,7 +1854,7 @@ function zodResolverImpl(
 					}).node;
 
 					Object.defineProperty(node, key, {
-						value: value,
+						value,
 						writable: true,
 						configurable: true,
 						enumerable: true,
@@ -1879,78 +1879,6 @@ function zodResolverImpl(
 		};
 	}
 	// if (schema instanceof z.ZodRecord) {
-	// 	let exactLength: number | undefined;
-	// 	let minLength: number | undefined;
-	// 	let maxLength: number | undefined;
-	// 	if (schema.def.rest) {
-	// 		minLength = schema.def.items.length;
-	// 	} else {
-	// 		exactLength = schema.def.items.length;
-	// 		minLength = schema.def.items.length;
-	// 		maxLength = schema.def.items.length;
-	// 	}
-	// 	const node = {
-	// 		[FIELD_CONFIG]: {
-	// 			level: "record",
-	// 			pathString: currentParentPathString,
-	// 			pathSegments: currentParentPathSegments,
-	// 			default: ctx.default,
-	// 			constraints: {
-	// 				presence: calcPresence(ctx),
-	// 				exactLength,
-	// 				minLength,
-	// 				maxLength,
-	// 			},
-	// 			validation: {
-	// 				validate: (value, options) =>
-	// 					customValidate(
-	// 						{
-	// 							value,
-	// 							currentParentPathString: currentParentPathString,
-	// 							currentParentSegments: currentParentPathSegments,
-	// 							schema: ctx.currentSchema,
-	// 						},
-	// 						options,
-	// 					),
-	// 			},
-	// 			// items: new Array(schema.def.items.length).fill(null),
-	// 			userMetadata: {},
-	// 		} as FormFieldOptionTupleLevel,
-	// 	};
-
-	// 	const items = schema.def.items;
-	// 	for (let index = 0; index < items.length; index++) {
-	// 		const item = items[index]!;
-	// 		const indexedNextParent = currentParentPathString
-	// 			? `${currentParentPathString}.${index}`
-	// 			: String(index);
-	// 		const indexedNextParentSegments = [...currentParentPathSegments, index];
-
-	// 		// node[FIELD_CONFIG].items[index] =
-	// 		zodResolverImpl(item, {
-	// 			acc: ctx.acc,
-	// 			currentParentPathString: indexedNextParent,
-	// 			currentParentPathSegments: indexedNextParentSegments,
-	// 			currentAttributes: { "tuple-direct-item": true },
-	// 			currentSchema: item,
-	// 			inheritedMetadata: ctx.inheritedMetadata,
-	// 			currentParentNode: node,
-	// 			childKey: index,
-	// 		}).node;
-	// 	}
-
-	// 	return {
-	// 		pathToNode: ctx.acc.pathToNode,
-	// 		node: pushToAcc({
-	// 			acc: ctx.acc,
-	// 			node,
-	// 			pathString: currentParentPathString,
-	// 			currentAttributes: ctx.currentAttributes,
-	// 			inheritedMetadata: ctx.inheritedMetadata,
-	// 			currentParentNode: ctx.currentParentNode,
-	// 			childKey: ctx.childKey,
-	// 		}).node,
-	// 	};
 	// }
 
 	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
@@ -1994,7 +1922,6 @@ function zodResolverImpl(
 		} as FormFieldOptionUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
 
-		// let tag: FormFieldOptionUnionRootLevel['tag'] | undefined;
 		if (schema instanceof z.ZodDiscriminatedUnion) {
 			config.constraints.tag = {
 				key: schema.def.discriminator,
@@ -2002,8 +1929,6 @@ function zodResolverImpl(
 				valueToOptionIndex: new Map(),
 			};
 
-			// const tag.key = schema.def.discriminator;
-			// const tag.valueToOptionIndex: Map<Literal, number> = new Map();
 			for (let i = 0; i < schema.def.options.length; i++) {
 				const opt = schema.def.options[i];
 				if (!opt || !(opt instanceof z.ZodObject)) {
@@ -2134,12 +2059,6 @@ function zodResolverImpl(
 					currentSchema: opt,
 					childKey: ctx.childKey,
 				});
-				// rootPathToInfo[currentParentIndexedPath] ??= [];
-				// rootPathToInfo[currentParentIndexedPath].push({
-				// 	rootPath: currentParentIndexedPath,
-				// 	rootPathSegments: currentParentIndexedPathSegments,
-				// 	paths: new Set([currentParentIndexedPath]),
-				// });
 
 				// Note: no need to push to options here since it's done in the `pushToAcc` function
 				// Since all options are pushed to the same path, they will be merged there on the options array
@@ -2203,7 +2122,6 @@ function zodResolverImpl(
 
 	// TODO: The following will have need to be handled properly in the future
 	// - z.ZodTransform
-	// - z.ZodLazy
 	// - z.ZodCatch
 	// - z.ZodPromise
 	// - z.ZodRecord
@@ -2216,7 +2134,6 @@ function zodResolverImpl(
 	// - z.ZodSymbol
 	// = z.ZodUndefined;
 	// = z.ZodNull;
-	// = z.ZodNullable;
 
 	if (schema instanceof z.ZodPipe) {
 		const mainSchema = schema.in;
@@ -2348,7 +2265,7 @@ function zodResolver<ZodSchema extends ZodAny>(
 } {
 	// Preserving top-level cache only - no deeper than this to make sure we preserve the correct paths
 	if (!options.skipCache && schemaPathCache.has(schema)) {
-		return schemaPathCache.get(schema)!;
+		return schemaPathCache.get(schema) as any;
 	}
 
 	const rootNode: TrieNode = {
@@ -2412,6 +2329,7 @@ const test = z.object({
 		.object({ a: z.string() })
 		.transform((val) => ({ b: val.a.length }))
 		.pipe(z.object({ b: z.number() })),
+	record: z.record(z.string().min(1), z.number().min(0)),
 });
 
 console.log(test);
@@ -2419,14 +2337,43 @@ console.log(test);
 type TestInput = z.input<typeof test>;
 type TestOutput = z.input<typeof test>;
 
-// TODO: Complex nested conditionals: The primitive type handling is repetitive
-// TODO: regex for lightweight pattern usage.
+/*
+TODO: Field Arrays Utils
+- `append`
+- `prepend`
+- `insert`
+- `remove`
+- `move`
+- `swap`
+- `update`
+- `replace`
+*/
+/*
+TODO: Field Records Utils
+addProperty
+removeProperty
+renameProperty
+updateProperty
+*/
+/*
+  / ** Fields that should trigger validation of this field * /
+  deps?: NestedPath<Values>[];
+  
+  / ** When to validate this field * /
+  mode?: ValidationEvents | "onChange";
+  
+  / ** Debounce time for async validation (ms) * /
+  asyncDebounceMs?: number;
+  
+  / ** Custom function to determine if validation should run * /
+  shouldValidate?: (values: Values) => boolean;
+*/
+
 // TODO: enum/literal arrays for UI-friendly strict matching.
 
 /*
 | Missing piece                      | Impact                             | Minimal patch                                          |
 | ---------------------------------- | ---------------------------------- | ------------------------------------------------------ |
-| **Discriminated-union resolution** | runtime still tries *all* branches | add `if (ZodDiscriminatedUnion)` branch                |
 | **Effects / Refine / Transform**   | rules are lost                     | wrap schema in `zodResolverImpl(schema.def.inner, …)` |
 | **HTML helper**                    | consumer must build attrs manually | export `getNativeAttrs(config)`                        |
 | **Bundle split**                   | one big file                       | ship `@form-manager/zod` entry                         |
@@ -2642,129 +2589,4 @@ Would you like me to give you a **side-by-side table** comparing your current de
 - Do we really need to merge and create new objects?
 - Can't we relay on if we encountered the same _path_, then check if it's an interaction item and _just mutate_!!!
 - I don't need to actually hold the intersection level, but the result of it!!!
-*/
-
-/*
-OK, for now, without mainly writing the code, I'm thinking of rules for the `unions`
-## Idea 1:
-- There won't be `UnionLevel`
-```
-interface UnionLevel extends Level<"union"> {
-	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
-	options: ResolverConfigShape[];
-	discriminator?: string;
-}
-```
-But `UnionRootLevel`
-```
-interface UnionRootLevel extends Level<"union-root"> {
-	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
-	options: ResolverConfigShape[];
-	divergentPathsOrigins?: string[]; // The paths that have different values for different options
-	divergentPathOriginToOptions?: {
-		[path: string]: {
-			discriminator?: string;
-			discriminatorValue?: string | number | boolean | null;
-			optionsIndex?: number;
-		}[];
-	};
-}
-```
-- If there happen to be no `discriminator`, the extracted rules will be invalid to be used _(for a native form validation as an example)_, and will depend on the runtime validation to determine which option is valid.
-- If there is a `discriminator`, it will be used to determine which option is valid based on the value of the `discriminator` field and the option rules will be valid to be used _(for a native form validation as an example)_.
-- If it happen that this level is an `intersection-item` process is happening to it too, it will process the intersection with the options of the union.
-- `UnionRootLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionRootLevel`, so we can know which option it belongs to and what are the divergent paths points.
-- I think the design of the schema should be the responsibility of the user/dev, and I have to just do some fallback and special handling for edge cases for a better DX, while maybe `warn` the user/dev in dev mode
-So it will be his responsibility to decide where to use unions vs discriminated union, what keys and where they're placed, etc.
-- `clientSafe` will be true if there in case of a union, there is a `discriminator` defined, otherwise it will be false.
-
-## Idea 2 _(incomplete needs revision and improvement)_
-- There won't be `UnionLevel`
-```
-interface UnionLevel extends Level<"union"> {
-	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
-	options: ResolverConfigShape[];
-	discriminator?: string;
-}
-```
-But once hitting a **discriminated union**, it will be lazy and won't process the options until it's needed
-- And will hold the options as is, and will process them when needed., and there will be a tagged union meta registry used internally to hold the union options and their divergent paths origins and their mapping to the options. which will be chached and reused if the same union is encountered again.
-
-```ts
-interface TaggedUnionMetaRegistry {
-	[unionPath: string]: {
-		recomputeCb: () => void; // To recompute the union options and their divergent paths origins and their mapping to the options
-		tagKeys: (string | number | boolean)[];
-		cachecdDivergentPathsOrigins: Map<
-			string, // This will be the value of the `tagKeys` in order joined by `|`
-			{
-				pathToResolverConfig: Record<string, ResolverConfigShape>;
-				paths: string[];
-				finalResolverConfig: ResolverConfigShape;
-			}
-		>; // The cached divergent paths origins and their mapping to the options
-	}
-```
-- The tag keys will be watched for changes, and once they change, the recomputeCb will be called to recompute the union options and their divergent paths origins and their mapping to the options.
-- The recomputeCb will be called
-	- On the first time the discriminated union is encountered, using the initial values of the form _(will be passed by the user/dev)_, if not passed, it will use the default values of the schema if any, otherwise it will use the first option of the union.
-	- Once the discriminated union keys are changed and needs to compute or get from the cache.
-- The recomputeCb will recompute the union options and their divergent paths origins and their mapping to the options, and will update the cachecdDivergentPathsOrigins with the new values.
-
-- If it happen that it's not a discriminated union, it will process it as a normal union and will have:
-```
-interface UnionRootLevel extends Level<"union-root"> {
-	// options: ResolverConfigShape[]; // Need to find a way to reference the main type here
-	options: ResolverConfigShape[];
-}
-```
-- If there happen to be no `tag`, the extracted rules will be invalid to be used _(for a native form validation as an example)_, and will depend on the runtime validation to determine which option is valid.
-- If there is a `tag`, it will be used to determine which option is valid based on the value of the `discriminator` field and the option rules will be valid to be used _(for a native form validation as an example)_.
-- If it happen that this level is an `intersection-item` process is happening to it too, it will process the intersection with the options of the union.
-- `UnionRootLevel` will be inherited down to the paths of the options and all the configs from this endpoint will be a `UnionRootLevel`, so we can know which option it belongs to and what are the divergent paths points.
-
-NOTE: I think the design of the schema should be the responsibility of the user/dev, and I have to just do some fallback and special handling for edge cases for a better DX, while maybe `warn` the user/dev in dev mode
-So it will be his responsibility to decide where to use unions vs discriminated union, what keys and where they're placed, etc.
-
-*/
-
-/*
-type TagValue = string | number | boolean | null;
-type TagKey = string; // stable encoded vector key // encoded as `${tag}:${value}` joined by `|`
-
-interface ResolvedOptionSnapshot {
-	// lazily-built, heavy object representing the option
-	pathToResolverConfig: Record<string, ResolverConfigShape>; // full map for this option
-	paths: string[]; // list of paths extracted (maybe shallow)
-	finalResolverConfig: ResolverConfigShape; // root resolver config for the option
-	createdAt: number; // for debugging / TTL
-}
-
-interface TaggedUnionMetaRegistry {
-	paths: {
-		[unionPath: string]: {
-			// map of encoded key -> ResolvedOptionSnapshot
-			cachedDivergentPathsOrigins: Map<TagKey, ResolvedOptionSnapshot>;
-			// optional: fallback option if router misses (index or null)
-			fallbackOptionIndex?: number | null;
-			// recompute function to build the snapshot for a tagKey or to rebuild router
-			recomputeCb: (
-				tagValues: TagValue[] | undefined, // undefined for router rebuild
-				ctx: { getFormValue: (path: string) => any },
-			) => Promise<{  snapshot?: ResolvedOptionSnapshot }>;
-			lastComputedAt?: number;
-		};
-	};
-	isComputing: boolean;
-	lastComputedAt?: number;
-	computingPaths: Set<string>;
-	totalComputations: number;
-}
-
-interface InternalCtx {
-	formId: string;
-	initialValues?: Record<string, any>; // for first-time compute
-	getCurrentFormValues?: () => Record<string, any>; // for recompute on change
-	taggedUnionMetaRegistry: TaggedUnionMetaRegistry;
-}
 */
