@@ -1260,6 +1260,7 @@ interface CurrentAttributes {
 	"array-item"?: boolean;
 	"array-token-item"?: boolean;
 	"tuple-direct-item"?: boolean;
+	isLazyChildren?: boolean;
 }
 
 const calcPresence = (props?: {
@@ -1752,8 +1753,7 @@ function zodResolverImpl(
 				get: () => {
 					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 					// @ts-ignore
-					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-					return (node[index] = zodResolverImpl(item, {
+					const value = zodResolverImpl(item, {
 						acc: ctx.acc,
 						currentParentPathString: indexedNextParent,
 						currentParentPathSegments: indexedNextParentSegments,
@@ -1762,7 +1762,16 @@ function zodResolverImpl(
 						inheritedMetadata: ctx.inheritedMetadata,
 						currentParentNode: node,
 						childKey: index,
-					}).node);
+					}).node;
+
+					Object.defineProperty(node, index, {
+						value: value,
+						writable: true,
+						configurable: true,
+						enumerable: true,
+					});
+
+					return value;
 				},
 			});
 		}
@@ -1833,8 +1842,7 @@ function zodResolverImpl(
 				get: () => {
 					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 					// @ts-ignore
-					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-					return (node[key] = zodResolverImpl(shape[key], {
+					const value = zodResolverImpl(shape[key], {
 						acc: ctx.acc,
 						currentParentPathString: nextParent,
 						currentParentPathSegments: nextParentSegments,
@@ -1843,7 +1851,16 @@ function zodResolverImpl(
 						inheritedMetadata: ctx.inheritedMetadata,
 						currentParentNode: node,
 						childKey: key,
-					}).node);
+					}).node;
+
+					Object.defineProperty(node, key, {
+						value: value,
+						writable: true,
+						configurable: true,
+						enumerable: true,
+					});
+
+					return value;
 				},
 			});
 		}
@@ -2203,6 +2220,17 @@ function zodResolverImpl(
 
 	if (schema instanceof z.ZodPipe) {
 		const mainSchema = schema.in;
+		return {
+			pathToNode: ctx.acc.pathToNode,
+			node: zodResolverImpl(mainSchema, ctx).node,
+		};
+	}
+
+	if (schema instanceof z.ZodLazy) {
+		// We need to call the getter to get the actual schema
+		const mainSchema = schema.def.getter();
+		// It's OK, since there are lazy computations already here, we won't get into infinite loop
+		// Q: Do we need to handle circular references somehow?
 		return {
 			pathToNode: ctx.acc.pathToNode,
 			node: zodResolverImpl(mainSchema, ctx).node,
