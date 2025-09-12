@@ -90,6 +90,7 @@ interface FormManagerError<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The path of the issue, if any. */
 	pathString: string; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
 	pathSegments: PathAcc;
+	// TODO: `fieldPath` and `fieldPathSegments`, those will be lazily computed using a getter and cached/set once accessed so we don't pay the cost if not needed, it will try to compute the actual field path by figuring any actual token through traversing the TreeNode by the pathSegments, if any token is not resolvable, it will return undefined, otherwise it will return the actual path to the field, or making a `normalizeZodPath` that the user/dev can call to get the actual field path from the issue.pathSegments
 }
 
 interface SuccessResult<Output> {
@@ -169,16 +170,16 @@ interface FormFieldOption<
 	// The metadata can be used to store additional information about the field that might be useful for rendering or other purposes
 	metadata?: {
 		[key in
-			| "object-property"
-			| "tuple-direct-item"
-			| "record-direct-property"
-			| "array-token-item"
-			| "marked-never"]?: boolean;
+			| "isObjectProperty"
+			| "isTupleItem"
+			| "isRecordProperty"
+			| "isArrayTokenItem"
+			| "isMarkedNever"]?: boolean;
 	} & {
-		"intersection-item"?: {
+		intersectionItem?: {
 			[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 		};
-		"union-root-descendant"?: {
+		unionRootDescendant?: {
 			rootPathToInfo: Record<
 				string,
 				{
@@ -275,7 +276,7 @@ interface FormFieldOptionNumberPrimitiveLevel<
 			inclusiveMin: boolean | undefined;
 			max: number | undefined;
 			inclusiveMax: boolean | undefined;
-			int: boolean | undefined;
+			// int: boolean | undefined;
 			multipleOf: number | bigint | undefined;
 		}
 	> {
@@ -1088,10 +1089,10 @@ async function customValidate<
 }
 
 interface InheritedMetadata {
-	"intersection-item"?: {
+	intersectionItem?: {
 		[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
 	};
-	"union-root-descendant"?: {
+	unionRootDescendant?: {
 		rootPathToInfo: Record<
 			string,
 			{
@@ -1101,7 +1102,7 @@ interface InheritedMetadata {
 			}[]
 		>;
 	};
-	"marked-never"?: boolean;
+	isMarkedNever?: boolean;
 }
 
 interface ZodResolverAcc {
@@ -1150,8 +1151,8 @@ function resolveIntersectionItemConfig(props: {
 		} else {
 			try {
 				// We will override the existing config to be of never type
-				// Since if we do `"marked-never": true` it won't be logical
-				// `"marked-never": true` will be used outside for the descendent if there is though
+				// Since if we do `"isMarkedNever": true` it won't be logical
+				// `"isMarkedNever": true` will be used outside for the descendent if there is though
 				// To avoid losing the other paths, metadata, and information
 				// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 				// @ts-ignore
@@ -1177,7 +1178,7 @@ function resolveIntersectionItemConfig(props: {
 								options,
 							),
 					},
-					metadata: { ...existingNode.metadata, "marked-never": true },
+					metadata: { ...existingNode.metadata, isMarkedNever: true },
 					userMetadata: {},
 				} satisfies FormFieldOptionShape);
 			} catch (error) {
@@ -1254,7 +1255,7 @@ function pushToAcc(props: {
 	if (existingNode && existingNode[FIELD_CONFIG].level !== "temp-root") {
 		isNew = false;
 
-		if (existingNode.metadata?.["intersection-item"]) {
+		if (existingNode.metadata?.["intersectionItem"]) {
 			//
 			existingNode = resolveIntersectionItemConfig({
 				acc: props.acc,
@@ -1263,8 +1264,8 @@ function pushToAcc(props: {
 			});
 
 			if (existingNode[FIELD_CONFIG].level === "never") {
-				// If it was marked as never, we need to update the inheritedMetadata to have marked-never true
-				props.inheritedMetadata["marked-never"] = true;
+				// If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true
+				props.inheritedMetadata["isMarkedNever"] = true;
 			}
 		}
 
@@ -1272,7 +1273,7 @@ function pushToAcc(props: {
 			existingNode[FIELD_CONFIG].level &&
 			existingNode[FIELD_CONFIG].level === "union-descendant"
 		) {
-			// TODO: needs to check the `marked-never`
+			// TODO: needs to check the `isMarkedNever`
 			// Merge union-descendant options
 			const itemsToPush =
 				props.node[FIELD_CONFIG].level === "union-descendant"
@@ -1296,13 +1297,12 @@ function pushToAcc(props: {
 	}
 
 	if (props.inheritedMetadata) {
-		if (props.inheritedMetadata["intersection-item"]) {
-			metadata["intersection-item"] =
-				props.inheritedMetadata["intersection-item"];
+		if (props.inheritedMetadata["intersectionItem"]) {
+			metadata["intersectionItem"] =
+				props.inheritedMetadata["intersectionItem"];
 		}
 
-		const unionRootDescendant =
-			props.inheritedMetadata["union-root-descendant"];
+		const unionRootDescendant = props.inheritedMetadata["unionRootDescendant"];
 		if (unionRootDescendant) {
 			// // Will this be used?
 			// const originPath = unionRootDescendant.rootPathToInfo[props.path]!;
@@ -1357,7 +1357,7 @@ function pushToAcc(props: {
 						},
 					},
 					metadata: {
-						"union-root-descendant": unionRootDescendant,
+						unionRootDescendant: unionRootDescendant,
 					},
 					userMetadata: {},
 				} satisfies FormFieldOptionUnionDescendantLevel,
@@ -1367,8 +1367,8 @@ function pushToAcc(props: {
 		// Instead of overriding the config level to be of never type
 		// we will just mark it as never and handle it in the validation phase
 		// to avoid losing the other paths, metadata, and information
-		if (props.inheritedMetadata["marked-never"]) {
-			metadata["marked-never"] = true;
+		if (props.inheritedMetadata["isMarkedNever"]) {
+			metadata["isMarkedNever"] = true;
 		}
 	}
 
@@ -1382,11 +1382,11 @@ function pushToAcc(props: {
 }
 
 interface CurrentAttributes {
-	"object-property"?: boolean;
+	isObjectProperty?: boolean;
 	"array-item"?: boolean;
-	"array-token-item"?: boolean;
-	"tuple-direct-item"?: boolean;
-	"record-direct-property"?: boolean;
+	isArrayTokenItem?: boolean;
+	isTupleItem?: boolean;
+	isRecordProperty?: boolean;
 	isLazyChildren?: boolean;
 }
 
@@ -1428,7 +1428,7 @@ From Zod docs:
 	- ``schema.isOptional()``: @deprecated Try safe-parsing undefined (this is what isOptional does internally)
 `schema.unwrap()` - will work only for for some types so the recursive functionality is needed anyway
 `pushToAcc` is needed to easily access the accumulator by path and use it when needed instead of always recursing or looping through the whole thing again and again
-`inheritedMetadata` is needed for properly handling and passing `intersection-item` and `union-root` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
+`inheritedMetadata` is needed for properly handling and passing `intersectionItem` and `union-root` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
 
 The system looks as it is because I'm trying different ways before changing the data structure to a Trie like one, to support many advanced functionalities and to make propagation cheap, and yes the tokenization will play a huge role on it
 */
@@ -1610,7 +1610,7 @@ function zodResolverImpl(
 				coerce,
 				minLength,
 				maxLength,
-				regex,
+				regex: regex,
 			},
 			validation: {
 				validate: (value, options) =>
@@ -1647,8 +1647,6 @@ function zodResolverImpl(
 		let inclusiveMin: boolean | undefined;
 		let inclusiveMax: boolean | undefined;
 		let multipleOf: number | undefined;
-		// Q: Fo need to account for if `finite` when present? will it be useful?
-		const int: boolean = schema.format === "safeint";
 		if (schema.def.checks) {
 			for (const check of schema.def.checks) {
 				if (check instanceof z.core.$ZodCheckLessThan) {
@@ -1664,6 +1662,8 @@ function zodResolverImpl(
 			}
 		}
 
+		multipleOf ??= schema.format === "safeint" ? 1 : undefined;
+
 		const config: FormFieldOptionNumberPrimitiveLevel = {
 			level: "primitive",
 			type: "number",
@@ -1678,7 +1678,6 @@ function zodResolverImpl(
 				max,
 				inclusiveMin,
 				inclusiveMax,
-				int,
 				multipleOf,
 			},
 			validation: {
@@ -1923,7 +1922,7 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			currentParentPathString: tokenNextParent,
 			currentParentPathSegments: tokenNextParentSegments,
-			currentAttributes: { "array-token-item": true },
+			currentAttributes: { isArrayTokenItem: true },
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentSchema: schema.element,
 			get currentParentNode() {
@@ -2003,7 +2002,7 @@ function zodResolverImpl(
 			// 	acc: ctx.acc,
 			// 	currentParentPathString: indexedNextParent,
 			// 	currentParentPathSegments: indexedNextParentSegments,
-			// 	currentAttributes: { "tuple-direct-item": true },
+			// 	currentAttributes: { "isTupleItem": true },
 			// 	currentSchema: item,
 			// 	inheritedMetadata: ctx.inheritedMetadata,
 			// 	currentParentNode: node,
@@ -2018,7 +2017,7 @@ function zodResolverImpl(
 						acc: ctx.acc,
 						currentParentPathString: indexedNextParent,
 						currentParentPathSegments: indexedNextParentSegments,
-						currentAttributes: { "tuple-direct-item": true },
+						currentAttributes: { isTupleItem: true },
 						currentSchema: item,
 						inheritedMetadata: ctx.inheritedMetadata,
 						currentParentNode: node,
@@ -2100,7 +2099,7 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			currentParentPathString: tokenNextParent,
 			currentParentPathSegments: tokenNextParentSegments,
-			currentAttributes: { "record-direct-property": true },
+			currentAttributes: { isRecordProperty: true },
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentSchema: valueSchema,
 			get currentParentNode() {
@@ -2162,7 +2161,7 @@ function zodResolverImpl(
 			// 	acc: ctx.acc,
 			// 	currentParentPathString: nextParent,
 			// 	currentParentPathSegments: nextParentSegments,
-			// 	currentAttributes: { "object-property": true },
+			// 	currentAttributes: { "isObjectProperty": true },
 			// 	currentSchema: shape[key],
 			// 	inheritedMetadata: ctx.inheritedMetadata,
 			// 	currentParentNode: node,
@@ -2177,7 +2176,7 @@ function zodResolverImpl(
 						acc: ctx.acc,
 						currentParentPathString: nextParent,
 						currentParentPathSegments: nextParentSegments,
-						currentAttributes: { "object-property": true },
+						currentAttributes: { isObjectProperty: true },
 						currentSchema: shape[key],
 						inheritedMetadata: ctx.inheritedMetadata,
 						currentParentNode: node,
@@ -2212,14 +2211,14 @@ function zodResolverImpl(
 	// if (schema instanceof z.ZodRecord) {
 	// }
 
-	// Q: How should the `currentAttributes` be handled for union-root and intersection-item? and should they be passed down to their children/resulting branches?
+	// Q: How should the `currentAttributes` be handled for union-root and intersectionItem? and should they be passed down to their children/resulting branches?
 
 	if (
 		schema instanceof z.ZodUnion ||
 		schema instanceof z.ZodDiscriminatedUnion
 	) {
 		const rootPathToInfo = {
-			...ctx.inheritedMetadata["union-root-descendant"]?.rootPathToInfo,
+			...ctx.inheritedMetadata["unionRootDescendant"]?.rootPathToInfo,
 		};
 		// collect all branches into one UnionRootLevel
 		const config = {
@@ -2248,7 +2247,7 @@ function zodResolverImpl(
 			},
 			userMetadata: {},
 			metadata: {
-				"union-root-descendant": { rootPathToInfo },
+				unionRootDescendant: { rootPathToInfo },
 				...ctx.currentAttributes,
 			},
 		} as FormFieldOptionUnionRootLevel;
@@ -2363,7 +2362,7 @@ function zodResolverImpl(
 					currentParentPathSegments: currentParentPathSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
-						"union-root-descendant": { rootPathToInfo },
+						unionRootDescendant: { rootPathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
 					currentParentNode: ctx.currentParentNode,
@@ -2384,7 +2383,7 @@ function zodResolverImpl(
 					currentParentPathSegments: currentParentIndexedTokenPathSegments,
 					inheritedMetadata: {
 						...ctx.inheritedMetadata,
-						"union-root-descendant": { rootPathToInfo },
+						unionRootDescendant: { rootPathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
 					currentParentNode: ctx.currentParentNode,
@@ -2410,11 +2409,11 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			currentParentPathString: currentParentPathString,
 			currentParentPathSegments: currentParentPathSegments,
-			// currentAttributes: { "intersection-item": "left" },
+			// currentAttributes: { "intersectionItem": "left" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
-				"intersection-item": {
-					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
+				intersectionItem: {
+					...(ctx.inheritedMetadata?.["intersectionItem"] || {}),
 					[currentParentPathString]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
 				},
 			},
@@ -2430,11 +2429,11 @@ function zodResolverImpl(
 			acc: ctx.acc,
 			currentParentPathString: currentParentPathString,
 			currentParentPathSegments: currentParentPathSegments,
-			// currentAttributes: { "intersection-item": "right" },
+			// currentAttributes: { "intersectionItem": "right" },
 			inheritedMetadata: {
 				...(ctx.inheritedMetadata || {}),
-				"intersection-item": {
-					...(ctx.inheritedMetadata?.["intersection-item"] || {}),
+				intersectionItem: {
+					...(ctx.inheritedMetadata?.["intersectionItem"] || {}),
 					[currentParentPathString]: 1,
 				},
 			},
@@ -2462,9 +2461,9 @@ function zodResolverImpl(
 	// - z.ZodCodec - which will support `z.stringbool` too.
 	// - z.ZodCustom
 	// - z.ZodCustomStringFormat
+	// - z.ZodTransform
 	// - z.ZodBigInt
 	// - z.ZodBigIntFormat
-	// - z.ZodTransform
 	// - z.ZodMap
 	// - z.ZodSet
 	//
@@ -2643,6 +2642,118 @@ function zodResolver<ZodSchema extends ZodAny>(
 	return result;
 }
 
+/**
+ * Extracts HTML form attributes from a field configuration
+ * Useful for direct integration with HTML form elements or UI libraries
+ *
+ * @param config The field configuration object
+ * @returns Record of HTML attributes ready to spread onto form elements
+ */
+export function getFieldAttributes(
+	config: FormFieldOptionShape,
+): Record<string, any> {
+	// Common attributes for all field types
+	const attributes: Record<string, any> = {
+		name: config.pathString,
+		required: config.constraints?.presence === "required",
+		readonly: config.constraints?.readonly,
+	};
+
+	if (config.constraints?.presence === "required") attributes.required = true;
+	if (config.constraints?.readonly) attributes.readonly = true;
+
+	// Handle specific field types
+	if (config.level === "primitive") {
+		// Set HTML input type based on field type
+		switch (config.type) {
+			case "string": {
+				// String-specific validations
+				if (config.constraints?.minLength !== undefined)
+					attributes.minLength = config.constraints.minLength;
+
+				if (config.constraints?.maxLength !== undefined)
+					attributes.maxLength = config.constraints.maxLength;
+
+				// Convert Regex pattern to HTML pattern
+				// Note: HTML pattern doesn't use flags and needs string format
+				if (config.constraints?.regex)
+					attributes.pattern = config.constraints.regex.source;
+
+				break;
+			}
+
+			// case 'bigint':
+			case "number": {
+				attributes.type = "number";
+
+				// Number-specific validations
+				if (config.constraints?.min !== undefined)
+					attributes.min = config.constraints.min;
+
+				if (config.constraints?.max !== undefined)
+					attributes.max = config.constraints.max;
+
+				if (config.constraints?.multipleOf !== undefined)
+					attributes.step = config.constraints.multipleOf;
+
+				break;
+			}
+
+			case "boolean":
+				attributes.type = "checkbox";
+				break;
+
+			case "date": {
+				attributes.type = "date";
+
+				// Date-specific validations
+				if (config.constraints?.min instanceof Date)
+					attributes.min = config.constraints.min.toISOString().split("T")[0];
+				if (config.constraints?.max instanceof Date)
+					attributes.max = config.constraints.max.toISOString().split("T")[0];
+				break;
+			}
+
+			case "file": {
+				attributes.type = "file";
+
+				// File-specific attributes
+				if (config.constraints?.mimeTypes)
+					attributes.accept = Array.isArray(config.constraints.mimeTypes)
+						? config.constraints.mimeTypes.join(",")
+						: config.constraints.mimeTypes;
+
+				break;
+			}
+
+			default: {
+				// For other primitives, use text input as fallback
+				attributes.type = "text";
+			}
+		}
+
+		// Default value
+		if (config.default !== undefined) {
+			attributes.defaultValue = config.default;
+		}
+	} else {
+		switch (config.level) {
+			case "array":
+			case "tuple":
+				// attributes['data-field-type'] = 'array';
+				// attributes['data-item-path'] = `${config.pathString}.${FieldTokenMap.arrayItem}`;
+				if (config.constraints.minLength)
+					attributes.min = config.constraints.minLength;
+				if (config.constraints.maxLength)
+					attributes.max = config.constraints.maxLength;
+				attributes.multiple = true;
+				break;
+		}
+	}
+
+	return attributes;
+}
+
 const userSchema = z.object({
 	name: z.string().min(1),
 	age: z.number().min(0),
@@ -2740,7 +2851,7 @@ Cached schema at leaf: faster single lookups, but you store potentially thousand
 * **Push-to-accumulator abstraction**: Good separation of concerns between collecting nodes and handling merging. You've already anticipated intersections, unions, metadata inheritance.
 * **Custom validate**: Nice wrapper around Zod's internal validation. You're controlling error shaping consistently (`path`, `message`), which will make your form lib predictable.
 * **PathSegments array**: You're storing both segments and the joined string—this is the right move for cheap traversal plus easy display/debug.
-* **Future-facing metadata**: You've left room for `"intersection-item"`, `"union-root-descendant"`, `"marked-never"`, etc. This gives you hooks for optimizations without changing core types later.
+* **Future-facing metadata**: You've left room for `"intersectionItem"`, `"unionRootDescendant"`, `"isMarkedNever"`, etc. This gives you hooks for optimizations without changing core types later.
 
 ---
 
@@ -2781,7 +2892,7 @@ If you add:
 
 3. **Rich metadata inheritance**
 
-   * The `inheritedMetadata` propagation (intersection flags, union origins, marked-never) gives you fine-grained control over how schema semantics bubble down.
+   * The `inheritedMetadata` propagation (intersection flags, union origins, isMarkedNever) gives you fine-grained control over how schema semantics bubble down.
    * That's a level of fidelity missing in most form libs. They flatten things and lose these distinctions, forcing devs to patch around edge cases.
 
 4. **Presence + coercion + defaults tracking**
@@ -2860,7 +2971,7 @@ Would you like me to give you a **side-by-side table** comparing your current de
 //
 // Notes
 // Union & Intersection merging
-// Right now, you have TODOs around merging union-root and intersection-item metadata/config. This is a big one:
+// Right now, you have TODOs around merging union-root and intersectionItem metadata/config. This is a big one:
 // Union: each path should map to multiple possible schemas. You'll need either an options: ResolverConfigShape[] array or a tagged type.
 // Intersection: each path should merge all constraints. But min/max collisions or type incompatibilities can't always be resolved statically. You may need a dual left/right config like you started.
 // If you skip this, you'll get misleading metadata (union-root path may appear stricter/looser than reality).
