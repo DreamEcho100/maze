@@ -1,28 +1,33 @@
 // form-manger/index.ts
 
 import type {
-	FormValidationEvent,
+	FormFieldTNConfigValidationEvents,
 	NestedPath,
 	NestedPathValue,
 	ValuesShape,
 } from "../shared.ts";
 import type { FormManagerError } from "./errors.ts";
-import type { FormFieldOptions } from "./field-options.ts";
+import type { FormFieldTN } from "./fields/structure.ts";
 
 // TODO: add a metadata that the user can optionally add to it's types
 // to improve the experience of the form manager
 // `isUpdatingFieldsValueOnError`/`forceUpdateFieldsValueOnError`
 
-export type Submission<
+export type Submit<
 	Values extends ValuesShape,
-	Schema,
-	SubmissionResult = unknown,
-	SubmissionError = unknown,
+	FieldsStructure extends FormFieldTN,
+	SubmitResult = unknown,
+	SubmitError = unknown,
 > = {
 	cb: <T>(params: {
 		values: Values;
-		validatedValues: Schema;
-		formManager: FormManager<Values, Schema, SubmissionResult, SubmissionError>;
+		validatedValues: FieldsStructure;
+		formManager: FormManager<
+			Values,
+			FieldsStructure,
+			SubmitResult,
+			SubmitError
+		>;
 	}) => T | Promise<T>;
 	retry: () => void;
 	count: number;
@@ -50,7 +55,7 @@ export type Submission<
 	| {
 			state: "success";
 			error: null;
-			result: SubmissionResult;
+			result: SubmitResult;
 			isSubmitting: false;
 			isDirty: boolean;
 			isValid: boolean;
@@ -71,9 +76,9 @@ export interface Config {
 
 export interface FormManager<
 	Values extends ValuesShape,
-	Schema,
-	SubmissionResult = unknown,
-	SubmissionError = unknown,
+	FieldsStructure extends FormFieldTN,
+	SubmitResult = unknown,
+	SubmitError = unknown,
 > {
 	/** 🔹 Unique identity for the form instance */
 	baseId: string;
@@ -137,7 +142,7 @@ export interface FormManager<
 						value: NestedPathValue<Values, Name>,
 				  ) => NestedPathValue<Values, Name>)
 				| NestedPathValue<Values, Name>,
-			validationName?: keyof Schema,
+			validationName?: keyof FieldsStructure,
 		) => void;
 
 		// /** Fully typed if path is literal, fallback to any if dynamic */
@@ -148,39 +153,41 @@ export interface FormManager<
 		// set(path: string, value: any): void;
 	};
 
-	/** 🔹 Submission domain
-	 * This is the main state of the form submission
+	/** 🔹 Submit domain
+	 * This is the main state of the form submit
 	 */
-	submission: Submission<
-		Values,
-		Schema,
-		SubmissionResult,
-		SubmissionError
-	> | null;
+	submit: Submit<Values, FieldsStructure, SubmitResult, SubmitError> | null;
 
 	/** 🔹 Fields domain
 	 * This is the main state of the form fields and their metadata
 	 */
 	fields: {
-		/** Options for each field, lazily created when accessed */
-		options: {
-			[Path in NestedPath<Values>]?: FormFieldOptions<
-				Values,
-				Path,
-				NestedPathValue<Values, Path>,
-				NestedPathValue<Schema, Path>
-			>;
-		};
-
-		/** Get (or lazily create) options for a field */
-		getOptions: <Path extends NestedPath<Values>>(
-			path: Path,
-		) => FormFieldOptions<
-			Values,
-			Path,
-			NestedPathValue<Values, Path>,
-			NestedPathValue<Schema, Path>
-		>;
+		/**
+		 * The structure of the form fields, mirroring the values shape
+		 * It's in a Trie/Tree like structure for optimal path-based access and operations
+		 * So the user/dev can easily traverse and manipulate the structure if needed
+		 * For example, to get the field config for a specific path
+		 *
+		 * ```ts
+		 * const fieldConfig = formManager.fields.structure.user.name;
+		 * ```
+		 * But to get the field config you will need to access it using `FORM_FIELD_TN_CONFIG`
+		 *
+		 * ```ts
+		 * import { FORM_FIELD_TN_CONFIG } from "@de100/form-manager-core/constants";
+		 * const fieldConfig = formManager.fields.structure.user.name[FORM_FIELD_TN_CONFIG];
+		 *
+		 * ```ts
+		 * This is done to avoid name collisions with potential field names
+		 * and to make it clear that this is a special property
+		 * that holds the field configuration and metadata
+		 *
+		 * ```ts
+		 * const fieldConfig = formManager.fields.structure.user.name[FORM_FIELD_TN_CONFIG];
+		 * console.log(fieldConfig.validation);
+		 * ```
+		 */
+		structure: FieldsStructure;
 
 		// // Important for performance - tracks what's actually changed
 		/** 🔹 State sets (performance: track only what's changed) */
@@ -190,33 +197,26 @@ export interface FormManager<
 		validating: Set<NestedPath<Values>>;
 
 		/** 🔹 Errors */
-		// errors: FormManagerErrors<Schema>;
-		// errorFormatter: (
-		// 	error: unknown,
-		// 	validationEvent: ValidationEvents,
-		// ) => string;
 		errors: {
-			// /** Current errors mapped by field/schema */
-			// current: FormManagerErrors<Schema>;
-
-			// /** Formats an error into a user-facing string */
-			// formatter: (error: unknown, validationEvent: ValidationEvents) => string;
-
-			// // (optional) helpers you may want to add later:
-			// // getFirst: () => NestedPath<Schema> | undefined;
-			// hasErrors: boolean;
-
 			/** Current errors mapped by field/schema */
-			current: { [Path in NestedPath<Schema>]?: FormManagerError<Path> };
+			current: {
+				[Path in NestedPath<FieldsStructure>]?: FormManagerError<Path>;
+			};
 			/** Count of current errors */
 			count: number;
 			/** First error path (if any) */
-			first?: NestedPath<Schema>;
+			first?: NestedPath<FieldsStructure>;
 
 			/** Parses an error into the internal structure */
-			parse?: (props: { error: unknown; path?: NestedPath<Schema> }) => void;
+			parse?: (props: {
+				error: unknown;
+				path?: NestedPath<FieldsStructure>;
+			}) => void;
 			/** Formats an error into a user-facing string */
-			format?: (error: unknown, validationEvent: FormValidationEvent) => string;
+			format?: (
+				error: unknown,
+				validationEvent: FormFieldTNConfigValidationEvents,
+			) => string;
 		};
 
 		/** 🔹 Derived flags (booleans derived from sets above) */
@@ -247,27 +247,27 @@ export interface FormManager<
 		/** 🔹 Validation */
 		validation: {
 			/** Rules per validation event */
-			allowedOnEvent?: { [key in FormValidationEvent]?: boolean };
+			allowedOnEvent?: { [key in FormFieldTNConfigValidationEvents]?: boolean };
 
 			/** Validate a single field */
 			validateOne: <T extends NestedPath<Values>>(
 				name: T,
-				validationEvent?: FormValidationEvent,
+				validationEvent?: FormFieldTNConfigValidationEvents,
 				force?: boolean,
-			) => Promise<NestedPathValue<Schema, T> | null>;
+			) => Promise<NestedPathValue<FieldsStructure, T> | null>;
 
 			/** Validate multiple fields */
 			validateMany: <T extends NestedPath<Values>>(
 				names: T[],
-				validationEvent?: FormValidationEvent,
+				validationEvent?: FormFieldTNConfigValidationEvents,
 				force?: boolean,
-			) => Promise<{ [K in T]: NestedPathValue<Schema, K> | null }>;
+			) => Promise<{ [K in T]: NestedPathValue<FieldsStructure, K> | null }>;
 
 			/** Validate the entire form */
 			validateAll: (
-				validationEvent?: FormValidationEvent,
+				validationEvent?: FormFieldTNConfigValidationEvents,
 				force?: boolean,
-			) => Promise<Schema | null>;
+			) => Promise<FieldsStructure | null>;
 		};
 
 		/** 🔹 Focus state */

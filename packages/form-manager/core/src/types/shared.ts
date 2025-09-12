@@ -1,13 +1,39 @@
-import type { ARRAY_ITEM_TOKEN, FORM_VALIDATION_EVENTS } from "../constants";
+import type {
+	formFieldTNPresenceEnum,
+	formFieldTNTokenEnum,
+	formFormFieldTNConfigValidationEventsEnum,
+} from "../constants";
 
-export type ArrayItemToken = typeof ARRAY_ITEM_TOKEN;
+export type AnyRecord = Record<string, any>;
+export type NeverRecord = Record<string, never>;
+export type PathSegmentItem = string | number; //| PathSegment;
+export type Literal = string | number | bigint | boolean | null | undefined;
+
+// export type FormFieldTNConfigTokenEnum['arrayItem'] = typeof ARRAY_ITEM_TOKEN;
+export type FormFieldTNConfigPresenceEnum = typeof formFieldTNPresenceEnum;
+export type FormFieldTNConfigPresence =
+	FormFieldTNConfigPresenceEnum[keyof FormFieldTNConfigPresenceEnum];
+export type FormFieldTNConfigTokenEnum = typeof formFieldTNTokenEnum;
+export type FormFieldTNConfigToken =
+	FormFieldTNConfigTokenEnum[keyof FormFieldTNConfigTokenEnum];
 
 // form-manger/shared.ts
 export type ValuesShape = Record<string, any>;
 // export type ValidationEvents = "input" | "blur" | "touch" | "submit";
 /** Validation triggers */
-export type FormValidationEvent =
-	(typeof FORM_VALIDATION_EVENTS)[keyof typeof FORM_VALIDATION_EVENTS];
+export type FormFormFieldTNConfigValidationEventsEnum =
+	typeof formFormFieldTNConfigValidationEventsEnum;
+export type FormFieldTNConfigValidationEvents =
+	FormFormFieldTNConfigValidationEventsEnum[keyof FormFormFieldTNConfigValidationEventsEnum];
+export interface FormFieldTNConfigValidateOptions {
+	/** The validation event that triggered the validation. */
+	validationEvent: FormFieldTNConfigValidationEvents;
+}
+/**
+ * This is used by the user/dev to add a specific metadata to the field for further extension and functionalities.
+ */
+// biome-ignore lint/suspicious/noEmptyInterface: <explanation>
+export interface FormFieldTNConfigUserMetadata {}
 
 type JoinPath<
 	P extends string,
@@ -56,17 +82,20 @@ export type NestedPath<
 				// e.g. `{ a: string[] }` with path `a`, `a.0`, `a.1`, but also `a.1.5` which is not desired
 				// Sometimes the "wrong" solution is the right solution! :D
 				// Credits to <https://stackoverflow.com/a/61199349/13961420>
-					| JoinPath<Path, bigint | ArrayItemToken>
+					| JoinPath<Path, bigint | FormFieldTNConfigTokenEnum["arrayItem"]>
 					| (U extends Record<PropertyKey, any>
 							? NestedPath<
 									U,
-									JoinPath<Path, bigint | ArrayItemToken>,
+									JoinPath<
+										Path,
+										bigint | FormFieldTNConfigTokenEnum["arrayItem"]
+									>,
 									DepthRest
 								>
 							: never)
-			: // | JoinPath<Path, ArrayItemToken>
+			: // | JoinPath<Path, FormFieldTNConfigTokenEnum['arrayItem']>
 				// | (T[number] extends Record<PropertyKey, any>
-				// 		? NestedPath<T[number], JoinPath<Path, ArrayItemToken>, Rest>
+				// 		? NestedPath<T[number], JoinPath<Path, FormFieldTNConfigTokenEnum['arrayItem']>, Rest>
 				// 		: never)
 				// Object branch
 				{
@@ -113,9 +142,9 @@ export type NestedPath<
 // 			| (T[number] extends Record<PropertyKey, any>
 // 					? NestedPath<T[number], JoinPath<Path, bigint>, Rest>
 // 					: never)
-// 			| JoinPath<Path, ArrayItemToken>
+// 			| JoinPath<Path, FormFieldTNConfigTokenEnum['arrayItem']>
 // 			| (T[number] extends Record<PropertyKey, any>
-// 					? NestedPath<T[number], JoinPath<Path, ArrayItemToken>, Rest>
+// 					? NestedPath<T[number], JoinPath<Path, FormFieldTNConfigTokenEnum['arrayItem']>, Rest>
 // 					: never)
 // 	: never;
 

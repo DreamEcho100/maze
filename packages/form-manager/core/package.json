@@ -28,6 +28,14 @@
 			"types": "./dist/types/form-manger/field-options.d.ts",
 			"default": "./src/types/form-manger/field-options.ts"
 		},
+		"./types/form-manger/fields/structure": {
+			"types": "./dist/types/form-manger/fields/structure.d.ts",
+			"default": "./src/types/form-manger/fields/structure.ts"
+		},
+		"./types/form-manger/fields/errors": {
+			"types": "./dist/types/form-manger/fields/errors.d.ts",
+			"default": "./src/types/form-manger/fields/index.ts"
+		},
 		"./types/form-manger/index": {
 			"types": "./dist/types/form-manger/index.d.ts",
 			"default": "./src/types/form-manger/index.ts",

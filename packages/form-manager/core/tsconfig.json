@@ -13,5 +13,11 @@
 		"outDir": "./dist",
 		"allowImportingTsExtensions": true
 	},
-	"include": ["./src/**/*.js", "./src/**/*.ts", "./tsup.config.ts"]
+	"include": [
+		"./src/**/*.js",
+		"./src/**/*.ts",
+		"./tsup.config.ts",
+		"_ignore/field-options.ts",
+		"_ignore/trie.ts"
+	]
 }
