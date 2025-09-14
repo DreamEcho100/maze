@@ -5,7 +5,7 @@ import type z from "zod/v4";
 
 export const name = "form-manager-resolver-zod";
 
-import { formFieldTNTokenEnum } from "@de100/form-manager-core/constants";
+import { fieldNodeTokenEnum } from "@de100/form-manager-core/constants";
 import type {
 	AnyRecord,
 	Literal,
@@ -82,10 +82,10 @@ type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 > = (Options extends readonly (infer UnionItem)[]
 	? UnionItem extends z.ZodRecord
 		? {
-				[formFieldTNTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
+				[fieldNodeTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
 					UnionItem["valueType"],
 					UnionItem["valueType"],
-					[...PathAcc, typeof formFieldTNTokenEnum.recordProperty],
+					[...PathAcc, typeof fieldNodeTokenEnum.recordProperty],
 					{ isUnionRootDescendant: true }
 				>;
 			}
@@ -100,10 +100,10 @@ type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 				}
 			: UnionItem extends z.ZodArray
 				? {
-						[formFieldTNTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
+						[fieldNodeTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
 							UnionItem["element"],
 							UnionItem["element"],
-							[...PathAcc, typeof formFieldTNTokenEnum.arrayItem],
+							[...PathAcc, typeof fieldNodeTokenEnum.arrayItem],
 							{ isUnionRootDescendant: true }
 						>;
 					}
@@ -115,7 +115,7 @@ type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 						>
 					: AnyRecord
 	: AnyRecord) & {
-	[formFieldTNTokenEnum.unionOptionOn]: {
+	[fieldNodeTokenEnum.unionOptionOn]: {
 		[K in keyof Options as K extends `${number}`
 			? K
 			: never]: ZodResolverFieldNodeResult<
@@ -272,10 +272,10 @@ export type ZodResolverFieldNodeResult<
 													PathAcc
 												>
 									> & {
-										[formFieldTNTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
+										[fieldNodeTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
 											ZodSchemaToUnwrap["valueType"],
 											ZodSchemaToUnwrap["valueType"],
-											[...PathAcc, typeof formFieldTNTokenEnum.recordProperty],
+											[...PathAcc, typeof fieldNodeTokenEnum.recordProperty],
 											Options extends { isUnionRootDescendant: true }
 												? { isUnionRootDescendant: true }
 												: AnyRecord
@@ -322,10 +322,10 @@ export type ZodResolverFieldNodeResult<
 															PathAcc
 														>
 											> & {
-												[formFieldTNTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
+												[fieldNodeTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
 													ZodSchemaToUnwrap["element"],
 													ZodSchemaToUnwrap["element"],
-													[...PathAcc, typeof formFieldTNTokenEnum.arrayItem],
+													[...PathAcc, typeof fieldNodeTokenEnum.arrayItem],
 													Options
 												>;
 											}

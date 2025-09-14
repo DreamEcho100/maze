@@ -1,7 +1,7 @@
 import type {
+	fieldNodePresenceEnum,
+	fieldNodeTokenEnum,
 	formFieldNodeConfigValidationEventsEnum,
-	formFieldTNPresenceEnum,
-	formFieldTNTokenEnum,
 } from "../constants";
 
 export type AnyRecord = Record<string, any>;
@@ -10,10 +10,10 @@ export type PathSegmentItem = string | number; //| PathSegment;
 export type Literal = string | number | bigint | boolean | null | undefined;
 
 // export type FieldNodeConfigTokenEnum['arrayItem'] = typeof ARRAY_ITEM_TOKEN;
-export type FieldNodeConfigPresenceEnum = typeof formFieldTNPresenceEnum;
+export type FieldNodeConfigPresenceEnum = typeof fieldNodePresenceEnum;
 export type FieldNodeConfigPresence =
 	FieldNodeConfigPresenceEnum[keyof FieldNodeConfigPresenceEnum];
-export type FieldNodeConfigTokenEnum = typeof formFieldTNTokenEnum;
+export type FieldNodeConfigTokenEnum = typeof fieldNodeTokenEnum;
 export type FieldNodeConfigToken =
 	FieldNodeConfigTokenEnum[keyof FieldNodeConfigTokenEnum];
 

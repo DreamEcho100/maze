@@ -8,14 +8,14 @@ export const formFieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	touch: "touch",
 });
 
-export const formFieldTNPresenceEnum = /** @type {const} */ ({
+export const fieldNodePresenceEnum = /** @type {const} */ ({
 	required: "required",
 	optional: "optional",
 	nullable: "nullable",
 	nullish: "nullish",
 });
 
-export const formFieldTNTokenEnum = /** @type {const} */ ({
+export const fieldNodeTokenEnum = /** @type {const} */ ({
 	/**
 	 * This is used to represent the array item in the path.
 	 *

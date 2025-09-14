@@ -2,7 +2,7 @@
 
 import {
 	FORM_FIELD_TN_CONFIG,
-	formFieldTNTokenEnum,
+	fieldNodeTokenEnum,
 } from "@de100/form-manager-core/constants";
 import z from "zod";
 import type { ZodResolverFieldNodeResult } from "./index.ts";
@@ -72,37 +72,37 @@ zodSchemaTestTrieResult.stringField[FORM_FIELD_TN_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.stringField[FORM_FIELD_TN_CONFIG].type; // "string"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[FORM_FIELD_TN_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.recordField[FORM_FIELD_TN_CONFIG].level; // "record"
-zodSchemaTestTrieResult.recordField[formFieldTNTokenEnum.recordProperty][
+zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordProperty][
 	FORM_FIELD_TN_CONFIG
 ].level; // "primitive"
-zodSchemaTestTrieResult.recordField[formFieldTNTokenEnum.recordProperty][
+zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordProperty][
 	FORM_FIELD_TN_CONFIG
 ].type; // "number"
 zodSchemaTestTrieResult.recordOfObjects[FORM_FIELD_TN_CONFIG].level; // "record"
-zodSchemaTestTrieResult.recordOfObjects[formFieldTNTokenEnum.recordProperty][
+zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty][
 	FORM_FIELD_TN_CONFIG
 ].level; // "object"
-zodSchemaTestTrieResult.recordOfObjects[formFieldTNTokenEnum.recordProperty].id[
+zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty].id[
 	FORM_FIELD_TN_CONFIG
 ].level; // "primitive"
-zodSchemaTestTrieResult.recordOfObjects[formFieldTNTokenEnum.recordProperty].id[
+zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty].id[
 	FORM_FIELD_TN_CONFIG
 ].type; // "string"
 zodSchemaTestTrieResult.arrayField[FORM_FIELD_TN_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayField[formFieldTNTokenEnum.arrayItem][
+zodSchemaTestTrieResult.arrayField[fieldNodeTokenEnum.arrayItem][
 	FORM_FIELD_TN_CONFIG
 ].level; // "primitive"
-zodSchemaTestTrieResult.arrayField[formFieldTNTokenEnum.arrayItem][
+zodSchemaTestTrieResult.arrayField[fieldNodeTokenEnum.arrayItem][
 	FORM_FIELD_TN_CONFIG
 ].type; // "string"
 zodSchemaTestTrieResult.arrayOfObjects[FORM_FIELD_TN_CONFIG].level; // "array"
-zodSchemaTestTrieResult.arrayOfObjects[formFieldTNTokenEnum.arrayItem][
+zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem][
 	FORM_FIELD_TN_CONFIG
 ].level; // "object"
-zodSchemaTestTrieResult.arrayOfObjects[formFieldTNTokenEnum.arrayItem].value[
+zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem].value[
 	FORM_FIELD_TN_CONFIG
 ].level; // "primitive"
-zodSchemaTestTrieResult.arrayOfObjects[formFieldTNTokenEnum.arrayItem].value[
+zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem].value[
 	FORM_FIELD_TN_CONFIG
 ].type; // "number"
 zodSchemaTestTrieResult.tupleField[FORM_FIELD_TN_CONFIG].level; // "tuple"
@@ -112,21 +112,21 @@ zodSchemaTestTrieResult.tupleField[1][FORM_FIELD_TN_CONFIG].level; // "primitive
 zodSchemaTestTrieResult.tupleField[1][FORM_FIELD_TN_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionField[FORM_FIELD_TN_CONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[0].level;
-zodSchemaTestTrieResult.unionOfArrays[formFieldTNTokenEnum.unionOptionOn][0][
-	formFieldTNTokenEnum.arrayItem
+zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][0][
+	fieldNodeTokenEnum.arrayItem
 ][FORM_FIELD_TN_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[formFieldTNTokenEnum.unionOptionOn][0][
-	formFieldTNTokenEnum.arrayItem
+zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][0][
+	fieldNodeTokenEnum.arrayItem
 ][FORM_FIELD_TN_CONFIG].type; // "string"
-zodSchemaTestTrieResult.unionOfArrays[formFieldTNTokenEnum.unionOptionOn][1][
-	formFieldTNTokenEnum.arrayItem
+zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][1][
+	fieldNodeTokenEnum.arrayItem
 ][FORM_FIELD_TN_CONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[formFieldTNTokenEnum.unionOptionOn][1][
-	formFieldTNTokenEnum.arrayItem
+zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][1][
+	fieldNodeTokenEnum.arrayItem
 ][FORM_FIELD_TN_CONFIG].type; // "number"
 zodSchemaTestTrieResult.unionOfArrays[FORM_FIELD_TN_CONFIG].level; // "union-root"
-zodSchemaTestTrieResult.unionOfArrays[formFieldTNTokenEnum.arrayItem][0][
-	formFieldTNTokenEnum.arrayItem
+zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.arrayItem][0][
+	fieldNodeTokenEnum.arrayItem
 ][FORM_FIELD_TN_CONFIG].level; // "primitive"
 zodSchemaTestTrieResult.unionOfObjects.type[FORM_FIELD_TN_CONFIG].level;
 zodSchemaTestTrieResult.unionOfObjects[FORM_FIELD_TN_CONFIG].level; // "union-root"

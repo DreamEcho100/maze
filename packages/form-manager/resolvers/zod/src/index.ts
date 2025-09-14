@@ -7,7 +7,7 @@ export const name = "form-manager-resolver-zod";
 
 import {
 	FORM_FIELD_TN_CONFIG,
-	formFieldTNTokenEnum,
+	fieldNodeTokenEnum,
 } from "@de100/form-manager-core/constants";
 import type {
 	FieldNodeConfigPresence,
@@ -66,6 +66,8 @@ async function customValidate<
 				result: {
 					issues: result.issues.map((issue) => ({
 						message: issue.message,
+						// TODO: a `normalizedPathStr(pathStr, formApi)` that will convert/figure the path segments to the correct tokens if needed by walking through `formApi.fields.shape` or having a map of path to tokenized path
+						// Q: is the `pathString` needed if we have the `pathSegments`?
 						pathString: issue.path?.join(".") || props.currentParentPathString,
 						pathSegments: (issue.path ||
 							props.currentParentSegments) as PathAcc,
@@ -218,9 +220,9 @@ function attachChildToParentNode(props: {
 			break;
 		}
 		case "array": {
-			if (props.childKey !== formFieldTNTokenEnum.arrayItem) {
+			if (props.childKey !== fieldNodeTokenEnum.arrayItem) {
 				throw new Error(
-					`Array parent can only have "${formFieldTNTokenEnum.arrayItem}" as child key, got "${props.childKey}"`,
+					`Array parent can only have "${fieldNodeTokenEnum.arrayItem}" as child key, got "${props.childKey}"`,
 				);
 			}
 			props.currentParentNode[props.childKey] ??= props.childNode;
@@ -581,20 +583,18 @@ function zodResolverImpl(
 			);
 		} else if (schema instanceof z.ZodStringFormat) {
 			regex = schema.def.pattern;
-		} else {
-			coerce = schema.def.coerce;
-			if (schema.def.checks) {
-				for (const check of schema.def.checks) {
-					if (check instanceof z.core.$ZodCheckMinLength) {
-						minLength = check._zod.def.minimum as number;
-					} else if (check instanceof z.core.$ZodCheckMaxLength) {
-						maxLength = check._zod.def.maximum as number;
-					} else if (check instanceof z.core.$ZodCheckRegex) {
-						regex = check._zod.def.pattern;
-					}
-				}
-			}
 		}
+
+		if ("coerce" in schema.def && typeof schema.def.coerce === "boolean")
+			coerce = schema.def.coerce;
+		if ("minLength" in schema && typeof schema.minLength === "number")
+			minLength = schema.minLength;
+		if ("maxLength" in schema && typeof schema.maxLength === "number")
+			maxLength = schema.maxLength;
+		if ("pattern" in schema.def && schema.def.pattern instanceof RegExp)
+			regex = schema.def.pattern;
+
+		// def.checks[0]._zod.def.check === "overwrite"
 
 		const config: FieldNodeConfigStringPrimitiveLevel = {
 			level: "primitive",
@@ -660,7 +660,10 @@ function zodResolverImpl(
 			}
 		}
 
-		multipleOf ??= schema.format === "safeint" ? 1 : undefined;
+		multipleOf ??=
+			schema.format && ["int32", "safeint"].includes(schema.format)
+				? 1
+				: undefined;
 
 		const config: FieldNodeConfigNumberPrimitiveLevel = {
 			level: "primitive",
@@ -946,11 +949,11 @@ function zodResolverImpl(
 		}
 
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${formFieldTNTokenEnum.arrayItem}`
-			: formFieldTNTokenEnum.arrayItem;
+			? `${currentParentPathString}.${fieldNodeTokenEnum.arrayItem}`
+			: fieldNodeTokenEnum.arrayItem;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			formFieldTNTokenEnum.arrayItem,
+			fieldNodeTokenEnum.arrayItem,
 		];
 		const node: FieldNode = {
 			[FORM_FIELD_TN_CONFIG]: {
@@ -992,7 +995,7 @@ function zodResolverImpl(
 			get currentParentNode() {
 				return node;
 			},
-			childKey: formFieldTNTokenEnum.arrayItem,
+			childKey: fieldNodeTokenEnum.arrayItem,
 		}).node;
 
 		return {
@@ -1151,11 +1154,11 @@ function zodResolverImpl(
 
 		// Create token path for the property template
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${formFieldTNTokenEnum.recordProperty}`
-			: formFieldTNTokenEnum.recordProperty;
+			? `${currentParentPathString}.${fieldNodeTokenEnum.recordProperty}`
+			: fieldNodeTokenEnum.recordProperty;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			formFieldTNTokenEnum.recordProperty,
+			fieldNodeTokenEnum.recordProperty,
 		];
 
 		// Process value type schema for the token path
@@ -1169,7 +1172,7 @@ function zodResolverImpl(
 			get currentParentNode() {
 				return node;
 			},
-			childKey: formFieldTNTokenEnum.recordProperty,
+			childKey: fieldNodeTokenEnum.recordProperty,
 		}).node;
 
 		return {
@@ -1434,11 +1437,11 @@ function zodResolverImpl(
 					childKey: ctx.childKey,
 				}).node;
 				const currentParentIndexedTokenPath = currentParentPathString
-					? `${currentParentPathString}.${formFieldTNTokenEnum.unionOptionOn}.${index}`
-					: `${formFieldTNTokenEnum.unionOptionOn}.${index}`;
+					? `${currentParentPathString}.${fieldNodeTokenEnum.unionOptionOn}.${index}`
+					: `${fieldNodeTokenEnum.unionOptionOn}.${index}`;
 				const currentParentIndexedTokenPathSegments = [
 					...currentParentPathSegments,
-					formFieldTNTokenEnum.unionOptionOn,
+					fieldNodeTokenEnum.unionOptionOn,
 					index,
 				];
 				zodResolverImpl(opt, {
