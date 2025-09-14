@@ -6,8 +6,8 @@ import z from "zod/v4";
 export const name = "form-manager-resolver-zod";
 
 import {
-	FORM_FIELD_TN_CONFIG,
 	fieldNodeTokenEnum,
+	fnConfigKeyCONFIG,
 } from "@de100/form-manager-core/constants";
 import type {
 	FieldNodeConfigPresence,
@@ -127,20 +127,20 @@ function resolveIntersectionItemConfig(props: {
 	const existingNode = props.existingNode;
 	if (existingNode) {
 		if (
-			existingNode[FORM_FIELD_TN_CONFIG].level ===
-				props.newNode[FORM_FIELD_TN_CONFIG].level &&
-			(existingNode[FORM_FIELD_TN_CONFIG].level !== "primitive" ||
-				(existingNode[FORM_FIELD_TN_CONFIG].level === "primitive" &&
-					existingNode[FORM_FIELD_TN_CONFIG].type ===
+			existingNode[fnConfigKeyCONFIG].level ===
+				props.newNode[fnConfigKeyCONFIG].level &&
+			(existingNode[fnConfigKeyCONFIG].level !== "primitive" ||
+				(existingNode[fnConfigKeyCONFIG].level === "primitive" &&
+					existingNode[fnConfigKeyCONFIG].type ===
 						(
-							props.newNode[FORM_FIELD_TN_CONFIG] as FieldNodeConfig &
+							props.newNode[fnConfigKeyCONFIG] as FieldNodeConfig &
 								FieldNodeConfigPrimitiveLevel
 						).type))
 		) {
-			const newConfig = props.newNode[FORM_FIELD_TN_CONFIG];
-			const existingConfig = existingNode[FORM_FIELD_TN_CONFIG];
+			const newConfig = props.newNode[fnConfigKeyCONFIG];
+			const existingConfig = existingNode[fnConfigKeyCONFIG];
 
-			const newMetadata = props.newNode[FORM_FIELD_TN_CONFIG].metadata;
+			const newMetadata = props.newNode[fnConfigKeyCONFIG].metadata;
 			if (newMetadata) {
 				existingConfig.metadata = {
 					...(existingConfig.metadata || {}),
@@ -164,11 +164,11 @@ function resolveIntersectionItemConfig(props: {
 				// @ts-ignore
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 				return (props.acc.pathToNode[
-					props.newNode[FORM_FIELD_TN_CONFIG].pathString
-				][FORM_FIELD_TN_CONFIG] = {
+					props.newNode[fnConfigKeyCONFIG].pathString
+				][fnConfigKeyCONFIG] = {
 					level: "never",
-					pathString: existingNode[FORM_FIELD_TN_CONFIG].pathString,
-					pathSegments: existingNode[FORM_FIELD_TN_CONFIG].pathSegments,
+					pathString: existingNode[fnConfigKeyCONFIG].pathString,
+					pathSegments: existingNode[fnConfigKeyCONFIG].pathSegments,
 					constraints: {},
 					validation: {
 						validate: async (value, options) =>
@@ -176,9 +176,9 @@ function resolveIntersectionItemConfig(props: {
 								{
 									value,
 									currentParentPathString:
-										existingNode[FORM_FIELD_TN_CONFIG].pathString,
+										existingNode[fnConfigKeyCONFIG].pathString,
 									currentParentSegments:
-										existingNode[FORM_FIELD_TN_CONFIG].pathSegments,
+										existingNode[fnConfigKeyCONFIG].pathSegments,
 									schema: z.never(),
 								},
 								options,
@@ -194,7 +194,7 @@ function resolveIntersectionItemConfig(props: {
 		}
 	}
 
-	props.acc.pathToNode[props.newNode[FORM_FIELD_TN_CONFIG].pathString] =
+	props.acc.pathToNode[props.newNode[fnConfigKeyCONFIG].pathString] =
 		props.newNode;
 	return props.newNode;
 }
@@ -213,7 +213,7 @@ function attachChildToParentNode(props: {
 		return props.childNode;
 	}
 
-	const parentConfig = props.currentParentNode[FORM_FIELD_TN_CONFIG];
+	const parentConfig = props.currentParentNode[fnConfigKeyCONFIG];
 	switch (parentConfig.level) {
 		case "object": {
 			props.currentParentNode[props.childKey] ??= props.childNode;
@@ -259,10 +259,7 @@ function pushToAcc(props: {
 		props.acc.pathToNode[props.pathString];
 	let isNew = true;
 
-	if (
-		existingNode &&
-		existingNode[FORM_FIELD_TN_CONFIG].level !== "temp-root"
-	) {
+	if (existingNode && existingNode[fnConfigKeyCONFIG].level !== "temp-root") {
 		isNew = false;
 
 		if (existingNode.metadata?.["intersectionItem"]) {
@@ -273,23 +270,23 @@ function pushToAcc(props: {
 				newNode: props.node,
 			});
 
-			if (existingNode[FORM_FIELD_TN_CONFIG].level === "never") {
+			if (existingNode[fnConfigKeyCONFIG].level === "never") {
 				// If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true
 				props.inheritedMetadata["isMarkedNever"] = true;
 			}
 		}
 
 		if (
-			existingNode[FORM_FIELD_TN_CONFIG].level &&
-			existingNode[FORM_FIELD_TN_CONFIG].level === "union-descendant"
+			existingNode[fnConfigKeyCONFIG].level &&
+			existingNode[fnConfigKeyCONFIG].level === "union-descendant"
 		) {
 			// TODO: needs to check the `isMarkedNever`
 			// Merge union-descendant options
 			const itemsToPush =
-				props.node[FORM_FIELD_TN_CONFIG].level === "union-descendant"
-					? props.node[FORM_FIELD_TN_CONFIG].options
+				props.node[fnConfigKeyCONFIG].level === "union-descendant"
+					? props.node[fnConfigKeyCONFIG].options
 					: [props.node];
-			existingNode[FORM_FIELD_TN_CONFIG].options.push(...itemsToPush);
+			existingNode[fnConfigKeyCONFIG].options.push(...itemsToPush);
 		}
 
 		return { node: existingNode, isNew, pathToNode: props.acc.pathToNode };
@@ -297,7 +294,7 @@ function pushToAcc(props: {
 
 	let newNode = props.node;
 	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-	const metadata = (newNode[FORM_FIELD_TN_CONFIG].metadata ??= {});
+	const metadata = (newNode[fnConfigKeyCONFIG].metadata ??= {});
 	if (props.currentAttributes) {
 		for (const key in props.currentAttributes) {
 			// @ts-expect-error
@@ -318,17 +315,17 @@ function pushToAcc(props: {
 			// const originPath = unionRootDescendant.rootPathToInfo[props.path]!;
 			const oldNode = newNode;
 			newNode = {
-				[FORM_FIELD_TN_CONFIG]: {
+				[fnConfigKeyCONFIG]: {
 					level: "union-descendant",
 					options: [oldNode],
-					pathString: oldNode[FORM_FIELD_TN_CONFIG].pathString,
-					pathSegments: oldNode[FORM_FIELD_TN_CONFIG].pathSegments,
+					pathString: oldNode[fnConfigKeyCONFIG].pathString,
+					pathSegments: oldNode[fnConfigKeyCONFIG].pathSegments,
 					// Q: default: ctx.default, // Can we pass it from the root somehow? maybe also make it lazy calculated/computed and cached? or just ignore it for union-descendant? is there a use case that needs it and can't be handled easily otherwise?
 					constraints: {},
 					validation: {
 						async validate(value, options): Promise<ValidateReturnShape> {
 							const config = newNode[
-								FORM_FIELD_TN_CONFIG
+								fnConfigKeyCONFIG
 							] as FieldNodeConfigUnionDescendantLevel;
 							for (let i = 0; i < config.options.length; i++) {
 								const opt = config.options[i];
@@ -339,7 +336,7 @@ function pushToAcc(props: {
 									continue;
 								}
 								const { result } = await opt[
-									FORM_FIELD_TN_CONFIG
+									fnConfigKeyCONFIG
 								].validation.validate(value, options);
 								if (!("issues" in result)) {
 									return {
@@ -631,7 +628,7 @@ function zodResolverImpl(
 			node: pushToAcc({
 				acc: ctx.acc,
 				pathString: currentParentPathString,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -701,7 +698,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -767,7 +764,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -827,7 +824,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -867,7 +864,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -923,7 +920,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -956,7 +953,7 @@ function zodResolverImpl(
 			fieldNodeTokenEnum.arrayItem,
 		];
 		const node: FieldNode = {
-			[FORM_FIELD_TN_CONFIG]: {
+			[fnConfigKeyCONFIG]: {
 				level: "array",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -1023,7 +1020,7 @@ function zodResolverImpl(
 			maxLength = schema.def.items.length;
 		}
 		const node = {
-			[FORM_FIELD_TN_CONFIG]: {
+			[fnConfigKeyCONFIG]: {
 				level: "tuple",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -1123,7 +1120,7 @@ function zodResolverImpl(
 
 		// Create record node configuration
 		const node: FieldNode = {
-			[FORM_FIELD_TN_CONFIG]: {
+			[fnConfigKeyCONFIG]: {
 				level: "record",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -1190,7 +1187,7 @@ function zodResolverImpl(
 	}
 	if (schema instanceof z.ZodObject) {
 		const node = {
-			[FORM_FIELD_TN_CONFIG]: {
+			[fnConfigKeyCONFIG]: {
 				level: "object",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -1412,7 +1409,7 @@ function zodResolverImpl(
 
 		const node = pushToAcc({
 			acc: ctx.acc,
-			node: { [FORM_FIELD_TN_CONFIG]: config },
+			node: { [fnConfigKeyCONFIG]: config },
 			pathString: currentParentPathString,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
@@ -1598,7 +1595,7 @@ function zodResolverImpl(
 			pathToNode: ctx.acc.pathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [FORM_FIELD_TN_CONFIG]: config },
+				node: { [fnConfigKeyCONFIG]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1614,7 +1611,7 @@ function zodResolverImpl(
 		node: pushToAcc({
 			acc: ctx.acc,
 			node: {
-				[FORM_FIELD_TN_CONFIG]: {
+				[fnConfigKeyCONFIG]: {
 					level: "unknown",
 					pathString: currentParentPathString,
 					pathSegments: currentParentPathSegments,
@@ -1691,7 +1688,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	}
 
 	const rootNode: FieldNode = {
-		[FORM_FIELD_TN_CONFIG]: {
+		[fnConfigKeyCONFIG]: {
 			level: "temp-root",
 			pathString: "",
 			pathSegments: [],

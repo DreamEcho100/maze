@@ -1,4 +1,4 @@
-import { FORM_FIELD_TN_CONFIG } from "../../../constants.js";
+import { fnConfigKeyCONFIG } from "../../../constants.js";
 import type {
 	AnyRecord,
 	FieldNodeConfigPresence,
@@ -15,7 +15,7 @@ export type FieldNode<
 	Config extends FieldNodeConfig = FieldNodeConfig,
 	T = Record<string | number, FieldNode<any, any>>,
 > = T & {
-	[FORM_FIELD_TN_CONFIG]: Config;
+	[fnConfigKeyCONFIG]: Config;
 };
 
 export interface FieldNodeConfigBase<

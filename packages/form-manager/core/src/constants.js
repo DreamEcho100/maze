@@ -1,5 +1,5 @@
 /* Trie structure for path-based storage and retrieval */
-export const FORM_FIELD_TN_CONFIG = Symbol("FORM_FIELD_TN_CONFIG");
+export const fnConfigKeyCONFIG = Symbol("fnConfigKeyCONFIG");
 
 export const formFieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	change: "change",
