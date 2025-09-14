@@ -1,7 +1,7 @@
 /* Trie structure for path-based storage and retrieval */
 export const FORM_FIELD_TN_CONFIG = Symbol("FORM_FIELD_TN_CONFIG");
 
-export const formFormFieldTNConfigValidationEventsEnum = /** @type {const} */ ({
+export const formFieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	change: "change",
 	blur: "blur",
 	submit: "submit",

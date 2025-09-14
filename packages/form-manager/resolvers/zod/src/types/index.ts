@@ -13,22 +13,22 @@ import type {
 	PathSegmentItem,
 } from "@de100/form-manager-core/shared";
 import type {
-	FormFieldTN,
-	FormFieldTNConfigArrayLevel,
-	FormFieldTNConfigBigIntPrimitiveLevel,
-	FormFieldTNConfigBooleanPrimitiveLevel,
-	FormFieldTNConfigDatePrimitiveLevel,
-	FormFieldTNConfigFilePrimitiveLevel,
-	FormFieldTNConfigNeverLevel,
-	FormFieldTNConfigNumberPrimitiveLevel,
-	FormFieldTNConfigObjectLevel,
-	FormFieldTNConfigRecordLevel,
-	FormFieldTNConfigStringPrimitiveLevel,
-	FormFieldTNConfigTupleLevel,
-	FormFieldTNConfigUnionDescendantLevel,
-	FormFieldTNConfigUnionRootLevel,
-	FormFieldTNConfigUnknownLevel,
-} from "@de100/form-manager-core/types/form-manger/fields/structure";
+	FieldNode,
+	FieldNodeConfigArrayLevel,
+	FieldNodeConfigBigIntPrimitiveLevel,
+	FieldNodeConfigBooleanPrimitiveLevel,
+	FieldNodeConfigDatePrimitiveLevel,
+	FieldNodeConfigFilePrimitiveLevel,
+	FieldNodeConfigNeverLevel,
+	FieldNodeConfigNumberPrimitiveLevel,
+	FieldNodeConfigObjectLevel,
+	FieldNodeConfigRecordLevel,
+	FieldNodeConfigStringPrimitiveLevel,
+	FieldNodeConfigTupleLevel,
+	FieldNodeConfigUnionDescendantLevel,
+	FieldNodeConfigUnionRootLevel,
+	FieldNodeConfigUnknownLevel,
+} from "@de100/form-manager-core/types/form-manger/fields/shape";
 import type { ZodAny } from "./internal.ts";
 
 export interface InheritedMetadata {
@@ -49,8 +49,8 @@ export interface InheritedMetadata {
 }
 
 export interface ZodResolverAcc {
-	pathToNode: Record<string, FormFieldTN>;
-	node: FormFieldTN;
+	pathToNode: Record<string, FieldNode>;
+	node: FieldNode;
 }
 export interface CurrentAttributes {
 	isObjectProperty?: boolean;
@@ -68,7 +68,7 @@ type ZodTupleItemResolverMap<
 > = {
 	[K in keyof T as K extends `${number}`
 		? K
-		: never]: ZodResolverFormFieldTNResult<
+		: never]: ZodResolverFieldNodeResult<
 		T[K] extends ZodAny ? T[K] : never,
 		T[K] extends ZodAny ? T[K] : never,
 		[...PathAcc, K extends `${infer TNum extends number}` ? TNum : never],
@@ -76,13 +76,13 @@ type ZodTupleItemResolverMap<
 	>;
 };
 
-type AttachCollectableTypeFormFieldTNNodesToUnionRootResolverMap<
+type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 	Options extends readonly any[],
 	PathAcc extends PathSegmentItem[] = [],
 > = (Options extends readonly (infer UnionItem)[]
 	? UnionItem extends z.ZodRecord
 		? {
-				[formFieldTNTokenEnum.recordProperty]: ZodResolverFormFieldTNResult<
+				[formFieldTNTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
 					UnionItem["valueType"],
 					UnionItem["valueType"],
 					[...PathAcc, typeof formFieldTNTokenEnum.recordProperty],
@@ -91,7 +91,7 @@ type AttachCollectableTypeFormFieldTNNodesToUnionRootResolverMap<
 			}
 		: UnionItem extends z.ZodObject
 			? {
-					[key in keyof UnionItem["shape"]]: ZodResolverFormFieldTNResult<
+					[key in keyof UnionItem["shape"]]: ZodResolverFieldNodeResult<
 						UnionItem["shape"][key],
 						UnionItem["shape"][key],
 						[...PathAcc, Extract<key, string>],
@@ -100,7 +100,7 @@ type AttachCollectableTypeFormFieldTNNodesToUnionRootResolverMap<
 				}
 			: UnionItem extends z.ZodArray
 				? {
-						[formFieldTNTokenEnum.arrayItem]: ZodResolverFormFieldTNResult<
+						[formFieldTNTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
 							UnionItem["element"],
 							UnionItem["element"],
 							[...PathAcc, typeof formFieldTNTokenEnum.arrayItem],
@@ -118,7 +118,7 @@ type AttachCollectableTypeFormFieldTNNodesToUnionRootResolverMap<
 	[formFieldTNTokenEnum.unionOptionOn]: {
 		[K in keyof Options as K extends `${number}`
 			? K
-			: never]: ZodResolverFormFieldTNResult<
+			: never]: ZodResolverFieldNodeResult<
 			Options[K] extends z.ZodTypeAny | z.core.$ZodType<any, any, any>
 				? Options[K]
 				: never,
@@ -150,7 +150,7 @@ type ZodTagValueMap<
 	get(key: unknown): never;
 };
 
-export type ZodResolverFormFieldTNResult<
+export type ZodResolverFieldNodeResult<
 	ZodSchemaToUnwrap extends ZodAny,
 	ZodSchemaToInfer extends ZodAny = ZodSchemaToUnwrap,
 	PathAcc extends PathSegmentItem[] = [],
@@ -162,7 +162,7 @@ export type ZodResolverFormFieldTNResult<
 	| z.ZodReadonly
 	| z.ZodOptional
 	| z.ZodNullable
-	? ZodResolverFormFieldTNResult<
+	? ZodResolverFieldNodeResult<
 			ZodSchemaToUnwrap["def"]["innerType"],
 			ZodSchemaToInfer,
 			PathAcc
@@ -172,84 +172,84 @@ export type ZodResolverFormFieldTNResult<
 				| z.ZodLiteral
 				| z.ZodEnum
 				| z.ZodStringFormat
-		? FormFieldTN<
+		? FieldNode<
 				Options extends { isUnionRootDescendant: true }
-					? FormFieldTNConfigUnionDescendantLevel<
+					? FieldNodeConfigUnionDescendantLevel<
 							z.input<ZodSchemaToInfer>,
 							z.output<ZodSchemaToInfer>,
 							PathAcc
 						>
-					: FormFieldTNConfigStringPrimitiveLevel<
+					: FieldNodeConfigStringPrimitiveLevel<
 							z.input<ZodSchemaToInfer>,
 							z.output<ZodSchemaToInfer>,
 							PathAcc
 						>
 			>
 		: ZodSchemaToUnwrap extends z.ZodNumber | z.ZodNumberFormat
-			? FormFieldTN<
+			? FieldNode<
 					Options extends { isUnionRootDescendant: true }
-						? FormFieldTNConfigUnionDescendantLevel<
+						? FieldNodeConfigUnionDescendantLevel<
 								z.input<ZodSchemaToInfer>,
 								z.output<ZodSchemaToInfer>,
 								PathAcc
 							>
-						: FormFieldTNConfigNumberPrimitiveLevel<
+						: FieldNodeConfigNumberPrimitiveLevel<
 								z.input<ZodSchemaToInfer>,
 								z.output<ZodSchemaToInfer>,
 								PathAcc
 							>
 				>
 			: ZodSchemaToUnwrap extends z.ZodBigInt | z.ZodBigIntFormat
-				? FormFieldTN<
+				? FieldNode<
 						Options extends { isUnionRootDescendant: true }
-							? FormFieldTNConfigUnionDescendantLevel<
+							? FieldNodeConfigUnionDescendantLevel<
 									z.input<ZodSchemaToInfer>,
 									z.output<ZodSchemaToInfer>,
 									PathAcc
 								>
-							: FormFieldTNConfigBigIntPrimitiveLevel<
+							: FieldNodeConfigBigIntPrimitiveLevel<
 									z.input<ZodSchemaToInfer>,
 									z.output<ZodSchemaToInfer>,
 									PathAcc
 								>
 					>
 				: ZodSchemaToUnwrap extends z.ZodBoolean
-					? FormFieldTN<
+					? FieldNode<
 							Options extends { isUnionRootDescendant: true }
-								? FormFieldTNConfigUnionDescendantLevel<
+								? FieldNodeConfigUnionDescendantLevel<
 										z.input<ZodSchemaToInfer>,
 										z.output<ZodSchemaToInfer>,
 										PathAcc
 									>
-								: FormFieldTNConfigBooleanPrimitiveLevel<
+								: FieldNodeConfigBooleanPrimitiveLevel<
 										z.input<ZodSchemaToInfer>,
 										z.output<ZodSchemaToInfer>,
 										PathAcc
 									>
 						>
 					: ZodSchemaToUnwrap extends z.ZodFile
-						? FormFieldTN<
+						? FieldNode<
 								Options extends { isUnionRootDescendant: true }
-									? FormFieldTNConfigUnionDescendantLevel<
+									? FieldNodeConfigUnionDescendantLevel<
 											z.input<ZodSchemaToInfer>,
 											z.output<ZodSchemaToInfer>,
 											PathAcc
 										>
-									: FormFieldTNConfigFilePrimitiveLevel<
+									: FieldNodeConfigFilePrimitiveLevel<
 											z.input<ZodSchemaToInfer>,
 											z.output<ZodSchemaToInfer>,
 											PathAcc
 										>
 							>
 						: ZodSchemaToUnwrap extends z.ZodDate
-							? FormFieldTN<
+							? FieldNode<
 									Options extends { isUnionRootDescendant: true }
-										? FormFieldTNConfigUnionDescendantLevel<
+										? FieldNodeConfigUnionDescendantLevel<
 												z.input<ZodSchemaToInfer>,
 												z.output<ZodSchemaToInfer>,
 												PathAcc
 											>
-										: FormFieldTNConfigDatePrimitiveLevel<
+										: FieldNodeConfigDatePrimitiveLevel<
 												z.input<ZodSchemaToInfer>,
 												z.output<ZodSchemaToInfer>,
 												PathAcc
@@ -259,20 +259,20 @@ export type ZodResolverFormFieldTNResult<
 								//  RECORD  (z.record(...))
 								// ------------------------------------------------
 								ZodSchemaToUnwrap extends z.ZodRecord
-								? FormFieldTN<
+								? FieldNode<
 										Options extends { isUnionRootDescendant: true }
-											? FormFieldTNConfigUnionDescendantLevel<
+											? FieldNodeConfigUnionDescendantLevel<
 													z.input<ZodSchemaToInfer>,
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
-											: FormFieldTNConfigRecordLevel<
+											: FieldNodeConfigRecordLevel<
 													z.input<ZodSchemaToInfer>,
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
 									> & {
-										[formFieldTNTokenEnum.recordProperty]: ZodResolverFormFieldTNResult<
+										[formFieldTNTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
 											ZodSchemaToUnwrap["valueType"],
 											ZodSchemaToUnwrap["valueType"],
 											[...PathAcc, typeof formFieldTNTokenEnum.recordProperty],
@@ -285,20 +285,20 @@ export type ZodResolverFormFieldTNResult<
 									//  OBJECT  (z.object({...}))
 									// ------------------------------------------------
 									ZodSchemaToUnwrap extends z.ZodObject
-									? FormFieldTN<
+									? FieldNode<
 											Options extends { isUnionRootDescendant: true }
-												? FormFieldTNConfigUnionDescendantLevel<
+												? FieldNodeConfigUnionDescendantLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
-												: FormFieldTNConfigObjectLevel<
+												: FieldNodeConfigObjectLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
 										> & {
-											[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverFormFieldTNResult<
+											[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverFieldNodeResult<
 												ZodSchemaToUnwrap["shape"][key],
 												ZodSchemaToUnwrap["shape"][key],
 												[...PathAcc, Extract<key, string>],
@@ -309,20 +309,20 @@ export type ZodResolverFormFieldTNResult<
 										//  ARRAY  (z.array(...))
 										// ------------------------------------------------
 										ZodSchemaToUnwrap extends z.ZodArray
-										? FormFieldTN<
+										? FieldNode<
 												Options extends { isUnionRootDescendant: true }
-													? FormFieldTNConfigUnionDescendantLevel<
+													? FieldNodeConfigUnionDescendantLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
-													: FormFieldTNConfigArrayLevel<
+													: FieldNodeConfigArrayLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
 											> & {
-												[formFieldTNTokenEnum.arrayItem]: ZodResolverFormFieldTNResult<
+												[formFieldTNTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
 													ZodSchemaToUnwrap["element"],
 													ZodSchemaToUnwrap["element"],
 													[...PathAcc, typeof formFieldTNTokenEnum.arrayItem],
@@ -333,14 +333,14 @@ export type ZodResolverFormFieldTNResult<
 											//  TUPLE  (z.tuple([...]))
 											// ------------------------------------------------
 											ZodSchemaToUnwrap extends z.ZodTuple
-											? FormFieldTN<
+											? FieldNode<
 													Options extends { isUnionRootDescendant: true }
-														? FormFieldTNConfigUnionDescendantLevel<
+														? FieldNodeConfigUnionDescendantLevel<
 																z.input<ZodSchemaToInfer>,
 																z.output<ZodSchemaToInfer>,
 																PathAcc
 															>
-														: FormFieldTNConfigTupleLevel<
+														: FieldNodeConfigTupleLevel<
 																z.input<ZodSchemaToInfer>,
 																z.output<ZodSchemaToInfer>,
 																PathAcc
@@ -358,8 +358,8 @@ export type ZodResolverFormFieldTNResult<
 												ZodSchemaToUnwrap extends
 														| z.ZodUnion
 														| z.ZodDiscriminatedUnion
-												? FormFieldTN<
-														FormFieldTNConfigUnionRootLevel<
+												? FieldNode<
+														FieldNodeConfigUnionRootLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc,
@@ -387,7 +387,7 @@ export type ZodResolverFormFieldTNResult<
 																: NeverRecord
 														>
 													> &
-														AttachCollectableTypeFormFieldTNNodesToUnionRootResolverMap<
+														AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 															ZodSchemaToUnwrap["def"]["options"],
 															PathAcc
 														>
@@ -402,43 +402,33 @@ export type ZodResolverFormFieldTNResult<
 													? // Intersection = both sides at the same path; we simply merge the
 														// two branch results.  At runtime your resolver already does
 														// “right wins” for conflicting keys; the type does the same.
-														ZodResolverFormFieldTNResult<
-															L,
-															L,
-															PathAcc,
-															Options
-														> &
-															ZodResolverFormFieldTNResult<
-																R,
-																R,
-																PathAcc,
-																Options
-															>
+														ZodResolverFieldNodeResult<L, L, PathAcc, Options> &
+															ZodResolverFieldNodeResult<R, R, PathAcc, Options>
 													: ZodSchemaToUnwrap extends z.ZodPipe
-														? ZodResolverFormFieldTNResult<
+														? ZodResolverFieldNodeResult<
 																ZodSchemaToUnwrap["def"]["out"],
 																ZodSchemaToInfer, // Q: is this correct
 																PathAcc,
 																Options
 															>
 														: ZodSchemaToUnwrap extends z.ZodAny | z.ZodUnknown
-															? FormFieldTN<
-																	FormFieldTNConfigUnknownLevel<
+															? FieldNode<
+																	FieldNodeConfigUnknownLevel<
 																		PathAcc,
 																		z.input<ZodSchemaToInfer>,
 																		z.output<ZodSchemaToInfer>
 																	>
 																>
 															: ZodSchemaToUnwrap extends z.ZodNever
-																? FormFieldTN<
-																		FormFieldTNConfigNeverLevel<
+																? FieldNode<
+																		FieldNodeConfigNeverLevel<
 																			never,
 																			never,
 																			PathAcc
 																		>
 																	>
-																: FormFieldTN<
-																		FormFieldTNConfigUnknownLevel<
+																: FieldNode<
+																		FieldNodeConfigUnknownLevel<
 																			PathAcc,
 																			z.input<ZodSchemaToInfer>,
 																			z.output<ZodSchemaToInfer>

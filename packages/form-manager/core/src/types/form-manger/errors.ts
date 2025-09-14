@@ -1,5 +1,5 @@
 // form-manger/errors.ts
-import type { FormFieldTNConfigValidationEvents } from "../shared.ts";
+import type { FieldNodeConfigValidationEvents } from "../shared.ts";
 
 export interface FormManagerError<Path extends string> {
 	/** The error message of the issue. */
@@ -7,5 +7,5 @@ export interface FormManagerError<Path extends string> {
 	/** The path of the issue, if any. */
 	readonly path: Path; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
 	/** The validation event that triggered the issue, if any. */
-	readonly validationEvent: FormFieldTNConfigValidationEvents;
+	readonly validationEvent: FieldNodeConfigValidationEvents;
 }

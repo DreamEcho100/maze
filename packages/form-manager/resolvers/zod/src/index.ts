@@ -10,35 +10,35 @@ import {
 	formFieldTNTokenEnum,
 } from "@de100/form-manager-core/constants";
 import type {
-	FormFieldTNConfigPresence,
-	FormFieldTNConfigValidateOptions,
+	FieldNodeConfigPresence,
+	FieldNodeConfigValidateOptions,
 	Literal,
 	PathSegmentItem,
 } from "@de100/form-manager-core/shared";
 import type {
-	FormFieldTN,
-	FormFieldTNConfig,
-	FormFieldTNConfigArrayLevel,
-	FormFieldTNConfigBigIntPrimitiveLevel,
-	FormFieldTNConfigBooleanPrimitiveLevel,
-	FormFieldTNConfigDatePrimitiveLevel,
-	FormFieldTNConfigFilePrimitiveLevel,
-	FormFieldTNConfigNumberPrimitiveLevel,
-	FormFieldTNConfigObjectLevel,
-	FormFieldTNConfigPrimitiveLevel,
-	FormFieldTNConfigRecordLevel,
-	FormFieldTNConfigStringPrimitiveLevel,
-	FormFieldTNConfigTupleLevel,
-	FormFieldTNConfigUnionDescendantLevel,
-	FormFieldTNConfigUnionRootLevel,
-	FormFieldTNConfigUnknownLevel,
+	FieldNode,
+	FieldNodeConfig,
+	FieldNodeConfigArrayLevel,
+	FieldNodeConfigBigIntPrimitiveLevel,
+	FieldNodeConfigBooleanPrimitiveLevel,
+	FieldNodeConfigDatePrimitiveLevel,
+	FieldNodeConfigFilePrimitiveLevel,
+	FieldNodeConfigNumberPrimitiveLevel,
+	FieldNodeConfigObjectLevel,
+	FieldNodeConfigPrimitiveLevel,
+	FieldNodeConfigRecordLevel,
+	FieldNodeConfigStringPrimitiveLevel,
+	FieldNodeConfigTupleLevel,
+	FieldNodeConfigUnionDescendantLevel,
+	FieldNodeConfigUnionRootLevel,
+	FieldNodeConfigUnknownLevel,
 	ValidateReturnShape,
-} from "@de100/form-manager-core/types/form-manger/fields/structure";
+} from "@de100/form-manager-core/types/form-manger/fields/shape";
 import type {
 	CurrentAttributes,
 	InheritedMetadata,
 	ZodResolverAcc,
-	ZodResolverFormFieldTNResult,
+	ZodResolverFieldNodeResult,
 } from "./types/index.ts";
 import type { ZodAny } from "./types/internal.ts";
 
@@ -52,7 +52,7 @@ async function customValidate<
 		currentParentSegments: PathSegmentItem[];
 		schema: ZodAny;
 	},
-	options: FormFieldTNConfigValidateOptions,
+	options: FieldNodeConfigValidateOptions,
 ): Promise<ValidateReturnShape<PathAcc, T>> {
 	try {
 		if (!("~standard" in props.schema)) {
@@ -119,9 +119,9 @@ async function customValidate<
  */
 function resolveIntersectionItemConfig(props: {
 	acc: ZodResolverAcc;
-	existingNode: FormFieldTN | undefined;
-	newNode: FormFieldTN;
-}): FormFieldTN {
+	existingNode: FieldNode | undefined;
+	newNode: FieldNode;
+}): FieldNode {
 	const existingNode = props.existingNode;
 	if (existingNode) {
 		if (
@@ -131,8 +131,8 @@ function resolveIntersectionItemConfig(props: {
 				(existingNode[FORM_FIELD_TN_CONFIG].level === "primitive" &&
 					existingNode[FORM_FIELD_TN_CONFIG].type ===
 						(
-							props.newNode[FORM_FIELD_TN_CONFIG] as FormFieldTNConfig &
-								FormFieldTNConfigPrimitiveLevel
+							props.newNode[FORM_FIELD_TN_CONFIG] as FieldNodeConfig &
+								FieldNodeConfigPrimitiveLevel
 						).type))
 		) {
 			const newConfig = props.newNode[FORM_FIELD_TN_CONFIG];
@@ -184,7 +184,7 @@ function resolveIntersectionItemConfig(props: {
 					},
 					metadata: { ...existingNode.metadata, isMarkedNever: true },
 					userMetadata: {},
-				} satisfies FormFieldTNConfig);
+				} satisfies FieldNodeConfig);
 			} catch (error) {
 				console.error(error);
 				throw error;
@@ -203,10 +203,10 @@ function resolveIntersectionItemConfig(props: {
  * @returns the current parent node after attaching the child node, or the child node itself if no parent node is provided
  */
 function attachChildToParentNode(props: {
-	currentParentNode: FormFieldTN | undefined;
+	currentParentNode: FieldNode | undefined;
 	childKey: string | number | undefined;
-	childNode: FormFieldTN;
-}): FormFieldTN {
+	childNode: FieldNode;
+}): FieldNode {
 	if (!props.currentParentNode || !props.childKey) {
 		return props.childNode;
 	}
@@ -247,13 +247,13 @@ function attachChildToParentNode(props: {
 function pushToAcc(props: {
 	pathString: string;
 	acc: ZodResolverAcc;
-	node: FormFieldTN;
+	node: FieldNode;
 	currentAttributes: CurrentAttributes | undefined;
 	inheritedMetadata: InheritedMetadata;
-	currentParentNode: FormFieldTN | undefined;
+	currentParentNode: FieldNode | undefined;
 	childKey: string | number | undefined;
 }): ZodResolverAcc & { isNew: boolean } {
-	let existingNode: FormFieldTN | undefined =
+	let existingNode: FieldNode | undefined =
 		props.acc.pathToNode[props.pathString];
 	let isNew = true;
 
@@ -327,7 +327,7 @@ function pushToAcc(props: {
 						async validate(value, options): Promise<ValidateReturnShape> {
 							const config = newNode[
 								FORM_FIELD_TN_CONFIG
-							] as FormFieldTNConfigUnionDescendantLevel;
+							] as FieldNodeConfigUnionDescendantLevel;
 							for (let i = 0; i < config.options.length; i++) {
 								const opt = config.options[i];
 								if (!opt) {
@@ -367,7 +367,7 @@ function pushToAcc(props: {
 						unionRootDescendant: unionRootDescendant,
 					},
 					userMetadata: {},
-				} satisfies FormFieldTNConfigUnionDescendantLevel,
+				} satisfies FieldNodeConfigUnionDescendantLevel,
 			};
 		}
 
@@ -395,7 +395,7 @@ const calcPresence = (
 				nullable?: boolean;
 		  }
 		| undefined,
-): FormFieldTNConfigPresence =>
+): FieldNodeConfigPresence =>
 	(props &&
 		(props.optional
 			? props.nullable
@@ -428,7 +428,7 @@ From Zod docs:
 `pushToAcc` is needed to easily access the accumulator by path and use it when needed instead of always recursing or looping through the whole thing again and again
 `inheritedMetadata` is needed for properly handling and passing `intersectionItem` and `union-root` metadata to the needed path because they can be defined at a higher level and need to be passed down to apply them properly
 
-The system looks as it is because I'm trying different ways before changing the data structure to a Trie like one, to support many advanced functionalities and to make propagation cheap, and yes the tokenization will play a huge role on it
+The system looks as it is because I'm trying different ways before changing the data structure/shape to a Trie like one, to support many advanced functionalities and to make propagation cheap, and yes the tokenization will play a huge role on it
 */
 function zodResolverImpl(
 	schema: ZodAny,
@@ -436,7 +436,7 @@ function zodResolverImpl(
 		//
 		currentParentPathString: string;
 		currentParentPathSegments: PathSegmentItem[];
-		currentParentNode: FormFieldTN | undefined;
+		currentParentNode: FieldNode | undefined;
 		currentSchema: ZodAny;
 		childKey: string | number | undefined;
 		//
@@ -451,8 +451,8 @@ function zodResolverImpl(
 		readonly?: boolean;
 	},
 ): {
-	pathToNode: Record<string, FormFieldTN>;
-	node: FormFieldTN;
+	pathToNode: Record<string, FieldNode>;
+	node: FieldNode;
 } {
 	const currentParentPathString = ctx.currentParentPathString;
 	const currentParentPathSegments = ctx.currentParentPathSegments;
@@ -596,7 +596,7 @@ function zodResolverImpl(
 			}
 		}
 
-		const config: FormFieldTNConfigStringPrimitiveLevel = {
+		const config: FieldNodeConfigStringPrimitiveLevel = {
 			level: "primitive",
 			type: "string",
 			pathString: currentParentPathString,
@@ -662,7 +662,7 @@ function zodResolverImpl(
 
 		multipleOf ??= schema.format === "safeint" ? 1 : undefined;
 
-		const config: FormFieldTNConfigNumberPrimitiveLevel = {
+		const config: FieldNodeConfigNumberPrimitiveLevel = {
 			level: "primitive",
 			type: "number",
 			pathString: currentParentPathString,
@@ -728,7 +728,7 @@ function zodResolverImpl(
 			}
 		}
 
-		const config: FormFieldTNConfigBigIntPrimitiveLevel = {
+		const config: FieldNodeConfigBigIntPrimitiveLevel = {
 			level: "primitive",
 			type: "bigint",
 			pathString: currentParentPathString,
@@ -789,7 +789,7 @@ function zodResolverImpl(
 				}
 			}
 		}
-		const config: FormFieldTNConfigDatePrimitiveLevel = {
+		const config: FieldNodeConfigDatePrimitiveLevel = {
 			level: "primitive",
 			type: "date",
 			pathString: currentParentPathString,
@@ -834,7 +834,7 @@ function zodResolverImpl(
 		};
 	}
 	if (schema instanceof z.ZodBoolean) {
-		const config: FormFieldTNConfigBooleanPrimitiveLevel = {
+		const config: FieldNodeConfigBooleanPrimitiveLevel = {
 			level: "primitive",
 			type: "boolean",
 			pathString: currentParentPathString,
@@ -874,7 +874,7 @@ function zodResolverImpl(
 		};
 	}
 	if (schema instanceof z.ZodFile) {
-		const config: FormFieldTNConfigFilePrimitiveLevel = {
+		const config: FieldNodeConfigFilePrimitiveLevel = {
 			level: "primitive",
 			type: "file",
 			pathString: currentParentPathString,
@@ -952,7 +952,7 @@ function zodResolverImpl(
 			...currentParentPathSegments,
 			formFieldTNTokenEnum.arrayItem,
 		];
-		const node: FormFieldTN = {
+		const node: FieldNode = {
 			[FORM_FIELD_TN_CONFIG]: {
 				level: "array",
 				pathString: currentParentPathString,
@@ -978,7 +978,7 @@ function zodResolverImpl(
 				},
 				userMetadata: {},
 				metadata: { ...ctx.currentAttributes },
-			} as FormFieldTNConfigArrayLevel,
+			} as FieldNodeConfigArrayLevel,
 		};
 		// // To make sure we also cover the array item token path
 		// node.items =
@@ -1050,7 +1050,7 @@ function zodResolverImpl(
 					isLazyChildren: true,
 					...ctx.currentAttributes,
 				},
-			} as FormFieldTNConfigTupleLevel,
+			} as FieldNodeConfigTupleLevel,
 		};
 
 		const items = schema.def.items;
@@ -1119,7 +1119,7 @@ function zodResolverImpl(
 		const valueSchema = schema.def.valueType;
 
 		// Create record node configuration
-		const node: FormFieldTN = {
+		const node: FieldNode = {
 			[FORM_FIELD_TN_CONFIG]: {
 				level: "record",
 				pathString: currentParentPathString,
@@ -1146,7 +1146,7 @@ function zodResolverImpl(
 				},
 				userMetadata: {},
 				metadata: { ...ctx.currentAttributes },
-			} as FormFieldTNConfigRecordLevel,
+			} as FieldNodeConfigRecordLevel,
 		};
 
 		// Create token path for the property template
@@ -1211,7 +1211,7 @@ function zodResolverImpl(
 					isLazyChildren: true,
 					...ctx.currentAttributes,
 				},
-			} as FormFieldTNConfigObjectLevel,
+			} as FieldNodeConfigObjectLevel,
 		};
 
 		const shape = schema.shape;
@@ -1314,7 +1314,7 @@ function zodResolverImpl(
 				unionRootDescendant: { rootPathToInfo },
 				...ctx.currentAttributes,
 			},
-		} as FormFieldTNConfigUnionRootLevel;
+		} as FieldNodeConfigUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
 
 		if (schema instanceof z.ZodDiscriminatedUnion) {
@@ -1571,7 +1571,7 @@ function zodResolverImpl(
 	// }
 
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
-		const config: FormFieldTNConfigUnknownLevel = {
+		const config: FieldNodeConfigUnknownLevel = {
 			level: "unknown",
 			pathString: currentParentPathString,
 			pathSegments: currentParentPathSegments,
@@ -1645,7 +1645,7 @@ function zodResolverImpl(
 const schemaPathCache = new WeakMap<
 	ZodAny,
 	{
-		node: Record<string, FormFieldTN>;
+		node: Record<string, FieldNode>;
 	}
 >();
 /**
@@ -1653,15 +1653,15 @@ const schemaPathCache = new WeakMap<
  * It will
  * - Be used by the form manager to validate fields based on their paths.
  * - Be used to get the field native rules for client-side validation (e.g. min, max, pattern, etc).
- * - Maybe on the future on the `FormFieldTN` structure to optimize nested validations, conditions, etc down the path chain.
+ * - Maybe on the future on the `FieldNode` structure/shape to optimize nested validations, conditions, etc down the path chain.
  * This is why there is a special token for array items: `@@__FIELD_TOKEN_ARRAY_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
  */
 export function zodResolver<ZodSchema extends ZodAny>(
 	schema: ZodSchema,
 	options: { skipCache?: boolean } = {},
 ): {
-	node: ZodResolverFormFieldTNResult<z.input<ZodSchema>, z.output<ZodSchema>>;
-	// Record<string, FormFieldTN>;
+	node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
+	// Record<string, FieldNode>;
 	// This will be used
 	__?: {
 		// This will be used for the form fields options
@@ -1674,11 +1674,8 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	// Preserving top-level cache only - no deeper than this to make sure we preserve the correct paths
 	if (!options.skipCache && schemaPathCache.has(schema)) {
 		return schemaPathCache.get(schema) as {
-			node: ZodResolverFormFieldTNResult<
-				z.input<ZodSchema>,
-				z.output<ZodSchema>
-			>;
-			// Record<string, FormFieldTN>;
+			node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
+			// Record<string, FieldNode>;
 			// This will be used
 			__?: {
 				// This will be used for the form fields options
@@ -1690,7 +1687,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 		};
 	}
 
-	const rootNode: FormFieldTN = {
+	const rootNode: FieldNode = {
 		[FORM_FIELD_TN_CONFIG]: {
 			level: "temp-root",
 			pathString: "",
@@ -1719,8 +1716,8 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	});
 	schemaPathCache.set(schema, result);
 	return result as unknown as {
-		node: ZodResolverFormFieldTNResult<z.input<ZodSchema>, z.output<ZodSchema>>;
-		// Record<string, FormFieldTN>;
+		node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
+		// Record<string, FieldNode>;
 		// This will be used
 		__?: {
 			// This will be used for the form fields options
@@ -1740,7 +1737,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
  * @returns Record of HTML attributes ready to spread onto form elements
  */
 export function getFieldAttributes(
-	config: FormFieldTNConfig,
+	config: FieldNodeConfig,
 ): Record<string, any> {
 	// Common attributes for all field types
 	const attributes: Record<string, any> = {

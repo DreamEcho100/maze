@@ -1,24 +1,24 @@
 import { FORM_FIELD_TN_CONFIG } from "../../../constants.js";
 import type {
 	AnyRecord,
-	FormFieldTNConfigPresence,
-	FormFieldTNConfigUserMetadata,
-	FormFieldTNConfigValidateOptions,
-	FormFieldTNConfigValidationEvents,
+	FieldNodeConfigPresence,
+	FieldNodeConfigUserMetadata,
+	FieldNodeConfigValidateOptions,
+	FieldNodeConfigValidationEvents,
 	Literal,
 	NeverRecord,
 	PathSegmentItem,
 } from "../../shared.ts";
 import type { ValidationResult } from "./errors.ts";
 
-export type FormFieldTN<
-	Config extends FormFieldTNConfig = FormFieldTNConfig,
-	T = Record<string | number, FormFieldTN<any, any>>,
+export type FieldNode<
+	Config extends FieldNodeConfig = FieldNodeConfig,
+	T = Record<string | number, FieldNode<any, any>>,
 > = T & {
 	[FORM_FIELD_TN_CONFIG]: Config;
 };
 
-export interface FormFieldTNConfigBase<
+export interface FieldNodeConfigBase<
 	LevelName extends string,
 	InputValue,
 	OutputValue = InputValue,
@@ -37,7 +37,7 @@ export interface FormFieldTNConfigBase<
 	// The main validation function for the field
 	validation: {
 		allowedOn?: {
-			[key in FormFieldTNConfigValidationEvents]?:
+			[key in FieldNodeConfigValidationEvents]?:
 				| boolean
 				| {
 						debounceMs?: number; // Debounce time in milliseconds, useful for "input" event
@@ -46,7 +46,7 @@ export interface FormFieldTNConfigBase<
 		};
 		validate: (
 			value: any,
-			options: FormFieldTNConfigValidateOptions,
+			options: FieldNodeConfigValidateOptions,
 		) => Promise<ValidateReturnShape<PathAcc, OutputValue>>;
 		isPending?: boolean;
 	};
@@ -85,7 +85,7 @@ export interface FormFieldTNConfigBase<
 	};
 	// User-defined metadata for further extension and functionalities
 	// For example, you can store UI-related metadata here like label, placeholder, description, etc.
-	userMetadata: FormFieldTNConfigUserMetadata;
+	userMetadata: FieldNodeConfigUserMetadata;
 
 	// Q: Any of the following needed? Or can they be either derived from somewhere else or managed externally by the user/dev?
 	// tabIndex?: number;
@@ -100,62 +100,56 @@ export interface FormFieldTNConfigBase<
 	// shouldDebounce: boolean;
 	// debounceMs?: number;
 }
-export interface FormFieldTNConfigTempRootLevel
-	extends FormFieldTNConfigBase<
-		"temp-root",
-		string[],
-		never,
-		never,
-		AnyRecord
-	> {}
-export interface FormFieldTNConfigNeverLevel<
+export interface FieldNodeConfigTempRootLevel
+	extends FieldNodeConfigBase<"temp-root", string[], never, never, AnyRecord> {}
+export interface FieldNodeConfigNeverLevel<
 	InputValue = never,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	Rules extends Record<string, any> = AnyRecord,
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"never",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		Rules
 	> {}
-export interface FormFieldTNConfigUnknownLevel<
+export interface FieldNodeConfigUnknownLevel<
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	InputValue = unknown,
 	OutputValue = InputValue,
 	Rules extends Record<string, any> = {
-		presence: FormFieldTNConfigPresence;
+		presence: FieldNodeConfigPresence;
 		readonly: boolean | undefined;
 	},
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"unknown",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		Rules
 	> {}
-export interface FormFieldTNConfigPrimitiveLevelBase<
+export interface FieldNodeConfigPrimitiveLevelBase<
 	InputValue = any,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	Rules extends Record<string, any> = AnyRecord,
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"primitive",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		Rules & {
 			coerce: boolean | undefined;
-			presence: FormFieldTNConfigPresence;
+			presence: FieldNodeConfigPresence;
 			readonly: boolean | undefined;
 		}
 	> {}
-export interface FormFieldTNConfigStringPrimitiveLevel<
+export interface FieldNodeConfigStringPrimitiveLevel<
 	InputValue = string,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -167,17 +161,17 @@ export interface FormFieldTNConfigStringPrimitiveLevel<
 	> {
 	type: "string";
 	metadata:
-		| (FormFieldTNConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
 				enum?: string[];
 				literal?: Literal;
 		  })
 		| undefined;
 }
-export interface FormFieldTNConfigNumberPrimitiveLevel<
+export interface FieldNodeConfigNumberPrimitiveLevel<
 	InputValue = number,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -191,17 +185,17 @@ export interface FormFieldTNConfigNumberPrimitiveLevel<
 	> {
 	type: "number";
 	metadata:
-		| (FormFieldTNConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
 				enum?: number[];
 				literal?: Literal;
 		  })
 		| undefined;
 }
-export interface FormFieldTNConfigBigIntPrimitiveLevel<
+export interface FieldNodeConfigBigIntPrimitiveLevel<
 	InputValue = bigint,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -216,7 +210,7 @@ export interface FormFieldTNConfigBigIntPrimitiveLevel<
 	> {
 	type: "bigint";
 	metadata:
-		| (FormFieldTNConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
 				enum?: (number | bigint)[];
 				literal?: Literal;
 		  })
@@ -224,11 +218,11 @@ export interface FormFieldTNConfigBigIntPrimitiveLevel<
 }
 
 // type DateLike = Date | string | number;
-export interface FormFieldTNConfigDatePrimitiveLevel<
+export interface FieldNodeConfigDatePrimitiveLevel<
 	InputValue = Date,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -241,11 +235,11 @@ export interface FormFieldTNConfigDatePrimitiveLevel<
 	> {
 	type: "date";
 }
-export interface FormFieldTNConfigBooleanPrimitiveLevel<
+export interface FieldNodeConfigBooleanPrimitiveLevel<
 	InputValue = boolean,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -253,11 +247,11 @@ export interface FormFieldTNConfigBooleanPrimitiveLevel<
 	> {
 	type: "boolean";
 }
-export interface FormFieldTNConfigFilePrimitiveLevel<
+export interface FieldNodeConfigFilePrimitiveLevel<
 	InputValue = File,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigPrimitiveLevelBase<
+> extends FieldNodeConfigPrimitiveLevelBase<
 		InputValue,
 		OutputValue,
 		PathAcc,
@@ -276,7 +270,7 @@ export interface FormFieldTNConfigFilePrimitiveLevel<
 	> {
 	type: "file";
 	// metadata:
-	// 	| (FormFieldTNConfigPrimitiveLevelBase<any>["metadata"] & {
+	// 	| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
 	// 			multiple?: boolean;
 	// 			directory?: boolean;
 	// 			literal?: Literal;
@@ -289,39 +283,39 @@ export interface FormFieldTNConfigFilePrimitiveLevel<
 	// 	| undefined;
 }
 
-export type FormFieldTNConfigPrimitiveLevel =
-	| FormFieldTNConfigStringPrimitiveLevel
-	| FormFieldTNConfigNumberPrimitiveLevel
-	| FormFieldTNConfigBigIntPrimitiveLevel
-	| FormFieldTNConfigDatePrimitiveLevel
-	| FormFieldTNConfigBooleanPrimitiveLevel
-	| FormFieldTNConfigFilePrimitiveLevel;
+export type FieldNodeConfigPrimitiveLevel =
+	| FieldNodeConfigStringPrimitiveLevel
+	| FieldNodeConfigNumberPrimitiveLevel
+	| FieldNodeConfigBigIntPrimitiveLevel
+	| FieldNodeConfigDatePrimitiveLevel
+	| FieldNodeConfigBooleanPrimitiveLevel
+	| FieldNodeConfigFilePrimitiveLevel;
 
-export interface FormFieldTNConfigObjectLevel<
+export interface FieldNodeConfigObjectLevel<
 	InputValue = AnyRecord,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"object",
 		InputValue,
 		OutputValue,
 		PathAcc,
-		{ presence: FormFieldTNConfigPresence; readonly: boolean | undefined }
+		{ presence: FieldNodeConfigPresence; readonly: boolean | undefined }
 	> {
 	// No need to store `shape` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	// shape: Record<string, TrieNode>;
 }
-export interface FormFieldTNConfigArrayLevel<
+export interface FieldNodeConfigArrayLevel<
 	InputValue = any[],
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"array",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
-			presence: FormFieldTNConfigPresence;
+			presence: FieldNodeConfigPresence;
 			minLength: number | undefined;
 			maxLength: number | undefined;
 			readonly: boolean | undefined;
@@ -330,17 +324,17 @@ export interface FormFieldTNConfigArrayLevel<
 	// No need to store `items` since it won't help much and we're relaying mainly on the `TrieNode` data structure
 	// items: TrieNode; // Need to find a way to reference the main type here
 }
-export interface FormFieldTNConfigTupleLevel<
+export interface FieldNodeConfigTupleLevel<
 	InputValue = any[],
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"tuple",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
-			presence: FormFieldTNConfigPresence;
+			presence: FieldNodeConfigPresence;
 			exactLength: number | undefined;
 			minLength: number | undefined;
 			maxLength: number | undefined;
@@ -351,20 +345,20 @@ export interface FormFieldTNConfigTupleLevel<
 	// items: TrieNode[];
 }
 
-export interface FormFieldTNConfigRecordLevel<
+export interface FieldNodeConfigRecordLevel<
 	InputValue = Record<PropertyKey, any>,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"record",
 		InputValue,
 		OutputValue,
 		PathAcc,
-		{ presence: FormFieldTNConfigPresence; readonly: boolean | undefined }
+		{ presence: FieldNodeConfigPresence; readonly: boolean | undefined }
 	> {}
 // z.record(z.string(), z.number()).def.keyType;
 // z.record(z.string(), z.number()).def.valueType;
-export interface FormFieldTNConfigUnionRootLevel<
+export interface FieldNodeConfigUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
@@ -378,34 +372,34 @@ export interface FormFieldTNConfigUnionRootLevel<
 				};
 		  }
 		| AnyRecord = AnyRecord,
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"union-root",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		Rules & {
-			presence: FormFieldTNConfigPresence;
+			presence: FieldNodeConfigPresence;
 			readonly: boolean | undefined;
 		}
 	> {
-	options: FormFieldTN[];
+	options: FieldNode[];
 	// tag: {
 	// 	key: string;
 	// 	valueToOptionIndex: Map<Literal, number>;
 	// };
 }
-export interface FormFieldTNConfigUnionDescendantLevel<
+export interface FieldNodeConfigUnionDescendantLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FormFieldTNConfigBase<
+> extends FieldNodeConfigBase<
 		"union-descendant",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		NeverRecord
 	> {
-	options: FormFieldTN[];
+	options: FieldNode[];
 }
 
 export interface ValidateReturnShape<
@@ -416,20 +410,20 @@ export interface ValidateReturnShape<
 	metadata:
 		| {
 				// /** The validation event that triggered the validation, if any. */
-				validationEvent: FormFieldTNConfigValidationEvents;
+				validationEvent: FieldNodeConfigValidationEvents;
 				"union-descendant"?: { firstValidOptionIndex: number };
 		  }
 		| undefined;
 }
 
-export type FormFieldTNConfig =
-	| FormFieldTNConfigTempRootLevel
-	| FormFieldTNConfigUnknownLevel
-	| FormFieldTNConfigNeverLevel
-	| FormFieldTNConfigPrimitiveLevel
-	| FormFieldTNConfigRecordLevel
-	| FormFieldTNConfigObjectLevel
-	| FormFieldTNConfigArrayLevel
-	| FormFieldTNConfigTupleLevel
-	| FormFieldTNConfigUnionRootLevel
-	| FormFieldTNConfigUnionDescendantLevel;
+export type FieldNodeConfig =
+	| FieldNodeConfigTempRootLevel
+	| FieldNodeConfigUnknownLevel
+	| FieldNodeConfigNeverLevel
+	| FieldNodeConfigPrimitiveLevel
+	| FieldNodeConfigRecordLevel
+	| FieldNodeConfigObjectLevel
+	| FieldNodeConfigArrayLevel
+	| FieldNodeConfigTupleLevel
+	| FieldNodeConfigUnionRootLevel
+	| FieldNodeConfigUnionDescendantLevel;

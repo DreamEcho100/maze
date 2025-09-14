@@ -5,7 +5,7 @@ import {
 	formFieldTNTokenEnum,
 } from "@de100/form-manager-core/constants";
 import z from "zod";
-import type { ZodResolverFormFieldTNResult } from "./index.ts";
+import type { ZodResolverFieldNodeResult } from "./index.ts";
 
 const zodSchemaTest = z
 	.object({
@@ -62,7 +62,7 @@ const zodSchemaTest = z
 	})
 	.optional();
 type ZodSchemaTest = typeof zodSchemaTest;
-type ZodSchemaTestTrieResult = ZodResolverFormFieldTNResult<
+type ZodSchemaTestTrieResult = ZodResolverFieldNodeResult<
 	ZodSchemaTest,
 	ZodSchemaTest
 >;

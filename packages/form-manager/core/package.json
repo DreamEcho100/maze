@@ -28,9 +28,9 @@
 			"types": "./dist/types/form-manger/field-options.d.ts",
 			"default": "./src/types/form-manger/field-options.ts"
 		},
-		"./types/form-manger/fields/structure": {
-			"types": "./dist/types/form-manger/fields/structure.d.ts",
-			"default": "./src/types/form-manger/fields/structure.ts"
+		"./types/form-manger/fields/shape": {
+			"types": "./dist/types/form-manger/fields/shape.d.ts",
+			"default": "./src/types/form-manger/fields/shape.ts"
 		},
 		"./types/form-manger/fields/errors": {
 			"types": "./dist/types/form-manger/fields/errors.d.ts",
