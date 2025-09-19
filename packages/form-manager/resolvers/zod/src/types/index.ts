@@ -46,10 +46,12 @@ export interface InheritedMetadata {
 		>;
 	};
 	isMarkedNever?: boolean;
+	isLazyEvaluated?: boolean;
 }
 
 export interface ZodResolverAcc {
-	pathToNode: Record<string, FieldNode>;
+	resolvedPathToNode: Record<string, FieldNode>;
+	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
 	node: FieldNode;
 }
 export interface CurrentAttributes {
@@ -58,7 +60,6 @@ export interface CurrentAttributes {
 	isArrayTokenItem?: boolean;
 	isTupleItem?: boolean;
 	isRecordProperty?: boolean;
-	isLazyChildren?: boolean;
 }
 
 type ZodTupleItemResolverMap<
