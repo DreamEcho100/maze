@@ -1,10 +1,9 @@
-// TODO: revise the use of `z.core.$ZodCheck*`
-// It's isn't about Zod semantics — it's about making a common interface that different schema validators can be transformed for form ergonomics.
-// So we can have a common ground for different schema validators to work with the form manager.
-// And keep form state agnostic of the validator library.
-import z from "zod";
-
-export const name = "form-manager-resolver-zod";
+/**
+ * * TODO: revise the use of `z.core.$ZodCheck*`
+ * It's isn't about Zod semantics — it's about making a common interface that different schema validators can be transformed for form ergonomics.
+ * So we can have a common ground for different schema validators to work with the form manager.
+ * And keep form state agnostic of the validator library.
+ */
 
 import {
 	fieldNodeTokenEnum,
@@ -30,19 +29,27 @@ import type {
 	FieldNodeConfigPrimitiveLevel,
 	FieldNodeConfigRecordLevel,
 	FieldNodeConfigStringPrimitiveLevel,
+	FieldNodeConfigTempParentLevel,
 	FieldNodeConfigTupleLevel,
 	FieldNodeConfigUnionDescendantLevel,
 	FieldNodeConfigUnionRootLevel,
 	FieldNodeConfigUnknownLevel,
+	InternalFieldNode,
+	InternalFieldNodeConfig,
 	ValidateReturnShape,
 } from "@de100/form-manager-core/types/form-manger/fields/shape";
+import z from "zod";
+
 import type {
 	CurrentAttributes,
 	InheritedMetadata,
-	ZodResolverAcc,
+	InternalZodResolverAcc,
 	ZodResolverFieldNodeResult,
 } from "./types/index.ts";
+
 import type { ZodAny } from "./types/internal.ts";
+
+export const name = "form-manager-resolver-zod";
 
 async function customValidate<
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
@@ -57,7 +64,7 @@ async function customValidate<
 	options: FieldNodeConfigValidateOptions,
 ): Promise<ValidateReturnShape<PathAcc, T>> {
 	try {
-		// The following is to use "standard schema" that should be provided by Zod through `~standard`
+		/** The following is to use "standard schema" that should be provided by Zod through `~standard` */
 		if (!("~standard" in props.schema)) {
 			throw new Error("Provided schema is not a valid Standard schema");
 		}
@@ -71,8 +78,8 @@ async function customValidate<
 				result: {
 					issues: result.issues.map((issue) => ({
 						message: issue.message,
-						// TODO: a `normalizedPathStr(pathStr, formApi)` that will convert/figure the path segments to the correct tokens if needed by walking through `formApi.fields.shape` or having a map of path to tokenized path
-						// Q: is the `pathString` needed if we have the `pathSegments`?
+						/** TODO: a `normalizedPathStr(pathStr, formApi)` that will convert/figure the path segments to the correct tokens if needed by walking through `formApi.fields.shape` or having a map of path to tokenized path */
+						/** Q: is the `pathString` needed if we have the `pathSegments`? */
 						pathString: issue.path?.join(".") || props.currentParentPathString,
 						pathSegments: (issue.path ||
 							props.currentParentSegments) as PathAcc,
@@ -89,7 +96,7 @@ async function customValidate<
 			};
 		}
 
-		// This case should never happen with proper Zod usage
+		/** This case should never happen with proper Zod usage */
 		return {
 			result: {
 				issues: [
@@ -103,7 +110,7 @@ async function customValidate<
 			metadata: { validationEvent: options.validationEvent },
 		};
 	} catch (error) {
-		// Handle sync validation errors
+		/** Handle sync validation errors */
 		return {
 			result: {
 				issues: [
@@ -125,10 +132,10 @@ async function customValidate<
  * @warning it's not accounting for "union-root" yet or recursive compatible intersections
  */
 function resolveIntersectionItemConfig(props: {
-	acc: ZodResolverAcc;
-	existingNode: FieldNode | undefined;
-	newNode: FieldNode;
-}): FieldNode {
+	acc: InternalZodResolverAcc;
+	existingNode: InternalFieldNode | undefined;
+	newNode: InternalFieldNode;
+}): InternalFieldNode {
 	const existingNode = props.existingNode;
 	if (existingNode) {
 		if (
@@ -138,7 +145,7 @@ function resolveIntersectionItemConfig(props: {
 				(existingNode[fnConfigKeyCONFIG].level === "primitive" &&
 					existingNode[fnConfigKeyCONFIG].type ===
 						(
-							props.newNode[fnConfigKeyCONFIG] as FieldNodeConfig &
+							props.newNode[fnConfigKeyCONFIG] as InternalFieldNodeConfig &
 								FieldNodeConfigPrimitiveLevel
 						).type))
 		) {
@@ -161,10 +168,12 @@ function resolveIntersectionItemConfig(props: {
 			return existingNode;
 		} else {
 			try {
-				// We will override the existing config to be of never type
-				// Since if we do `"isMarkedNever": true` it won't be logical
-				// `"isMarkedNever": true` will be used outside for the descendent if there is though
-				// To avoid losing the other paths, metadata, and information
+				/**
+				 * We will override the existing config to be of never type
+				 * Since if we do `"isMarkedNever": true` it won't be logical
+				 * `"isMarkedNever": true` will be used outside for the descendent if there is though
+				 * To avoid losing the other paths, metadata, and information
+				 */
 				// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 				// @ts-ignore
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
@@ -191,7 +200,7 @@ function resolveIntersectionItemConfig(props: {
 					},
 					metadata: { ...existingNode.metadata, isMarkedNever: true },
 					userMetadata: {},
-				} satisfies FieldNodeConfig);
+				} satisfies InternalFieldNodeConfig);
 			} catch (error) {
 				console.error(error);
 				throw error;
@@ -204,84 +213,28 @@ function resolveIntersectionItemConfig(props: {
 	return props.newNode;
 }
 
-// /**
-//  * Attach the child node to the current parent node based on the parent node level
-//  * It's handled on the `pushToAcc` function
-//  * @returns the current parent node after attaching the child node, or the child node itself if no parent node is provided
-//  */
-// function attachChildToParentNode(props: {
-// 	currentParentNode: FieldNode | undefined;
-// 	childKey: string | number | undefined;
-// 	childNode: FieldNode;
-// 	isEvaluationDeferred?: boolean
-// }): FieldNode {
-// 	if (!props.currentParentNode || !props.childKey) {
-// 		return props.childNode;
-// 	}
-
-// 	const parentConfig = props.currentParentNode[fnConfigKeyCONFIG];
-// 	switch (parentConfig.level) {
-// 		case "object": {
-// 			props.currentParentNode[props.childKey] ??= props.childNode;
-// 			break;
-// 		}
-// 		case "array": {
-// 			if (props.childKey !== fieldNodeTokenEnum.arrayItem) {
-// 				throw new Error(
-// 					`Array parent can only have "${fieldNodeTokenEnum.arrayItem}" as child key, got "${props.childKey}"`,
-// 				);
-// 			}
-// 			props.currentParentNode[props.childKey] ??= props.childNode;
-// 			break;
-// 		}
-// 		case "tuple": {
-// 			if (typeof props.childKey !== "number") {
-// 				throw new Error(
-// 					`Tuple parent can only have numeric keys as child key, got "${props.childKey}"`,
-// 				);
-// 			}
-// 			props.currentParentNode[props.childKey] ??= props.childNode;
-// 			break;
-// 		}
-// 		default: {
-// 			throw new Error(
-// 				`Parent node must be of level "object", "array", or "tuple" to attach child nodes, got "${parentConfig.level}"`,
-// 			);
-// 		}
-// 	}
-// 	return props.currentParentNode;
-// }
-
 /**
  * Update the accumulator with the new node at the given path, merging if necessary
  * handles intersection/union merging conflicts and metadata propagation
  */
 function pushToAcc(props: {
 	pathString: string;
-	acc: ZodResolverAcc;
-	node: FieldNode;
+	acc: InternalZodResolverAcc;
+	node: InternalFieldNode;
 	currentAttributes: CurrentAttributes | undefined;
 	inheritedMetadata: InheritedMetadata;
-	currentParentNode: FieldNode;
+	currentParentNode: InternalFieldNode;
 	childKey: string | number;
-}): ZodResolverAcc & { isNew: boolean } {
-	const existingNodeDescriptor = Object.getOwnPropertyDescriptor(
-		props.acc.resolvedPathToNode,
-		props.pathString,
-	);
-	const isLazilyEvaluated = !!existingNodeDescriptor?.get;
-	props.inheritedMetadata.isLazyEvaluated;
-
-	let existingNode: FieldNode | undefined =
-		props.acc.resolvedPathToNode[props.pathString];
+}): InternalZodResolverAcc & { isNew: boolean } {
 	let isNew = true;
+	let existingNode: InternalFieldNode | undefined =
+		props.acc.resolvedPathToNode[props.pathString];
 
 	if (existingNode && existingNode[fnConfigKeyCONFIG].level !== "temp-root") {
 		isNew = false;
 
-		// Should do something here to handle if it's `isLazilyEvaluated` as `true`
+		/** Should do something here to handle if it's `isLazilyEvaluated` as `true` */
 		if (existingNode.metadata?.intersectionItem) {
-			//
 			existingNode = resolveIntersectionItemConfig({
 				acc: props.acc,
 				existingNode: existingNode,
@@ -289,23 +242,25 @@ function pushToAcc(props: {
 			});
 
 			if (existingNode[fnConfigKeyCONFIG].level === "never") {
-				// If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true
+				/** If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true */
 				props.inheritedMetadata.isMarkedNever = true;
 			}
 		}
 
-		// Should do something here to handle if it's `isLazilyEvaluated` as `true`
+		/** Should do something here to handle if it's `isLazilyEvaluated` as `true` */
 		if (
 			existingNode[fnConfigKeyCONFIG].level &&
 			existingNode[fnConfigKeyCONFIG].level === "union-descendant"
 		) {
-			// TODO: needs to check the `isMarkedNever`
-			// Merge union-descendant options
+			/** TODO: needs to check the `isMarkedNever` */
+			/** Merge union-descendant options */
 			const itemsToPush =
 				props.node[fnConfigKeyCONFIG].level === "union-descendant"
 					? props.node[fnConfigKeyCONFIG].options
 					: [props.node];
-			existingNode[fnConfigKeyCONFIG].options.push(...itemsToPush);
+			existingNode[fnConfigKeyCONFIG].options.push(
+				...(itemsToPush as FieldNode[]),
+			);
 		}
 
 		return {
@@ -321,8 +276,8 @@ function pushToAcc(props: {
 	const metadata = (newNode[fnConfigKeyCONFIG].metadata ??= {});
 	if (props.currentAttributes) {
 		for (const key in props.currentAttributes) {
-			// @ts-expect-error
 			// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+			// @ts-ignore
 			metadata[key] = props.currentAttributes[key];
 		}
 	}
@@ -334,13 +289,16 @@ function pushToAcc(props: {
 
 		const unionRootDescendant = props.inheritedMetadata.unionRootDescendant;
 		if (unionRootDescendant) {
-			// // Will this be used?
-			// const originPath = unionRootDescendant.rootPathToInfo[props.path]!;
+			/**
+			 * Q: Will this be used?
+			 *
+			 * `const originPath = unionRootDescendant.rootPathToInfo[props.path]!;`
+			 */
 			const oldNode = newNode;
 			newNode = {
 				[fnConfigKeyCONFIG]: {
 					level: "union-descendant",
-					options: [oldNode],
+					options: [oldNode as FieldNode],
 					pathString: oldNode[fnConfigKeyCONFIG].pathString,
 					pathSegments: oldNode[fnConfigKeyCONFIG].pathSegments,
 					// Q: default: ctx.default, // Can we pass it from the root somehow? maybe also make it lazy calculated/computed and cached? or just ignore it for union-descendant? is there a use case that needs it and can't be handled easily otherwise?
@@ -393,9 +351,11 @@ function pushToAcc(props: {
 			};
 		}
 
-		// Instead of overriding the config level to be of never type
-		// we will just mark it as never and handle it in the validation phase
-		// to avoid losing the other paths, metadata, and information
+		/**
+		 * Instead of overriding the config level to be of never type
+		 * we will just mark it as never and handle it in the validation phase
+		 * to avoid losing the other paths, metadata, and information
+		 */
 		if (props.inheritedMetadata.isMarkedNever) {
 			metadata.isMarkedNever = true;
 		}
@@ -447,15 +407,14 @@ function createDeferredProperty(props: {
 	container: AnyRecord;
 	key: string | number;
 	schema: ZodAny;
-	resolverNode: () => FieldNode;
-	shouldEvaluateImmediately: () => boolean;
+	resolverNode: () => InternalFieldNode;
+	shouldEvaluateImmediately?: boolean;
 }) {
-	if (props.shouldEvaluateImmediately?.()) {
+	if (props.shouldEvaluateImmediately) {
 		props.container[props.key] = props.resolverNode();
 		return;
 	}
 
-	// Otherwise, create lazy getter
 	Object.defineProperty(props.container, props.key, {
 		enumerable: true,
 		configurable: true,
@@ -494,54 +453,641 @@ The system looks as it is because I'm trying different ways before changing the 
 function zodResolverImpl(
 	schema: ZodAny,
 	ctx: {
-		//
+		/** */
 		currentParentPathString: string;
 		currentParentPathSegments: PathSegmentItem[];
-		currentParentNode: FieldNode;
+		currentParentNode: InternalFieldNode;
 		currentSchema: ZodAny;
 		childKey: string | number;
-		//
+		/** */
 		currentAttributes?: CurrentAttributes;
 		inheritedMetadata: InheritedMetadata;
-		//
-		acc: ZodResolverAcc;
-		//
+		/** */
+		acc: InternalZodResolverAcc;
+		/** */
 		default?: any;
 		optional?: boolean;
 		nullable?: boolean;
 		readonly?: boolean;
 	},
 ): {
-	resolvedPathToNode: Record<string, FieldNode>;
-	node: FieldNode;
+	resolvedPathToNode: Record<string, InternalFieldNode>;
+	node: InternalFieldNode;
 } {
 	const currentParentPathString = ctx.currentParentPathString;
 	const currentParentPathSegments = ctx.currentParentPathSegments;
 
-	// NOTE:
-	// - ZodDefault:
-	//   - Makes the final inferred type **non-optional**.
-	//   - If the key is missing or explicitly set to `undefined`, it fills in the default value.
-	//   - When used with `.nullable()`, it still allows `null` values.
-	//   - So, missing key or `undefined` input results in the default value being used.
-	//
-	// - ZodPrefault:
-	//   - Keeps the final inferred type **optional**.
-	//   - If the key is missing, it fills in the default value.
-	//   - If the key is present but explicitly set to `undefined`, it is treated as `undefined` (not replaced by the default).
-	//   - Works with `.nullable()` to allow `null` as a value as well.
-	//
-	// In other words, the key difference is how `undefined` input is treated when the key is present:
-	// - `.default()` transforms `undefined` input into the default.
-	// - `.prefault()` does not transform `undefined` if explicitly passed, only if the key is missing.
-	//
-	// Summary:
-	// - ZodDefault: missing key → default; key present with undefined → default
-	// - ZodPrefault: missing key → default; key present with undefined → undefined
-	// - Both allow `null` if marked as nullable.
-	//
-	// This difference impacts TypeScript inferred types too: `.default()` results in a non-optional property type, while `.prefault()` results in an optional property type.
+	/** Handle complex types **/
+	if (schema instanceof z.ZodArray) {
+		let minLength: number | undefined;
+		let maxLength: number | undefined;
+		if (schema.def.checks) {
+			for (const check of schema.def.checks) {
+				if (check instanceof z.core.$ZodCheckMinLength) {
+					minLength = check._zod.def.minimum as number;
+				} else if (check instanceof z.core.$ZodCheckMaxLength) {
+					maxLength = check._zod.def.maximum as number;
+				}
+			}
+		}
 
+		const tokenNextParent = currentParentPathString
+			? `${currentParentPathString}.${fieldNodeTokenEnum.arrayItem}`
+			: fieldNodeTokenEnum.arrayItem;
+		const tokenNextParentSegments = [
+			...currentParentPathSegments,
+			fieldNodeTokenEnum.arrayItem,
+		];
+		const node: FieldNode = {
+			[fnConfigKeyCONFIG]: {
+				level: "array",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: {
+					presence: calcPresence(ctx),
+					readonly: ctx.readonly,
+					minLength,
+					maxLength,
+				},
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				userMetadata: {},
+				metadata: { ...ctx.currentAttributes },
+			} as FieldNodeConfigArrayLevel,
+		};
+
+		zodResolverImpl(schema.element, {
+			acc: ctx.acc,
+			currentParentPathString: tokenNextParent,
+			currentParentPathSegments: tokenNextParentSegments,
+			currentAttributes: { isArrayTokenItem: true },
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentSchema: schema.element,
+			currentParentNode: node,
+			childKey: fieldNodeTokenEnum.arrayItem,
+		}).node;
+
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
+	if (schema instanceof z.ZodTuple) {
+		let exactLength: number | undefined;
+		let minLength: number | undefined;
+		let maxLength: number | undefined;
+		if (schema.def.rest) {
+			minLength = schema.def.items.length;
+		} else {
+			exactLength = schema.def.items.length;
+			minLength = schema.def.items.length;
+			maxLength = schema.def.items.length;
+		}
+		const node = {
+			[fnConfigKeyCONFIG]: {
+				level: "tuple",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: {
+					presence: calcPresence(ctx),
+					readonly: ctx.readonly,
+					exactLength,
+					minLength,
+					maxLength,
+				},
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				userMetadata: {},
+				metadata: {
+					isLazyChildren: true,
+					...ctx.currentAttributes,
+				},
+			} as FieldNodeConfigTupleLevel,
+		};
+
+		const items = schema.def.items;
+		for (let index = 0; index < items.length; index++) {
+			const item = items[index]!;
+			const indexedNextParent = currentParentPathString
+				? `${currentParentPathString}.${index}`
+				: String(index);
+			const indexedNextParentSegments = [...currentParentPathSegments, index];
+
+			zodResolverImpl(item, {
+				acc: ctx.acc,
+				currentParentPathString: indexedNextParent,
+				currentParentPathSegments: indexedNextParentSegments,
+				currentAttributes: { isTupleItem: true },
+				currentSchema: item,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: node,
+				childKey: index,
+			}).node;
+		}
+
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
+	if (schema instanceof z.ZodRecord) {
+		/** Extract key and value types */
+		const keySchema = schema.def.keyType;
+		const valueSchema = schema.def.valueType;
+
+		/** Create record node configuration */
+		const node: FieldNode = {
+			[fnConfigKeyCONFIG]: {
+				level: "record",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: {
+					presence: calcPresence(ctx),
+					readonly: ctx.readonly,
+					/** Store schema references for runtime operations */
+					keySchema,
+					valueSchema,
+				},
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				userMetadata: {},
+				metadata: { ...ctx.currentAttributes },
+			} as FieldNodeConfigRecordLevel,
+		};
+
+		/** Create token path for the property template */
+		const tokenNextParent = currentParentPathString
+			? `${currentParentPathString}.${fieldNodeTokenEnum.recordProperty}`
+			: fieldNodeTokenEnum.recordProperty;
+		const tokenNextParentSegments = [
+			...currentParentPathSegments,
+			fieldNodeTokenEnum.recordProperty,
+		];
+
+		zodResolverImpl(valueSchema, {
+			acc: ctx.acc,
+			currentParentPathString: tokenNextParent,
+			currentParentPathSegments: tokenNextParentSegments,
+			currentAttributes: { isRecordProperty: true },
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentSchema: valueSchema,
+			currentParentNode: node,
+			childKey: fieldNodeTokenEnum.recordProperty,
+		}).node;
+
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
+	if (schema instanceof z.ZodObject) {
+		const node = {
+			[fnConfigKeyCONFIG]: {
+				level: "object",
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				default: ctx.default,
+				constraints: { presence: calcPresence(ctx), readonly: ctx.readonly },
+				validation: {
+					validate: (value, options) =>
+						customValidate(
+							{
+								value,
+								currentParentPathString: currentParentPathString,
+								currentParentSegments: currentParentPathSegments,
+								schema: ctx.currentSchema,
+							},
+							options,
+						),
+				},
+				shape: {} /** To be filled below */,
+				userMetadata: {},
+				metadata: {
+					isLazyChildren: true,
+					...ctx.currentAttributes,
+				},
+			} as FieldNodeConfigObjectLevel,
+		};
+
+		const shape = schema.shape;
+		for (const key in shape) {
+			const nextParent = currentParentPathString
+				? `${currentParentPathString}.${key}`
+				: key;
+			const nextParentSegments = [...currentParentPathSegments, key];
+
+			zodResolverImpl(shape[key], {
+				acc: ctx.acc,
+				currentParentPathString: nextParent,
+				currentParentPathSegments: nextParentSegments,
+				currentAttributes: { isObjectProperty: true },
+				currentSchema: shape[key],
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: node,
+				childKey: key,
+			}).node;
+		}
+
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+			}).node,
+		};
+	}
+
+	/** Q: How should the `currentAttributes` be handled for union-root and intersectionItem? and should they be passed down to their children/resulting branches? */
+
+	if (
+		schema instanceof z.ZodUnion ||
+		schema instanceof z.ZodDiscriminatedUnion
+	) {
+		const rootPathToInfo = {
+			...ctx.inheritedMetadata.unionRootDescendant?.rootPathToInfo,
+		};
+		/** collect all branches into one UnionRootLevel */
+		const config = {
+			level: "union-root",
+			pathString: currentParentPathString,
+			pathSegments: currentParentPathSegments,
+			options: [],
+			default: ctx.default,
+			constraints: {
+				tag: undefined,
+				presence: calcPresence(ctx),
+				readonly: ctx.readonly,
+			},
+			validation: {
+				async validate(value, options): Promise<ValidateReturnShape> {
+					return customValidate(
+						{
+							value,
+							currentParentPathString: currentParentPathString,
+							currentParentSegments: currentParentPathSegments,
+							schema: ctx.currentSchema,
+						},
+						options,
+					);
+				},
+			},
+			userMetadata: {},
+			metadata: {
+				unionRootDescendant: { rootPathToInfo },
+				...ctx.currentAttributes,
+			},
+		} as FieldNodeConfigUnionRootLevel;
+		rootPathToInfo[currentParentPathString] ??= [];
+
+		if (schema instanceof z.ZodDiscriminatedUnion) {
+			config.constraints.tag = {
+				key: schema.def.discriminator,
+				values: new Set(),
+				valueToOptionIndex: new Map(),
+			};
+
+			for (let i = 0; i < schema.def.options.length; i++) {
+				const opt = schema.def.options[i];
+				if (!opt || !(opt instanceof z.ZodObject)) {
+					throw new Error("Discriminated union options must be ZodObject");
+				}
+
+				const tagSchema = opt.def.shape[config.constraints.tag.key];
+
+				if (tagSchema instanceof z.ZodLiteral) {
+					for (const literal of tagSchema.def.values) {
+						tagToOptionIndexSetGuard(
+							config.constraints.tag.valueToOptionIndex,
+							literal,
+							i,
+						);
+						config.constraints.tag.valueToOptionIndex.set(literal, i);
+						config.constraints.tag.values.add(literal);
+					}
+					continue;
+				}
+
+				if (tagSchema instanceof z.ZodEnum) {
+					for (const enumValue of Object.values(tagSchema.def.entries)) {
+						tagToOptionIndexSetGuard(
+							config.constraints.tag.valueToOptionIndex,
+							enumValue,
+							i,
+						);
+						config.constraints.tag.valueToOptionIndex.set(enumValue, i);
+						config.constraints.tag.values.add(enumValue);
+					}
+					continue;
+				}
+
+				if (tagSchema instanceof z.ZodUnion) {
+					for (const tagOpt of tagSchema.def.options) {
+						if (tagOpt instanceof z.ZodLiteral) {
+							for (const literal of tagOpt.def.values) {
+								tagToOptionIndexSetGuard(
+									config.constraints.tag.valueToOptionIndex,
+									literal,
+									i,
+								);
+								config.constraints.tag.valueToOptionIndex.set(literal, i);
+								config.constraints.tag.values.add(literal);
+							}
+							continue;
+						}
+
+						if (tagOpt instanceof z.ZodEnum) {
+							for (const enumValue of Object.values(tagOpt.def.entries)) {
+								tagToOptionIndexSetGuard(
+									config.constraints.tag.valueToOptionIndex,
+									enumValue,
+									i,
+								);
+								config.constraints.tag.valueToOptionIndex.set(enumValue, i);
+								config.constraints.tag.values.add(enumValue);
+							}
+							continue;
+						}
+
+						throw new Error(
+							// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+							// @ts-ignore
+							`Discriminated union discriminator/tag must if it happen to be a union too, it's members must be either ZodLiteral or ZodEnum, got ${tagOpt.def.typeName}`,
+						);
+					}
+					continue;
+				}
+
+				throw new Error(
+					`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
+				);
+			}
+		}
+
+		rootPathToInfo[currentParentPathString].push({
+			rootPath: currentParentPathString,
+			rootPathSegments: currentParentPathSegments,
+			paths: new Set([currentParentPathString]),
+		});
+
+		const node = pushToAcc({
+			acc: ctx.acc,
+			node: { [fnConfigKeyCONFIG]: config },
+			pathString: currentParentPathString,
+			currentAttributes: ctx.currentAttributes,
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentParentNode: ctx.currentParentNode,
+			childKey: ctx.childKey,
+		}).node;
+
+		for (let index = 0; index < schema.options.length; index++) {
+			const opt = schema.options[index];
+			if (opt) {
+				createDeferredProperty({
+					container: config.options,
+					key: index,
+					schema: opt,
+					resolverNode() {
+						return zodResolverImpl(opt, {
+							acc: ctx.acc,
+							currentParentPathString: currentParentPathString,
+							currentParentPathSegments: currentParentPathSegments,
+							inheritedMetadata: {
+								...ctx.inheritedMetadata,
+								unionRootDescendant: { rootPathToInfo },
+							},
+							currentAttributes: { ...ctx.currentAttributes },
+							currentSchema: opt,
+							currentParentNode: node,
+							childKey: index,
+						}).node;
+					},
+					shouldEvaluateImmediately: !ctx.inheritedMetadata.isLazyEvaluated,
+				});
+
+				const currentParentIndexedTokenPath = currentParentPathString
+					? `${currentParentPathString}.${fieldNodeTokenEnum.unionOptionOn}.${index}`
+					: `${fieldNodeTokenEnum.unionOptionOn}.${index}`;
+				const currentParentIndexedTokenPathSegments = [
+					...currentParentPathSegments,
+					fieldNodeTokenEnum.unionOptionOn,
+					index,
+				];
+				zodResolverImpl(opt, {
+					acc: ctx.acc,
+					currentParentPathString: currentParentIndexedTokenPath,
+					currentParentPathSegments: currentParentIndexedTokenPathSegments,
+					inheritedMetadata: {
+						...ctx.inheritedMetadata,
+						unionRootDescendant: { rootPathToInfo },
+					},
+					currentAttributes: { ...ctx.currentAttributes },
+					currentParentNode: ctx.currentParentNode,
+					currentSchema: opt,
+					childKey: ctx.childKey,
+				});
+
+				/**
+				 * Note: no need to push to options here since it's done in the `pushToAcc` function
+				 * Since all options are pushed to the same path, they will be merged there on the options array
+				 * with the correct order as well getting the config reference from the accumulator by path
+				 */
+			}
+		}
+
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node,
+		};
+	}
+
+	if (schema instanceof z.ZodIntersection) {
+		/** **Left** is processed first so its metadata has lower priority than the right one */
+		zodResolverImpl(schema.def.left, {
+			acc: ctx.acc,
+			currentParentPathString: currentParentPathString,
+			currentParentPathSegments: currentParentPathSegments,
+			// currentAttributes: { "intersectionItem": "left" },
+			inheritedMetadata: {
+				...(ctx.inheritedMetadata || {}),
+				intersectionItem: {
+					...(ctx.inheritedMetadata?.intersectionItem || {}),
+					[currentParentPathString]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
+				},
+			},
+			currentAttributes: ctx.currentAttributes,
+			currentParentNode: ctx.currentParentNode,
+			/** Q: Should we pass the current schema?!! */
+			currentSchema: schema.def.left,
+			childKey: ctx.childKey,
+		});
+
+		/** **Right** is processed second so its metadata has higher priority than the left one */
+		const right = zodResolverImpl(schema.def.right, {
+			acc: ctx.acc,
+			currentParentPathString: currentParentPathString,
+			currentParentPathSegments: currentParentPathSegments,
+			// currentAttributes: { "intersectionItem": "right" },
+			inheritedMetadata: {
+				...(ctx.inheritedMetadata || {}),
+				intersectionItem: {
+					...(ctx.inheritedMetadata?.intersectionItem || {}),
+					[currentParentPathString]: 1,
+				},
+			},
+			currentParentNode: ctx.currentParentNode,
+			/** Q: Should we pass the current schema?!! */
+			currentSchema: schema.def.right,
+			childKey: ctx.childKey,
+		});
+
+		/** They will be merged in the `pushToAcc` function when adding to the accumulator by path */
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: right.node,
+		};
+	}
+	/** End complex types **/
+
+	/**
+	 * TODO: `.or`, `.and` - which are just aliases to union and intersection respectively needs more tests
+	 * TODO: The following will have need to be handled properly in the future
+	 *
+	 * - z.ZodNever
+	 * = z.ZodUndefined;
+	 * = z.ZodNull;
+	 *
+	 * - z.ZodCodec - which will support `z.stringbool` too.
+	 * - z.ZodCustom
+	 * - z.ZodCustomStringFormat
+	 * - z.ZodTransform
+	 * - z.ZodBigInt
+	 * - z.ZodBigIntFormat
+	 * - z.ZodMap
+	 * - z.ZodSet
+	 *
+	 * - z.ZodLiteral
+	 *
+	 * - z.ZodCatch
+	 * - z.ZodPromise
+	 * - z.ZodFunction
+	 * - z.ZodVoid
+	 * - z.ZodSymbol
+	 * - z.ZodNaN
+	 * - z.ZodTemplateLiteral
+	 * - z.ZodPromise
+	 */
+
+	if (schema instanceof z.ZodPipe) {
+		const mainSchema = schema.in;
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: zodResolverImpl(mainSchema, ctx).node,
+		};
+	}
+
+	if (schema instanceof z.ZodLazy) {
+		/** We need to call the getter to get the actual schema */
+		const mainSchema = schema.def.getter();
+		/** It's OK, since there are lazy computations already here, we won't get into infinite loop */
+		/** Q: Do we need to handle circular references somehow? */
+		return {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: zodResolverImpl(mainSchema, {
+				...ctx,
+				inheritedMetadata: { ...ctx.inheritedMetadata, isLazyEvaluated: true },
+			}).node,
+		};
+	}
+
+	/** Q: Do we still need to handle ZodTransform? */
+
+	/**
+	 * NOTE:
+	 * - ZodDefault:
+	 *   - Makes the final inferred type **non-optional**.
+	 *   - If the key is missing or explicitly set to `undefined`, it fills in the default value.
+	 *   - When used with `.nullable()`, it still allows `null` values.
+	 *   - So, missing key or `undefined` input results in the default value being used.
+	 *
+	 * - ZodPrefault:
+	 *   - Keeps the final inferred type **optional**.
+	 *   - If the key is missing, it fills in the default value.
+	 *   - If the key is present but explicitly set to `undefined`, it is treated as `undefined` (not replaced by the default).
+	 *   - Works with `.nullable()` to allow `null` as a value as well.
+	 *
+	 * In other words, the key difference is how `undefined` input is treated when the key is present:
+	 * - `.default()` transforms `undefined` input into the default.
+	 * - `.prefault()` does not transform `undefined` if explicitly passed, only if the key is missing.
+	 *
+	 * Summary:
+	 * - ZodDefault: missing key → default; key present with undefined → default
+	 * - ZodPrefault: missing key → default; key present with undefined → undefined
+	 * - Both allow `null` if marked as nullable.
+	 *
+	 * This difference impacts TypeScript inferred types too: `.default()` results in a non-optional property type, while `.prefault()` results in an optional property type.
+	 */
 	/** Unwrap ZodDefault, ZodOptional, and ZodNullable to get to the core schema **/
 	if (schema instanceof z.ZodPrefault) {
 		const defaultValue = schema.def.defaultValue;
@@ -551,7 +1097,7 @@ function zodResolverImpl(
 				...ctx,
 				acc: ctx.acc,
 				default: defaultValue,
-				// NOTE: No need to change optional here, it already keeps it optional
+				/** NOTE: No need to change optional here, it already keeps it optional */
 			}).node,
 		};
 	}
@@ -603,23 +1149,115 @@ function zodResolverImpl(
 	}
 	/* End unwrap **/
 
+	if (ctx.currentParentNode[fnConfigKeyCONFIG].level !== "temp-root") {
+		throw new Error(""); // primitives aren't not allowed to be the root
+	}
+
 	/** Handle lazy evaluation */
-	/** `isLazyEvaluated` and `isIntersectionItem` and `isUnionRoot` */
+	/**
+	 *  If it's lazy evaluated, and it's here at this point, then it's likely a descendant/child of a collectable type _(object, array, tuple, record)_
+	 * so we first the current child key
+	 * if it's on the node parent and it's descriptor has a `get` _(it should be else either that or undefined if not we should throw an error)_ then we will only add a resolve function that hold the data needed at this point and _no lazy evaluation_ on  `ctx.lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;`
+	 * else we attach the lazy-level to the parent node byy it's key and when accessed we resolve it's node from `ctx.lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;`
+	 */
 	if (ctx.inheritedMetadata?.isLazyEvaluated) {
-		// If it's lazy evaluated, we either create a `lazy-level` or check if this path already have a lazy-level
-		// Then we utilize the `ctx.lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;` to store the lazy nodes
-		// And create a lazy getter on the parent node to access the lazy nodes when needed
+		const pathString = ctx.currentParentPathString;
+		const childKey = ctx.childKey;
+		/**
+		 * To avoid race conditions and make sure all resolvers complete before any merging happens --- isolates resolution
+		 * this is needed to make sure it's isolated from the main node tree during resolution
+		 * Final result is atomic - either fully resolved or not resolved
+		 */
+		const tempCurrentParentNode = {
+			[fnConfigKeyCONFIG]: {
+				level: "temp-parent",
+				pathString: ctx.currentParentNode[fnConfigKeyCONFIG].pathString,
+				pathSegments: ctx.currentParentNode[fnConfigKeyCONFIG].pathSegments,
+				constraints: {},
+				validation: {
+					validate: () => {
+						throw new Error("");
+					},
+				},
+				userMetadata: {},
+			} as FieldNodeConfigTempParentLevel,
+		};
+
+		/** Create resolver function that captures current context */
+		const resolverFn = () =>
+			zodResolverImpl(schema, {
+				...ctx,
+				currentParentNode: tempCurrentParentNode,
+				inheritedMetadata: { ...ctx.inheritedMetadata, isLazyEvaluated: false },
+			}).node as FieldNode;
+
+		/** Check if parent already has lazy getter for this child */
+		const parentDescriptor = Object.getOwnPropertyDescriptor(
+			ctx.currentParentNode,
+			childKey,
+		);
+
+		if (parentDescriptor?.get) {
+			/** Case A: Collision - add to existing collection */
+			const existing = ctx.acc.lazyPathToLazyNodesAccMap.get(pathString) ?? [];
+			existing.push(resolverFn);
+			ctx.acc.lazyPathToLazyNodesAccMap.set(pathString, existing);
+
+			/** Return reference to existing lazy node */
+			return {
+				resolvedPathToNode: ctx.acc.resolvedPathToNode,
+				node: ctx.currentParentNode[childKey] as FieldNode,
+			};
+		} else {
+			/** Case B: First encounter - create lazy getter and collection */
+			const resolvers = [resolverFn];
+			ctx.acc.lazyPathToLazyNodesAccMap.set(pathString, resolvers);
+
+			/** Create lazy getter that resolves from collection */
+			Object.defineProperty(ctx.currentParentNode, childKey, {
+				enumerable: true,
+				configurable: true,
+				writable: true,
+				get() {
+					const allResolvers =
+						ctx.acc.lazyPathToLazyNodesAccMap.get(pathString) || [];
+
+					/** Now we should loop on the resolvers and everything is right, the `pushToAcc` should have resolved and handled this path */
+					for (const resolver of allResolvers) resolver();
+
+					/** Clean up collection after resolution */
+					ctx.acc.lazyPathToLazyNodesAccMap.delete(pathString);
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					const resolvedNode = tempCurrentParentNode[childKey];
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					tempCurrentParentNode[childKey] = undefined;
+
+					// So we should be access the finalized resolved node directly
+					return resolvedNode;
+				},
+			});
+
+			return {
+				resolvedPathToNode: ctx.acc.resolvedPathToNode,
+				get node() {
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					return tempCurrentParentNode[childKey];
+				},
+			};
+		}
 	}
 	/* End lazy evaluation */
 
-	/** Handle primitives **/
 	if (
 		schema instanceof z.ZodString ||
 		schema instanceof z.ZodLiteral ||
 		schema instanceof z.ZodEnum ||
 		schema instanceof z.ZodStringFormat
-		// ZodCustomStringFormat
 	) {
+		/** Handle primitives **/
 		let minLength: number | undefined;
 		let maxLength: number | undefined;
 		let regex: RegExp | undefined;
@@ -629,7 +1267,7 @@ function zodResolverImpl(
 			regex = new RegExp(
 				`^${schema.def.values
 					.map((v) =>
-						// Need to escape special regex characters if the literal is a string
+						/** Need to escape special regex characters if the literal is a string */
 						typeof v === "string"
 							? v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 							: String(v),
@@ -640,7 +1278,7 @@ function zodResolverImpl(
 			regex = new RegExp(
 				`^${Object.values(schema.def.entries)
 					.map((v) =>
-						// Need to escape special regex characters if the enum value is a string
+						/** Need to escape special regex characters if the enum value is a string */
 						typeof v === "string"
 							? v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 							: String(v),
@@ -787,7 +1425,6 @@ function zodResolverImpl(
 				if (check instanceof z.core.$ZodCheckLessThan) {
 					max = check._zod.def.value as number | bigint;
 					inclusiveMax = check._zod.def.inclusive;
-					// inclusiveMax = check._zod.def.when
 				} else if (check instanceof z.core.$ZodCheckGreaterThan) {
 					min = check._zod.def.value as number | bigint;
 					inclusiveMin = check._zod.def.inclusive;
@@ -952,8 +1589,6 @@ function zodResolverImpl(
 			constraints: {
 				presence: calcPresence(ctx),
 				readonly: ctx.readonly,
-				// multiple: schema.def.multiple,
-				// accept: schema.def.accept,
 				max: undefined,
 				min: undefined,
 				mimeTypes: undefined,
@@ -1000,644 +1635,6 @@ function zodResolverImpl(
 		};
 	}
 	/** End primitives **/
-
-	/** Handle complex types **/
-	if (schema instanceof z.ZodArray) {
-		let minLength: number | undefined;
-		let maxLength: number | undefined;
-		if (schema.def.checks) {
-			for (const check of schema.def.checks) {
-				if (check instanceof z.core.$ZodCheckMinLength) {
-					minLength = check._zod.def.minimum as number;
-				} else if (check instanceof z.core.$ZodCheckMaxLength) {
-					maxLength = check._zod.def.maximum as number;
-				}
-			}
-		}
-
-		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${fieldNodeTokenEnum.arrayItem}`
-			: fieldNodeTokenEnum.arrayItem;
-		const tokenNextParentSegments = [
-			...currentParentPathSegments,
-			fieldNodeTokenEnum.arrayItem,
-		];
-		const node: FieldNode = {
-			[fnConfigKeyCONFIG]: {
-				level: "array",
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				default: ctx.default,
-				constraints: {
-					presence: calcPresence(ctx),
-					readonly: ctx.readonly,
-					minLength,
-					maxLength,
-				},
-				validation: {
-					validate: (value, options) =>
-						customValidate(
-							{
-								value,
-								currentParentPathString: currentParentPathString,
-								currentParentSegments: currentParentPathSegments,
-								schema: ctx.currentSchema,
-							},
-							options,
-						),
-				},
-				userMetadata: {},
-				metadata: { ...ctx.currentAttributes },
-			} as FieldNodeConfigArrayLevel,
-		};
-
-		createDeferredProperty({
-			container: node,
-			key: fieldNodeTokenEnum.arrayItem,
-			schema: schema.element,
-			resolverNode() {
-				return zodResolverImpl(schema.element, {
-					acc: ctx.acc,
-					currentParentPathString: tokenNextParent,
-					currentParentPathSegments: tokenNextParentSegments,
-					currentAttributes: { isArrayTokenItem: true },
-					inheritedMetadata: ctx.inheritedMetadata,
-					currentSchema: schema.element,
-					currentParentNode: node,
-					childKey: fieldNodeTokenEnum.arrayItem,
-				}).node;
-			},
-			shouldEvaluateImmediately: () => !ctx.inheritedMetadata.isLazyEvaluated,
-		});
-
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-			}).node,
-		};
-	}
-	if (schema instanceof z.ZodTuple) {
-		let exactLength: number | undefined;
-		let minLength: number | undefined;
-		let maxLength: number | undefined;
-		if (schema.def.rest) {
-			minLength = schema.def.items.length;
-		} else {
-			exactLength = schema.def.items.length;
-			minLength = schema.def.items.length;
-			maxLength = schema.def.items.length;
-		}
-		const node = {
-			[fnConfigKeyCONFIG]: {
-				level: "tuple",
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				default: ctx.default,
-				constraints: {
-					presence: calcPresence(ctx),
-					readonly: ctx.readonly,
-					exactLength,
-					minLength,
-					maxLength,
-				},
-				validation: {
-					validate: (value, options) =>
-						customValidate(
-							{
-								value,
-								currentParentPathString: currentParentPathString,
-								currentParentSegments: currentParentPathSegments,
-								schema: ctx.currentSchema,
-							},
-							options,
-						),
-				},
-				// items: new Array(schema.def.items.length).fill(null),
-				userMetadata: {},
-				metadata: {
-					isLazyChildren: true,
-					...ctx.currentAttributes,
-				},
-			} as FieldNodeConfigTupleLevel,
-		};
-
-		const items = schema.def.items;
-		for (let index = 0; index < items.length; index++) {
-			const item = items[index]!;
-			const indexedNextParent = currentParentPathString
-				? `${currentParentPathString}.${index}`
-				: String(index);
-			const indexedNextParentSegments = [...currentParentPathSegments, index];
-
-			createDeferredProperty({
-				container: node,
-				key: index,
-				schema: item,
-				resolverNode() {
-					return zodResolverImpl(item, {
-						acc: ctx.acc,
-						currentParentPathString: indexedNextParent,
-						currentParentPathSegments: indexedNextParentSegments,
-						currentAttributes: { isTupleItem: true },
-						currentSchema: item,
-						inheritedMetadata: ctx.inheritedMetadata,
-						currentParentNode: node,
-						childKey: index,
-					}).node;
-				},
-				shouldEvaluateImmediately: () => !ctx.inheritedMetadata.isLazyEvaluated,
-			});
-		}
-
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-			}).node,
-		};
-	}
-	if (schema instanceof z.ZodRecord) {
-		// Extract key and value types
-		const keySchema = schema.def.keyType;
-		const valueSchema = schema.def.valueType;
-
-		// Create record node configuration
-		const node: FieldNode = {
-			[fnConfigKeyCONFIG]: {
-				level: "record",
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				default: ctx.default,
-				constraints: {
-					presence: calcPresence(ctx),
-					readonly: ctx.readonly,
-					// Store schema references for runtime operations
-					keySchema,
-					valueSchema,
-				},
-				validation: {
-					validate: (value, options) =>
-						customValidate(
-							{
-								value,
-								currentParentPathString: currentParentPathString,
-								currentParentSegments: currentParentPathSegments,
-								schema: ctx.currentSchema,
-							},
-							options,
-						),
-				},
-				userMetadata: {},
-				metadata: { ...ctx.currentAttributes },
-			} as FieldNodeConfigRecordLevel,
-		};
-
-		// Create token path for the property template
-		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${fieldNodeTokenEnum.recordProperty}`
-			: fieldNodeTokenEnum.recordProperty;
-		const tokenNextParentSegments = [
-			...currentParentPathSegments,
-			fieldNodeTokenEnum.recordProperty,
-		];
-
-		createDeferredProperty({
-			container: node,
-			key: fieldNodeTokenEnum.recordProperty,
-			schema: valueSchema,
-			resolverNode() {
-				return zodResolverImpl(valueSchema, {
-					acc: ctx.acc,
-					currentParentPathString: tokenNextParent,
-					currentParentPathSegments: tokenNextParentSegments,
-					currentAttributes: { isRecordProperty: true },
-					inheritedMetadata: ctx.inheritedMetadata,
-					currentSchema: valueSchema,
-					currentParentNode: node,
-					childKey: fieldNodeTokenEnum.recordProperty,
-				}).node;
-			},
-			shouldEvaluateImmediately: () => !ctx.inheritedMetadata.isLazyEvaluated,
-		});
-
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-			}).node,
-		};
-	}
-	if (schema instanceof z.ZodObject) {
-		const node = {
-			[fnConfigKeyCONFIG]: {
-				level: "object",
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				default: ctx.default,
-				constraints: { presence: calcPresence(ctx), readonly: ctx.readonly },
-				validation: {
-					validate: (value, options) =>
-						customValidate(
-							{
-								value,
-								currentParentPathString: currentParentPathString,
-								currentParentSegments: currentParentPathSegments,
-								schema: ctx.currentSchema,
-							},
-							options,
-						),
-				},
-				shape: {}, // To be filled below
-				userMetadata: {},
-				metadata: {
-					isLazyChildren: true,
-					...ctx.currentAttributes,
-				},
-			} as FieldNodeConfigObjectLevel,
-		};
-
-		const shape = schema.shape;
-		for (const key in shape) {
-			const nextParent = currentParentPathString
-				? `${currentParentPathString}.${key}`
-				: key;
-			const nextParentSegments = [...currentParentPathSegments, key];
-
-			createDeferredProperty({
-				container: node,
-				key: key,
-				schema: shape[key],
-				resolverNode() {
-					return zodResolverImpl(shape[key], {
-						acc: ctx.acc,
-						currentParentPathString: nextParent,
-						currentParentPathSegments: nextParentSegments,
-						currentAttributes: { isObjectProperty: true },
-						currentSchema: shape[key],
-						inheritedMetadata: ctx.inheritedMetadata,
-						currentParentNode: node,
-						childKey: key,
-					}).node;
-				},
-				shouldEvaluateImmediately: () => !ctx.inheritedMetadata.isLazyEvaluated,
-			});
-		}
-
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-			}).node,
-		};
-	}
-	// if (schema instanceof z.ZodRecord) {
-	// }
-
-	// Q: How should the `currentAttributes` be handled for union-root and intersectionItem? and should they be passed down to their children/resulting branches?
-
-	if (
-		schema instanceof z.ZodUnion ||
-		schema instanceof z.ZodDiscriminatedUnion
-	) {
-		const rootPathToInfo = {
-			...ctx.inheritedMetadata.unionRootDescendant?.rootPathToInfo,
-		};
-		// collect all branches into one UnionRootLevel
-		const config = {
-			level: "union-root",
-			pathString: currentParentPathString,
-			pathSegments: currentParentPathSegments,
-			options: [],
-			default: ctx.default,
-			constraints: {
-				tag: undefined,
-				presence: calcPresence(ctx),
-				readonly: ctx.readonly,
-			},
-			validation: {
-				async validate(value, options): Promise<ValidateReturnShape> {
-					return customValidate(
-						{
-							value,
-							currentParentPathString: currentParentPathString,
-							currentParentSegments: currentParentPathSegments,
-							schema: ctx.currentSchema,
-						},
-						options,
-					);
-				},
-			},
-			userMetadata: {},
-			metadata: {
-				unionRootDescendant: { rootPathToInfo },
-				...ctx.currentAttributes,
-			},
-		} as FieldNodeConfigUnionRootLevel;
-		rootPathToInfo[currentParentPathString] ??= [];
-
-		if (schema instanceof z.ZodDiscriminatedUnion) {
-			config.constraints.tag = {
-				key: schema.def.discriminator,
-				values: new Set(),
-				valueToOptionIndex: new Map(),
-			};
-
-			for (let i = 0; i < schema.def.options.length; i++) {
-				const opt = schema.def.options[i];
-				if (!opt || !(opt instanceof z.ZodObject)) {
-					throw new Error("Discriminated union options must be ZodObject");
-				}
-
-				const tagSchema = opt.def.shape[config.constraints.tag.key];
-
-				if (tagSchema instanceof z.ZodLiteral) {
-					for (const literal of tagSchema.def.values) {
-						tagToOptionIndexSetGuard(
-							config.constraints.tag.valueToOptionIndex,
-							literal,
-							i,
-						);
-						config.constraints.tag.valueToOptionIndex.set(literal, i);
-						config.constraints.tag.values.add(literal);
-					}
-					continue;
-				}
-
-				if (tagSchema instanceof z.ZodEnum) {
-					for (const enumValue of Object.values(tagSchema.def.entries)) {
-						tagToOptionIndexSetGuard(
-							config.constraints.tag.valueToOptionIndex,
-							enumValue,
-							i,
-						);
-						config.constraints.tag.valueToOptionIndex.set(enumValue, i);
-						config.constraints.tag.values.add(enumValue);
-					}
-					continue;
-				}
-
-				if (tagSchema instanceof z.ZodUnion) {
-					for (const tagOpt of tagSchema.def.options) {
-						if (tagOpt instanceof z.ZodLiteral) {
-							for (const literal of tagOpt.def.values) {
-								tagToOptionIndexSetGuard(
-									config.constraints.tag.valueToOptionIndex,
-									literal,
-									i,
-								);
-								config.constraints.tag.valueToOptionIndex.set(literal, i);
-								config.constraints.tag.values.add(literal);
-							}
-							continue;
-						}
-
-						if (tagOpt instanceof z.ZodEnum) {
-							for (const enumValue of Object.values(tagOpt.def.entries)) {
-								tagToOptionIndexSetGuard(
-									config.constraints.tag.valueToOptionIndex,
-									enumValue,
-									i,
-								);
-								config.constraints.tag.valueToOptionIndex.set(enumValue, i);
-								config.constraints.tag.values.add(enumValue);
-							}
-							continue;
-						}
-
-						throw new Error(
-							// biome-ignore lint/suspicious/noTsIgnore: <explanation>
-							// @ts-ignore
-							`Discriminated union discriminator/tag must if it happen to be a union too, it's members must be either ZodLiteral or ZodEnum, got ${tagOpt.def.typeName}`,
-						);
-					}
-					continue;
-				}
-
-				throw new Error(
-					`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
-				);
-			}
-		}
-
-		rootPathToInfo[currentParentPathString].push({
-			rootPath: currentParentPathString,
-			rootPathSegments: currentParentPathSegments,
-			paths: new Set([currentParentPathString]),
-		});
-
-		const node = pushToAcc({
-			acc: ctx.acc,
-			node: { [fnConfigKeyCONFIG]: config },
-			pathString: currentParentPathString,
-			currentAttributes: ctx.currentAttributes,
-			inheritedMetadata: ctx.inheritedMetadata,
-			currentParentNode: ctx.currentParentNode,
-			childKey: ctx.childKey,
-		}).node;
-
-		for (let index = 0; index < schema.options.length; index++) {
-			const opt = schema.options[index];
-			if (opt) {
-				// config.options[index] = zodResolverImpl(opt, {
-				// 	acc: ctx.acc,
-				// 	currentParentPathString: currentParentPathString,
-				// 	currentParentPathSegments: currentParentPathSegments,
-				// 	inheritedMetadata: {
-				// 		...ctx.inheritedMetadata,
-				// 		unionRootDescendant: { rootPathToInfo },
-				// 	},
-				// 	currentAttributes: { ...ctx.currentAttributes },
-				// 	currentParentNode: ctx.currentParentNode,
-				// 	currentSchema: opt,
-				// 	childKey: ctx.childKey,
-				// }).node;
-				createDeferredProperty({
-					container: config.options,
-					key: index,
-					schema: opt,
-					resolverNode() {
-						return zodResolverImpl(opt, {
-							acc: ctx.acc,
-							currentParentPathString: currentParentPathString,
-							currentParentPathSegments: currentParentPathSegments,
-							inheritedMetadata: {
-								...ctx.inheritedMetadata,
-								unionRootDescendant: { rootPathToInfo },
-							},
-							currentAttributes: { ...ctx.currentAttributes },
-							currentSchema: opt,
-							currentParentNode: node,
-							childKey: index,
-						}).node;
-					},
-					shouldEvaluateImmediately: () =>
-						!ctx.inheritedMetadata.isLazyEvaluated,
-				});
-
-				const currentParentIndexedTokenPath = currentParentPathString
-					? `${currentParentPathString}.${fieldNodeTokenEnum.unionOptionOn}.${index}`
-					: `${fieldNodeTokenEnum.unionOptionOn}.${index}`;
-				const currentParentIndexedTokenPathSegments = [
-					...currentParentPathSegments,
-					fieldNodeTokenEnum.unionOptionOn,
-					index,
-				];
-				zodResolverImpl(opt, {
-					acc: ctx.acc,
-					currentParentPathString: currentParentIndexedTokenPath,
-					currentParentPathSegments: currentParentIndexedTokenPathSegments,
-					inheritedMetadata: {
-						...ctx.inheritedMetadata,
-						unionRootDescendant: { rootPathToInfo },
-					},
-					currentAttributes: { ...ctx.currentAttributes },
-					currentParentNode: ctx.currentParentNode,
-					currentSchema: opt,
-					childKey: ctx.childKey,
-				});
-
-				// Note: no need to push to options here since it's done in the `pushToAcc` function
-				// Since all options are pushed to the same path, they will be merged there on the options array
-				// with the correct order as well getting the config reference from the accumulator by path
-			}
-		}
-
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node,
-		};
-	}
-
-	if (schema instanceof z.ZodIntersection) {
-		// **Left** is processed first so its metadata has lower priority than the right one
-		zodResolverImpl(schema.def.left, {
-			acc: ctx.acc,
-			currentParentPathString: currentParentPathString,
-			currentParentPathSegments: currentParentPathSegments,
-			// currentAttributes: { "intersectionItem": "left" },
-			inheritedMetadata: {
-				...(ctx.inheritedMetadata || {}),
-				intersectionItem: {
-					...(ctx.inheritedMetadata?.intersectionItem || {}),
-					[currentParentPathString]: 0, // TODO: Maybe add a function to generate the power set index if needed in the future
-				},
-			},
-			currentAttributes: ctx.currentAttributes,
-			currentParentNode: ctx.currentParentNode,
-			// Q: Should we pass the current schema?!!
-			currentSchema: schema.def.left,
-			childKey: ctx.childKey,
-		});
-
-		// **Right** is processed second so its metadata has higher priority than the left one
-		const right = zodResolverImpl(schema.def.right, {
-			acc: ctx.acc,
-			currentParentPathString: currentParentPathString,
-			currentParentPathSegments: currentParentPathSegments,
-			// currentAttributes: { "intersectionItem": "right" },
-			inheritedMetadata: {
-				...(ctx.inheritedMetadata || {}),
-				intersectionItem: {
-					...(ctx.inheritedMetadata?.intersectionItem || {}),
-					[currentParentPathString]: 1,
-				},
-			},
-			currentParentNode: ctx.currentParentNode,
-			// Q: Should we pass the current schema?!!
-			currentSchema: schema.def.right,
-			childKey: ctx.childKey,
-		});
-
-		// They will be merged in the `pushToAcc` function when adding to the accumulator by path
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: right.node,
-		};
-	}
-	/** End complex types **/
-
-	// TODO: `.or`, `.and` - which are just aliases to union and intersection respectively needs more tests
-	// TODO: The following will have need to be handled properly in the future
-	//
-	// - z.ZodNever
-	// = z.ZodUndefined;
-	// = z.ZodNull;
-	//
-	// - z.ZodCodec - which will support `z.stringbool` too.
-	// - z.ZodCustom
-	// - z.ZodCustomStringFormat
-	// - z.ZodTransform
-	// - z.ZodBigInt
-	// - z.ZodBigIntFormat
-	// - z.ZodMap
-	// - z.ZodSet
-	//
-	// - z.ZodLiteral
-	//
-	// - z.ZodCatch
-	// - z.ZodPromise
-	// - z.ZodFunction
-	// - z.ZodVoid
-	// - z.ZodSymbol
-	// - z.ZodNaN
-	// - z.ZodTemplateLiteral
-	// - z.ZodPromise
-
-	if (schema instanceof z.ZodPipe) {
-		const mainSchema = schema.in;
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: zodResolverImpl(mainSchema, ctx).node,
-		};
-	}
-
-	if (schema instanceof z.ZodLazy) {
-		// We need to call the getter to get the actual schema
-		const mainSchema = schema.def.getter();
-		// It's OK, since there are lazy computations already here, we won't get into infinite loop
-		// Q: Do we need to handle circular references somehow?
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: zodResolverImpl(mainSchema, {
-				...ctx,
-				inheritedMetadata: { ...ctx.inheritedMetadata, isLazyEvaluated: true },
-			}).node,
-		};
-	}
-
-	// Q: Do we still need to handle ZodTransform?
-	// if ( schema instanceof z.ZodTransform) {
-	// 	const mainSchema = // ???
-	// 	return {
-	// 		resolvedPathToNode: ctx.acc.resolvedPathToNode,
-	// 		node: zodResolverImpl(mainSchema, ctx).node,
-	// 	};
-	// }
 
 	if (schema instanceof z.ZodUnknown || schema instanceof z.ZodAny) {
 		const config: FieldNodeConfigUnknownLevel = {
@@ -1730,33 +1727,30 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	options: { skipCache?: boolean; isLazyEvaluated?: boolean } = {},
 ): {
 	node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
-	// Record<string, FieldNode>;
-	// This will be used
 	__?: {
-		// This will be used for the form fields options
+		/** This will be used for the form fields options */
 		input: z.input<ZodSchema>;
-		// This will be used for the validation final result
+		/** This will be used for the validation final result */
 		output: z.output<ZodSchema>;
-		// Q: But is there a case where we need to infer the _path_ output from a _trie node_?
+		/** Q: But is there a case where we need to infer the _path_ output from a _trie node_? */
 	};
 } {
-	// Preserving top-level cache only - no deeper than this to make sure we preserve the correct paths
+	/** Preserving top-level cache only - no deeper than this to make sure we preserve the correct paths */
 	if (!options.skipCache && schemaPathCache.has(schema)) {
 		return schemaPathCache.get(schema) as {
 			node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
-			// Record<string, FieldNode>;
-			// This will be used
+			/** This will be used */
 			__?: {
-				// This will be used for the form fields options
+				/** This will be used for the form fields options */
 				input: z.input<ZodSchema>;
-				// This will be used for the validation final result
+				/** This will be used for the validation final result */
 				output: z.output<ZodSchema>;
-				// Q: But is there a case where we need to infer the _path_ output from a _trie node_?
+				/** Q: But is there a case where we need to infer the _path_ output from a _trie node_? */
 			};
 		};
 	}
 
-	const rootNode: FieldNode = {
+	const rootNode: InternalFieldNode = {
 		[fnConfigKeyCONFIG]: {
 			level: "temp-root",
 			pathString: "",
@@ -1802,14 +1796,14 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	schemaPathCache.set(schema, result);
 	return result as unknown as {
 		node: ZodResolverFieldNodeResult<z.input<ZodSchema>, z.output<ZodSchema>>;
-		// Record<string, FieldNode>;
-		// This will be used
+		/** Record<string, FieldNode>; */
+		/** This will be used */
 		__?: {
-			// This will be used for the form fields options
+			/** This will be used for the form fields options */
 			input: z.input<ZodSchema>;
-			// This will be used for the validation final result
+			/** This will be used for the validation final result */
 			output: z.output<ZodSchema>;
-			// Q: But is there a case where we need to infer the _path_ output from a _trie node_?
+			/** Q: But is there a case where we need to infer the _path_ output from a _trie node_? */
 		};
 	};
 }
@@ -1824,7 +1818,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 export function getFieldAttributes(
 	config: FieldNodeConfig,
 ): Record<string, any> {
-	// Common attributes for all field types
+	/** Common attributes for all field types */
 	const attributes: Record<string, any> = {
 		name: config.pathString,
 		required: config.constraints?.presence === "required",
@@ -1834,22 +1828,22 @@ export function getFieldAttributes(
 	if (config.constraints?.presence === "required") attributes.required = true;
 	if (config.constraints?.readonly) attributes.readonly = true;
 
-	// Handle specific field types
+	/** Handle specific field types */
 	if (config.level === "primitive") {
-		// Set HTML input type based on field type
+		/** Set HTML input type based on field type */
 		switch (config.type) {
 			case "string": {
 				attributes.type = "text";
 
-				// String-specific validations
+				/** String-specific validations */
 				if (config.constraints?.minLength !== undefined)
 					attributes.minLength = config.constraints.minLength;
 
 				if (config.constraints?.maxLength !== undefined)
 					attributes.maxLength = config.constraints.maxLength;
 
-				// Convert Regex pattern to HTML pattern
-				// Note: HTML pattern doesn't use flags and needs string format
+				/** Convert Regex pattern to HTML pattern */
+				/** Note: HTML pattern doesn't use flags and needs string format */
 				if (config.constraints?.regex)
 					attributes.pattern = config.constraints.regex.source;
 
@@ -1859,7 +1853,7 @@ export function getFieldAttributes(
 			case "number": {
 				attributes.type = "number";
 
-				// Number-specific validations
+				/** Number-specific validations */
 				if (config.constraints?.min !== undefined)
 					attributes.min = config.constraints.min;
 
@@ -1875,7 +1869,7 @@ export function getFieldAttributes(
 			case "bigint": {
 				attributes.type = "number";
 
-				// Number-specific validations
+				/** Number-specific validations */
 				if (config.constraints?.min !== undefined)
 					attributes.min = Math.max(
 						Number.MIN_SAFE_INTEGER,
@@ -1901,7 +1895,7 @@ export function getFieldAttributes(
 			case "date": {
 				attributes.type = "date";
 
-				// Date-specific validations
+				/** Date-specific validations */
 				if (config.constraints?.min instanceof Date)
 					attributes.min = config.constraints.min.toISOString().split("T")[0];
 				if (config.constraints?.max instanceof Date)
@@ -1912,7 +1906,7 @@ export function getFieldAttributes(
 			case "file": {
 				attributes.type = "file";
 
-				// File-specific attributes
+				/** File-specific attributes */
 				if (config.constraints?.mimeTypes)
 					attributes.accept = Array.isArray(config.constraints.mimeTypes)
 						? config.constraints.mimeTypes.join(",")
@@ -1922,12 +1916,12 @@ export function getFieldAttributes(
 			}
 
 			default: {
-				// For other primitives, use text input as fallback
+				/** For other primitives, use text input as fallback */
 				attributes.type = "text";
 			}
 		}
 
-		// Default value
+		/** Default value */
 		if (config.default !== undefined) {
 			attributes.defaultValue = config.default;
 		}
@@ -1935,8 +1929,8 @@ export function getFieldAttributes(
 		switch (config.level) {
 			case "array":
 			case "tuple":
-				// attributes['data-field-type'] = 'array';
-				// attributes['data-item-path'] = `${config.pathString}.${FieldTokenMap.arrayItem}`;
+				/** attributes['data-field-type'] = 'array'; */
+				/** attributes['data-item-path'] = `${config.pathString}.${FieldTokenMap.arrayItem}`; */
 				if (config.constraints.minLength)
 					attributes.min = config.constraints.minLength;
 				if (config.constraints.maxLength)
@@ -1948,41 +1942,3 @@ export function getFieldAttributes(
 
 	return attributes;
 }
-
-// const userSchema = z.object({
-// 	name: z.string().min(1),
-// 	age: z.number().min(0),
-// 	addresses: z.array(
-// 		z.object({
-// 			street: z.string(),
-// 			city: z.string(),
-// 		}),
-// 	),
-// });
-
-// const paths = zodResolver(userSchema);
-// console.log(paths);
-
-// const test = z.object({
-// 	name: z.string().min(0).max(10),
-// 	userName: z.coerce.string().min(0).max(10),
-// 	age: z.number().min(0).max(10),
-// 	age2: z.number().lt(5).gt(1),
-// 	age3: z.number().lte(5).gte(1),
-// 	birthDate: z.date().min(0).max(10),
-// 	birthDate2: z.coerce.date().min(0).max(10),
-// 	test1: z
-// 		.string()
-// 		.transform((val) => val.length)
-// 		.pipe(z.number()),
-// 	test2: z
-// 		.object({ a: z.string() })
-// 		.transform((val) => ({ b: val.a.length }))
-// 		.pipe(z.object({ b: z.number() })),
-// 	record: z.record(z.string().min(1), z.number().min(0)),
-// });
-
-// console.log(test);
-
-// type TestInput = z.input<typeof test>;
-// type TestOutput = z.input<typeof test>;

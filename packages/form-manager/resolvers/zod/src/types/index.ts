@@ -28,6 +28,7 @@ import type {
 	FieldNodeConfigUnionDescendantLevel,
 	FieldNodeConfigUnionRootLevel,
 	FieldNodeConfigUnknownLevel,
+	InternalFieldNode,
 } from "@de100/form-manager-core/types/form-manger/fields/shape";
 import type { ZodAny } from "./internal.ts";
 
@@ -53,6 +54,11 @@ export interface ZodResolverAcc {
 	resolvedPathToNode: Record<string, FieldNode>;
 	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
 	node: FieldNode;
+}
+export interface InternalZodResolverAcc {
+	resolvedPathToNode: Record<string, InternalFieldNode>;
+	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
+	node: InternalFieldNode;
 }
 export interface CurrentAttributes {
 	isObjectProperty?: boolean;

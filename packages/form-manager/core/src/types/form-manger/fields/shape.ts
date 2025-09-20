@@ -17,6 +17,12 @@ export type FieldNode<
 > = T & {
 	[fnConfigKeyCONFIG]: Config;
 };
+export type InternalFieldNode<
+	Config extends InternalFieldNodeConfig = InternalFieldNodeConfig,
+	T = Record<string | number, InternalFieldNode<any, any>>,
+> = T & {
+	[fnConfigKeyCONFIG]: Config;
+};
 
 export interface FieldNodeConfigBase<
 	LevelName extends string,
@@ -102,6 +108,14 @@ export interface FieldNodeConfigBase<
 }
 export interface FieldNodeConfigTempRootLevel
 	extends FieldNodeConfigBase<"temp-root", string[], never, never, AnyRecord> {}
+export interface FieldNodeConfigTempParentLevel
+	extends FieldNodeConfigBase<
+		"temp-parent",
+		string[],
+		never,
+		never,
+		AnyRecord
+	> {}
 export interface FieldNodeConfigNeverLevel<
 	InputValue = never,
 	OutputValue = InputValue,
@@ -416,8 +430,20 @@ export interface ValidateReturnShape<
 		| undefined;
 }
 
-export type FieldNodeConfig =
+export type InternalFieldNodeConfig =
 	| FieldNodeConfigTempRootLevel
+	| FieldNodeConfigTempParentLevel
+	| FieldNodeConfigUnknownLevel
+	| FieldNodeConfigNeverLevel
+	| FieldNodeConfigPrimitiveLevel
+	| FieldNodeConfigRecordLevel
+	| FieldNodeConfigObjectLevel
+	| FieldNodeConfigArrayLevel
+	| FieldNodeConfigTupleLevel
+	| FieldNodeConfigUnionRootLevel
+	| FieldNodeConfigUnionDescendantLevel;
+
+export type FieldNodeConfig =
 	| FieldNodeConfigUnknownLevel
 	| FieldNodeConfigNeverLevel
 	| FieldNodeConfigPrimitiveLevel
