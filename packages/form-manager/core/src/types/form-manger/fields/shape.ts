@@ -24,6 +24,28 @@ export type InternalFieldNode<
 	[fnConfigKeyCONFIG]: Config;
 };
 
+export type FieldNodeConfigMetadata = {
+	[key in
+		| "isObjectProperty"
+		| "isTupleItem"
+		| "isRecordProperty"
+		| "isArrayTokenItem"
+		| "isMarkedNever"]?: boolean;
+} & {
+	intersectionItem?: {
+		[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
+	};
+	unionRootDescendant?: {
+		rootPathToInfo: Record<
+			string,
+			{
+				rootPath: string;
+				rootPathSegments: PathSegmentItem[];
+				paths: Set<string>;
+			}[]
+		>;
+	};
+};
 export interface FieldNodeConfigBase<
 	LevelName extends string,
 	InputValue,
@@ -67,28 +89,7 @@ export interface FieldNodeConfigBase<
 	isValid?: boolean;
 
 	// The metadata can be used to store additional information about the field that might be useful for rendering or other purposes
-	metadata?: {
-		[key in
-			| "isObjectProperty"
-			| "isTupleItem"
-			| "isRecordProperty"
-			| "isArrayTokenItem"
-			| "isMarkedNever"]?: boolean;
-	} & {
-		intersectionItem?: {
-			[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
-		};
-		unionRootDescendant?: {
-			rootPathToInfo: Record<
-				string,
-				{
-					rootPath: string;
-					rootPathSegments: PathSegmentItem[];
-					paths: Set<string>;
-				}[]
-			>;
-		};
-	};
+	metadata?: FieldNodeConfigMetadata;
 	// User-defined metadata for further extension and functionalities
 	// For example, you can store UI-related metadata here like label, placeholder, description, etc.
 	userMetadata: FieldNodeConfigUserMetadata;
@@ -143,39 +144,42 @@ export interface FieldNodeConfigUnknownLevel<
 		PathAcc,
 		Rules
 	> {}
-export interface FieldNodeConfigPrimitiveLevelBase<
-	InputValue = any,
-	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-	Rules extends Record<string, any> = AnyRecord,
-> extends FieldNodeConfigBase<
-		"primitive",
-		InputValue,
-		OutputValue,
-		PathAcc,
-		Rules & {
-			coerce: boolean | undefined;
-			presence: FieldNodeConfigPresence;
-			readonly: boolean | undefined;
-		}
-	> {}
+// export interface FieldNodeConfigBase<
+// 	InputValue = any,
+// 	OutputValue = InputValue,
+// 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+// 	Rules extends Record<string, any> = AnyRecord,
+// > extends FieldNodeConfigBase<
+// 		"primitive",
+// 		InputValue,
+// 		OutputValue,
+// 		PathAcc,
+// 		Rules & {
+// 			coerce: boolean | undefined;
+// 			presence: FieldNodeConfigPresence;
+// 			readonly: boolean | undefined;
+// 		}
+// 	> {}
 export interface FieldNodeConfigStringPrimitiveLevel<
 	InputValue = string,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
+> extends FieldNodeConfigBase<
+		"string",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
+			coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
 			minLength: number | undefined;
 			maxLength: number | undefined;
 			regex: RegExp | undefined;
 		}
 	> {
-	type: "string";
 	metadata:
-		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigMetadata & {
 				enum?: string[];
 				literal?: Literal;
 		  })
@@ -185,11 +189,15 @@ export interface FieldNodeConfigNumberPrimitiveLevel<
 	InputValue = number,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
+> extends FieldNodeConfigBase<
+		"number",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
+			coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
 			min: number | undefined;
 			inclusiveMin: boolean | undefined;
 			max: number | undefined;
@@ -197,9 +205,8 @@ export interface FieldNodeConfigNumberPrimitiveLevel<
 			multipleOf: number | bigint | undefined;
 		}
 	> {
-	type: "number";
 	metadata:
-		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigMetadata & {
 				enum?: number[];
 				literal?: Literal;
 		  })
@@ -209,11 +216,15 @@ export interface FieldNodeConfigBigIntPrimitiveLevel<
 	InputValue = bigint,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
+> extends FieldNodeConfigBase<
+		"bigint",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
+			coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
 			min: number | bigint | undefined;
 			inclusiveMin: boolean | undefined;
 			max: number | bigint | undefined;
@@ -222,9 +233,8 @@ export interface FieldNodeConfigBigIntPrimitiveLevel<
 			multipleOf: number | bigint;
 		}
 	> {
-	type: "bigint";
 	metadata:
-		| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
+		| (FieldNodeConfigMetadata & {
 				enum?: (number | bigint)[];
 				literal?: Literal;
 		  })
@@ -236,40 +246,49 @@ export interface FieldNodeConfigDatePrimitiveLevel<
 	InputValue = Date,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
+> extends FieldNodeConfigBase<
+		"date",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
+			coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
 			min: Date | undefined;
 			inclusiveMin: boolean | undefined;
 			max: Date | undefined;
 			inclusiveMax: boolean | undefined;
 		}
-	> {
-	type: "date";
-}
+	> {}
 export interface FieldNodeConfigBooleanPrimitiveLevel<
 	InputValue = boolean,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
-		InputValue,
-		OutputValue,
-		PathAcc,
-		AnyRecord
-	> {
-	type: "boolean";
-}
-export interface FieldNodeConfigFilePrimitiveLevel<
-	InputValue = File,
-	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-> extends FieldNodeConfigPrimitiveLevelBase<
+> extends FieldNodeConfigBase<
+		"boolean",
 		InputValue,
 		OutputValue,
 		PathAcc,
 		{
+			coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
+		}
+	> {}
+export interface FieldNodeConfigFilePrimitiveLevel<
+	InputValue = File,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FieldNodeConfigBase<
+		"file",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{
+			// coerce: boolean | undefined;
+			presence: FieldNodeConfigPresence;
+			readonly: boolean | undefined;
 			min: number | undefined;
 			max: number | undefined;
 			mimeTypes: string[] | undefined;
@@ -282,9 +301,8 @@ export interface FieldNodeConfigFilePrimitiveLevel<
 			// application: boolean | undefined;
 		}
 	> {
-	type: "file";
 	// metadata:
-	// 	| (FieldNodeConfigPrimitiveLevelBase<any>["metadata"] & {
+	// 	| (FieldNodeConfigMetadata & {
 	// 			multiple?: boolean;
 	// 			directory?: boolean;
 	// 			literal?: Literal;
@@ -376,16 +394,20 @@ export interface FieldNodeConfigUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-	Rules extends
-		| {
-				tag: {
+	Rules extends Record<string, any> = {
+		// presence: FieldNodeConfigPresence;
+		// readonly: boolean | undefined;
+		tag?:
+			| {
 					key: string;
 					values: Set<Literal>;
 					/** @description This map is used to quickly find the index of the option based on the tag value */
-					valueToOptionIndex: Map<Literal, number>;
-				};
-		  }
-		| AnyRecord = AnyRecord,
+					valueToOptionIndex: {
+						get: (tagValue: Literal) => number | undefined;
+					};
+			  }
+			| undefined;
+	},
 > extends FieldNodeConfigBase<
 		"union-root",
 		InputValue,
@@ -397,10 +419,6 @@ export interface FieldNodeConfigUnionRootLevel<
 		}
 	> {
 	options: FieldNode[];
-	// tag: {
-	// 	key: string;
-	// 	valueToOptionIndex: Map<Literal, number>;
-	// };
 }
 export interface FieldNodeConfigUnionDescendantLevel<
 	InputValue = unknown,

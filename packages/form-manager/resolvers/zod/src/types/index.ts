@@ -370,28 +370,40 @@ export type ZodResolverFieldNodeResult<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc,
-															ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
-																infer Options
-															>
-																? {
-																		tag: {
-																			key: ZodSchemaToUnwrap["def"]["discriminator"];
-																			values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
-																				Options[number]
-																			>
-																				? Set<
-																						z.infer<
-																							Options[number]
-																						>[ZodSchemaToUnwrap["def"]["discriminator"]]
+															{
+																tag: ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
+																	infer Options
+																>
+																	?
+																			| {
+																					key: ZodSchemaToUnwrap["def"]["discriminator"];
+																					values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
+																						Options[number]
 																					>
-																				: Set<Literal>;
-																			valueToOptionIndex: ZodTagValueMap<
-																				Options,
-																				ZodSchemaToUnwrap["def"]["discriminator"]
-																			>;
-																		};
-																	}
-																: NeverRecord
+																						? Set<
+																								z.infer<
+																									Options[number]
+																								>[ZodSchemaToUnwrap["def"]["discriminator"]] extends infer O
+																									? O extends Literal
+																										? O
+																										: never
+																									: never
+																							>
+																						: Set<Literal>;
+																					valueToOptionIndex: ZodTagValueMap<
+																						Options,
+																						ZodSchemaToUnwrap["def"]["discriminator"]
+																					>;
+																					// key: ZodSchemaToUnwrap["def"]["discriminator"];
+																					// values: Set<Literal>;
+																					// valueToOptionIndex: Map<
+																					// 	Literal,
+																					// 	number
+																					// >;
+																			  }
+																			| undefined
+																	: undefined;
+															}
 														>
 													> &
 														AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
