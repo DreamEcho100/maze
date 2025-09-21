@@ -1070,7 +1070,6 @@ export function resolverBuilder<
 			Object.defineProperty(ctx.currentParentNode, childKey, {
 				enumerable: true,
 				configurable: true,
-				writable: true,
 				get() {
 					const allResolvers =
 						ctx.acc.lazyPathToLazyNodesAccMap.get(pathString) || [];
@@ -1089,7 +1088,16 @@ export function resolverBuilder<
 					// @ts-ignore
 					tempCurrentParentNode[childKey] = undefined;
 
-					// So we should be access the finalized resolved node directly
+					// Replace the lazy getter with the finalized resolved node
+					// so next time it's accessed directly
+					Object.defineProperty(ctx.currentParentNode, childKey, {
+						enumerable: true,
+						configurable: true,
+						writable: true,
+						value: resolvedNode,
+					});
+
+					// Return the finalized resolved node so we should be access it directly
 					return resolvedNode;
 				},
 			});
