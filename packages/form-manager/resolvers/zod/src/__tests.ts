@@ -16,7 +16,9 @@ const zodSchemaTest = z
 			.min(2)
 			.max(5)
 			.regex(/^[a-z]+$/),
+		literalStringField: z.literal("literal-string"),
 		numberField: z.number().min(1).max(10).int(),
+		literalNumberField: z.literal(0),
 		booleanField: z.boolean().default(true),
 		dateField: z.date().min(new Date("2020-01-01")).max(new Date("2030-12-31")),
 		nestedObject: z.object({
@@ -70,62 +72,44 @@ type ZodSchemaTestTrieResult = ZodResolverFieldNodeResult<
 >;
 //^?
 const zodSchemaTestTrieResult = {} as ZodSchemaTestTrieResult;
-zodSchemaTestTrieResult.stringField[fnConfigKeyCONFIG].level; // "primitive"
-zodSchemaTestTrieResult.stringField[fnConfigKeyCONFIG].type; // "string"
+zodSchemaTestTrieResult.stringField[fnConfigKeyCONFIG].level; // "string"
+zodSchemaTestTrieResult.literalStringField[fnConfigKeyCONFIG].level; // "string"
+zodSchemaTestTrieResult.numberField[fnConfigKeyCONFIG].level; // "number"
+zodSchemaTestTrieResult.literalNumberField[fnConfigKeyCONFIG].level; // "number"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[fnConfigKeyCONFIG].level; // "primitive"
 zodSchemaTestTrieResult.recordField[fnConfigKeyCONFIG].level; // "record"
 zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordProperty][
 	fnConfigKeyCONFIG
-].level; // "primitive"
-zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordProperty][
-	fnConfigKeyCONFIG
-].type; // "number"
+].level; // "number"
 zodSchemaTestTrieResult.recordOfObjects[fnConfigKeyCONFIG].level; // "record"
 zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty][
 	fnConfigKeyCONFIG
 ].level; // "object"
 zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty].id[
 	fnConfigKeyCONFIG
-].level; // "primitive"
-zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty].id[
-	fnConfigKeyCONFIG
-].type; // "string"
+].level; // "string"
 zodSchemaTestTrieResult.arrayField[fnConfigKeyCONFIG].level; // "array"
 zodSchemaTestTrieResult.arrayField[fieldNodeTokenEnum.arrayItem][
 	fnConfigKeyCONFIG
-].level; // "primitive"
-zodSchemaTestTrieResult.arrayField[fieldNodeTokenEnum.arrayItem][
-	fnConfigKeyCONFIG
-].type; // "string"
+].level; // "string"
 zodSchemaTestTrieResult.arrayOfObjects[fnConfigKeyCONFIG].level; // "array"
 zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem][
 	fnConfigKeyCONFIG
 ].level; // "object"
 zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem].value[
 	fnConfigKeyCONFIG
-].level; // "primitive"
-zodSchemaTestTrieResult.arrayOfObjects[fieldNodeTokenEnum.arrayItem].value[
-	fnConfigKeyCONFIG
-].type; // "number"
+].level; // "number"
 zodSchemaTestTrieResult.tupleField[fnConfigKeyCONFIG].level; // "tuple"
-zodSchemaTestTrieResult.tupleField[0][fnConfigKeyCONFIG].level; // "primitive"
-zodSchemaTestTrieResult.tupleField[0][fnConfigKeyCONFIG].type; // "string"
-zodSchemaTestTrieResult.tupleField[1][fnConfigKeyCONFIG].level; // "primitive"
-zodSchemaTestTrieResult.tupleField[1][fnConfigKeyCONFIG].type; // "number"
+zodSchemaTestTrieResult.tupleField[0][fnConfigKeyCONFIG].level; // "string"
+zodSchemaTestTrieResult.tupleField[1][fnConfigKeyCONFIG].level; // "number"
 zodSchemaTestTrieResult.unionField[fnConfigKeyCONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[0].level;
 zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][0][
 	fieldNodeTokenEnum.arrayItem
-][fnConfigKeyCONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][0][
-	fieldNodeTokenEnum.arrayItem
-][fnConfigKeyCONFIG].type; // "string"
+][fnConfigKeyCONFIG].level; // "string"
 zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][1][
 	fieldNodeTokenEnum.arrayItem
-][fnConfigKeyCONFIG].level; // "primitive"
-zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.unionOptionOn][1][
-	fieldNodeTokenEnum.arrayItem
-][fnConfigKeyCONFIG].type; // "number"
+][fnConfigKeyCONFIG].level; // "number"
 zodSchemaTestTrieResult.unionOfArrays[fnConfigKeyCONFIG].level; // "union-root"
 zodSchemaTestTrieResult.unionOfArrays[fieldNodeTokenEnum.arrayItem][0][
 	fieldNodeTokenEnum.arrayItem
@@ -137,7 +121,7 @@ zodSchemaTestTrieResult.unionOfObjects[fnConfigKeyCONFIG].level; // "object"
 const discriminatedUnionValueToOptionIndexTest =
 	zodSchemaTestTrieResult.discriminatedUnion[
 		fnConfigKeyCONFIG
-	].constraints.tag.valueToOptionIndex.get("C"); // { type: "A", value: string }
+	].constraints.tag?.valueToOptionIndex.get("C"); // { type: "A", value: string }
 const discriminatedUnionValuesTest = [
 	...zodSchemaTestTrieResult.discriminatedUnion[fnConfigKeyCONFIG].constraints
 		.tag.values,

@@ -117,18 +117,6 @@ export interface FieldNodeConfigTempParentLevel
 		never,
 		AnyRecord
 	> {}
-export interface FieldNodeConfigNeverLevel<
-	InputValue = never,
-	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
-	Rules extends Record<string, any> = AnyRecord,
-> extends FieldNodeConfigBase<
-		"never",
-		InputValue,
-		OutputValue,
-		PathAcc,
-		Rules
-	> {}
 export interface FieldNodeConfigUnknownLevel<
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	InputValue = unknown,
@@ -170,12 +158,12 @@ export interface FieldNodeConfigStringPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			coerce: boolean | undefined;
 			presence: FieldNodeConfigPresence;
-			readonly: boolean | undefined;
-			minLength: number | undefined;
-			maxLength: number | undefined;
-			regex: RegExp | undefined;
+			coerce?: boolean;
+			readonly?: boolean;
+			minLength?: number;
+			maxLength?: number;
+			regex?: RegExp;
 		}
 	> {
 	metadata:
@@ -195,14 +183,15 @@ export interface FieldNodeConfigNumberPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			coerce: boolean | undefined;
 			presence: FieldNodeConfigPresence;
-			readonly: boolean | undefined;
-			min: number | undefined;
-			inclusiveMin: boolean | undefined;
-			max: number | undefined;
-			inclusiveMax: boolean | undefined;
-			multipleOf: number | bigint | undefined;
+			coerce?: boolean;
+			readonly?: boolean;
+			min?: number;
+			inclusiveMin?: boolean;
+			max?: number;
+			inclusiveMax?: boolean;
+			multipleOf?: number | bigint;
+			regex?: RegExp;
 		}
 	> {
 	metadata:
@@ -222,15 +211,16 @@ export interface FieldNodeConfigBigIntPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			coerce: boolean | undefined;
+			coerce?: boolean;
 			presence: FieldNodeConfigPresence;
-			readonly: boolean | undefined;
-			min: number | bigint | undefined;
-			inclusiveMin: boolean | undefined;
-			max: number | bigint | undefined;
-			inclusiveMax: boolean | undefined;
-			// int: boolean | undefined;
+			readonly?: boolean;
+			min?: number | bigint;
+			inclusiveMin?: boolean;
+			max?: number | bigint;
+			inclusiveMax?: boolean;
 			multipleOf: number | bigint;
+			regex?: RegExp;
+			// int?: boolean;
 		}
 	> {
 	metadata:
@@ -271,10 +261,65 @@ export interface FieldNodeConfigBooleanPrimitiveLevel<
 		OutputValue,
 		PathAcc,
 		{
-			coerce: boolean | undefined;
 			presence: FieldNodeConfigPresence;
-			readonly: boolean | undefined;
+			coerce?: boolean;
+			readonly?: boolean;
+			regex?: RegExp;
 		}
+	> {}
+export interface FieldNodeConfigUndefinedLevel<
+	InputValue = undefined,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FieldNodeConfigBase<
+		"undefined",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{
+			presence: FieldNodeConfigPresence;
+			readonly?: boolean;
+		}
+	> {}
+export interface FieldNodeConfigNullLevel<
+	InputValue = null,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FieldNodeConfigBase<
+		"null",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{
+			presence: FieldNodeConfigPresence;
+			readonly?: boolean;
+		}
+	> {}
+export interface FieldNodeConfigVoidLevel<
+	InputValue = void,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+> extends FieldNodeConfigBase<
+		"void",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		{
+			presence: FieldNodeConfigPresence;
+			readonly?: boolean;
+		}
+	> {}
+export interface FieldNodeConfigNeverLevel<
+	InputValue = never,
+	OutputValue = InputValue,
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	Rules extends Record<string, any> = AnyRecord,
+> extends FieldNodeConfigBase<
+		"never",
+		InputValue,
+		OutputValue,
+		PathAcc,
+		Rules
 	> {}
 export interface FieldNodeConfigFilePrimitiveLevel<
 	InputValue = File,
@@ -321,7 +366,12 @@ export type FieldNodeConfigPrimitiveLevel =
 	| FieldNodeConfigBigIntPrimitiveLevel
 	| FieldNodeConfigDatePrimitiveLevel
 	| FieldNodeConfigBooleanPrimitiveLevel
-	| FieldNodeConfigFilePrimitiveLevel;
+	| FieldNodeConfigFilePrimitiveLevel
+	| FieldNodeConfigUnknownLevel
+	| FieldNodeConfigUndefinedLevel
+	| FieldNodeConfigNullLevel
+	| FieldNodeConfigVoidLevel
+	| FieldNodeConfigNeverLevel;
 
 export interface FieldNodeConfigObjectLevel<
 	InputValue = AnyRecord,
@@ -448,11 +498,7 @@ export interface ValidateReturnShape<
 		| undefined;
 }
 
-export type InternalFieldNodeConfig =
-	| FieldNodeConfigTempRootLevel
-	| FieldNodeConfigTempParentLevel
-	| FieldNodeConfigUnknownLevel
-	| FieldNodeConfigNeverLevel
+export type FieldNodeConfig =
 	| FieldNodeConfigPrimitiveLevel
 	| FieldNodeConfigRecordLevel
 	| FieldNodeConfigObjectLevel
@@ -461,13 +507,7 @@ export type InternalFieldNodeConfig =
 	| FieldNodeConfigUnionRootLevel
 	| FieldNodeConfigUnionDescendantLevel;
 
-export type FieldNodeConfig =
-	| FieldNodeConfigUnknownLevel
-	| FieldNodeConfigNeverLevel
-	| FieldNodeConfigPrimitiveLevel
-	| FieldNodeConfigRecordLevel
-	| FieldNodeConfigObjectLevel
-	| FieldNodeConfigArrayLevel
-	| FieldNodeConfigTupleLevel
-	| FieldNodeConfigUnionRootLevel
-	| FieldNodeConfigUnionDescendantLevel;
+export type InternalFieldNodeConfig =
+	| FieldNodeConfigTempRootLevel
+	| FieldNodeConfigTempParentLevel
+	| FieldNodeConfig;

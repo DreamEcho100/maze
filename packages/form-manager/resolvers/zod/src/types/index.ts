@@ -20,14 +20,17 @@ import type {
 	FieldNodeConfigDatePrimitiveLevel,
 	FieldNodeConfigFilePrimitiveLevel,
 	FieldNodeConfigNeverLevel,
+	FieldNodeConfigNullLevel,
 	FieldNodeConfigNumberPrimitiveLevel,
 	FieldNodeConfigObjectLevel,
 	FieldNodeConfigRecordLevel,
 	FieldNodeConfigStringPrimitiveLevel,
 	FieldNodeConfigTupleLevel,
+	FieldNodeConfigUndefinedLevel,
 	FieldNodeConfigUnionDescendantLevel,
 	FieldNodeConfigUnionRootLevel,
 	FieldNodeConfigUnknownLevel,
+	FieldNodeConfigVoidLevel,
 	InternalFieldNode,
 } from "@de100/form-manager-core/types/form-manger/fields/shape";
 import type { ZodAny } from "./internal.ts";
@@ -137,6 +140,39 @@ type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 	};
 };
 
+export type ZodLiteralString = z.ZodLiteral & {
+	def: {
+		values: string[];
+	};
+};
+export type ZodLiteralNumber = z.ZodLiteral & {
+	def: {
+		values: number[];
+	};
+};
+export type ZodLiteralBigInt = z.ZodLiteral & {
+	def: {
+		values: bigint[];
+	};
+};
+export type ZodLiteralBoolean = z.ZodLiteral & {
+	def: {
+		values: boolean[];
+	};
+};
+export type ZodLiteralNull = z.ZodLiteral & {
+	def: {
+		values: null[];
+	};
+};
+export type ZodLiteralUndefined = z.ZodLiteral & {
+	def: {
+		values: undefined[];
+	};
+};
+
+// ({} as ZodLiteralString).def.
+
 type FindIndexOfZodType<
 	T extends readonly any[],
 	TU,
@@ -176,7 +212,7 @@ export type ZodResolverFieldNodeResult<
 		>
 	: ZodSchemaToUnwrap extends
 				| z.ZodString
-				| z.ZodLiteral
+				| ZodLiteralString
 				| z.ZodEnum
 				| z.ZodStringFormat
 		? FieldNode<
@@ -192,7 +228,10 @@ export type ZodResolverFieldNodeResult<
 							PathAcc
 						>
 			>
-		: ZodSchemaToUnwrap extends z.ZodNumber | z.ZodNumberFormat
+		: ZodSchemaToUnwrap extends
+					| z.ZodNumber
+					| z.ZodNumberFormat
+					| ZodLiteralNumber
 			? FieldNode<
 					Options extends { isUnionRootDescendant: true }
 						? FieldNodeConfigUnionDescendantLevel<
@@ -206,7 +245,10 @@ export type ZodResolverFieldNodeResult<
 								PathAcc
 							>
 				>
-			: ZodSchemaToUnwrap extends z.ZodBigInt | z.ZodBigIntFormat
+			: ZodSchemaToUnwrap extends
+						| z.ZodBigInt
+						| z.ZodBigIntFormat
+						| ZodLiteralBigInt
 				? FieldNode<
 						Options extends { isUnionRootDescendant: true }
 							? FieldNodeConfigUnionDescendantLevel<
@@ -220,7 +262,7 @@ export type ZodResolverFieldNodeResult<
 									PathAcc
 								>
 					>
-				: ZodSchemaToUnwrap extends z.ZodBoolean
+				: ZodSchemaToUnwrap extends z.ZodBoolean | ZodLiteralBoolean
 					? FieldNode<
 							Options extends { isUnionRootDescendant: true }
 								? FieldNodeConfigUnionDescendantLevel<
@@ -262,10 +304,7 @@ export type ZodResolverFieldNodeResult<
 												PathAcc
 											>
 								>
-							: // ------------------------------------------------
-								//  RECORD  (z.record(...))
-								// ------------------------------------------------
-								ZodSchemaToUnwrap extends z.ZodRecord
+							: ZodSchemaToUnwrap extends z.ZodUndefined | ZodLiteralUndefined
 								? FieldNode<
 										Options extends { isUnionRootDescendant: true }
 											? FieldNodeConfigUnionDescendantLevel<
@@ -273,25 +312,13 @@ export type ZodResolverFieldNodeResult<
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
-											: FieldNodeConfigRecordLevel<
+											: FieldNodeConfigUndefinedLevel<
 													z.input<ZodSchemaToInfer>,
 													z.output<ZodSchemaToInfer>,
 													PathAcc
 												>
-									> & {
-										[fieldNodeTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
-											ZodSchemaToUnwrap["valueType"],
-											ZodSchemaToUnwrap["valueType"],
-											[...PathAcc, typeof fieldNodeTokenEnum.recordProperty],
-											Options extends { isUnionRootDescendant: true }
-												? { isUnionRootDescendant: true }
-												: AnyRecord
-										>;
-									}
-								: // ------------------------------------------------
-									//  OBJECT  (z.object({...}))
-									// ------------------------------------------------
-									ZodSchemaToUnwrap extends z.ZodObject
+									>
+								: ZodSchemaToUnwrap extends z.ZodNull | ZodLiteralNull
 									? FieldNode<
 											Options extends { isUnionRootDescendant: true }
 												? FieldNodeConfigUnionDescendantLevel<
@@ -299,23 +326,13 @@ export type ZodResolverFieldNodeResult<
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
-												: FieldNodeConfigObjectLevel<
+												: FieldNodeConfigNullLevel<
 														z.input<ZodSchemaToInfer>,
 														z.output<ZodSchemaToInfer>,
 														PathAcc
 													>
-										> & {
-											[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverFieldNodeResult<
-												ZodSchemaToUnwrap["shape"][key],
-												ZodSchemaToUnwrap["shape"][key],
-												[...PathAcc, Extract<key, string>],
-												Options
-											>;
-										}
-									: // ------------------------------------------------
-										//  ARRAY  (z.array(...))
-										// ------------------------------------------------
-										ZodSchemaToUnwrap extends z.ZodArray
+										>
+									: ZodSchemaToUnwrap extends z.ZodVoid
 										? FieldNode<
 												Options extends { isUnionRootDescendant: true }
 													? FieldNodeConfigUnionDescendantLevel<
@@ -323,23 +340,13 @@ export type ZodResolverFieldNodeResult<
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
-													: FieldNodeConfigArrayLevel<
+													: FieldNodeConfigVoidLevel<
 															z.input<ZodSchemaToInfer>,
 															z.output<ZodSchemaToInfer>,
 															PathAcc
 														>
-											> & {
-												[fieldNodeTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
-													ZodSchemaToUnwrap["element"],
-													ZodSchemaToUnwrap["element"],
-													[...PathAcc, typeof fieldNodeTokenEnum.arrayItem],
-													Options
-												>;
-											}
-										: // ------------------------------------------------
-											//  TUPLE  (z.tuple([...]))
-											// ------------------------------------------------
-											ZodSchemaToUnwrap extends z.ZodTuple
+											>
+										: ZodSchemaToUnwrap extends z.ZodNever
 											? FieldNode<
 													Options extends { isUnionRootDescendant: true }
 														? FieldNodeConfigUnionDescendantLevel<
@@ -347,109 +354,206 @@ export type ZodResolverFieldNodeResult<
 																z.output<ZodSchemaToInfer>,
 																PathAcc
 															>
-														: FieldNodeConfigTupleLevel<
-																z.input<ZodSchemaToInfer>,
-																z.output<ZodSchemaToInfer>,
+														: FieldNodeConfigNeverLevel<
+																never, // z.input<ZodSchemaToInfer>,
+																never, // z.output<ZodSchemaToInfer>,
 																PathAcc
 															>
-												> &
-													ZodTupleItemResolverMap<
-														ZodSchemaToUnwrap["def"]["items"],
-														PathAcc,
-														Options
-													>
+												>
 											: // ------------------------------------------------
-												//  UNION  (z.union([...]))
+												//  RECORD  (z.record(...))
 												// ------------------------------------------------
-												// :
-												ZodSchemaToUnwrap extends
-														| z.ZodUnion
-														| z.ZodDiscriminatedUnion
+												ZodSchemaToUnwrap extends z.ZodRecord
 												? FieldNode<
-														FieldNodeConfigUnionRootLevel<
-															z.input<ZodSchemaToInfer>,
-															z.output<ZodSchemaToInfer>,
-															PathAcc,
-															{
-																tag: ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
-																	infer Options
+														Options extends { isUnionRootDescendant: true }
+															? FieldNodeConfigUnionDescendantLevel<
+																	z.input<ZodSchemaToInfer>,
+																	z.output<ZodSchemaToInfer>,
+																	PathAcc
 																>
-																	?
-																			| {
-																					key: ZodSchemaToUnwrap["def"]["discriminator"];
-																					values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
-																						Options[number]
-																					>
-																						? Set<
-																								z.infer<
-																									Options[number]
-																								>[ZodSchemaToUnwrap["def"]["discriminator"]] extends infer O
-																									? O extends Literal
-																										? O
-																										: never
-																									: never
-																							>
-																						: Set<Literal>;
-																					valueToOptionIndex: ZodTagValueMap<
-																						Options,
-																						ZodSchemaToUnwrap["def"]["discriminator"]
-																					>;
-																					// key: ZodSchemaToUnwrap["def"]["discriminator"];
-																					// values: Set<Literal>;
-																					// valueToOptionIndex: Map<
-																					// 	Literal,
-																					// 	number
-																					// >;
-																			  }
-																			| undefined
-																	: undefined;
-															}
-														>
-													> &
-														AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
-															ZodSchemaToUnwrap["def"]["options"],
-															PathAcc
-														>
-												: //
+															: FieldNodeConfigRecordLevel<
+																	z.input<ZodSchemaToInfer>,
+																	z.output<ZodSchemaToInfer>,
+																	PathAcc
+																>
+													> & {
+														[fieldNodeTokenEnum.recordProperty]: ZodResolverFieldNodeResult<
+															ZodSchemaToUnwrap["valueType"],
+															ZodSchemaToUnwrap["valueType"],
+															[
+																...PathAcc,
+																typeof fieldNodeTokenEnum.recordProperty,
+															],
+															Options extends { isUnionRootDescendant: true }
+																? { isUnionRootDescendant: true }
+																: AnyRecord
+														>;
+													}
+												: // ------------------------------------------------
+													//  OBJECT  (z.object({...}))
 													// ------------------------------------------------
-													//  INTERSECTION  (z.intersection(...))
-													// ------------------------------------------------
-													ZodSchemaToUnwrap extends z.ZodIntersection<
-															infer L,
-															infer R
-														>
-													? // Intersection = both sides at the same path; we simply merge the
-														// two branch results.  At runtime your resolver already does
-														// “right wins” for conflicting keys; the type does the same.
-														ZodResolverFieldNodeResult<L, L, PathAcc, Options> &
-															ZodResolverFieldNodeResult<R, R, PathAcc, Options>
-													: ZodSchemaToUnwrap extends z.ZodPipe
-														? ZodResolverFieldNodeResult<
-																ZodSchemaToUnwrap["def"]["out"],
-																ZodSchemaToInfer, // Q: is this correct
-																PathAcc,
-																Options
-															>
-														: ZodSchemaToUnwrap extends z.ZodAny | z.ZodUnknown
-															? FieldNode<
-																	FieldNodeConfigUnknownLevel<
-																		PathAcc,
+													ZodSchemaToUnwrap extends z.ZodObject
+													? FieldNode<
+															Options extends { isUnionRootDescendant: true }
+																? FieldNodeConfigUnionDescendantLevel<
 																		z.input<ZodSchemaToInfer>,
-																		z.output<ZodSchemaToInfer>
+																		z.output<ZodSchemaToInfer>,
+																		PathAcc
 																	>
-																>
-															: ZodSchemaToUnwrap extends z.ZodNever
-																? FieldNode<
-																		FieldNodeConfigNeverLevel<
-																			never,
-																			never,
+																: FieldNodeConfigObjectLevel<
+																		z.input<ZodSchemaToInfer>,
+																		z.output<ZodSchemaToInfer>,
+																		PathAcc
+																	>
+														> & {
+															[key in keyof ZodSchemaToUnwrap["shape"]]: ZodResolverFieldNodeResult<
+																ZodSchemaToUnwrap["shape"][key],
+																ZodSchemaToUnwrap["shape"][key],
+																[...PathAcc, Extract<key, string>],
+																Options
+															>;
+														}
+													: // ------------------------------------------------
+														//  ARRAY  (z.array(...))
+														// ------------------------------------------------
+														ZodSchemaToUnwrap extends z.ZodArray
+														? FieldNode<
+																Options extends { isUnionRootDescendant: true }
+																	? FieldNodeConfigUnionDescendantLevel<
+																			z.input<ZodSchemaToInfer>,
+																			z.output<ZodSchemaToInfer>,
 																			PathAcc
 																		>
-																	>
-																: FieldNode<
-																		FieldNodeConfigUnknownLevel<
-																			PathAcc,
+																	: FieldNodeConfigArrayLevel<
 																			z.input<ZodSchemaToInfer>,
-																			z.output<ZodSchemaToInfer>
+																			z.output<ZodSchemaToInfer>,
+																			PathAcc
 																		>
-																	>;
+															> & {
+																[fieldNodeTokenEnum.arrayItem]: ZodResolverFieldNodeResult<
+																	ZodSchemaToUnwrap["element"],
+																	ZodSchemaToUnwrap["element"],
+																	[
+																		...PathAcc,
+																		typeof fieldNodeTokenEnum.arrayItem,
+																	],
+																	Options
+																>;
+															}
+														: // ------------------------------------------------
+															//  TUPLE  (z.tuple([...]))
+															// ------------------------------------------------
+															ZodSchemaToUnwrap extends z.ZodTuple
+															? FieldNode<
+																	Options extends {
+																		isUnionRootDescendant: true;
+																	}
+																		? FieldNodeConfigUnionDescendantLevel<
+																				z.input<ZodSchemaToInfer>,
+																				z.output<ZodSchemaToInfer>,
+																				PathAcc
+																			>
+																		: FieldNodeConfigTupleLevel<
+																				z.input<ZodSchemaToInfer>,
+																				z.output<ZodSchemaToInfer>,
+																				PathAcc
+																			>
+																> &
+																	ZodTupleItemResolverMap<
+																		ZodSchemaToUnwrap["def"]["items"],
+																		PathAcc,
+																		Options
+																	>
+															: // ------------------------------------------------
+																//  UNION  (z.union([...]))
+																// ------------------------------------------------
+																// :
+																ZodSchemaToUnwrap extends
+																		| z.ZodUnion
+																		| z.ZodDiscriminatedUnion
+																? FieldNode<
+																		// TODO: FieldNodeConfigUnionDescendantLevel
+																		FieldNodeConfigUnionRootLevel<
+																			z.input<ZodSchemaToInfer>,
+																			z.output<ZodSchemaToInfer>,
+																			PathAcc,
+																			{
+																				tag: ZodSchemaToUnwrap extends z.ZodDiscriminatedUnion<
+																					infer Options
+																				>
+																					? {
+																							key: ZodSchemaToUnwrap["def"]["discriminator"];
+																							values: ZodSchemaToUnwrap["def"]["discriminator"] extends keyof z.infer<
+																								Options[number]
+																							>
+																								? Set<
+																										z.infer<
+																											Options[number]
+																										>[ZodSchemaToUnwrap["def"]["discriminator"]] extends infer O
+																											? O extends Literal
+																												? O
+																												: never
+																											: never
+																									>
+																								: Set<Literal>;
+																							valueToOptionIndex: ZodTagValueMap<
+																								Options,
+																								ZodSchemaToUnwrap["def"]["discriminator"]
+																							>;
+																						}
+																					: undefined;
+																			}
+																		>
+																	> &
+																		AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
+																			ZodSchemaToUnwrap["def"]["options"],
+																			PathAcc
+																		>
+																: //
+																	// ------------------------------------------------
+																	//  INTERSECTION  (z.intersection(...))
+																	// ------------------------------------------------
+																	ZodSchemaToUnwrap extends z.ZodIntersection<
+																			infer L,
+																			infer R
+																		>
+																	? // Intersection = both sides at the same path; we simply merge the
+																		// two branch results.  At runtime your resolver already does
+																		// “right wins” for conflicting keys; the type does the same.
+																		ZodResolverFieldNodeResult<
+																			// TODO: FieldNodeConfigUnionDescendantLevel
+																			L,
+																			L,
+																			PathAcc,
+																			Options
+																		> &
+																			ZodResolverFieldNodeResult<
+																				// TODO: FieldNodeConfigUnionDescendantLevel
+																				R,
+																				R,
+																				PathAcc,
+																				Options
+																			>
+																	: ZodSchemaToUnwrap extends z.ZodPipe
+																		? ZodResolverFieldNodeResult<
+																				// TODO: FieldNodeConfigUnionDescendantLevel
+																				ZodSchemaToUnwrap["def"]["out"],
+																				ZodSchemaToInfer, // Q: is this correct
+																				PathAcc,
+																				Options
+																			>
+																		: FieldNode<
+																				Options extends {
+																					isUnionRootDescendant: true;
+																				}
+																					? FieldNodeConfigUnionDescendantLevel<
+																							z.input<ZodSchemaToInfer>,
+																							z.output<ZodSchemaToInfer>,
+																							PathAcc
+																						>
+																					: FieldNodeConfigUnknownLevel<
+																							z.input<ZodSchemaToInfer>,
+																							z.output<ZodSchemaToInfer>,
+																							PathAcc
+																						>
+																			>;
