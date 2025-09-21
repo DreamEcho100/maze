@@ -2,7 +2,7 @@
 
 // form-manger/under-discussion-todo/field-array-utils.ts
 
-import type { NestedPath, NestedPathValue, ValuesShape } from "../shared";
+import type { NestedPath, NestedPathValue, ValuesShape } from "../types";
 
 type PotentialArr = any[] | ReadonlyArray<any> | undefined | null;
 type GetPotentialArrVal<T extends PotentialArr> = T extends ReadonlyArray<

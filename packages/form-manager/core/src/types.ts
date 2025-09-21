@@ -1,13 +1,13 @@
 // form-manger/index.ts
 
+import type { FormManagerError } from "./fields/errors/types.ts";
+import type { FieldNode } from "./fields/shape/types.ts";
 import type {
 	FieldNodeConfigValidationEvents,
 	NestedPath,
 	NestedPathValue,
 	ValuesShape,
-} from "../shared.ts";
-import type { FormManagerError } from "./errors.ts";
-import type { FieldNode } from "./fields/shape.ts";
+} from "./shared/types.ts";
 
 // TODO: add a metadata that the user can optionally add to it's types
 // to improve the experience of the form manager
@@ -195,7 +195,8 @@ export interface FormManager<
 		errors: {
 			/** Current errors mapped by field/schema */
 			current: {
-				[Path in NestedPath<FieldsShape>]?: FormManagerError<Path>;
+				// TODO: it should infer the _paths_ from the FieldsShape
+				// [Path in NestedPath<FieldsShape>]?: FormManagerError<Path>;
 			};
 			/** Count of current errors */
 			count: number;

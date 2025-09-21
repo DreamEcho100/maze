@@ -1,4 +1,4 @@
-import { fnConfigKeyCONFIG } from "../../../constants.js";
+import { fnConfigKeyCONFIG } from "../../constants.js";
 import type {
 	AnyRecord,
 	FieldNodeConfigPresence,
@@ -8,8 +8,8 @@ import type {
 	Literal,
 	NeverRecord,
 	PathSegmentItem,
-} from "../../shared.ts";
-import type { ValidationResult } from "./errors.ts";
+} from "../../shared/types.ts";
+import type { ValidationResult } from "../errors/types.ts";
 
 export type FieldNode<
 	Config extends FieldNodeConfig = FieldNodeConfig,

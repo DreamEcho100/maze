@@ -7,12 +7,6 @@ export const name = "form-manager-resolver-zod";
 
 import { fieldNodeTokenEnum } from "@de100/form-manager-core/constants";
 import type {
-	AnyRecord,
-	Literal,
-	NeverRecord,
-	PathSegmentItem,
-} from "@de100/form-manager-core/shared";
-import type {
 	FieldNode,
 	FieldNodeConfigArrayLevel,
 	FieldNodeConfigBigIntPrimitiveLevel,
@@ -31,45 +25,13 @@ import type {
 	FieldNodeConfigUnionRootLevel,
 	FieldNodeConfigUnknownLevel,
 	FieldNodeConfigVoidLevel,
-	InternalFieldNode,
-} from "@de100/form-manager-core/types/form-manger/fields/shape";
+} from "@de100/form-manager-core/fields/shape/types";
+import type {
+	AnyRecord,
+	Literal,
+	PathSegmentItem,
+} from "@de100/form-manager-core/shared/types";
 import type { ZodAny } from "./internal.ts";
-
-export interface InheritedMetadata {
-	intersectionItem?: {
-		[pathString: string]: number; // for intersection two or many, represents the power set of the items for overriding metadata
-	};
-	unionRootDescendant?: {
-		rootPathToInfo: Record<
-			string,
-			{
-				rootPath: string;
-				rootPathSegments: PathSegmentItem[];
-				paths: Set<string>;
-			}[]
-		>;
-	};
-	isMarkedNever?: boolean;
-	isLazyEvaluated?: boolean;
-}
-
-export interface ZodResolverAcc {
-	resolvedPathToNode: Record<string, FieldNode>;
-	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
-	node: FieldNode;
-}
-export interface InternalZodResolverAcc {
-	resolvedPathToNode: Record<string, InternalFieldNode>;
-	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
-	node: InternalFieldNode;
-}
-export interface CurrentAttributes {
-	isObjectProperty?: boolean;
-	"array-item"?: boolean;
-	isArrayTokenItem?: boolean;
-	isTupleItem?: boolean;
-	isRecordProperty?: boolean;
-}
 
 type ZodTupleItemResolverMap<
 	T extends readonly ZodAny[],

@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import type { NestedPath } from "./shared";
+import type { NestedPath } from "./types";
 
 type Test_1_NestedPath = NestedPath<{
 	a: { b: { c: [{ e: string }] } };

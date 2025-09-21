@@ -9,38 +9,50 @@
 	"license": "MIT",
 	"readme": "./README.md",
 	"sideEffects": false,
-	"main": "./dist/index.js",
+	"main": "./src/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
 		"./constants": {
 			"types": "./dist/constants.d.ts",
-			"default": "./src/constants.js"
+			"default": "./src/constants.js",
+			"import": "./src/constants.js",
+			"require": "./src/constants.js"
 		},
-		"./shared": {
-			"types": "./dist/types/shared.d.ts",
-			"default": "./src/types/shared.ts"
+		"./types": {
+			"types": "./dist/types.d.ts",
+			"default": "./src/types.ts",
+			"import": "./src/types.ts",
+			"require": "./src/types.ts"
 		},
-		"./types/form-manger/errors": {
-			"types": "./dist/types/form-manger/errors.d.ts",
-			"default": "./src/types/form-manger/errors.ts"
+		"./fields/errors/types": {
+			"types": "./dist/fields/errors/types.d.ts",
+			"default": "./src/fields/errors/types.ts",
+			"import": "./src/fields/errors/types.ts",
+			"require": "./src/fields/errors/types.ts"
 		},
-		"./types/form-manger/field-options": {
-			"types": "./dist/types/form-manger/field-options.d.ts",
-			"default": "./src/types/form-manger/field-options.ts"
+		"./fields/shape/types": {
+			"types": "./dist/fields/shape/types.d.ts",
+			"default": "./src/fields/shape/types.ts",
+			"import": "./src/fields/shape/types.ts",
+			"require": "./src/fields/shape/types.ts"
 		},
-		"./types/form-manger/fields/shape": {
-			"types": "./dist/types/form-manger/fields/shape.d.ts",
-			"default": "./src/types/form-manger/fields/shape.ts"
+		"./resolver-builder": {
+			"types": "./dist/resolver-builder/index.d.ts",
+			"default": "./src/resolver-builder/index.ts",
+			"import": "./src/resolver-builder/index.ts",
+			"require": "./src/resolver-builder/index.ts"
 		},
-		"./types/form-manger/fields/errors": {
-			"types": "./dist/types/form-manger/fields/errors.d.ts",
-			"default": "./src/types/form-manger/fields/index.ts"
+		"./resolver-builder/types": {
+			"types": "./dist/resolver-builder/types.d.ts",
+			"default": "./src/resolver-builder/types.ts",
+			"import": "./src/resolver-builder/types.ts",
+			"require": "./src/resolver-builder/types.ts"
 		},
-		"./types/form-manger/index": {
-			"types": "./dist/types/form-manger/index.d.ts",
-			"default": "./src/types/form-manger/index.ts",
-			"require": "./src/types/form-manger/index.ts",
-			"import": "./src/types/form-manger/index.ts"
+		"./shared/types": {
+			"types": "./dist/shared/types.d.ts",
+			"default": "./src/shared/types.ts",
+			"import": "./src/shared/types.ts",
+			"require": "./src/shared/types.ts"
 		}
 	},
 	"devDependencies": {

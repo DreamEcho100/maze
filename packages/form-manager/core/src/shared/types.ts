@@ -2,7 +2,7 @@ import type {
 	fieldNodePresenceEnum,
 	fieldNodeTokenEnum,
 	formFieldNodeConfigValidationEventsEnum,
-} from "../constants";
+} from "../constants.js";
 
 export type AnyRecord = Record<string, any>;
 export type NeverRecord = Record<string, never>;

@@ -1,23 +1,11 @@
 {
-	"extends": "@de100/tsconfig/base.json",
+	"extends": "@de100/tsconfig/internal-package.json",
 	"compilerOptions": {
-		"lib": ["dom", "dom.iterable", "ES2015"],
-		"allowJs": true,
-		"checkJs": true,
-		"resolveJsonModule": true,
-		"moduleResolution": "Bundler",
-		"declaration": true,
-		// "composite": true,
-		// "declarationMap": true,
-		"target": "ESNext",
-		"outDir": "./dist",
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"rootDir": "./src",
+		"baseUrl": ".",
+		"paths": { "#*": ["./src/*"] }
 	},
-	"include": [
-		"./src/**/*.js",
-		"./src/**/*.ts",
-		"./tsup.config.ts",
-		"_ignore/field-options.ts",
-		"_ignore/trie.ts"
-	]
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
 }
