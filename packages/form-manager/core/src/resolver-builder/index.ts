@@ -1003,7 +1003,7 @@ export function resolverBuilder<
 	/* End unwrap **/
 
 	if (ctx.currentParentNode[fnConfigKeyCONFIG].level !== "temp-root") {
-		throw new Error(""); // primitives aren't not allowed to be the root
+		throw new Error("Primitives cannot be the root schema");
 	}
 
 	/** Handle lazy evaluation */
@@ -1029,7 +1029,7 @@ export function resolverBuilder<
 				constraints: {},
 				validation: {
 					validate: () => {
-						throw new Error("");
+						throw new Error("This is a temp node, should not be validated");
 					},
 				},
 				userMetadata: {},
@@ -1072,22 +1072,18 @@ export function resolverBuilder<
 				configurable: true,
 				get() {
 					const allResolvers =
-						ctx.acc.lazyPathToLazyNodesAccMap.get(pathString) || [];
+						ctx.acc.lazyPathToLazyNodesAccMap.get(pathString);
+
+					if (!allResolvers) {
+						throw new Error("No resolvers found for lazy path!");
+					}
 
 					/** Now we should loop on the resolvers and everything is right, the `pushToAcc` should have resolved and handled this path */
 					for (const resolver of allResolvers) resolver();
 
-					/** Clean up collection after resolution */
-					ctx.acc.lazyPathToLazyNodesAccMap.delete(pathString);
 					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
 					// @ts-ignore
 					const resolvedNode = tempCurrentParentNode[childKey];
-
-					/* Clean up the temp reference */
-					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
-					// @ts-ignore
-					tempCurrentParentNode[childKey] = undefined;
-
 					// Replace the lazy getter with the finalized resolved node
 					// so next time it's accessed directly
 					Object.defineProperty(ctx.currentParentNode, childKey, {
@@ -1096,6 +1092,13 @@ export function resolverBuilder<
 						writable: true,
 						value: resolvedNode,
 					});
+
+					/* Clean up the temp reference */
+					// biome-ignore lint/suspicious/noTsIgnore: <explanation>
+					// @ts-ignore
+					tempCurrentParentNode[childKey] = undefined;
+					/** Clean up collection after resolution */
+					ctx.acc.lazyPathToLazyNodesAccMap.delete(pathString);
 
 					// Return the finalized resolved node so we should be access it directly
 					return resolvedNode;
