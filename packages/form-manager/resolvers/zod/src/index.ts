@@ -5,7 +5,7 @@
  * And keep form state agnostic of the validator library.
  */
 
-import { fnConfigKeyCONFIG } from "@de100/form-manager-core/constants";
+import { fnConfigKey } from "@de100/form-manager-core/constants";
 
 // ZodCheckOverwriteDef
 // ZodCheckPropertyDef
@@ -49,7 +49,7 @@ import type { ZodAny } from "./types/internal.ts";
 export const name = "form-manager-resolver-zod";
 
 async function customValidate<
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	T = unknown,
 >(
 	props: {
@@ -59,7 +59,7 @@ async function customValidate<
 		schema: unknown;
 	},
 	options: FieldNodeConfigValidateOptions,
-): Promise<ValidateReturnShape<PathAcc, T>> {
+): Promise<ValidateReturnShape<PathSegments, T>> {
 	try {
 		/** The following is to use "standard schema" that should be provided by Zod through `~standard` */
 		if (!(props.schema instanceof z.ZodAny) || !("~standard" in props.schema)) {
@@ -79,7 +79,7 @@ async function customValidate<
 						/** Q: is the `pathString` needed if we have the `pathSegments`? */
 						pathString: issue.path?.join(".") || props.currentParentPathString,
 						pathSegments: (issue.path ||
-							props.currentParentSegments) as PathAcc,
+							props.currentParentSegments) as PathSegments,
 					})),
 				},
 				metadata: { validationEvent: options.validationEvent },
@@ -100,7 +100,7 @@ async function customValidate<
 					{
 						message: "Unknown validation error",
 						pathString: props.currentParentPathString,
-						pathSegments: props.currentParentSegments as PathAcc,
+						pathSegments: props.currentParentSegments as PathSegments,
 					},
 				],
 			},
@@ -115,7 +115,7 @@ async function customValidate<
 						message:
 							error instanceof Error ? error.message : "Validation failed",
 						pathString: props.currentParentPathString,
-						pathSegments: props.currentParentSegments as PathAcc,
+						pathSegments: props.currentParentSegments as PathSegments,
 					},
 				],
 			},
@@ -977,7 +977,7 @@ const schemaPathCache = new WeakMap<
  * - Be used by the form manager to validate fields based on their paths.
  * - Be used to get the field native rules for client-side validation (e.g. min, max, pattern, etc).
  * - Maybe on the future on the `FieldNode` structure/shape to optimize nested validations, conditions, etc down the path chain.
- * This is why there is a special token for array items: `@@__FIELD_TOKEN_ARRAY_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
+ * This is why there is a special token for array items: `@@__FN_TKN_ARR_ITEM__@@`, so we can optimize dependencies and validations for all items in an array.
  */
 export function zodResolver<ZodSchema extends ZodAny>(
 	schema: ZodSchema,
@@ -1008,7 +1008,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 	}
 
 	const rootNode: InternalFieldNode = {
-		[fnConfigKeyCONFIG]: {
+		[fnConfigKey]: {
 			level: "temp-root",
 			pathString: "",
 			pathSegments: [],
@@ -1035,7 +1035,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 		},
 		currentSchema: schema,
 		currentParentNode: {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "never",
 				pathString: "",
 				pathSegments: [],

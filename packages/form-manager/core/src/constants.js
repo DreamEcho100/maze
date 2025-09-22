@@ -1,5 +1,5 @@
 /* Trie structure for path-based storage and retrieval */
-export const fnConfigKeyCONFIG = Symbol("fnConfigKeyCONFIG");
+export const fnConfigKey = Symbol("fnConfigKey");
 
 export const formFieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	change: "change",
@@ -26,9 +26,9 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * ```
 	 *
 	 * Will have the following paths:
-	 * - `"@@__FIELD_TOKEN_ARRAY_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
+	 * - `"@@__FN_TKN_ARR_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
 	 */
-	arrayItem: "@@__FIELD_TOKEN_ARRAY_ITEM__@@",
+	arrayItem: "@@__FN_TKN_ARR_ITEM__@@",
 	/**
 	 * This is used to represent the direct property of an object in the path.
 	 * For example:
@@ -38,7 +38,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * Will have the following
 	 * paths:
 	 * - `""` (root) -> level: "record" -> type: "Record<string, number>"
-	 * - `"@@__FIELD_TOKEN_RECORD_PROPERTY__@@` -> level: "primitive" -> type: "number"
+	 * - `"@@__FN_TKN_RCRD_PROP__@@` -> level: "primitive" -> type: "number"
 	 * The root path represents the record itself, while the token path represents any property in the record.
 	 * The actual property key will be dynamic and can be q valid property key _(e.g._ string, number or symbol).
 	 * The token is used to indicate that it's a direct property of the record.
@@ -51,7 +51,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * This token is primarily for direct properties of the record itself.
 	 * It helps in scenarios where you want to apply rules or validations to the properties of the record as a whole, rather than to nested objects within the record.
 	 */
-	recordProperty: "@@__FIELD_TOKEN_RECORD_PROPERTY__@@",
+	recordProperty: "@@__FN_TKN_RCRD_PROP__@@",
 	/**
 	 * This is used to represent the index of the union option that was valid during validation.
 	 *
@@ -67,20 +67,23 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * ```
 	 *
 	 * Will have the following paths:
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.0.value"` -> level: "primitive" -> type: "string"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.1.value"` -> level: "primitive" -> type: "number"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.2.value"` -> level: "primitive" -> type: "boolean"
-	 * - `"@@__FIELD_TOKEN_UNION_OPTION_ON__@@.3"` -> level: "primitive" -> type: "string"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0.value"` -> level: "primitive" -> type: "string"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1.value"` -> level: "primitive" -> type: "number"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2.value"` -> level: "primitive" -> type: "boolean"
+	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.3"` -> level: "primitive" -> type: "string"
 	 *
 	 * The root path represents the union item itself, while the numeric paths represent each option in the union.
 	 * The index of the valid option during validation can be stored in the metadata for reference.
 	 */
-	unionOptionOn: "@@__FIELD_TOKEN_UNION_OPTION_ON__@@",
+	unionOptionOn: "@@__FN_TKN_UNION_OPT_ON__@@",
 });
+
+// fieldNodeTokenEnum.arrayItem; // -> have a metadata.isArrayTokenItem
+// fieldNodeTokenEnum.recordProperty; // -> have a metadata.isRecordProperty

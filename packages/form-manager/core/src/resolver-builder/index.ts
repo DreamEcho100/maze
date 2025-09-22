@@ -1,4 +1,4 @@
-import { fieldNodeTokenEnum, fnConfigKeyCONFIG } from "../constants.js";
+import { fieldNodeTokenEnum, fnConfigKey } from "../constants.js";
 
 interface TResolverUtilsShapeBase {
 	/* complex types */
@@ -62,6 +62,7 @@ import type {
 	FieldNodeConfigPresence,
 	Literal,
 	PathSegmentItem,
+	PathSegmentsToString,
 } from "../shared/types.ts";
 import type {
 	CurrentAttributes,
@@ -88,7 +89,7 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 	let existingNode: InternalFieldNode | undefined =
 		props.acc.resolvedPathToNode[props.pathString];
 
-	if (existingNode && existingNode[fnConfigKeyCONFIG].level !== "temp-root") {
+	if (existingNode && existingNode[fnConfigKey].level !== "temp-root") {
 		isNew = false;
 
 		/** Should do something here to handle if it's `isLazilyEvaluated` as `true` */
@@ -100,7 +101,7 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 				resolverUtils: props.resolverUtils,
 			});
 
-			if (existingNode[fnConfigKeyCONFIG].level === "never") {
+			if (existingNode[fnConfigKey].level === "never") {
 				/** If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true */
 				props.inheritedMetadata.isMarkedNever = true;
 			}
@@ -108,18 +109,16 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 
 		/** Should do something here to handle if it's `isLazilyEvaluated` as `true` */
 		if (
-			existingNode[fnConfigKeyCONFIG].level &&
-			existingNode[fnConfigKeyCONFIG].level === "union-descendant"
+			existingNode[fnConfigKey].level &&
+			existingNode[fnConfigKey].level === "union-descendant"
 		) {
 			/** TODO: needs to check the `isMarkedNever` */
 			/** Merge union-descendant options */
 			const itemsToPush =
-				props.node[fnConfigKeyCONFIG].level === "union-descendant"
-					? props.node[fnConfigKeyCONFIG].options
+				props.node[fnConfigKey].level === "union-descendant"
+					? props.node[fnConfigKey].options
 					: [props.node];
-			existingNode[fnConfigKeyCONFIG].options.push(
-				...(itemsToPush as FieldNode[]),
-			);
+			existingNode[fnConfigKey].options.push(...(itemsToPush as FieldNode[]));
 		}
 
 		return {
@@ -132,7 +131,7 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 
 	let newNode = props.node;
 	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-	const metadata = (newNode[fnConfigKeyCONFIG].metadata ??= {});
+	const metadata = (newNode[fnConfigKey].metadata ??= {});
 	if (props.currentAttributes) {
 		for (const key in props.currentAttributes) {
 			// biome-ignore lint/suspicious/noTsIgnore: <explanation>
@@ -155,17 +154,17 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 			 */
 			const oldNode = newNode;
 			newNode = {
-				[fnConfigKeyCONFIG]: {
+				[fnConfigKey]: {
 					level: "union-descendant",
 					options: [oldNode as FieldNode],
-					pathString: oldNode[fnConfigKeyCONFIG].pathString,
-					pathSegments: oldNode[fnConfigKeyCONFIG].pathSegments,
+					pathString: oldNode[fnConfigKey].pathString,
+					pathSegments: oldNode[fnConfigKey].pathSegments,
 					// Q: default: ctx.default, // Can we pass it from the root somehow? maybe also make it lazy calculated/computed and cached? or just ignore it for union-descendant? is there a use case that needs it and can't be handled easily otherwise?
 					constraints: {},
 					validation: {
 						async validate(value, options): Promise<ValidateReturnShape> {
 							const config = newNode[
-								fnConfigKeyCONFIG
+								fnConfigKey
 							] as FieldNodeConfigUnionDescendantLevel;
 							for (let i = 0; i < config.options.length; i++) {
 								const opt = config.options[i];
@@ -175,9 +174,10 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 									);
 									continue;
 								}
-								const { result } = await opt[
-									fnConfigKeyCONFIG
-								].validation.validate(value, options);
+								const { result } = await opt[fnConfigKey].validation.validate(
+									value,
+									options,
+								);
 								if (!("issues" in result)) {
 									return {
 										result,
@@ -193,7 +193,9 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 									issues: [
 										{
 											message: "No union option matched",
-											pathString: config.pathString,
+											pathString: config.pathString as PathSegmentsToString<
+												typeof config.pathSegments
+											>,
 											pathSegments: config.pathSegments,
 										},
 									],
@@ -306,14 +308,11 @@ function resolveIntersectionItemConfig<
 }): InternalFieldNode {
 	const existingNode = props.existingNode;
 	if (existingNode) {
-		if (
-			existingNode[fnConfigKeyCONFIG].level ===
-			props.newNode[fnConfigKeyCONFIG].level
-		) {
-			const newConfig = props.newNode[fnConfigKeyCONFIG];
-			const existingConfig = existingNode[fnConfigKeyCONFIG];
+		if (existingNode[fnConfigKey].level === props.newNode[fnConfigKey].level) {
+			const newConfig = props.newNode[fnConfigKey];
+			const existingConfig = existingNode[fnConfigKey];
 
-			const newMetadata = props.newNode[fnConfigKeyCONFIG].metadata;
+			const newMetadata = props.newNode[fnConfigKey].metadata;
 			if (newMetadata) {
 				existingConfig.metadata = {
 					...(existingConfig.metadata || {}),
@@ -339,21 +338,19 @@ function resolveIntersectionItemConfig<
 				// @ts-ignore
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 				return (props.acc.resolvedPathToNode[
-					props.newNode[fnConfigKeyCONFIG].pathString
-				][fnConfigKeyCONFIG] = {
+					props.newNode[fnConfigKey].pathString
+				][fnConfigKey] = {
 					level: "never",
-					pathString: existingNode[fnConfigKeyCONFIG].pathString,
-					pathSegments: existingNode[fnConfigKeyCONFIG].pathSegments,
+					pathString: existingNode[fnConfigKey].pathString,
+					pathSegments: existingNode[fnConfigKey].pathSegments,
 					constraints: {},
 					validation: {
 						validate: async (value, options) =>
 							// TODO: implement on `props.resolverUtils` the `UnreachableField`
 							props.resolverUtils.UnreachableField({
 								value,
-								currentParentPathString:
-									existingNode[fnConfigKeyCONFIG].pathString,
-								currentParentSegments:
-									existingNode[fnConfigKeyCONFIG].pathSegments,
+								currentParentPathString: existingNode[fnConfigKey].pathString,
+								currentParentSegments: existingNode[fnConfigKey].pathSegments,
 								// TODO: improve
 								reason: "intersection-conflict",
 								options,
@@ -369,7 +366,7 @@ function resolveIntersectionItemConfig<
 		}
 	}
 
-	props.acc.resolvedPathToNode[props.newNode[fnConfigKeyCONFIG].pathString] =
+	props.acc.resolvedPathToNode[props.newNode[fnConfigKey].pathString] =
 		props.newNode;
 	return props.newNode;
 }
@@ -427,7 +424,7 @@ export function resolverBuilder<
 			fieldNodeTokenEnum.arrayItem,
 		];
 		const node: FieldNode = {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "array",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -480,7 +477,7 @@ export function resolverBuilder<
 		});
 
 		const node = {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "tuple",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -542,7 +539,7 @@ export function resolverBuilder<
 
 		/** Create record node configuration */
 		const node: FieldNode = {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "record",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -603,7 +600,7 @@ export function resolverBuilder<
 		});
 
 		const node = {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "object",
 				pathString: currentParentPathString,
 				pathSegments: currentParentPathSegments,
@@ -693,7 +690,7 @@ export function resolverBuilder<
 
 		const node = pushToAcc({
 			acc: ctx.acc,
-			node: { [fnConfigKeyCONFIG]: config },
+			node: { [fnConfigKey]: config },
 			pathString: currentParentPathString,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
@@ -1002,7 +999,7 @@ export function resolverBuilder<
 	}
 	/* End unwrap **/
 
-	if (ctx.currentParentNode[fnConfigKeyCONFIG].level !== "temp-root") {
+	if (ctx.currentParentNode[fnConfigKey].level !== "temp-root") {
 		throw new Error("Primitives cannot be the root schema");
 	}
 
@@ -1022,10 +1019,10 @@ export function resolverBuilder<
 		 * Final result is atomic - either fully resolved or not resolved
 		 */
 		const tempCurrentParentNode = {
-			[fnConfigKeyCONFIG]: {
+			[fnConfigKey]: {
 				level: "temp-parent",
-				pathString: ctx.currentParentNode[fnConfigKeyCONFIG].pathString,
-				pathSegments: ctx.currentParentNode[fnConfigKeyCONFIG].pathSegments,
+				pathString: ctx.currentParentNode[fnConfigKey].pathString,
+				pathSegments: ctx.currentParentNode[fnConfigKey].pathSegments,
 				constraints: {},
 				validation: {
 					validate: () => {
@@ -1146,7 +1143,7 @@ export function resolverBuilder<
 			node: pushToAcc({
 				acc: ctx.acc,
 				pathString: currentParentPathString,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1183,7 +1180,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1221,7 +1218,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1259,7 +1256,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1295,7 +1292,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1332,7 +1329,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1369,7 +1366,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1406,7 +1403,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1443,7 +1440,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1480,7 +1477,7 @@ export function resolverBuilder<
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
-				node: { [fnConfigKeyCONFIG]: config },
+				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1498,7 +1495,7 @@ export function resolverBuilder<
 		node: pushToAcc({
 			acc: ctx.acc,
 			node: {
-				[fnConfigKeyCONFIG]: {
+				[fnConfigKey]: {
 					level: "unknown",
 					pathString: currentParentPathString,
 					pathSegments: currentParentPathSegments,

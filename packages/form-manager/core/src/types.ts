@@ -167,11 +167,11 @@ export interface FormManager<
 		 * ```ts
 		 * const fieldConfig = formManager.fields.shape.user.name;
 		 * ```
-		 * But to get the field config you will need to access it using `fnConfigKeyCONFIG`
+		 * But to get the field config you will need to access it using `fnConfigKey`
 		 *
 		 * ```ts
-		 * import { fnConfigKeyCONFIG } from "@de100/form-manager-core/constants";
-		 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKeyCONFIG];
+		 * import { fnConfigKey } from "@de100/form-manager-core/constants";
+		 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKey];
 		 *
 		 * ```ts
 		 * This is done to avoid name collisions with potential field names
@@ -179,7 +179,7 @@ export interface FormManager<
 		 * that holds the field configuration and metadata
 		 *
 		 * ```ts
-		 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKeyCONFIG];
+		 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKey];
 		 * console.log(fieldConfig.validation);
 		 * ```
 		 */

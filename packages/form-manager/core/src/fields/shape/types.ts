@@ -1,4 +1,4 @@
-import { fnConfigKeyCONFIG } from "../../constants.js";
+import { fnConfigKey } from "../../constants.js";
 import type {
 	AnyRecord,
 	FieldNodeConfigPresence,
@@ -15,13 +15,13 @@ export type FieldNode<
 	Config extends FieldNodeConfig = FieldNodeConfig,
 	T = Record<string | number, FieldNode<any, any>>,
 > = T & {
-	[fnConfigKeyCONFIG]: Config;
+	[fnConfigKey]: Config;
 };
 export type InternalFieldNode<
 	Config extends InternalFieldNodeConfig = InternalFieldNodeConfig,
 	T = Record<string | number, InternalFieldNode<any, any>>,
 > = T & {
-	[fnConfigKeyCONFIG]: Config;
+	[fnConfigKey]: Config;
 };
 
 export type FieldNodeConfigMetadata = {
@@ -50,13 +50,13 @@ export interface FieldNodeConfigBase<
 	LevelName extends string,
 	InputValue,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = [],
+	PathSegments extends PathSegmentItem[] = [],
 	Rules extends AnyRecord = AnyRecord,
 > {
 	//
 	level: LevelName;
-	pathString: string;
-	pathSegments: PathSegmentItem[];
+	pathString: string; // NOTE: Can't use `PathSegmentsToString<PathSegments>` easily without TS complaining
+	pathSegments: PathSegments;
 
 	// default value if applicable
 	default?: InputValue;
@@ -75,7 +75,7 @@ export interface FieldNodeConfigBase<
 		validate: (
 			value: unknown,
 			options: FieldNodeConfigValidateOptions,
-		) => Promise<ValidateReturnShape<PathAcc, OutputValue>>;
+		) => Promise<ValidateReturnShape<PathSegments, OutputValue>>;
 		isPending?: boolean;
 	};
 
@@ -118,7 +118,7 @@ export interface FieldNodeConfigTempParentLevel
 		AnyRecord
 	> {}
 export interface FieldNodeConfigUnknownLevel<
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	InputValue = unknown,
 	OutputValue = InputValue,
 	Rules extends Record<string, any> = {
@@ -129,19 +129,19 @@ export interface FieldNodeConfigUnknownLevel<
 		"unknown",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		Rules
 	> {}
 // export interface FieldNodeConfigBase<
 // 	InputValue = any,
 // 	OutputValue = InputValue,
-// 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+// 	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 // 	Rules extends Record<string, any> = AnyRecord,
 // > extends FieldNodeConfigBase<
 // 		"primitive",
 // 		InputValue,
 // 		OutputValue,
-// 		PathAcc,
+// 		PathSegments,
 // 		Rules & {
 // 			coerce: boolean | undefined;
 // 			presence: FieldNodeConfigPresence;
@@ -151,12 +151,12 @@ export interface FieldNodeConfigUnknownLevel<
 export interface FieldNodeConfigStringPrimitiveLevel<
 	InputValue = string,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"string",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			coerce?: boolean;
@@ -176,12 +176,12 @@ export interface FieldNodeConfigStringPrimitiveLevel<
 export interface FieldNodeConfigNumberPrimitiveLevel<
 	InputValue = number,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"number",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			coerce?: boolean;
@@ -204,12 +204,12 @@ export interface FieldNodeConfigNumberPrimitiveLevel<
 export interface FieldNodeConfigBigIntPrimitiveLevel<
 	InputValue = bigint,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"bigint",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			coerce?: boolean;
 			presence: FieldNodeConfigPresence;
@@ -235,12 +235,12 @@ export interface FieldNodeConfigBigIntPrimitiveLevel<
 export interface FieldNodeConfigDatePrimitiveLevel<
 	InputValue = Date,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"date",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			coerce: boolean | undefined;
 			presence: FieldNodeConfigPresence;
@@ -254,12 +254,12 @@ export interface FieldNodeConfigDatePrimitiveLevel<
 export interface FieldNodeConfigBooleanPrimitiveLevel<
 	InputValue = boolean,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"boolean",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			coerce?: boolean;
@@ -270,12 +270,12 @@ export interface FieldNodeConfigBooleanPrimitiveLevel<
 export interface FieldNodeConfigUndefinedLevel<
 	InputValue = undefined,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"undefined",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			readonly?: boolean;
@@ -284,12 +284,12 @@ export interface FieldNodeConfigUndefinedLevel<
 export interface FieldNodeConfigNullLevel<
 	InputValue = null,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"null",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			readonly?: boolean;
@@ -298,12 +298,12 @@ export interface FieldNodeConfigNullLevel<
 export interface FieldNodeConfigVoidLevel<
 	InputValue = void,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"void",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			readonly?: boolean;
@@ -312,24 +312,24 @@ export interface FieldNodeConfigVoidLevel<
 export interface FieldNodeConfigNeverLevel<
 	InputValue = never,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	Rules extends Record<string, any> = AnyRecord,
 > extends FieldNodeConfigBase<
 		"never",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		Rules
 	> {}
 export interface FieldNodeConfigFilePrimitiveLevel<
 	InputValue = File,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"file",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			// coerce: boolean | undefined;
 			presence: FieldNodeConfigPresence;
@@ -376,12 +376,12 @@ export type FieldNodeConfigPrimitiveLevel =
 export interface FieldNodeConfigObjectLevel<
 	InputValue = AnyRecord,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"object",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{ presence: FieldNodeConfigPresence; readonly: boolean | undefined }
 	> {
 	// No need to store `shape` since it won't help much and we're relaying mainly on the `TrieNode` data structure
@@ -390,12 +390,12 @@ export interface FieldNodeConfigObjectLevel<
 export interface FieldNodeConfigArrayLevel<
 	InputValue = any[],
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"array",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			minLength: number | undefined;
@@ -409,12 +409,12 @@ export interface FieldNodeConfigArrayLevel<
 export interface FieldNodeConfigTupleLevel<
 	InputValue = any[],
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"tuple",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{
 			presence: FieldNodeConfigPresence;
 			exactLength: number | undefined;
@@ -430,12 +430,12 @@ export interface FieldNodeConfigTupleLevel<
 export interface FieldNodeConfigRecordLevel<
 	InputValue = Record<PropertyKey, any>,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"record",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		{ presence: FieldNodeConfigPresence; readonly: boolean | undefined }
 	> {}
 // z.record(z.string(), z.number()).def.keyType;
@@ -443,7 +443,7 @@ export interface FieldNodeConfigRecordLevel<
 export interface FieldNodeConfigUnionRootLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	Rules extends Record<string, any> = {
 		// presence: FieldNodeConfigPresence;
 		// readonly: boolean | undefined;
@@ -462,7 +462,7 @@ export interface FieldNodeConfigUnionRootLevel<
 		"union-root",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		Rules & {
 			presence: FieldNodeConfigPresence;
 			readonly: boolean | undefined;
@@ -473,22 +473,22 @@ export interface FieldNodeConfigUnionRootLevel<
 export interface FieldNodeConfigUnionDescendantLevel<
 	InputValue = unknown,
 	OutputValue = InputValue,
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 > extends FieldNodeConfigBase<
 		"union-descendant",
 		InputValue,
 		OutputValue,
-		PathAcc,
+		PathSegments,
 		NeverRecord
 	> {
 	options: FieldNode[];
 }
 
 export interface ValidateReturnShape<
-	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	ValidValue = unknown,
 > {
-	result: ValidationResult<PathAcc, ValidValue>;
+	result: ValidationResult<PathSegments, ValidValue>;
 	metadata:
 		| {
 				// /** The validation event that triggered the validation, if any. */

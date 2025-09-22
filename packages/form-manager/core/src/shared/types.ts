@@ -1,15 +1,21 @@
-import type { FieldNode, ValidateReturnShape } from "#fields/shape/types.js";
-import {
-	type fieldNodePresenceEnum,
-	type fieldNodeTokenEnum,
-	fnConfigKeyCONFIG,
-	type formFieldNodeConfigValidationEventsEnum,
+import type {
+	FieldNode,
+	FieldNodeConfigNeverLevel,
+	FieldNodeConfigPrimitiveLevel,
+} from "#fields/shape/types.js";
+import type {
+	fieldNodePresenceEnum,
+	fieldNodeTokenEnum,
+	fnConfigKey,
+	formFieldNodeConfigValidationEventsEnum,
 } from "../constants.js";
 
 export type AnyRecord = Record<string, any>;
 export type NeverRecord = Record<string, never>;
 export type PathSegmentItem = string | number; //| PathSegment;
 export type Literal = string | number | bigint | boolean | null | undefined;
+
+export type FnConfigKey = typeof fnConfigKey;
 
 // export type FieldNodeConfigTokenEnum['arrayItem'] = typeof ARRAY_ITEM_TOKEN;
 export type FieldNodeConfigPresenceEnum = typeof fieldNodePresenceEnum;
@@ -46,6 +52,9 @@ type IntegerString<T> = T extends `${number}`
 		? never // Reject if it contains a decimal
 		: T
 	: never;
+
+const t = {} as JoinPath<"a.b", 0>; // Expected: "a.b.0"
+//    ^?
 
 export interface Config {
 	// So the user can configure/override this if needed
@@ -113,104 +122,180 @@ export type NestedPath<
 				}[keyof T & string]
 	: never;
 
+type NormalizedPathSegment<Segment extends PathSegmentItem> =
+	Segment extends FieldNodeConfigTokenEnum["arrayItem"]
+		? number
+		: Segment extends FieldNodeConfigTokenEnum["recordProperty"]
+			? PathSegmentItem
+			: Segment extends FieldNodeConfigTokenEnum["unionOptionOn"]
+				? ""
+				: Segment;
+
+type NormalizedPathStringSegment<
+	Segment extends PathSegmentItem,
+	PathSegments extends PathSegmentItem[] = [],
+	ParentNode extends FieldNode = {
+		[Key in FnConfigKey]: FieldNodeConfigNeverLevel;
+	},
+	NormalizedPathSegments extends PathSegmentItem[] = [],
+> = Segment extends FieldNodeConfigTokenEnum["arrayItem"]
+	? ParentNode[FnConfigKey]["level"] extends "array"
+		? {
+				normalizedPathString: PathSegmentsToString<
+					[...NormalizedPathSegments, number]
+				>;
+				normalizedPathSegments: [...NormalizedPathSegments, number];
+			}
+		: {
+				normalizedPathString: PathSegmentsToString<
+					[...NormalizedPathSegments, Segment]
+				>;
+				normalizedPathSegments: [...NormalizedPathSegments, Segment];
+			}
+	: Segment extends FieldNodeConfigTokenEnum["recordProperty"]
+		? ParentNode[FnConfigKey]["level"] extends "record"
+			? {
+					normalizedPathString: PathSegmentsToString<
+						[...NormalizedPathSegments, PathSegmentItem]
+					>;
+					normalizedPathSegments: [...NormalizedPathSegments, PathSegmentItem];
+				}
+			: {
+					normalizedPathString: PathSegmentsToString<
+						[...NormalizedPathSegments, Segment]
+					>;
+					normalizedPathSegments: [...NormalizedPathSegments, Segment];
+				}
+		: Segment extends number
+			? PathSegments extends [
+					...infer PrevPathSegments extends PathSegmentItem[],
+					FieldNodeConfigTokenEnum["unionOptionOn"],
+				]
+				? {
+						normalizedPathString: PathSegmentsToString<PrevPathSegments>;
+						normalizedPathSegments: PrevPathSegments;
+					}
+				: {
+						normalizedPathString: PathSegmentsToString<
+							[...NormalizedPathSegments]
+						>;
+						normalizedPathSegments: [...NormalizedPathSegments];
+					}
+			: {
+					normalizedPathString: PathSegmentsToString<
+						[...NormalizedPathSegments, Segment]
+					>;
+					normalizedPathSegments: [...NormalizedPathSegments, Segment];
+				};
+
 type Values<T> = T[keyof T];
+type IsContainer<
+	ParentNode extends FieldNode,
+	K extends keyof ParentNode,
+> = ParentNode[K]["level"] extends "object" | "array" | "tuple" | "record"
+	? 1
+	: K extends FieldNodeConfigTokenEnum["recordProperty"]
+		? 1
+		: 0;
+type IsPrimitive<
+	ParentNode extends FieldNode,
+	K extends keyof ParentNode,
+> = ParentNode[K] extends FieldNodeConfigPrimitiveLevel
+	? K extends FieldNodeConfigTokenEnum["recordProperty"]
+		? 0
+		: 1
+	: 0;
 export type DeepFieldNodePath<
-	T extends FieldNode,
+	ParentNode extends FieldNode,
 	Path extends string = "",
 	PathSegments extends PathSegmentItem[] = [],
+	NormalizedPathSegments extends PathSegmentItem[] = [],
 > = Values<{
-	[K in keyof T & string]: NonNullable<T[K]> extends Record<PropertyKey, any>
-		?
-				| {
-						pathString: JoinPath<Path, K>;
-						pathSegments: [...PathSegments, K];
-						// node: T[typeof fnConfigKeyCONFIG];
-				  }
-				| DeepFieldNodePath<T[K], JoinPath<Path, K>, [...PathSegments, K]>
-		: {
+	[K in keyof ParentNode & string]: IsPrimitive<ParentNode, K> extends 1
+		? {
 				pathString: JoinPath<Path, K>;
 				pathSegments: [...PathSegments, K];
-				// node: T[typeof fnConfigKeyCONFIG];
-			};
+				node: ParentNode[K];
+				// plevel: ParentNode[FnConfigKey]["level"];
+				// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
+				// 	? ParentNode[FnConfigKey]["level"] extends "array"
+				// 		? 1
+				// 		: 0.1
+				// 	: 0;
+				// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
+				// 	? ParentNode[FnConfigKey]["level"] extends "record"
+				// 		? 1
+				// 		: 0.1
+				// 	: 0;
+			} & NormalizedPathStringSegment<
+				K,
+				PathSegments,
+				ParentNode,
+				NormalizedPathSegments
+			>
+		:
+				| ({
+						pathString: JoinPath<Path, K>;
+						pathSegments: [...PathSegments, K];
+						node: ParentNode[K];
+						// plevel: ParentNode[FnConfigKey]["level"];
+						// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
+						// 	? ParentNode[FnConfigKey]["level"] extends "array"
+						// 		? 1
+						// 		: 0.1
+						// 	: 0;
+						// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
+						// 	? ParentNode[FnConfigKey]["level"] extends "record"
+						// 		? 1
+						// 		: 0.1
+						// 	: 0;
+				  } & NormalizedPathStringSegment<
+						K,
+						PathSegments,
+						ParentNode,
+						NormalizedPathSegments
+				  >)
+				| DeepFieldNodePath<
+						ParentNode[K],
+						JoinPath<Path, K>,
+						[...PathSegments, K],
+						NormalizedPathStringSegment<
+							K,
+							PathSegments,
+							ParentNode,
+							NormalizedPathSegments
+						>["normalizedPathSegments"]
+				  >;
 }>;
 
-export type PathSegmentsToStr<
+export type PathSegmentsToString<
 	S extends PathSegmentItem[],
 	Acc extends string = "",
 > = S extends [infer First, ...infer Rest extends PathSegmentItem[]]
 	? First extends PathSegmentItem
-		? PathSegmentsToStr<Rest, Acc extends "" ? `${First}` : `${Acc}.${First}`>
+		? PathSegmentsToString<
+				Rest,
+				Acc extends "" ? `${First}` : `${Acc}.${First}`
+			>
 		: never
 	: Acc;
 
+// normalizedPathString: "b";
+// normalizedPathSegments: ["b"];
 export type DeepFieldNodePathEntry<T extends FieldNode> =
 	DeepFieldNodePath<T> extends infer U
-		? U extends { pathString: infer PS extends string; pathSegments: infer Seg }
-			? { pathString: PS; pathSegments: Seg }
+		? U extends {
+				normalizedPathString: infer NPS;
+				pathSegments: infer PS;
+				node: infer N;
+			}
+			? {
+					normalizedPathString: NPS extends string ? NPS : never;
+					pathSegments: PS extends PathSegmentItem[] ? PS : never;
+					node: N extends FieldNode ? N : never;
+				}
 			: never
 		: never;
-
-// Split approach - divide and conquer
-// 1. Split into specialized types for different structures
-
-// // Object paths
-// export type NestedObjectPath<
-// 	T,
-// 	Path extends string = "",
-// 	Depth extends unknown[] = DepthArray,
-// > = Depth extends [unknown, ...infer Rest]
-// 	? {
-// 			[K in keyof T & string]: NonNullable<T[K]> extends Record<
-// 				PropertyKey,
-// 				any
-// 			>
-// 				?
-// 						| JoinPath<Path, K>
-// 						| NestedObjectPath<NonNullable<T[K]>, JoinPath<Path, K>, Rest>
-// 				: JoinPath<Path, K>;
-// 		}[keyof T & string]
-// 	: never;
-
-// // Array paths
-// export type NestedArrayPath<
-// 	T extends any[],
-// 	Path extends string = "",
-// 	Depth extends unknown[] = DepthArray,
-// > = Depth extends [unknown, ...infer Rest]
-// 	?
-// 			| JoinPath<Path, bigint>
-// 			| (T[number] extends Record<PropertyKey, any>
-// 					? NestedPath<T[number], JoinPath<Path, bigint>, Rest>
-// 					: never)
-// 			| JoinPath<Path, FieldNodeConfigTokenEnum['arrayItem']>
-// 			| (T[number] extends Record<PropertyKey, any>
-// 					? NestedPath<T[number], JoinPath<Path, FieldNodeConfigTokenEnum['arrayItem']>, Rest>
-// 					: never)
-// 	: never;
-
-// // Tuple paths
-// export type NestedTuplePath<
-// 	T extends readonly any[],
-// 	Path extends string = "",
-// 	Depth extends unknown[] = DepthArray,
-// > = Depth extends [unknown, ...infer Rest]
-// 	? {
-// 			[K in IntegerString<keyof T>]: T[K] extends Record<PropertyKey, any>
-// 				? JoinPath<Path, K> | NestedPath<T[K], JoinPath<Path, K>, Rest>
-// 				: JoinPath<Path, K>;
-// 		}[IntegerString<keyof T>]
-// 	: never;
-
-// // Main type becomes a dispatcher
-// export type NestedPath<
-// 	T,
-// 	Path extends string = "",
-// 	Depth extends unknown[] = DepthArray,
-// > = T extends readonly [any, ...any[]]
-// 	? NestedTuplePath<T, Path, Depth>
-// 	: T extends any[]
-// 		? NestedArrayPath<T, Path, Depth>
-// 		: NestedObjectPath<T, Path, Depth>;
 
 type HasNull<T> = null extends T ? true : false;
 type HasUndefined<T> = undefined extends T ? true : false;
