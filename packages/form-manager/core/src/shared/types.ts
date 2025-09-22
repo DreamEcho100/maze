@@ -1,7 +1,9 @@
-import type {
-	fieldNodePresenceEnum,
-	fieldNodeTokenEnum,
-	formFieldNodeConfigValidationEventsEnum,
+import type { FieldNode, ValidateReturnShape } from "#fields/shape/types.js";
+import {
+	type fieldNodePresenceEnum,
+	type fieldNodeTokenEnum,
+	fnConfigKeyCONFIG,
+	type formFieldNodeConfigValidationEventsEnum,
 } from "../constants.js";
 
 export type AnyRecord = Record<string, any>;
@@ -110,6 +112,44 @@ export type NestedPath<
 						: JoinPath<Path, K & string>;
 				}[keyof T & string]
 	: never;
+
+type Values<T> = T[keyof T];
+export type DeepFieldNodePath<
+	T extends FieldNode,
+	Path extends string = "",
+	PathSegments extends PathSegmentItem[] = [],
+> = Values<{
+	[K in keyof T & string]: NonNullable<T[K]> extends Record<PropertyKey, any>
+		?
+				| {
+						pathString: JoinPath<Path, K>;
+						pathSegments: [...PathSegments, K];
+						// node: T[typeof fnConfigKeyCONFIG];
+				  }
+				| DeepFieldNodePath<T[K], JoinPath<Path, K>, [...PathSegments, K]>
+		: {
+				pathString: JoinPath<Path, K>;
+				pathSegments: [...PathSegments, K];
+				// node: T[typeof fnConfigKeyCONFIG];
+			};
+}>;
+
+export type PathSegmentsToStr<
+	S extends PathSegmentItem[],
+	Acc extends string = "",
+> = S extends [infer First, ...infer Rest extends PathSegmentItem[]]
+	? First extends PathSegmentItem
+		? PathSegmentsToStr<Rest, Acc extends "" ? `${First}` : `${Acc}.${First}`>
+		: never
+	: Acc;
+
+export type DeepFieldNodePathEntry<T extends FieldNode> =
+	DeepFieldNodePath<T> extends infer U
+		? U extends { pathString: infer PS extends string; pathSegments: infer Seg }
+			? { pathString: PS; pathSegments: Seg }
+			: never
+		: never;
+
 // Split approach - divide and conquer
 // 1. Split into specialized types for different structures
 

@@ -1,7 +1,11 @@
-import type { PathSegmentItem } from "../../shared/types.ts";
+import type { FieldNode } from "#fields/shape/types.ts";
+import type {
+	DeepFieldNodePathEntry,
+	PathSegmentItem,
+} from "../../shared/types.ts";
 
-export interface FormManagerError<
-	PathAcc extends PathSegmentItem[] = string[],
+export interface FieldError<
+	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 > {
 	/** The error message of the issue. */
 	message: string | null;
@@ -21,9 +25,15 @@ export interface SuccessResult<Output> {
 /** The result interface if validation fails. */
 export interface FailureResult<PathAcc extends PathSegmentItem[] = string[]> {
 	/** The issues of failed validation. */
-	issues: ReadonlyArray<FormManagerError<PathAcc>>;
+	issues: ReadonlyArray<FieldError<PathAcc>>;
 }
 export type ValidationResult<
 	PathAcc extends PathSegmentItem[] = PathSegmentItem[],
 	ValidValue = unknown,
 > = SuccessResult<ValidValue> | FailureResult<PathAcc>;
+
+export type FieldPathToError<T extends FieldNode> = {
+	[NodeInfo in DeepFieldNodePathEntry<T> as NodeInfo["pathString"]]: FieldError<
+		NodeInfo["pathSegments"]
+	>;
+};

@@ -73,7 +73,7 @@ export interface FieldNodeConfigBase<
 				  };
 		};
 		validate: (
-			value: any,
+			value: unknown,
 			options: FieldNodeConfigValidateOptions,
 		) => Promise<ValidateReturnShape<PathAcc, OutputValue>>;
 		isPending?: boolean;

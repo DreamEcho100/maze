@@ -1,8 +1,9 @@
 // form-manger/index.ts
 
-import type { FormManagerError } from "./fields/errors/types.ts";
+import type { FieldError, FieldPathToError } from "./fields/errors/types.ts";
 import type { FieldNode } from "./fields/shape/types.ts";
 import type {
+	DeepFieldNodePath,
 	FieldNodeConfigValidationEvents,
 	NestedPath,
 	NestedPathValue,
@@ -194,10 +195,7 @@ export interface FormManager<
 		/** 🔹 Errors */
 		errors: {
 			/** Current errors mapped by field/schema */
-			current: {
-				// TODO: it should infer the _paths_ from the FieldsShape
-				// [Path in NestedPath<FieldsShape>]?: FormManagerError<Path>;
-			};
+			current: FieldPathToError<FieldsShape>;
 			/** Count of current errors */
 			count: number;
 			/** First error path (if any) */
