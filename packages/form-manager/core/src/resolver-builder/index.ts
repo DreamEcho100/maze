@@ -555,11 +555,11 @@ export function resolverBuilder<
 
 		/** Create token path for the property template */
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${fieldNodeTokenEnum.recordProperty}`
-			: fieldNodeTokenEnum.recordProperty;
+			? `${currentParentPathString}.${fieldNodeTokenEnum.recordKey}`
+			: fieldNodeTokenEnum.recordKey;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			fieldNodeTokenEnum.recordProperty,
+			fieldNodeTokenEnum.recordKey,
 		];
 
 		resolverBuilder(result.valueSchema, {
@@ -570,7 +570,7 @@ export function resolverBuilder<
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentSchema: result.valueSchema,
 			currentParentNode: node,
-			childKey: fieldNodeTokenEnum.recordProperty,
+			childKey: fieldNodeTokenEnum.recordKey,
 			resolverUtils: ctx.resolverUtils,
 		}).node;
 

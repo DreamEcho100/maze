@@ -54,10 +54,10 @@ type AttachCollectableTypeFieldNodeNodesToUnionRootResolverMap<
 > = (Options extends readonly (infer UnionItem)[]
 	? UnionItem extends z.ZodRecord
 		? {
-				[Key in FieldNodeConfigTokenEnum["recordProperty"]]: ZodResolverFieldNodeResult<
+				[Key in FieldNodeConfigTokenEnum["recordKey"]]: ZodResolverFieldNodeResult<
 					UnionItem["valueType"],
 					UnionItem["valueType"],
-					[...PathSegments, FieldNodeConfigTokenEnum["recordProperty"]],
+					[...PathSegments, FieldNodeConfigTokenEnum["recordKey"]],
 					{ isUnionRootDescendant: true }
 				>;
 			}
@@ -339,12 +339,12 @@ export type ZodResolverFieldNodeResult<
 																	PathSegments
 																>
 													> & {
-														[Key in FieldNodeConfigTokenEnum["recordProperty"]]: ZodResolverFieldNodeResult<
+														[Key in FieldNodeConfigTokenEnum["recordKey"]]: ZodResolverFieldNodeResult<
 															ZodSchemaToUnwrap["valueType"],
 															ZodSchemaToUnwrap["valueType"],
 															[
 																...PathSegments,
-																FieldNodeConfigTokenEnum["recordProperty"],
+																FieldNodeConfigTokenEnum["recordKey"],
 															],
 															Options extends { isUnionRootDescendant: true }
 																? { isUnionRootDescendant: true }

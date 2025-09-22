@@ -38,7 +38,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * Will have the following
 	 * paths:
 	 * - `""` (root) -> level: "record" -> type: "Record<string, number>"
-	 * - `"@@__FN_TKN_RCRD_PROP__@@` -> level: "primitive" -> type: "number"
+	 * - `"@@__FN_TKN_RCRD_KEY__@@` -> level: "primitive" -> type: "number"
 	 * The root path represents the record itself, while the token path represents any property in the record.
 	 * The actual property key will be dynamic and can be q valid property key _(e.g._ string, number or symbol).
 	 * The token is used to indicate that it's a direct property of the record.
@@ -51,7 +51,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * This token is primarily for direct properties of the record itself.
 	 * It helps in scenarios where you want to apply rules or validations to the properties of the record as a whole, rather than to nested objects within the record.
 	 */
-	recordProperty: "@@__FN_TKN_RCRD_PROP__@@",
+	recordKey: "@@__FN_TKN_RCRD_KEY__@@",
 	/**
 	 * This is used to represent the index of the union option that was valid during validation.
 	 *
@@ -86,4 +86,4 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 });
 
 // fieldNodeTokenEnum.arrayItem; // -> have a metadata.isArrayTokenItem
-// fieldNodeTokenEnum.recordProperty; // -> have a metadata.isRecordProperty
+// fieldNodeTokenEnum.recordKey; // -> have a metadata.isRecordProperty

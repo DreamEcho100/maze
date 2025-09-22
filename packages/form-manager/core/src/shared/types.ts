@@ -125,7 +125,7 @@ export type NestedPath<
 type NormalizedPathSegment<Segment extends PathSegmentItem> =
 	Segment extends FieldNodeConfigTokenEnum["arrayItem"]
 		? number
-		: Segment extends FieldNodeConfigTokenEnum["recordProperty"]
+		: Segment extends FieldNodeConfigTokenEnum["recordKey"]
 			? PathSegmentItem
 			: Segment extends FieldNodeConfigTokenEnum["unionOptionOn"]
 				? ""
@@ -152,7 +152,7 @@ type NormalizedPathStringSegment<
 				>;
 				normalizedPathSegments: [...NormalizedPathSegments, Segment];
 			}
-	: Segment extends FieldNodeConfigTokenEnum["recordProperty"]
+	: Segment extends FieldNodeConfigTokenEnum["recordKey"]
 		? ParentNode[FnConfigKey]["level"] extends "record"
 			? {
 					normalizedPathString: PathSegmentsToString<
@@ -189,19 +189,11 @@ type NormalizedPathStringSegment<
 				};
 
 type Values<T> = T[keyof T];
-type IsContainer<
-	ParentNode extends FieldNode,
-	K extends keyof ParentNode,
-> = ParentNode[K]["level"] extends "object" | "array" | "tuple" | "record"
-	? 1
-	: K extends FieldNodeConfigTokenEnum["recordProperty"]
-		? 1
-		: 0;
-type IsPrimitive<
+type IsFieldNodePrimitive<
 	ParentNode extends FieldNode,
 	K extends keyof ParentNode,
 > = ParentNode[K] extends FieldNodeConfigPrimitiveLevel
-	? K extends FieldNodeConfigTokenEnum["recordProperty"]
+	? K extends FieldNodeConfigTokenEnum["recordKey"]
 		? 0
 		: 1
 	: 0;
@@ -211,7 +203,10 @@ export type DeepFieldNodePath<
 	PathSegments extends PathSegmentItem[] = [],
 	NormalizedPathSegments extends PathSegmentItem[] = [],
 > = Values<{
-	[K in keyof ParentNode & string]: IsPrimitive<ParentNode, K> extends 1
+	[K in keyof ParentNode & string]: IsFieldNodePrimitive<
+		ParentNode,
+		K
+	> extends 1
 		? {
 				pathString: JoinPath<Path, K>;
 				pathSegments: [...PathSegments, K];
@@ -222,7 +217,7 @@ export type DeepFieldNodePath<
 				// 		? 1
 				// 		: 0.1
 				// 	: 0;
-				// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
+				// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordKey"]
 				// 	? ParentNode[FnConfigKey]["level"] extends "record"
 				// 		? 1
 				// 		: 0.1
@@ -244,7 +239,7 @@ export type DeepFieldNodePath<
 						// 		? 1
 						// 		: 0.1
 						// 	: 0;
-						// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
+						// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordKey"]
 						// 	? ParentNode[FnConfigKey]["level"] extends "record"
 						// 		? 1
 						// 		: 0.1

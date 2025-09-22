@@ -78,14 +78,13 @@ zodSchemaTestTrieResult.numberField[fnConfigKey].level; // "number"
 zodSchemaTestTrieResult.literalNumberField[fnConfigKey].level; // "number"
 zodSchemaTestTrieResult.nestedObject.nestedNumber[fnConfigKey].level; // "primitive"
 zodSchemaTestTrieResult.recordField[fnConfigKey].level; // "record"
-zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordProperty][
-	fnConfigKey
-].level; // "number"
+zodSchemaTestTrieResult.recordField[fieldNodeTokenEnum.recordKey][fnConfigKey]
+	.level; // "number"
 zodSchemaTestTrieResult.recordOfObjects[fnConfigKey].level; // "record"
-zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty][
+zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordKey][
 	fnConfigKey
 ].level; // "object"
-zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordProperty].id[
+zodSchemaTestTrieResult.recordOfObjects[fieldNodeTokenEnum.recordKey].id[
 	fnConfigKey
 ].level; // "string"
 zodSchemaTestTrieResult.arrayField[fnConfigKey].level; // "array"
