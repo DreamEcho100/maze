@@ -553,13 +553,17 @@ export function resolverBuilder<
 			} as FieldNodeConfigRecordLevel,
 		};
 
+		// TODO: Is this won't be correct
+		// Does the `result.keySchema` needs to be handled and how
+		// I mean the `...path.${fieldNodeTokenEnum.recordProperty}` will represent a placeholder for the unknown key, but it's schema should be coming from `result.valueSchema`, should the "record" level hold the key/value validation too or leave it as it is or something else?
+
 		/** Create token path for the property template */
 		const tokenNextParent = currentParentPathString
-			? `${currentParentPathString}.${fieldNodeTokenEnum.recordKey}`
-			: fieldNodeTokenEnum.recordKey;
+			? `${currentParentPathString}.${fieldNodeTokenEnum.recordProperty}`
+			: fieldNodeTokenEnum.recordProperty;
 		const tokenNextParentSegments = [
 			...currentParentPathSegments,
-			fieldNodeTokenEnum.recordKey,
+			fieldNodeTokenEnum.recordProperty,
 		];
 
 		resolverBuilder(result.valueSchema, {
@@ -570,7 +574,7 @@ export function resolverBuilder<
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentSchema: result.valueSchema,
 			currentParentNode: node,
-			childKey: fieldNodeTokenEnum.recordKey,
+			childKey: fieldNodeTokenEnum.recordProperty,
 			resolverUtils: ctx.resolverUtils,
 		}).node;
 

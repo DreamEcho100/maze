@@ -51,7 +51,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * This token is primarily for direct properties of the record itself.
 	 * It helps in scenarios where you want to apply rules or validations to the properties of the record as a whole, rather than to nested objects within the record.
 	 */
-	recordKey: "@@__FN_TKN_RCRD_KEY__@@",
+	recordProperty: "@@__FN_TKN_RCRD_PROP__@@",
 	/**
 	 * This is used to represent the index of the union option that was valid during validation.
 	 *
@@ -86,4 +86,4 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 });
 
 // fieldNodeTokenEnum.arrayItem; // -> have a metadata.isArrayTokenItem
-// fieldNodeTokenEnum.recordKey; // -> have a metadata.isRecordProperty
+// fieldNodeTokenEnum.recordProperty; // -> have a metadata.isRecordProperty

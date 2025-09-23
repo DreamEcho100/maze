@@ -180,11 +180,11 @@ const fieldNode = {
 	// 			},
 	// 		},
 	// 	},
-	// 	[fieldNodeTokenEnum.recordKey]: {
+	// 	[fieldNodeTokenEnum.recordProperty]: {
 	// 		[fnConfigKey]: {
 	// 			level: "string" as const,
-	// 			pathSegments: ["d", fieldNodeTokenEnum.recordKey] as const,
-	// 			pathString: `d.${fieldNodeTokenEnum.recordKey}`,
+	// 			pathSegments: ["d", fieldNodeTokenEnum.recordProperty] as const,
+	// 			pathString: `d.${fieldNodeTokenEnum.recordProperty}`,
 	// 			constraints: {
 	// 				presence: "required",
 	// 				readonly: false,
@@ -202,8 +202,8 @@ const fieldNode = {
 	// 		a: {
 	// 			[fnConfigKey]: {
 	// 				level: "string" as const,
-	// 				pathSegments: ["d", fieldNodeTokenEnum.recordKey, "a"] as const,
-	// 				pathString: `d.${fieldNodeTokenEnum.recordKey}.a`,
+	// 				pathSegments: ["d", fieldNodeTokenEnum.recordProperty, "a"] as const,
+	// 				pathString: `d.${fieldNodeTokenEnum.recordProperty}.a`,
 	// 				constraints: {
 	// 					presence: "required",
 	// 					readonly: false,
@@ -222,8 +222,8 @@ const fieldNode = {
 	// 		b: {
 	// 			[fnConfigKey]: {
 	// 				level: "number" as const,
-	// 				pathSegments: ["d", fieldNodeTokenEnum.recordKey, "b"] as const,
-	// 				pathString: `d.${fieldNodeTokenEnum.recordKey}.b`,
+	// 				pathSegments: ["d", fieldNodeTokenEnum.recordProperty, "b"] as const,
+	// 				pathString: `d.${fieldNodeTokenEnum.recordProperty}.b`,
 	// 				constraints: {
 	// 					presence: "required",
 	// 					readonly: false,

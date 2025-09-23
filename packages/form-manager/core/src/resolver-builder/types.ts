@@ -188,6 +188,7 @@ export interface ResolverUtils<
 			metadata: Partial<FieldNodeConfigRecordLevel["metadata"]>;
 			userMetadata: FieldNodeConfigRecordLevel["userMetadata"];
 			valueSchema: unknown;
+			keySchema: unknown;
 		};
 	};
 	object: {
