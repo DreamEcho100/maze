@@ -1,10 +1,10 @@
-import { fnConfigKey } from "../../constants.js";
 import type {
 	AnyRecord,
 	FieldNodeConfigPresence,
 	FieldNodeConfigUserMetadata,
 	FieldNodeConfigValidateOptions,
-	FieldNodeConfigValidationEvents,
+	FieldNodeConfigValidationEvent,
+	FnConfigKey,
 	Literal,
 	NeverRecord,
 	PathSegmentItem,
@@ -15,13 +15,13 @@ export type FieldNode<
 	Config extends FieldNodeConfig = FieldNodeConfig,
 	T = Record<string | number, FieldNode<any, any>>,
 > = T & {
-	[fnConfigKey]: Config;
+	[Key in FnConfigKey]: Config;
 };
 export type InternalFieldNode<
 	Config extends InternalFieldNodeConfig = InternalFieldNodeConfig,
 	T = Record<string | number, InternalFieldNode<any, any>>,
 > = T & {
-	[fnConfigKey]: Config;
+	[Key in FnConfigKey]: Config;
 };
 
 export type FieldNodeConfigMetadata = {
@@ -65,7 +65,7 @@ export interface FieldNodeConfigBase<
 	// The main validation function for the field
 	validation: {
 		allowedOn?: {
-			[key in FieldNodeConfigValidationEvents]?:
+			[key in FieldNodeConfigValidationEvent]?:
 				| boolean
 				| {
 						debounceMs?: number; // Debounce time in milliseconds, useful for "input" event
@@ -492,7 +492,7 @@ export interface ValidateReturnShape<
 	metadata:
 		| {
 				// /** The validation event that triggered the validation, if any. */
-				validationEvent: FieldNodeConfigValidationEvents;
+				validationEvent: FieldNodeConfigValidationEvent;
 				"union-descendant"?: { firstValidOptionIndex: number };
 		  }
 		| undefined;
@@ -511,3 +511,7 @@ export type InternalFieldNodeConfig =
 	| FieldNodeConfigTempRootLevel
 	| FieldNodeConfigTempParentLevel
 	| FieldNodeConfig;
+
+export type NeverFieldNode = {
+	[Key in FnConfigKey]: FieldNodeConfigNeverLevel;
+};

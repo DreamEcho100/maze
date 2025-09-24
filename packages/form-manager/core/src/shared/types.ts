@@ -4,10 +4,10 @@ import type {
 	FieldNodeConfigPrimitiveLevel,
 } from "#fields/shape/types.js";
 import type {
+	fieldNodeConfigValidationEventsEnum,
 	fieldNodePresenceEnum,
 	fieldNodeTokenEnum,
 	fnConfigKey,
-	formFieldNodeConfigValidationEventsEnum,
 } from "../constants.js";
 
 export type AnyRecord = Record<string, any>;
@@ -30,12 +30,12 @@ export type ValuesShape = Record<string, any>;
 // export type ValidationEvents = "input" | "blur" | "touch" | "submit";
 /** Validation triggers */
 export type FormFieldNodeConfigValidationEventsEnum =
-	typeof formFieldNodeConfigValidationEventsEnum;
-export type FieldNodeConfigValidationEvents =
+	typeof fieldNodeConfigValidationEventsEnum;
+export type FieldNodeConfigValidationEvent =
 	FormFieldNodeConfigValidationEventsEnum[keyof FormFieldNodeConfigValidationEventsEnum];
 export interface FieldNodeConfigValidateOptions {
 	/** The validation event that triggered the validation. */
-	validationEvent: FieldNodeConfigValidationEvents;
+	validationEvent: FieldNodeConfigValidationEvent;
 }
 /**
  * This is used by the user/dev to add a specific metadata to the field for further extension and functionalities.

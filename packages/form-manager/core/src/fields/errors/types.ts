@@ -37,7 +37,7 @@ export type ValidationResult<
 > = SuccessResult<ValidValue> | FailureResult<PathSegments>;
 
 export type FieldPathToError<T extends FieldNode> = {
-	[NodeInfo in DeepFieldNodePathEntry<T> as NodeInfo["normalizedPathString"]]: FieldError<
+	[NodeInfo in DeepFieldNodePathEntry<T> as NodeInfo["normalizedPathString"]]?: FieldError<
 		NodeInfo["node"][FnConfigKey]["pathSegments"]
 	>;
 };

@@ -1,11 +1,12 @@
 /* Trie structure for path-based storage and retrieval */
 export const fnConfigKey = Symbol("fnConfigKey");
 
-export const formFieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
+export const fieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	change: "change",
 	blur: "blur",
 	submit: "submit",
 	touch: "touch",
+	custom: "custom",
 });
 
 export const fieldNodePresenceEnum = /** @type {const} */ ({
