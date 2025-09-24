@@ -33,6 +33,7 @@ import type {
 	FieldNodeConfigValidateOptions,
 	Literal,
 	PathSegmentItem,
+	PathSegmentsToString,
 } from "@de100/form-manager-core/shared/types";
 import z, { unknown, ZodLiteral } from "zod";
 
@@ -77,7 +78,11 @@ async function customValidate<
 						message: issue.message,
 						/** TODO: a `normalizedPathStr(pathStr, formApi)` that will convert/figure the path segments to the correct tokens if needed by walking through `formApi.fields.shape` or having a map of path to tokenized path */
 						/** Q: is the `pathString` needed if we have the `pathSegments`? */
-						pathString: issue.path?.join(".") || props.currentParentPathString,
+						pathString: (issue.path?.join(".") ||
+							props.currentParentPathString) as PathSegmentsToString<
+							PathSegments,
+							""
+						>,
 						pathSegments: (issue.path ||
 							props.currentParentSegments) as PathSegments,
 					})),
@@ -99,7 +104,10 @@ async function customValidate<
 				issues: [
 					{
 						message: "Unknown validation error",
-						pathString: props.currentParentPathString,
+						pathString: props.currentParentPathString as PathSegmentsToString<
+							PathSegments,
+							""
+						>,
 						pathSegments: props.currentParentSegments as PathSegments,
 					},
 				],
@@ -114,7 +122,10 @@ async function customValidate<
 					{
 						message:
 							error instanceof Error ? error.message : "Validation failed",
-						pathString: props.currentParentPathString,
+						pathString: props.currentParentPathString as PathSegmentsToString<
+							PathSegments,
+							""
+						>,
 						pathSegments: props.currentParentSegments as PathSegments,
 					},
 				],
@@ -191,7 +202,7 @@ const zodLibUtil = {
 						throw new Error("Discriminated union options must be ZodObject");
 					}
 
-					const tagSchema = opt.def.shape[tag.key];
+					const tagSchema: ZodAny = opt.def.shape[tag.key];
 
 					if (tagSchema instanceof z.ZodLiteral) {
 						for (const literal of tagSchema.def.values) {
@@ -241,7 +252,13 @@ const zodLibUtil = {
 					}
 
 					throw new Error(
-						`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${tagSchema.def.typeName}`,
+						`Discriminated union discriminator/tag must be either ZodLiteral or ZodEnum, got ${
+							"def" in tagSchema
+								? "typeName" in tagSchema.def
+									? tagSchema.def.typeName
+									: String(tagSchema)
+								: String(tagSchema)
+						}`,
 					);
 				}
 			}
@@ -416,6 +433,7 @@ const zodLibUtil = {
 				metadata: { ...ctx.currentAttributes },
 				userMetadata: {},
 				valueSchema,
+				keySchema,
 			};
 		},
 	},
@@ -1011,7 +1029,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 		[fnConfigKey]: {
 			level: "temp-root",
 			pathString: "",
-			pathSegments: [],
+			pathSegments: [] as never,
 			constraints: { presence: "required", readonly: false },
 			validation: {
 				validate() {

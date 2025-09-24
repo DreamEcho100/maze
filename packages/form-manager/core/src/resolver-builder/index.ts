@@ -434,7 +434,7 @@ export function resolverBuilder<
 					validate: result.validate,
 				},
 				userMetadata: result.userMetadata,
-				metadata: result.userMetadata,
+				metadata: result.metadata,
 			} as FieldNodeConfigArrayLevel,
 		};
 
@@ -549,13 +549,12 @@ export function resolverBuilder<
 					validate: result.validate,
 				},
 				userMetadata: result.userMetadata,
-				metadata: result.userMetadata,
+				metadata: result.metadata,
 			} as FieldNodeConfigRecordLevel,
 		};
 
-		// TODO: Is this won't be correct
-		// Does the `result.keySchema` needs to be handled and how
-		// I mean the `...path.${fieldNodeTokenEnum.recordProperty}` will represent a placeholder for the unknown key, but it's schema should be coming from `result.valueSchema`, should the "record" level hold the key/value validation too or leave it as it is or something else?
+		// TODO:
+		// Use `result.keySchema` to make a `FieldNode` that you can add to the `"record"` level config constraints as `key` _(will think of better name)`
 
 		/** Create token path for the property template */
 		const tokenNextParent = currentParentPathString
@@ -614,7 +613,7 @@ export function resolverBuilder<
 					validate: result.validate,
 				},
 				userMetadata: result.userMetadata,
-				metadata: result.userMetadata,
+				metadata: result.metadata,
 				shape: {} /** To be filled below */,
 			} as FieldNodeConfigObjectLevel,
 		};
@@ -681,7 +680,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 			options: [],
 		} as FieldNodeConfigUnionRootLevel;
 		rootPathToInfo[currentParentPathString] ??= [];
@@ -1139,7 +1138,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 
 		return {
@@ -1177,7 +1176,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 
 		return {
@@ -1215,7 +1214,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 
 		return {
@@ -1253,7 +1252,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 
 		return {
@@ -1290,7 +1289,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 		return {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
@@ -1326,7 +1325,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 
 		return {
@@ -1364,7 +1363,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 		return {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
@@ -1401,7 +1400,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 		return {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
@@ -1438,7 +1437,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 		return {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
@@ -1475,7 +1474,7 @@ export function resolverBuilder<
 				validate: result.validate,
 			},
 			userMetadata: result.userMetadata,
-			metadata: result.userMetadata,
+			metadata: result.metadata,
 		};
 		return {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
