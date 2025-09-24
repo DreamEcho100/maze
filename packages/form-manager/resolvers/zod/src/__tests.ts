@@ -4,6 +4,7 @@ import {
 	fieldNodeTokenEnum,
 	fnConfigKey,
 } from "@de100/form-manager-core/constants";
+import type { FnIOValueToInfer } from "@de100/form-manager-core/shared/types";
 import z from "zod";
 import type { ZodResolverFieldNodeResult } from "./types";
 
@@ -64,7 +65,8 @@ const zodSchemaTest = z
 			z.object({ type: z.undefined(), value: z.null() }),
 		]),
 	})
-	.optional();
+	.required();
+// .optional();
 type ZodSchemaTest = typeof zodSchemaTest;
 type ZodSchemaTestTrieResult = ZodResolverFieldNodeResult<
 	ZodSchemaTest,
@@ -135,3 +137,7 @@ z.discriminatedUnion("type", [
 	z.object({ type: z.literal("B"), value: z.number() }),
 	z.object({ type: z.literal("C"), value: z.boolean() }),
 ]);
+
+const inferredIdOutputValue = {} as NonNullable<
+	(typeof zodSchemaTestTrieResult)[FnIOValueToInfer]
+>["$output"]["arrayOfObjects"][0]["id"]; // string

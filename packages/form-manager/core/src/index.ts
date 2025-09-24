@@ -88,8 +88,8 @@ Props to consider:
 // 		// "all" = always validate
 // 		strategy: "smart" | "off" | "on";
 // 		// isActive: boolean;
-// 		delay?: number | ((fieldPath: NestedPath<Values>) => number);
-// 		force?: boolean | ((fieldPath: NestedPath<Values>) => boolean);
+// 		delay?: number | ((fieldPath: NestedPath<FieldsShape>) => number);
+// 		force?: boolean | ((fieldPath: NestedPath<FieldsShape>) => boolean);
 // 	};
 // };
 
@@ -97,69 +97,109 @@ Props to consider:
 
 // NOTE: Needed To use `NeverFieldNode` and `NeverRecord` as defaults to avoid TS errors of having infinite types
 
+type ValidateOn<FieldsShape extends FieldNode, Values extends ValuesShape> =
+	| undefined
+	| boolean
+	| "smart"
+	| "smart/eager"
+	| ValidationAllowedOnEvents<FieldsShape, Values>
+	| ((
+			event: FieldNodeConfigValidationEvent,
+	  ) => ValidationAllowedOnEventConfig<FieldsShape, Values>);
+
+const createValidationConfig = {
+	smart: (event: FieldNodeConfigValidationEvent) => ({
+		isActive: ["blur", "change", "submit", "custom"].includes(event),
+		ifOnlyHasError: event === "change",
+		delay: event === "change" ? 300 : 0,
+	}),
+
+	eager: (event: FieldNodeConfigValidationEvent) => ({
+		isActive: ["blur", "change", "submit", "custom"].includes(event),
+		ifOnlyHasError: event === "change",
+		delay: undefined, // No delay
+	}),
+
+	function: (
+		event: FieldNodeConfigValidationEvent,
+		validateOnFn: (
+			event: FieldNodeConfigValidationEvent,
+		) => ValidationAllowedOnEventConfig<any, any>,
+	) => {
+		const config = validateOnFn(event);
+		config.delay ??= undefined;
+		return config;
+	},
+
+	object: (
+		event: FieldNodeConfigValidationEvent,
+		validateOnObj: ValidationAllowedOnEvents<any, any>,
+	) => {
+		if (event in validateOnObj) {
+			const config = validateOnObj[event];
+			config.delay ??= undefined;
+			return config;
+		}
+		return {
+			isActive: false,
+			ifOnlyHasError: false,
+			delay: undefined,
+		};
+	},
+
+	fallback: (
+		validateOn:
+			| boolean
+			| "smart"
+			| "smart/eager"
+			| ValidationAllowedOnEvents<any, any>
+			| undefined,
+	) => {
+		const config =
+			typeof validateOn === "object" && validateOn
+				? {
+						delay: undefined,
+						...validateOn,
+					}
+				: {
+						isActive: false,
+						ifOnlyHasError: false,
+						delay: undefined,
+					};
+
+		return config;
+	},
+};
+
 function getFieldNodeConfigValidationEventConfig<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
 >(
 	event: FieldNodeConfigValidationEvent,
-	validateOn?:
-		| boolean
-		| "smart"
-		| "smart/eager"
-		| ValidationAllowedOnEvents<FieldsShape, Values>
-		| ((
-				event: FieldNodeConfigValidationEvent,
-		  ) => ValidationAllowedOnEventConfig<FieldsShape, Values>),
+	validateOn?: ValidateOn<FieldsShape, Values>,
 ) {
 	if (
 		typeof validateOn === "undefined" ||
 		(typeof validateOn === "string" && validateOn.includes("smart")) ||
 		(typeof validateOn === "boolean" && validateOn)
 	) {
-		return {
-			isActive: ["blur", "change", "submit", "custom"].includes(event),
-			ifOnlyHasError: event === "change",
-			delay:
-				validateOn === "smart/eager"
-					? undefined
-					: event === "change"
-						? 300
-						: event === "submit"
-							? undefined
-							: 0,
-		};
+		return createValidationConfig.smart(event);
 	}
 
 	if (typeof validateOn === "function") {
-		const config = validateOn(event);
-		config.delay ??= undefined;
-		return config;
+		return createValidationConfig.function(event, validateOn);
 	}
 
 	if (typeof validateOn === "object" && validateOn && event in validateOn) {
-		const config = validateOn[event];
-		config.delay ??= undefined;
-		return config;
+		return createValidationConfig.object(event, validateOn);
 	}
 
-	const config =
-		typeof validateOn === "object" && validateOn
-			? {
-					delay: undefined,
-					...validateOn,
-				}
-			: {
-					isActive: false,
-					ifOnlyHasError: false,
-					delay: undefined,
-				};
-
-	return config;
+	return createValidationConfig.fallback(validateOn);
 }
 
 export function createFormManager<
-	FieldsShape extends FieldNode = NeverFieldNode,
-	Values extends ValuesShape = NeverRecord,
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
 	SubmitError = unknown,
 	SubmitResult = unknown,
 >(props: {

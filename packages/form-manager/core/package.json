@@ -12,17 +12,29 @@
 	"main": "./src/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
-		"./constants": {
-			"types": "./dist/constants.d.ts",
-			"default": "./src/constants.js",
-			"import": "./src/constants.js",
-			"require": "./src/constants.js"
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./src/index.ts",
+			"import": "./src/index.ts",
+			"require": "./src/index.ts"
 		},
 		"./types": {
 			"types": "./dist/types.d.ts",
 			"default": "./src/types.ts",
 			"import": "./src/types.ts",
 			"require": "./src/types.ts"
+		},
+		"./constants": {
+			"types": "./dist/constants.d.ts",
+			"default": "./src/constants.js",
+			"import": "./src/constants.js",
+			"require": "./src/constants.js"
+		},
+		"./fields/types": {
+			"types": "./dist/fields/types.d.ts",
+			"default": "./src/fields/types.ts",
+			"import": "./src/fields/types.ts",
+			"require": "./src/fields/types.ts"
 		},
 		"./fields/errors/types": {
 			"types": "./dist/fields/errors/types.d.ts",

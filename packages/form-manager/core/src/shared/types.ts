@@ -8,6 +8,7 @@ import type {
 	fieldNodePresenceEnum,
 	fieldNodeTokenEnum,
 	fnConfigKey,
+	fnIOValueToInfer,
 } from "../constants.js";
 
 export type AnyRecord = Record<string, any>;
@@ -16,6 +17,7 @@ export type PathSegmentItem = string | number; //| PathSegment;
 export type Literal = string | number | bigint | boolean | null | undefined;
 
 export type FnConfigKey = typeof fnConfigKey;
+export type FnIOValueToInfer = typeof fnIOValueToInfer;
 
 // export type FieldNodeConfigTokenEnum['arrayItem'] = typeof ARRAY_ITEM_TOKEN;
 export type FieldNodeConfigPresenceEnum = typeof fieldNodePresenceEnum;
@@ -210,7 +212,7 @@ export type DeepFieldNodePath<
 		? {
 				pathString: JoinPath<Path, K>;
 				pathSegments: [...PathSegments, K];
-				node: ParentNode[K];
+				fieldNode: ParentNode[K];
 				// plevel: ParentNode[FnConfigKey]["level"];
 				// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
 				// 	? ParentNode[FnConfigKey]["level"] extends "array"
@@ -232,7 +234,7 @@ export type DeepFieldNodePath<
 				| ({
 						pathString: JoinPath<Path, K>;
 						pathSegments: [...PathSegments, K];
-						node: ParentNode[K];
+						fieldNode: ParentNode[K];
 						// plevel: ParentNode[FnConfigKey]["level"];
 						// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
 						// 	? ParentNode[FnConfigKey]["level"] extends "array"
@@ -282,12 +284,12 @@ export type DeepFieldNodePathEntry<T extends FieldNode> =
 		? U extends {
 				normalizedPathString: infer NPS;
 				pathSegments: infer PS;
-				node: infer N;
+				fieldNode: infer FN;
 			}
 			? {
 					normalizedPathString: NPS extends string ? NPS : never;
 					pathSegments: PS extends PathSegmentItem[] ? PS : never;
-					node: N extends FieldNode ? N : never;
+					fieldNode: FN extends FieldNode ? FN : never;
 				}
 			: never
 		: never;

@@ -5,6 +5,7 @@ import type {
 	FieldNodeConfigValidateOptions,
 	FieldNodeConfigValidationEvent,
 	FnConfigKey,
+	FnIOValueToInfer,
 	Literal,
 	NeverRecord,
 	PathSegmentItem,
@@ -12,17 +13,48 @@ import type {
 import type { ValidationResult } from "../errors/types.ts";
 
 export type FieldNode<
+	InputValue = unknown,
+	OutputValue = InputValue,
 	Config extends FieldNodeConfig = FieldNodeConfig,
-	T = Record<string | number, FieldNode<any, any>>,
+	T = Record<string | number, FieldNode<any, any, any, any>>,
 > = T & {
 	[Key in FnConfigKey]: Config;
+} & {
+	[Key in FnIOValueToInfer]?: {
+		$input: InputValue;
+		$output: OutputValue;
+	};
 };
 export type InternalFieldNode<
+	InputValue = unknown,
+	OutputValue = InputValue,
 	Config extends InternalFieldNodeConfig = InternalFieldNodeConfig,
-	T = Record<string | number, InternalFieldNode<any, any>>,
+	T = Record<string | number, InternalFieldNode<any, any, any, any>>,
 > = T & {
 	[Key in FnConfigKey]: Config;
+} & {
+	[Key in FnIOValueToInfer]?: {
+		$input: InputValue;
+		$output: OutputValue;
+	};
 };
+
+export type InferFieldNodeInputValue<T> = T extends FieldNode<
+	infer InputValue,
+	any,
+	any,
+	any
+>
+	? InputValue
+	: never;
+export type InferFieldNodeOutputValue<T> = T extends FieldNode<
+	any,
+	infer OutputValue,
+	any,
+	any
+>
+	? OutputValue
+	: never;
 
 export type FieldNodeConfigMetadata = {
 	[key in

@@ -101,6 +101,10 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 				resolverUtils: props.resolverUtils,
 			});
 
+			if (!existingNode) {
+				throw new Error("Could not resolve intersection item");
+			}
+
 			if (existingNode[fnConfigKey].level === "never") {
 				/** If it was marked as never, we need to update the inheritedMetadata to have isMarkedNever true */
 				props.inheritedMetadata.isMarkedNever = true;

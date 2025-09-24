@@ -1,5 +1,6 @@
 /* Trie structure for path-based storage and retrieval */
 export const fnConfigKey = Symbol("fnConfigKey");
+export const fnIOValueToInfer = Symbol("fnIOValueToInfer");
 
 export const fieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
 	change: "change",

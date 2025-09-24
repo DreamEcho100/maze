@@ -78,7 +78,17 @@ export interface ValidationAllowedOnEventConfig<
 > {
 	isActive: boolean;
 	ifOnlyHasError?: boolean;
-	delay?: number | ((fieldPath: NestedPath<Values>) => number);
+	delay?:
+		| number
+		| ((
+				props: DeepFieldNodePathEntry<FieldsShape> & {
+					field: DeepFieldNodePathEntry<FieldsShape>;
+					fieldPath: DeepFieldNodePath<FieldsShape>;
+					values: Values;
+					formManager: FormManager<FieldsShape, Values>;
+					error: FieldPathToError<FieldsShape> | null;
+				},
+		  ) => number);
 }
 
 export type ValidationAllowedOnEvents<

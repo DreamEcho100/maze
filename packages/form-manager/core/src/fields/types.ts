@@ -80,21 +80,21 @@ export interface FormManagerFields<
 	isError: boolean;
 
 	/** 🔹 Parsing & formatting */
-	parse?: <Name extends NestedPath<Values>>(
+	parse?: <Name extends NestedPath<FieldsShape>>(
 		name: Name,
 		value: any,
 		metadata?: { customEvent?: string },
-	) => NestedPathValue<Values, Name>;
-	format?: <Name extends NestedPath<Values>>(
+	) => NestedPathValue<FieldsShape, Name>;
+	format?: <Name extends NestedPath<FieldsShape>>(
 		name: Name,
-		value: NestedPathValue<Values, Name>,
+		value: NestedPathValue<FieldsShape, Name>,
 		metadata?: { customEvent?: string },
 	) => any;
-	// parser: <Name extends NestedPath<Values>>(
+	// parser: <Name extends NestedPath<FieldsShape>>(
 	// 	name: Name,
 	// 	value: any,
 	// 	metadata?: { customEvent?: string },
-	// ) => NestedPathValue<Values, Name>;
+	// ) => NestedPathValue<FieldsShape, Name>;
 	// // serializer
 
 	/** 🔹 Validation */
@@ -103,14 +103,14 @@ export interface FormManagerFields<
 		allowedOnEvent: ValidationAllowedOnEvents<FieldsShape, Values>;
 
 		// /** Validate a single field */
-		// validateOne: <T extends NestedPath<Values>>(props: {
+		// validateOne: <T extends NestedPath<FieldsShape>>(props: {
 		// 	// name: T;
 		// 	// validationEvent?: FieldNodeConfigValidationEvent;
 		// 	// force?: boolean;
 		// }) => Promise<NestedPathValue<FieldsShape, T> | null>;
 
 		// /** Validate multiple fields */
-		// validateMany: <T extends NestedPath<Values>>(
+		// validateMany: <T extends NestedPath<FieldsShape>>(
 		// 	// names: T[],
 		// 	// validationEvent?: FieldNodeConfigValidationEvent,
 		// 	// force?: boolean,

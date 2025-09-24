@@ -178,6 +178,8 @@ export type ZodResolverFieldNodeResult<
 				| z.ZodEnum
 				| z.ZodStringFormat
 		? FieldNode<
+				z.input<ZodSchemaToInfer>,
+				z.output<ZodSchemaToInfer>,
 				Options extends { isUnionRootDescendant: true }
 					? FieldNodeConfigUnionDescendantLevel<
 							z.input<ZodSchemaToInfer>,
@@ -195,6 +197,8 @@ export type ZodResolverFieldNodeResult<
 					| z.ZodNumberFormat
 					| ZodLiteralNumber
 			? FieldNode<
+					z.input<ZodSchemaToInfer>,
+					z.output<ZodSchemaToInfer>,
 					Options extends { isUnionRootDescendant: true }
 						? FieldNodeConfigUnionDescendantLevel<
 								z.input<ZodSchemaToInfer>,
@@ -212,6 +216,8 @@ export type ZodResolverFieldNodeResult<
 						| z.ZodBigIntFormat
 						| ZodLiteralBigInt
 				? FieldNode<
+						z.input<ZodSchemaToInfer>,
+						z.output<ZodSchemaToInfer>,
 						Options extends { isUnionRootDescendant: true }
 							? FieldNodeConfigUnionDescendantLevel<
 									z.input<ZodSchemaToInfer>,
@@ -226,6 +232,8 @@ export type ZodResolverFieldNodeResult<
 					>
 				: ZodSchemaToUnwrap extends z.ZodBoolean | ZodLiteralBoolean
 					? FieldNode<
+							z.input<ZodSchemaToInfer>,
+							z.output<ZodSchemaToInfer>,
 							Options extends { isUnionRootDescendant: true }
 								? FieldNodeConfigUnionDescendantLevel<
 										z.input<ZodSchemaToInfer>,
@@ -240,6 +248,8 @@ export type ZodResolverFieldNodeResult<
 						>
 					: ZodSchemaToUnwrap extends z.ZodFile
 						? FieldNode<
+								z.input<ZodSchemaToInfer>,
+								z.output<ZodSchemaToInfer>,
 								Options extends { isUnionRootDescendant: true }
 									? FieldNodeConfigUnionDescendantLevel<
 											z.input<ZodSchemaToInfer>,
@@ -254,6 +264,8 @@ export type ZodResolverFieldNodeResult<
 							>
 						: ZodSchemaToUnwrap extends z.ZodDate
 							? FieldNode<
+									z.input<ZodSchemaToInfer>,
+									z.output<ZodSchemaToInfer>,
 									Options extends { isUnionRootDescendant: true }
 										? FieldNodeConfigUnionDescendantLevel<
 												z.input<ZodSchemaToInfer>,
@@ -268,6 +280,8 @@ export type ZodResolverFieldNodeResult<
 								>
 							: ZodSchemaToUnwrap extends z.ZodUndefined | ZodLiteralUndefined
 								? FieldNode<
+										z.input<ZodSchemaToInfer>,
+										z.output<ZodSchemaToInfer>,
 										Options extends { isUnionRootDescendant: true }
 											? FieldNodeConfigUnionDescendantLevel<
 													z.input<ZodSchemaToInfer>,
@@ -282,6 +296,8 @@ export type ZodResolverFieldNodeResult<
 									>
 								: ZodSchemaToUnwrap extends z.ZodNull | ZodLiteralNull
 									? FieldNode<
+											z.input<ZodSchemaToInfer>,
+											z.output<ZodSchemaToInfer>,
 											Options extends { isUnionRootDescendant: true }
 												? FieldNodeConfigUnionDescendantLevel<
 														z.input<ZodSchemaToInfer>,
@@ -296,6 +312,8 @@ export type ZodResolverFieldNodeResult<
 										>
 									: ZodSchemaToUnwrap extends z.ZodVoid
 										? FieldNode<
+												z.input<ZodSchemaToInfer>,
+												z.output<ZodSchemaToInfer>,
 												Options extends { isUnionRootDescendant: true }
 													? FieldNodeConfigUnionDescendantLevel<
 															z.input<ZodSchemaToInfer>,
@@ -310,6 +328,8 @@ export type ZodResolverFieldNodeResult<
 											>
 										: ZodSchemaToUnwrap extends z.ZodNever
 											? FieldNode<
+													z.input<ZodSchemaToInfer>,
+													z.output<ZodSchemaToInfer>,
 													Options extends { isUnionRootDescendant: true }
 														? FieldNodeConfigUnionDescendantLevel<
 																z.input<ZodSchemaToInfer>,
@@ -327,6 +347,8 @@ export type ZodResolverFieldNodeResult<
 												// ------------------------------------------------
 												ZodSchemaToUnwrap extends z.ZodRecord
 												? FieldNode<
+														z.input<ZodSchemaToInfer>,
+														z.output<ZodSchemaToInfer>,
 														Options extends { isUnionRootDescendant: true }
 															? FieldNodeConfigUnionDescendantLevel<
 																	z.input<ZodSchemaToInfer>,
@@ -356,6 +378,8 @@ export type ZodResolverFieldNodeResult<
 													// ------------------------------------------------
 													ZodSchemaToUnwrap extends z.ZodObject
 													? FieldNode<
+															z.input<ZodSchemaToInfer>,
+															z.output<ZodSchemaToInfer>,
 															Options extends { isUnionRootDescendant: true }
 																? FieldNodeConfigUnionDescendantLevel<
 																		z.input<ZodSchemaToInfer>,
@@ -380,6 +404,8 @@ export type ZodResolverFieldNodeResult<
 														// ------------------------------------------------
 														ZodSchemaToUnwrap extends z.ZodArray
 														? FieldNode<
+																z.input<ZodSchemaToInfer>,
+																z.output<ZodSchemaToInfer>,
 																Options extends { isUnionRootDescendant: true }
 																	? FieldNodeConfigUnionDescendantLevel<
 																			z.input<ZodSchemaToInfer>,
@@ -407,6 +433,8 @@ export type ZodResolverFieldNodeResult<
 															// ------------------------------------------------
 															ZodSchemaToUnwrap extends z.ZodTuple
 															? FieldNode<
+																	z.input<ZodSchemaToInfer>,
+																	z.output<ZodSchemaToInfer>,
 																	Options extends {
 																		isUnionRootDescendant: true;
 																	}
@@ -434,6 +462,8 @@ export type ZodResolverFieldNodeResult<
 																		| z.ZodUnion
 																		| z.ZodDiscriminatedUnion
 																? FieldNode<
+																		z.input<ZodSchemaToInfer>,
+																		z.output<ZodSchemaToInfer>,
 																		// TODO: FieldNodeConfigUnionDescendantLevel
 																		FieldNodeConfigUnionRootLevel<
 																			z.input<ZodSchemaToInfer>,
@@ -505,6 +535,8 @@ export type ZodResolverFieldNodeResult<
 																				Options
 																			>
 																		: FieldNode<
+																				z.input<ZodSchemaToInfer>,
+																				z.output<ZodSchemaToInfer>,
 																				Options extends {
 																					isUnionRootDescendant: true;
 																				}
