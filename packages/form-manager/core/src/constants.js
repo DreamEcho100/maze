@@ -1,5 +1,8 @@
+/* Our token system uses Unicode-enhanced string identifiers for namespace isolation and visual debugging... aka we are using emojis on the string 🤣 */
+
 /* Trie structure for path-based storage and retrieval */
-export const fnConfigKey = Symbol("fnConfigKey");
+// Node emoji:
+// Symbol("fnConfigKey");
 export const fnIOValueToInfer = Symbol("fnIOValueToInfer");
 
 export const fieldNodeConfigValidationEventsEnum = /** @type {const} */ ({
@@ -19,73 +22,60 @@ export const fieldNodePresenceEnum = /** @type {const} */ ({
 
 export const fieldNodeTokenEnum = /** @type {const} */ ({
 	/**
-	 * This is used to represent the array item in the path.
 	 *
-	 * For example:
+	 * @danger
+	 * **WARNING**: cringe ahh alternative to symbols for hydration safety 🥲, proceed with cation
 	 *
-	 * ```ts
-	 * z.array(z.string())
-	 * ```
+	 * The Greatest Array Show on Earth! 🎪
 	 *
-	 * Will have the following paths:
-	 * - `"@@__FN_TKN_ARR_ITEM__@@"` (root) -> level: "primitive" -> type: "string"
+	 * Ringmaster 🤪 presents the most spectacular array performance ever!
+	 * Watch death-defying acrobats leap between indices 🤸‍♂️,
+	 * see tigers jump through flaming bracket hoops 🔥,
+	 * as the crowd goes WILD for the amazing flying array items! 🎊🫠
 	 */
-	arrayItem: "@@__FN_TKN_ARR_ITEM__@@",
+	arrayItem: "🤪FN🔤TKN🎪ARR🤸‍♂️CIRCUS🔥AMAZING🎊🫠",
+
 	/**
-	 * This is used to represent the direct property of an object in the path.
-	 * For example:
-	 * ```ts
-	 * z.record(z.string(), z.number())
-	 * ```
-	 * Will have the following
-	 * paths:
-	 * - `""` (root) -> level: "record" -> type: "Record<string, number>"
-	 * - `"@@__FN_TKN_RCRD_KEY__@@` -> level: "primitive" -> type: "number"
-	 * The root path represents the record itself, while the token path represents any property in the record.
-	 * The actual property key will be dynamic and can be q valid property key _(e.g._ string, number or symbol).
-	 * The token is used to indicate that it's a direct property of the record.
-	 * This is useful for scenarios where you want to apply specific rules or validations to the properties of the record.
-	 * For example, you might want to enforce that all properties of the record are numbers greater than zero.
-	 * In such cases, you can use this token to identify and apply the necessary validations or rules.
-	 * Note that this token is not used for nested objects within the record. For nested objects, the actual property keys will be used in the path to accurately represent the structure of the data.
-	 * For example, if you have a record of objects like `z.record(z.string(), z.object({ age: z.number() }))`, the path for the `age` property would be something like `"someKey.age"`, where `someKey` is a dynamic key in the record.
-	 * This distinction helps in accurately representing the structure of the data and applying the appropriate validations or rules at different levels of the hierarchy.
-	 * This token is primarily for direct properties of the record itself.
-	 * It helps in scenarios where you want to apply rules or validations to the properties of the record as a whole, rather than to nested objects within the record.
+	 *
+	 * @danger
+	 * **WARNING**: cringe ahh alternative to symbols for hydration safety 🥲, proceed with cation
+	 *
+	 * The Record Property Magic Show 🎩
+	 *
+	 * Ladies and gentlemen, magician 🤪 will now attempt
+	 * the impossible trick of making record properties appear 🎩✨
+	 * from thin air! Watch as keys materialize from nowhere 🗝️,
+	 * ABRACADABRA! The crowd gasps in amazement! 👏🫠
 	 */
-	recordProperty: "@@__FN_TKN_RCRD_PROP__@@",
+	recordProperty: "🤪FN🔤TKN🎩RCRD✨MAGIC🗝️ABRACADABRA👏🫠",
+
 	/**
-	 * This is used to represent the index of the union option that was valid during validation.
 	 *
-	 * For example:
+	 * @danger
+	 * **WARNING**: cringe ahh alternative to symbols for hydration safety 🥲, proceed with cation
 	 *
-	 * ```ts
-	 * z.union([
-	 *  z.object({ type: z.literal("A"), value: z.string() }),
-	 * 	z.object({ type: z.literal("B"), value: z.number() }),
-	 * 	z.object({ type: z.literal("C"), value: z.boolean() }),
-	 * 	z.string(),
-	 * ])
-	 * ```
+	 * The Union Battle Royale Wrestling Match 🤼‍♂️
 	 *
-	 * Will have the following paths:
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@"`  (root) -> level: "union-root" -> type: "{ type: "A", value: string }" | "{ type: "B", value: number }" | "{ type: "C", value: boolean }"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0"` -> level: "object" -> type: "{ type: "A", value: string }"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0.type"` -> level: "primitive" -> type: "string" (literal "A")
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.0.value"` -> level: "primitive" -> type: "string"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1"` -> level: "object" -> type: "{ type: "B", value: number }"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1.type"` -> level: "primitive" -> type: "string" (literal "B")
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.1.value"` -> level: "primitive" -> type: "number"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2"` -> level: "object" -> type: "{ type: "C", value: boolean }"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2.type"` -> level: "primitive" -> type: "string" (literal "C")
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.2.value"` -> level: "primitive" -> type: "boolean"
-	 * - `"@@__FN_TKN_UNION_OPT_ON__@@.3"` -> level: "primitive" -> type: "string"
-	 *
-	 * The root path represents the union item itself, while the numeric paths represent each option in the union.
-	 * The index of the valid option during validation can be stored in the metadata for reference.
+	 * 🤪 announces tonight's MAIN EVENT championship bout!
+	 * In this corner: String Type! In that corner: Number Type! 📢
+	 * The crowd chants as they grapple for ultimate union supremacy 💪,
+	 * AND THE WINNER IS... *drumroll* 🥁 THE CHAMPION! 🏆🫠
 	 */
-	unionOptionOn: "@@__FN_TKN_UNION_OPT_ON__@@",
+	unionOptionOn: "🤪FN🔤TKN🤼‍♂️UNION📢WRESTLING💪CHAMPION🏆🫠",
 });
 
-// fieldNodeTokenEnum.arrayItem; // -> have a metadata.isArrayTokenItem
-// fieldNodeTokenEnum.recordProperty; // -> have a metadata.isRecordProperty
+/**
+ *
+ * @danger
+ * **WARNING**: cringe ahh alternative to symbols for hydration safety 🥲, proceed with cation
+ *
+ * The Grand Finale: The Master Ringmaster's Secret Vault! 🎪
+ *
+ * Deep beneath the Greatest Show on Earth, 🤪 discovers the legendary
+ * Master Ringmaster's ancient vault 🏛️ containing the most precious artifact:
+ * The Golden Config Key 🗝️ that controls ALL circus performances! 🎪
+ * Guarded by mystical config dragons 🐉 and protected by ancient spells ✨,
+ * only the worthy developer can claim this ultimate power and become
+ * the Supreme Ringmaster of Form Management! 👑🫠
+ */
+export const fnConfigKey = "🤪FN🔤TKN🏛️CFG🐉VAULT🗝️RINGMASTER👑🫠";

@@ -164,22 +164,7 @@ export interface FieldNodeConfigUnknownLevel<
 		PathSegments,
 		Rules
 	> {}
-// export interface FieldNodeConfigBase<
-// 	InputValue = any,
-// 	OutputValue = InputValue,
-// 	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
-// 	Rules extends Record<string, any> = AnyRecord,
-// > extends FieldNodeConfigBase<
-// 		"primitive",
-// 		InputValue,
-// 		OutputValue,
-// 		PathSegments,
-// 		Rules & {
-// 			coerce: boolean | undefined;
-// 			presence: FieldNodeConfigPresence;
-// 			readonly: boolean | undefined;
-// 		}
-// 	> {}
+
 export interface FieldNodeConfigStringPrimitiveLevel<
 	InputValue = string,
 	OutputValue = InputValue,
