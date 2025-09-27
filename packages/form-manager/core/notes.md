@@ -54,7 +54,7 @@
 * **Edge-case indexing**: Accept strings with numeric segments — your parsing/normalization must be robust for `foo['0']` vs `foo.0`.
 * **Cross-framework events**: If this core library is headless and framework-agnostic, don’t type event parameter shapes concretely — accept `unknown` or generic `E`.
 * **Validation race conditions**: async validation debounce + request cancellation is essential. Provide an abort token / sequence id per validate call to ignore stale results.
-* **Migration surface**: If `FormManager` public API evolves, keep shim helpers to avoid breaking consumers.
+* **Migration surface**: If `FormApi` public API evolves, keep shim helpers to avoid breaking consumers.
 
 ---
 
@@ -197,7 +197,7 @@ interface FormValidation<…> { … }
 Then:
 
 ```ts
-interface FormManager<…> extends FormState<Values>, FormSubmission<…>, FormValidation<…>, FieldArrayOps<Values> {}
+interface FormApi<…> extends FormState<Values>, FormSubmission<…>, FormValidation<…>, FieldArrayOps<Values> {}
 ```
 
 Tree-shakers will thank you, and intellisense becomes *progressive*.
@@ -246,7 +246,7 @@ off(); // removes listeners
 
 - **Schema inference** – let users pass a Zod schema *once* and derive both `Values` and `ValidValues`.  
 - **i18n for error messages** – provide a message registry, not hard-coded strings.  
-- **Dev-time only devtools** – opt-in bundle that adds a `FormManagerDev` interface for time-travel.  
+- **Dev-time only devtools** – opt-in bundle that adds a `FormApiDev` interface for time-travel.  
 - **Plugin system** – e.g., `registerPlugin({ afterChange, beforeSubmit })` so third-party UI kits can hook in.
 ---
 
@@ -255,7 +255,7 @@ off(); // removes listeners
 
 | Area | Do | Don’t |
 |---|---|---|
-| **Naming** | Rename `FormManger` → `FormManager` | Ship with typo |
+| **Naming** | Rename `FormManger` → `FormApi` | Ship with typo |
 | **Size** | Split into feature slices | One mega interface |
 | **Arrays** | Add `garbageCollect()` to trie | Leak dead paths |
 | **Validation** | Single `initial` source, typed rules | `initialValue` + `defaultValue` |

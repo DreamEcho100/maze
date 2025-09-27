@@ -1,6 +1,6 @@
 // form-manger/index.ts
 
-import type { FormManagerFields } from "#fields/types.ts";
+import type { FormApiFields } from "#fields/types.ts";
 import type { FieldError, FieldPathToError } from "./fields/errors/types.ts";
 import type { FieldNode } from "./fields/shape/types.ts";
 import type {
@@ -25,7 +25,7 @@ export type Submit<
 	cb: <T>(params: {
 		values: Values;
 		validatedValues: FieldsShape;
-		formManager: FormManager<FieldsShape, Values, SubmitResult, SubmitError>;
+		formApi: FormApi<FieldsShape, Values, SubmitResult, SubmitError>;
 	}) => T | Promise<T>;
 	retry: () => void;
 	count: number;
@@ -85,7 +85,7 @@ export interface ValidationAllowedOnEventConfig<
 					field: DeepFieldNodePathEntry<FieldsShape>;
 					fieldPath: DeepFieldNodePath<FieldsShape>;
 					values: Values;
-					formManager: FormManager<FieldsShape, Values>;
+					formApi: FormApi<FieldsShape, Values>;
 					error: FieldPathToError<FieldsShape> | null;
 				},
 		  ) => number);
@@ -101,7 +101,7 @@ export type ValidationAllowedOnEvents<
 	>;
 };
 
-export interface FormManager<
+export interface FormApi<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
 	SubmitError = unknown,
@@ -121,8 +121,8 @@ export interface FormManager<
 		/** Whether values are still being loaded (e.g. async defaults) */
 		isLoading: boolean;
 
-		/** Get a value by nested path */
-		get: <T extends NestedPath<Values>>(name: T) => NestedPathValue<Values, T>;
+		// /** Get a value by nested path */
+		// get: <T extends NestedPath<Values>>(name: T) => NestedPathValue<Values, T>;
 
 		// Todo: support string paths with type safety
 		// get<Path extends NestedPath<Values>>(path: Path): NestedPathValue<Values, Path>;
@@ -188,7 +188,7 @@ export interface FormManager<
 	/** 🔹 Fields domain
 	 * This is the main state of the form fields and their metadata
 	 */
-	fields: FormManagerFields<FieldsShape, Values>;
+	fields: FormApiFields<FieldsShape, Values>;
 
 	/** 🔹 Reset domain */
 	reset: (options?: {

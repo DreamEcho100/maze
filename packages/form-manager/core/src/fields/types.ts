@@ -9,7 +9,7 @@ import type { ValidationAllowedOnEvents } from "#types";
 import type { FieldPathToError } from "./errors/types";
 import type { FieldNode } from "./shape/types";
 
-export interface FormManagerFields<
+export interface FormApiFields<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
 > {
@@ -20,13 +20,13 @@ export interface FormManagerFields<
 	 * For example, to get the field config for a specific path
 	 *
 	 * ```ts
-	 * const fieldConfig = formManager.fields.shape.user.name;
+	 * const fieldConfig = formApi.fields.shape.user.name;
 	 * ```
 	 * But to get the field config you will need to access it using `fnConfigKey`
 	 *
 	 * ```ts
 	 * import { fnConfigKey } from "@de100/form-manager-core/constants";
-	 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKey];
+	 * const fieldConfig = formApi.fields.shape.user.name[fnConfigKey];
 	 *
 	 * ```ts
 	 * This is done to avoid name collisions with potential field names
@@ -34,7 +34,7 @@ export interface FormManagerFields<
 	 * that holds the field configuration and metadata
 	 *
 	 * ```ts
-	 * const fieldConfig = formManager.fields.shape.user.name[fnConfigKey];
+	 * const fieldConfig = formApi.fields.shape.user.name[fnConfigKey];
 	 * console.log(fieldConfig.validation);
 	 * ```
 	 */

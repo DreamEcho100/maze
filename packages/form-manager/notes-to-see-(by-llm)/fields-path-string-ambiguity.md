@@ -186,13 +186,13 @@ function parseEscapedPathString(pathString: string): PathSegmentItem[] {
 ### **📝 Developer Guidance:**
 ```typescript
 // ✅ RECOMMENDED: Use pathSegments for programmatic access
-const fieldConfig = formManager.getField(["user.name", "profile", "email"]);
+const fieldConfig = formApi.getField(["user.name", "profile", "email"]);
 
 // ✅ OK: Use escaped pathString for debugging
 console.log("Validating field:", field.pathString); // "user\\.name.profile.email"
 
 // ⚠️ DEPRECATED: Raw pathString (ambiguous)
-const fieldConfig = formManager.getField("user.name.profile.email"); // Could be ambiguous!
+const fieldConfig = formApi.getField("user.name.profile.email"); // Could be ambiguous!
 ```
 
 ### **📚 Documentation Note:**
@@ -264,7 +264,7 @@ function resolvePath<T extends FieldNode>(
 
 ### **Form Manager Methods**
 ```typescript
-class FormManager<Schema extends FieldNode> {
+class FormApi<Schema extends FieldNode> {
   // ✅ Flexible path input
   getField(path: FlexiblePath<Schema>) {
     const resolved = resolvePath(path, this.schema);
@@ -308,15 +308,15 @@ async function validateField<T extends FieldNode>(
 
 ### **Developer Experience**
 ```typescript
-const formManager = createFormManager(schema);
+const formApi = createFormApi(schema);
 
 // ✅ Both work seamlessly!
-formManager.setFieldValue("user.profile.email", "test@example.com");
-formManager.setFieldValue(["user", "profile", "email"], "test@example.com");
+formApi.setFieldValue("user.profile.email", "test@example.com");
+formApi.setFieldValue(["user", "profile", "email"], "test@example.com");
 
 // ✅ Handle edge cases gracefully
-formManager.setFieldValue("user.name", "John");        // Normal case
-formManager.setFieldValue(["user.name"], "John Doe");  // Key with dot - unambiguous
+formApi.setFieldValue("user.name", "John");        // Normal case
+formApi.setFieldValue(["user.name"], "John Doe");  // Key with dot - unambiguous
 ```
 
 ## 📝 **Documentation Strategy**

@@ -159,8 +159,8 @@ function deepEqual(a: any, b: any): boolean {
   return false;
 }
 
-// Update your createFormManager implementation:
-export function createFormManager<
+// Update your createFormApi implementation:
+export function createFormApi<
   FieldsShape extends FieldNode,
   Values extends ValuesShape,
   SubmitError = unknown,
@@ -170,7 +170,7 @@ export function createFormManager<
   values?: Partial<Values>;
   validateOn?: ValidateOn<FieldsShape, Values>;
   // ... other props
-}): FormManager<FieldsShape, Values, SubmitError, SubmitResult> {
+}): FormApi<FieldsShape, Values, SubmitError, SubmitResult> {
   
   const initialValues = (props.values || {}) as Values;
   const currentValues = structuredClone(initialValues);
@@ -190,7 +190,7 @@ export function createFormManager<
     get isValidating() { return this.validating.size > 0; },
     get isValid() { 
       // TODO: Check if any errors exist
-      return Object.keys(formManager.errors.current).length === 0;
+      return Object.keys(formApi.errors.current).length === 0;
     },
     get isError() { return !this.isValid; },
     
@@ -201,9 +201,9 @@ export function createFormManager<
     validation: {
       allowedOnEvent: {} as ValidationAllowedOnEvents<FieldsShape, Values>,
     },
-  } satisfies FormManagerFields<FieldsShape, Values>;
+  } satisfies FormApiFields<FieldsShape, Values>;
 
-  const formManager = {
+  const formApi = {
     fields,
     
     values: {
@@ -310,9 +310,9 @@ export function createFormManager<
       field: async (path: NestedPath<FieldsShape>) => console.log("TODO: Validate field", path),
     },
     
-  } satisfies FormManager<FieldsShape, Values, SubmitError, SubmitResult>;
+  } satisfies FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
   
-  return formManager;
+  return formApi;
 }
 ```
 
@@ -396,7 +396,7 @@ const undefinedTag = Symbol("undefinedTag");
 const trueTag = Symbol("trueTag");
 const falseTag = Symbol("falseTag");
 
-const formApi1 = {}; // as createFormManager
+const formApi1 = {}; // as createFormApi
 
 formApi1.fields.$setValues({
 	[fieldNodeTokenEnum.unionOptionOn]: {
@@ -815,7 +815,7 @@ Symbol("newData") !== Symbol("newData") // true - always different!
 ```typescript
 // app/form/page.tsx
 export default function FormPage() {
-  const formManager = createFormManager(...);
+  const formApi = createFormApi(...);
   
   // This will break on hydration!
   const instruction = {
@@ -1619,7 +1619,7 @@ export const fnConfigKey = "@d100👔FN📊CFG📈KEY🎯";
  * @example
  * ```typescript
  * // This is a real thing that actually works:
- * formManager.fields.$setValues({
+ * formApi.fields.$setValues({
  *   "@d100📎FN🔤TKN📋ARR🤦‍♂️ITEM☕": {
  *     op: "push", 
  *     value: "Another meeting that could've been an email"
@@ -1866,7 +1866,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
  * @example
  * ```typescript
  * // This is real production code that actually works:
- * formManager.setValue({
+ * formApi.setValue({
  *   "🤪FN🔤TKN🎪ARR🤸‍♂️CIRCUS🔥AMAZING🎊🫠": {
  *     op: "push",
  *     value: "Ladies and gentlemen, a new array item!"
@@ -2194,8 +2194,8 @@ type PathsForLargeSchema = DeepFieldNodePath<LargeSchema>;
 ### **4. Consider Simpler APIs**
 ```typescript
 // Maybe this is better than your elaborate $setValues:
-formManager.set("users.0.name", "John");
-formManager.set("users.0.profile", { age: 30 });
+formApi.set("users.0.name", "John");
+formApi.set("users.0.profile", { age: 30 });
 
 // Instead of complex token manipulation
 ```
@@ -2575,7 +2575,7 @@ This system provides:
 
 ```typescript
 // Example of using normalization with your error system
-const formManager = createFormManager({
+const formApi = createFormApi({
   fieldsShape: yourSchema,
   // other options
 });
@@ -2588,12 +2588,12 @@ function validateArrayItem(baseFieldPath: string, index: number) {
   );
   
   // Get value using normalized path
-  const value = formManager.values.get(normalizedPath);
+  const value = formApi.values.get(normalizedPath);
   
   // Validate and store error if needed
   const validationResult = validateValue(value);
   if (!validationResult.valid) {
-    formManager.errors.setError(normalizedPath, {
+    formApi.errors.setError(normalizedPath, {
       path: normalizedPath.split('.'),
       message: validationResult.message,
       type: 'validation'
@@ -2602,7 +2602,7 @@ function validateArrayItem(baseFieldPath: string, index: number) {
 }
 
 // Usage with array operations
-formManager.fields.$setValues({
+formApi.fields.$setValues({
   users: {
     [fieldNodeTokenEnum.arrayItem]: {
       op: "push",
@@ -2612,7 +2612,7 @@ formManager.fields.$setValues({
 });
 
 // Validate the new item
-validateArrayItem('users', formManager.values.current.users.length - 1);
+validateArrayItem('users', formApi.values.current.users.length - 1);
 ```
 
 ## 🎯 **Next Steps for Your Implementation**
@@ -2836,9 +2836,9 @@ You have beautiful types but I don't see runtime guards:
 
 ```typescript
 // What happens when someone passes this?
-formManager.setValue("users.invalid.path", "value");
+formApi.setValue("users.invalid.path", "value");
 // Or this?
-formManager.setValue("users.🔢📌.name", "value"); // Token in actual path
+formApi.setValue("users.🔢📌.name", "value"); // Token in actual path
 ```
 
 **Need:** Runtime path validation that mirrors your type system.
@@ -2965,19 +2965,19 @@ export class FormErrorManager {
 ### **1. Separate Concerns Better**
 ```typescript
 // Core form manager (no React dependencies)
-class FormManager {
+class FormApi {
   // Pure logic, state management
 }
 
 // React integration layer (separate package)
-function useFormManager(formManager: FormManager) {
+function useFormApi(formApi: FormApi) {
   // React-specific hooks, subscriptions
 }
 ```
 
 ### **2. Add Escape Hatches**
 ```typescript
-interface FormManagerOptions {
+interface FormApiOptions {
   // Let advanced users opt out of heavy type checking
   typeCheckingLevel?: 'strict' | 'loose' | 'none';
   // Performance budget
@@ -2996,9 +2996,9 @@ You asked about runtime schema changes. Here are real scenarios:
 
 ```typescript
 // Consider supporting this
-formManager.updateSchema(newSchema);
-formManager.addConditionalField('address', condition);
-formManager.setFieldVisibility('ssn', userRole === 'admin');
+formApi.updateSchema(newSchema);
+formApi.addConditionalField('address', condition);
+formApi.setFieldVisibility('ssn', userRole === 'admin');
 ```
 
 ## 🚀 **Next Steps Priority**

@@ -16,7 +16,7 @@ type GetPotentialArrVal<T extends PotentialArr> = T extends ReadonlyArray<
 // type PotentialArr = unknown[] | ReadonlyArray<unknown> | null | undefined;
 // type GetArrayItem<T> = T extends ReadonlyArray<infer U> ? U : T extends Array<infer U> ? U : never;
 
-export interface FormManagerWithFieldArrays<Values extends ValuesShape> {
+export interface FormApiWithFieldArrays<Values extends ValuesShape> {
 	/** Field array management with trie-optimized operations */
 	fieldArrays: {
 		[Key in NestedPath<Values>]?: {

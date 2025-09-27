@@ -165,7 +165,7 @@ type DynamicFieldProps = {
 			| "submit.count"
 			| "submit.success"
 			| "submit.error";
-		cb: (formManager: any) => any;
+		cb: (formApi: any) => any;
 		props: {
 			[key: string]: {
 				watch:
@@ -175,7 +175,7 @@ type DynamicFieldProps = {
 					| "submit.count"
 					| "submit.success"
 					| "submit.error";
-				cb: (formManager: any) => any;
+				cb: (formApi: any) => any;
 			};
 		};
 	};

@@ -280,18 +280,29 @@ export type PathSegmentsToString<
 // normalizedPathString: "b";
 // normalizedPathSegments: ["b"];
 export type DeepFieldNodePathEntry<T extends FieldNode> =
-	DeepFieldNodePath<T> extends infer U
-		? U extends {
-				normalizedPathString: infer NPS;
-				pathSegments: infer PS;
-				fieldNode: infer FN;
+	// DeepFieldNodePath<T> extends infer U
+	// 	? U extends {
+	// 			normalizedPathString: infer NPS;
+	// 			pathSegments: infer PS;
+	// 			fieldNode: infer FN;
+	// 		}
+	// 		? {
+	// 				normalizedPathString: NPS extends string ? NPS : never;
+	// 				pathSegments: PS extends PathSegmentItem[] ? PS : never;
+	// 				fieldNode: FN extends FieldNode ? FN : never;
+	// 			}
+	// 		: never
+	// 	: never;
+	DeepFieldNodePath<T> extends {
+		normalizedPathString: infer NPS extends string;
+		pathSegments: infer PS extends PathSegmentItem[];
+		fieldNode: infer FN extends FieldNode;
+	}
+		? {
+				normalizedPathString: NPS;
+				pathSegments: PS;
+				fieldNode: FN;
 			}
-			? {
-					normalizedPathString: NPS extends string ? NPS : never;
-					pathSegments: PS extends PathSegmentItem[] ? PS : never;
-					fieldNode: FN extends FieldNode ? FN : never;
-				}
-			: never
 		: never;
 
 type HasNull<T> = null extends T ? true : false;

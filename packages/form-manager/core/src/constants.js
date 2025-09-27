@@ -23,7 +23,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	 * 📊 Array Item Token
 	 * Emoji key: 🔢 (array) + 📌 (item)
 	 */
-	arrayItem: "\uFFFF@de100/fm-🔢📌", // Short but distinctive
+	arrayItem: "\uFFFF@de100/fm-🔢📌",
 
 	/**
 	 * 🏢 Record Property Token
@@ -38,5 +38,15 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
 	unionOptionOn: "\uFFFF@de100/fm-🔀🎯",
 });
 
-// Config key - much shorter but still distinctive
+/**
+ *
+ * @description
+ * The key used to store field configuration on field values and nodes.
+ *
+ * This key is a string with special characters to minimize the risk of collisions
+ * with user-defined keys. It is used as a property key on objects to store metadata
+ * about the field, such as its type, constraints, and other configuration details.
+ *
+ * @warning Always use the `${fnConfigKey}` or `[fnConfigKey]`  instead of the string directly to avoid typos and ensure type safety.
+ */
 export const fnConfigKey = "\uFFFF@de100/fm-⚙️🛠️";

@@ -1,4 +1,8 @@
-import { fieldNodeConfigValidationEventsEnum } from "#constants";
+import {
+	fieldNodeConfigValidationEventsEnum,
+	fieldNodeTokenEnum,
+	fnConfigKey,
+} from "#constants";
 import type { FieldNode, NeverFieldNode } from "#fields/shape/types";
 import type {
 	DeepFieldNodePathEntry,
@@ -8,7 +12,7 @@ import type {
 	ValuesShape,
 } from "#shared/types";
 import type {
-	FormManager,
+	FormApi,
 	ValidationAllowedOnEventConfig,
 	ValidationAllowedOnEvents,
 } from "#types";
@@ -80,7 +84,7 @@ Props to consider:
 ```
 */
 
-// export type CreateFormManagerValidationAllowedOnEventConfig<
+// export type CreateFormApiValidationAllowedOnEventConfig<
 // 	FieldsShape extends FieldNode,
 // 	Values extends ValuesShape,
 // > = {
@@ -115,7 +119,7 @@ const createValidationConfig = {
 		delay: event === "change" ? 300 : 0,
 	}),
 
-	eager: (event: FieldNodeConfigValidationEvent) => ({
+	["smart/eager"]: (event: FieldNodeConfigValidationEvent) => ({
 		isActive: ["blur", "change", "submit", "custom"].includes(event),
 		ifOnlyHasError: event === "change",
 		delay: undefined, // No delay
@@ -238,10 +242,13 @@ function getFieldNodeConfigValidationEventConfig<
 ) {
 	if (
 		typeof validateOn === "undefined" ||
-		(typeof validateOn === "string" && validateOn.includes("smart")) ||
 		(typeof validateOn === "boolean" && validateOn)
 	) {
 		return createValidationConfig.smart(event);
+	}
+
+	if (typeof validateOn === "string") {
+		return createValidationConfig[validateOn](event);
 	}
 
 	if (typeof validateOn === "function") {
@@ -255,12 +262,12 @@ function getFieldNodeConfigValidationEventConfig<
 	return createValidationConfig.fallback(validateOn);
 }
 
-export function createFormManager<
+interface CreateFormApiProps<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
 	SubmitError = unknown,
 	SubmitResult = unknown,
->(props: {
+> {
 	fieldsShape: FieldsShape;
 	initialValues?: Partial<Values>;
 	values?: Partial<Values>;
@@ -272,8 +279,37 @@ export function createFormManager<
 		props: DeepFieldNodePathEntry<T>,
 	) => boolean;
 	baseId: string;
-}): FormManager<FieldsShape, Values, SubmitError, SubmitResult> {
-	type FormManagerType = FormManager<
+	/**
+	 * State manager to get and set the form state api instance
+	 * Which will be used internally on the methods and getters
+	 */
+	stateManager: {
+		getState: () => FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+		setState: (
+			newState: Partial<
+				FormApi<FieldsShape, Values, SubmitError, SubmitResult>
+			>,
+			cb?: (state: {
+				instance: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+			}) => void,
+		) => void;
+	};
+}
+
+export function initFormApi<
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
+	SubmitError = unknown,
+	SubmitResult = unknown,
+>(
+	props: CreateFormApiProps<FieldsShape, Values, SubmitError, SubmitResult>,
+): FormApi<FieldsShape, Values, SubmitError, SubmitResult> {
+	/**
+	 * @note
+	 *
+	 * - `NeverFieldNode` and `NeverRecord` are used here to avoid Typescript infinite depth/recursion issue
+	 */
+	type FormApiType = FormApi<
 		NeverFieldNode,
 		NeverRecord,
 		SubmitError,
@@ -284,6 +320,9 @@ export function createFormManager<
 		NeverFieldNode,
 		NeverRecord
 	>;
+
+	const getState = props.stateManager.getState;
+	const setState = props.stateManager.setState;
 
 	for (const key in fieldNodeConfigValidationEventsEnum) {
 		// biome-ignore lint/suspicious/noTsIgnore: <explanation>
@@ -329,28 +368,29 @@ export function createFormManager<
 		computeIsDirty:
 			props.computeIsDirty ??
 			((props) => {
+				props.normalizedPathString;
 				// TODO: need to implement a proper deep equality check
 				// for now, just return `true` to avoid TS errors
 				return true;
 			}),
 
 		get isDirty() {
-			return this.modified.size > 0;
+			return getState().fields.modified.size > 0;
 		},
 		get isTouched() {
-			return this.touched.size > 0;
+			return getState().fields.touched.size > 0;
 		},
 		get isValidating() {
-			return this.validating.size > 0;
+			return getState().fields.validating.size > 0;
 		},
 		get isFocused() {
-			return this.focused !== null;
+			return getState().fields.focused !== null;
 		},
 		get isBlurred() {
-			return this.focused === null;
+			return getState().fields.focused === null;
 		},
 		get isError() {
-			return this.errors.count > 0;
+			return getState().fields.errors.count > 0;
 		},
 
 		// parse
@@ -365,17 +405,17 @@ export function createFormManager<
 		},
 
 		// reset
-	} satisfies FormManagerType["fields"];
+	} satisfies FormApiType["fields"];
 
-	const formManager = {
+	const formApi = {
 		baseId: props.baseId,
 		values: {
 			current: (props.values || {}) as NeverRecord,
 			initial: structuredClone(props.values || {}),
 			isLoading: false,
-			get(name) {
-				throw new Error("Not implemented");
-			},
+			// get(name) {
+			// 	throw new Error("Not implemented");
+			// },
 			set(name, value) {
 				throw new Error("Not implemented");
 			},
@@ -403,7 +443,175 @@ export function createFormManager<
 				throw new Error("Not implemented");
 			},
 		},
-	} satisfies FormManagerType;
+	} satisfies FormApiType;
 
-	return formManager as any;
+	return formApi as any;
 }
+
+/**
+ * Simulate a state manager with basic get and set functionality.
+ * This is a placeholder and should be replaced with a proper state management solution.
+ * It should be replaced with your state management solution
+ */
+function stateManagerSimulator<T>(initialState: T) {
+	let state = { ...initialState };
+
+	return {
+		getState: () => state,
+		setState: (newState: Partial<T>) => {
+			state = { ...state, ...newState };
+		},
+	};
+}
+
+/**
+ * @notes
+ * This is more like a base approach on how the integration with other state management libs will be
+ * Which means it will differ internally by you slightly based on the state management solution you use
+ * As long as you can provide a `getState`, `setState` and a stable reference for the instance, it should work 😊
+ *
+ * @warning
+ *
+ * - **Serialization Problems**: this instance will have problems if you try to serialize it (e.g., for server-side rendering or saving to local storage). Consider implementing a custom serialization method if needed.
+ * - **Performance**: This will mostly depend on the state management solution you use. If you notice performance issues, consider optimizing the state updates or using a more efficient state management library.
+ * - **Deep Equality Checks**: If your state management solution uses deep equality checks, maybe it's better to disable it if possible to avoid unnecessary re-renders.
+ */
+function createFormApi<
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
+	SubmitError = unknown,
+	SubmitResult = unknown,
+>(
+	props: Omit<
+		CreateFormApiProps<FieldsShape, Values, SubmitError, SubmitResult>,
+		"stateManager"
+	>,
+) {
+	type FormApiType = FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+
+	// Potential other approach:
+	// To cache the initial instance on the _stalled closure_
+	// Still you will need to set the instance on the state manager
+	// Or use a stable reference for the instance, for example using `useRef` in React
+	// let instanceCache: any;
+
+	const formApi: {
+		getState: () => {
+			instance: FormApiType;
+		};
+		setState: (
+			newState: Partial<{
+				instance: FormApiType;
+			}>,
+		) => void;
+	} = stateManagerSimulator<{
+		instance: FormApiType;
+	}>({
+		get instance() {
+			try {
+				if (process.env.NODE_ENV === "development") {
+					console.log("Initializing FormApi...");
+				}
+
+				const instance = initFormApi<
+					FieldsShape,
+					Values,
+					SubmitError,
+					SubmitResult
+				>({
+					...props,
+					stateManager: {
+						getState: () => formApi.getState().instance,
+						setState: (newState) =>
+							formApi.setState({
+								instance: {
+									...formApi.getState().instance,
+									...newState,
+								},
+							}),
+					},
+				});
+
+				Object.defineProperty(this, "instance", {
+					value: instance,
+					configurable: true,
+					enumerable: true,
+				});
+				// Potential other approach:
+				// This could be nessacery
+				// instanceCache = instance
+				// formApi.setState({ instance })
+
+				return instance;
+			} catch (error) {
+				console.error("FormApi initialization failed:", error);
+				throw error;
+			}
+		},
+	});
+
+	return formApi.getState().instance;
+}
+
+const formApi = createFormApi({
+	fieldsShape: {
+		[fnConfigKey]: {
+			level: "object",
+			constraints: { presence: "required", readonly: false },
+			pathSegments: [],
+			pathString: "",
+			userMetadata: {},
+			metadata: {},
+			validation: {
+				validate(value, options) {
+					if (!value || typeof value !== "object") {
+						throw new Error("Not implemented");
+					}
+					throw new Error("Not implemented");
+				},
+			},
+		},
+		foo: {
+			[fnConfigKey]: {
+				level: "string",
+				constraints: { presence: "required", readonly: false },
+				pathSegments: ["foo"] as const,
+				pathString: "foo",
+				userMetadata: {},
+				metadata: {},
+				validation: {
+					validate(value: unknown) {
+						if (typeof value !== "string") {
+							throw new Error("Not implemented");
+						}
+						throw new Error("Not implemented");
+					},
+				},
+			},
+		},
+		bar: {
+			[fnConfigKey]: {
+				level: "number",
+				constraints: { presence: "optional", readonly: false },
+				pathSegments: ["bar"] as const,
+				pathString: "bar",
+				userMetadata: {},
+				metadata: {},
+				validation: {
+					validate(value: unknown) {
+						if (typeof value !== "number") {
+							throw new Error("Not implemented");
+						}
+						throw new Error("Not implemented");
+					},
+				},
+			},
+		},
+	} as const satisfies FieldNode,
+	initialValues: { foo: "initialFoo", bar: 42 },
+	baseId: "form-manager",
+});
+
+formApi.fields.shape.bar[fnConfigKey].validation;
+formApi.fields.errors.current.fieldNode;
+formApi.values.current.foo;
