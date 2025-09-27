@@ -21,6 +21,7 @@ const fieldNode = {
 	[fnConfigKey]: {
 		level: "object" as const,
 		pathSegments: [] as const,
+		normalizedPathSegments: [],
 		pathString: "",
 		constraints: {
 			presence: "required",
@@ -40,6 +41,7 @@ const fieldNode = {
 	// 	[fnConfigKey]: {
 	// 		level: "string" as const,
 	// 		pathSegments: ["a"] as const,
+	//		normalizedPathSegments: ["a"],
 	// 		pathString: "a",
 	// 		constraints: {
 	// 			presence: "required",
@@ -60,6 +62,7 @@ const fieldNode = {
 	// 	[fnConfigKey]: {
 	// 		level: "number" as const,
 	// 		pathSegments: ["b"] as const,
+	// 		normalizedPathString: ["b"] as const,
 	// 		pathString: "b",
 	// 		constraints: {
 	// 			presence: "required",
@@ -99,6 +102,7 @@ const fieldNode = {
 	// 		[fnConfigKey]: {
 	// 			level: "object" as const,
 	// 			pathSegments: ["c", fieldNodeTokenEnum.arrayItem] as const,
+	// 			normalizedPathString: ["c", fieldNodeTokenEnum.arrayItem] as const,
 	// 			pathString: `c.${fieldNodeTokenEnum.arrayItem}`,
 	// 			constraints: {
 	// 				presence: "required",
@@ -118,6 +122,7 @@ const fieldNode = {
 	// 			[fnConfigKey]: {
 	// 				level: "string" as const,
 	// 				pathSegments: ["c", fieldNodeTokenEnum.arrayItem, "a"] as const,
+	// 				normalizedPathString: ["c", fieldNodeTokenEnum.arrayItem, "a"] as const,
 	// 				pathString: `c.${fieldNodeTokenEnum.arrayItem}.a`,
 	// 				constraints: {
 	// 					constraints: {
@@ -140,6 +145,7 @@ const fieldNode = {
 	// 			[fnConfigKey]: {
 	// 				level: "number" as const,
 	// 				pathSegments: ["c", fieldNodeTokenEnum.arrayItem, "b"] as const,
+	// 				normalizedPathString: ["c", fieldNodeTokenEnum.arrayItem, "b"] as const,
 	// 				pathString: `c.${fieldNodeTokenEnum.arrayItem}.b`,
 	// 				constraints: {
 	// 					presence: "required",
@@ -162,6 +168,7 @@ const fieldNode = {
 	// 	[fnConfigKey]: {
 	// 		level: "record" as const,
 	// 		pathSegments: ["d"] as const,
+	// 		normalizedPathString: ["d"] as const,
 	// 		pathString: "d",
 	// 		constraints: {
 	// 			presence: "required",
@@ -184,6 +191,7 @@ const fieldNode = {
 	// 		[fnConfigKey]: {
 	// 			level: "string" as const,
 	// 			pathSegments: ["d", fieldNodeTokenEnum.recordProperty] as const,
+	// 			normalizedPathString: ["d", fieldNodeTokenEnum.recordProperty] as const,
 	// 			pathString: `d.${fieldNodeTokenEnum.recordProperty}`,
 	// 			constraints: {
 	// 				presence: "required",
@@ -203,6 +211,7 @@ const fieldNode = {
 	// 			[fnConfigKey]: {
 	// 				level: "string" as const,
 	// 				pathSegments: ["d", fieldNodeTokenEnum.recordProperty, "a"] as const,
+	// 				normalizedPathString: ["d", fieldNodeTokenEnum.recordProperty, "a"] as const,
 	// 				pathString: `d.${fieldNodeTokenEnum.recordProperty}.a`,
 	// 				constraints: {
 	// 					presence: "required",
@@ -223,6 +232,7 @@ const fieldNode = {
 	// 			[fnConfigKey]: {
 	// 				level: "number" as const,
 	// 				pathSegments: ["d", fieldNodeTokenEnum.recordProperty, "b"] as const,
+	// 				normalizedPathString: ["d", fieldNodeTokenEnum.recordProperty, "b"] as const,
 	// 				pathString: `d.${fieldNodeTokenEnum.recordProperty}.b`,
 	// 				constraints: {
 	// 					presence: "required",
@@ -245,6 +255,7 @@ const fieldNode = {
 } satisfies FieldNode;
 
 const t = {} as Pretty<DeepFieldNodePath<typeof fieldNode>>;
+t.fieldNode;
 
 type Test_DeepFieldNodePathEntry = DeepFieldNodePathEntry<typeof fieldNode>;
 //   ^?

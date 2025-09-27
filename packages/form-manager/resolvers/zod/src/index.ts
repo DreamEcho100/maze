@@ -78,13 +78,21 @@ async function customValidate<
 						message: issue.message,
 						/** TODO: a `normalizedPathStr(pathStr, formApi)` that will convert/figure the path segments to the correct tokens if needed by walking through `formApi.fields.shape` or having a map of path to tokenized path */
 						/** Q: is the `pathString` needed if we have the `pathSegments`? */
-						pathString: (issue.path?.join(".") ||
-							props.currentParentPathString) as PathSegmentsToString<
-							PathSegments,
-							""
-						>,
-						pathSegments: (issue.path ||
-							props.currentParentSegments) as PathSegments,
+						// pathString: (issue.path?.join(".") ||
+						// 	props.currentParentPathString) as PathSegmentsToString<
+						// 	PathSegments,
+						// 	""
+						// >,
+						// pathSegments: (issue.path ||
+						// 	props.currentParentSegments) as PathSegments,
+						normalizedPathSegments:
+							typeof issue.path === "undefined" || issue.path.length === 0
+								? []
+								: Array.isArray(issue.path)
+									? issue.path
+									: [issue.path],
+						pathIssuerSegments: props.currentParentSegments,
+						event: options.validationEvent,
 					})),
 				},
 				metadata: { validationEvent: options.validationEvent },
@@ -104,11 +112,15 @@ async function customValidate<
 				issues: [
 					{
 						message: "Unknown validation error",
-						pathString: props.currentParentPathString as PathSegmentsToString<
-							PathSegments,
-							""
-						>,
-						pathSegments: props.currentParentSegments as PathSegments,
+						// pathString: props.currentParentPathString as PathSegmentsToString<
+						// 	PathSegments,
+						// 	""
+						// >,
+						// pathSegments: props.currentParentSegments as PathSegments,
+						// TODO: get `normalizedPathSegments` some other way
+						normalizedPathSegments: [],
+						pathIssuerSegments: props.currentParentSegments,
+						event: options.validationEvent,
 					},
 				],
 			},
@@ -122,11 +134,15 @@ async function customValidate<
 					{
 						message:
 							error instanceof Error ? error.message : "Validation failed",
-						pathString: props.currentParentPathString as PathSegmentsToString<
-							PathSegments,
-							""
-						>,
-						pathSegments: props.currentParentSegments as PathSegments,
+						// pathString: props.currentParentPathString as PathSegmentsToString<
+						// 	PathSegments,
+						// 	""
+						// >,
+						// pathSegments: props.currentParentSegments as PathSegments,
+						// TODO: get `normalizedPathSegments` some other way
+						normalizedPathSegments: [],
+						pathIssuerSegments: props.currentParentSegments,
+						event: options.validationEvent,
 					},
 				],
 			},
