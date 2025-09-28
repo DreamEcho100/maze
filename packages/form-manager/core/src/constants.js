@@ -49,4 +49,7 @@ export const fieldNodeTokenEnum = /** @type {const} */ ({
  *
  * @warning Always use the `${fnConfigKey}` or `[fnConfigKey]`  instead of the string directly to avoid typos and ensure type safety.
  */
-export const fnConfigKey = "\uFFFF@de100/fm-⚙️🛠️";
+export const fnConfigKey =
+	// /** @type {"\uFFFF@de100/fm-⚙️🛠️" & { __brand: "key" }} */
+	"\uFFFF@de100/fm-⚙️🛠️";
+// "\uFFFF@de100/fm-\u2699\uFE0F\uD83D\uDEE0\uFE0F";

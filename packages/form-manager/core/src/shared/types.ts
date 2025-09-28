@@ -2,6 +2,7 @@ import type {
 	FieldNode,
 	FieldNodeConfigNeverLevel,
 	FieldNodeConfigPrimitiveLevel,
+	NormalizePathSegments,
 } from "#fields/shape/types.js";
 import type {
 	fieldNodeConfigValidationEventsEnum,
@@ -134,7 +135,7 @@ type NormalizedPathSegment<Segment extends PathSegmentItem> =
 				: Segment;
 
 type NormalizedPathStringSegment<
-	Segment extends PathSegmentItem,
+	Segment extends PathSegmentItem | never,
 	PathSegments extends PathSegmentItem[] = [],
 	ParentNode extends FieldNode = {
 		[Key in FnConfigKey]: FieldNodeConfigNeverLevel;
@@ -183,12 +184,17 @@ type NormalizedPathStringSegment<
 						>;
 						normalizedPathSegments: [...NormalizedPathSegments];
 					}
-			: {
-					normalizedPathString: PathSegmentsToString<
-						[...NormalizedPathSegments, Segment]
-					>;
-					normalizedPathSegments: [...NormalizedPathSegments, Segment];
-				};
+			: Segment extends never
+				? {
+						normalizedPathString: PathSegmentsToString<NormalizedPathSegments>;
+						normalizedPathSegments: NormalizedPathSegments;
+					}
+				: {
+						normalizedPathString: PathSegmentsToString<
+							[...NormalizedPathSegments, Segment]
+						>;
+						normalizedPathSegments: [...NormalizedPathSegments, Segment];
+					};
 
 type Values<T> = T[keyof T];
 type IsFieldNodePrimitive<
@@ -204,66 +210,33 @@ export type DeepFieldNodePath<
 	Path extends string = "",
 	PathSegments extends PathSegmentItem[] = [],
 	NormalizedPathSegments extends PathSegmentItem[] = [],
-> = Values<{
-	[K in keyof ParentNode & string]: IsFieldNodePrimitive<
-		ParentNode,
-		K
-	> extends 1
+> = {
+	[K in keyof ParentNode]: K extends FnConfigKey
 		? {
-				pathString: JoinPath<Path, K>;
-				pathSegments: [...PathSegments, K];
-				fieldNode: ParentNode[K];
-				// plevel: ParentNode[FnConfigKey]["level"];
-				// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
-				// 	? ParentNode[FnConfigKey]["level"] extends "array"
-				// 		? 1
-				// 		: 0.1
-				// 	: 0;
-				// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
-				// 	? ParentNode[FnConfigKey]["level"] extends "record"
-				// 		? 1
-				// 		: 0.1
-				// 	: 0;
-			} & NormalizedPathStringSegment<
-				K,
-				PathSegments,
-				ParentNode,
-				NormalizedPathSegments
-			>
-		:
-				| ({
-						pathString: JoinPath<Path, K>;
-						pathSegments: [...PathSegments, K];
-						fieldNode: ParentNode[K];
-						// plevel: ParentNode[FnConfigKey]["level"];
-						// segment__arrItemTest: K extends FieldNodeConfigTokenEnum["arrayItem"]
-						// 	? ParentNode[FnConfigKey]["level"] extends "array"
-						// 		? 1
-						// 		: 0.1
-						// 	: 0;
-						// segment__rcrdPrpTest: K extends FieldNodeConfigTokenEnum["recordProperty"]
-						// 	? ParentNode[FnConfigKey]["level"] extends "record"
-						// 		? 1
-						// 		: 0.1
-						// 	: 0;
-				  } & NormalizedPathStringSegment<
-						K,
-						PathSegments,
-						ParentNode,
-						NormalizedPathSegments
-				  >)
-				| DeepFieldNodePath<
-						ParentNode[K],
-						JoinPath<Path, K>,
-						[...PathSegments, K],
-						NormalizedPathStringSegment<
-							K,
-							PathSegments,
-							ParentNode,
-							NormalizedPathSegments
-						>["normalizedPathSegments"]
-				  >;
-}>;
+				pathString: Path;
+				pathSegments: PathSegments;
+				fieldNode: ParentNode;
+				normalizedPathString: PathSegmentsToString<NormalizedPathSegments>;
+				normalizedPathSegments: NormalizedPathSegments;
+			}
+		: // & NormalizedPathStringSegment<
+			// 	never,
+			// 	PathSegments,
+			// 	ParentNode,
+			// 	NormalizedPathSegments
+			// >
+			DeepFieldNodePath<
+				ParentNode[K],
+				JoinPath<Path, K & PathSegmentItem>,
+				[...PathSegments, K & PathSegmentItem],
+				NormalizedPathStringSegment<
+					K & PathSegmentItem,
+					PathSegments,
+					ParentNode,
+					NormalizedPathSegments
+				>["normalizedPathSegments"]
+			>;
+}[keyof ParentNode & string];
 
 export type PathSegmentsToString<
 	S extends PathSegmentItem[],
@@ -280,30 +253,30 @@ export type PathSegmentsToString<
 // normalizedPathString: "b";
 // normalizedPathSegments: ["b"];
 export type DeepFieldNodePathEntry<T extends FieldNode> =
-	// DeepFieldNodePath<T> extends infer U
-	// 	? U extends {
-	// 			normalizedPathString: infer NPS;
-	// 			pathSegments: infer PS;
-	// 			fieldNode: infer FN;
-	// 		}
-	// 		? {
-	// 				normalizedPathString: NPS extends string ? NPS : never;
-	// 				pathSegments: PS extends PathSegmentItem[] ? PS : never;
-	// 				fieldNode: FN extends FieldNode ? FN : never;
-	// 			}
-	// 		: never
-	// 	: never;
-	DeepFieldNodePath<T> extends {
-		normalizedPathString: infer NPS extends string;
-		pathSegments: infer PS extends PathSegmentItem[];
-		fieldNode: infer FN extends FieldNode;
-	}
-		? {
-				normalizedPathString: NPS;
-				pathSegments: PS;
-				fieldNode: FN;
+	DeepFieldNodePath<T> extends infer U
+		? U extends {
+				normalizedPathString: infer NPS;
+				pathSegments: infer PS;
+				fieldNode: infer FN;
 			}
+			? {
+					normalizedPathString: NPS extends string ? NPS : never;
+					pathSegments: PS extends PathSegmentItem[] ? PS : never;
+					fieldNode: FN;
+				}
+			: never
 		: never;
+// DeepFieldNodePath<T> extends {
+// 	fieldNode: infer FN extends FieldNode;
+// 	pathSegments: infer PS extends PathSegmentItem[];
+// 	// normalizedPathString: infer NPS extends string;
+// }
+// 	? {
+// 			pathSegments: PS;
+// 			fieldNode: FN;
+// 			normalizedPathString: NormalizePathSegments<PS>;
+// 		}
+// 	: never;
 
 type HasNull<T> = null extends T ? true : false;
 type HasUndefined<T> = undefined extends T ? true : false;

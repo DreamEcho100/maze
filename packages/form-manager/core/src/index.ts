@@ -1,8 +1,4 @@
-import {
-	fieldNodeConfigValidationEventsEnum,
-	fieldNodeTokenEnum,
-	fnConfigKey,
-} from "#constants";
+import { fieldNodeConfigValidationEventsEnum, fnConfigKey } from "#constants";
 import type { FieldNode, NeverFieldNode } from "#fields/shape/types";
 import type {
 	DeepFieldNodePathEntry,
@@ -368,7 +364,7 @@ export function initFormApi<
 		computeIsDirty:
 			props.computeIsDirty ??
 			((props) => {
-				props.normalizedPathString;
+				props;
 				// TODO: need to implement a proper deep equality check
 				// for now, just return `true` to avoid TS errors
 				return true;
@@ -559,6 +555,7 @@ const formApi = createFormApi({
 			level: "object",
 			constraints: { presence: "required", readonly: false },
 			pathSegments: [],
+			normalizedPathSegments: [],
 			pathString: "",
 			userMetadata: {},
 			metadata: {},
@@ -576,6 +573,7 @@ const formApi = createFormApi({
 				level: "string",
 				constraints: { presence: "required", readonly: false },
 				pathSegments: ["foo"] as const,
+				normalizedPathSegments: ["foo"] as const,
 				pathString: "foo",
 				userMetadata: {},
 				metadata: {},
@@ -594,6 +592,7 @@ const formApi = createFormApi({
 				level: "number",
 				constraints: { presence: "optional", readonly: false },
 				pathSegments: ["bar"] as const,
+				normalizedPathSegments: ["bar"] as const,
 				pathString: "bar",
 				userMetadata: {},
 				metadata: {},
@@ -607,11 +606,70 @@ const formApi = createFormApi({
 				},
 			},
 		},
-	} as const satisfies FieldNode,
+		moo: {
+			[fnConfigKey]: {
+				level: "object",
+				constraints: { presence: "required", readonly: false },
+				pathSegments: ["moo"] as const,
+				normalizedPathSegments: ["moo"] as const,
+				pathString: "moo",
+				userMetadata: {},
+				metadata: {},
+				validation: {
+					validate(value: unknown) {
+						if (!value || typeof value !== "object") {
+							throw new Error("Not implemented");
+						}
+						throw new Error("Not implemented");
+					},
+				},
+			},
+			foo: {
+				[fnConfigKey]: {
+					level: "string",
+					constraints: { presence: "required", readonly: false },
+					pathSegments: ["moo", "foo"] as const,
+					normalizedPathSegments: ["moo", "foo"] as const,
+					pathString: "moo.foo",
+					userMetadata: {},
+					metadata: {},
+					validation: {
+						validate(value: unknown) {
+							if (typeof value !== "string") {
+								throw new Error("Not implemented");
+							}
+							throw new Error("Not implemented");
+						},
+					},
+				},
+			},
+			bar: {
+				[fnConfigKey]: {
+					level: "number",
+					constraints: { presence: "optional", readonly: false },
+					pathSegments: ["moo", "bar"] as const,
+					normalizedPathSegments: ["moo", "bar"] as const,
+					pathString: "moo.bar",
+					userMetadata: {},
+					metadata: {},
+					validation: {
+						validate(value: unknown) {
+							if (typeof value !== "number") {
+								throw new Error("Not implemented");
+							}
+							throw new Error("Not implemented");
+						},
+					},
+				},
+			},
+		},
+	} satisfies FieldNode,
 	initialValues: { foo: "initialFoo", bar: 42 },
 	baseId: "form-manager",
 });
 
-formApi.fields.shape.bar[fnConfigKey].validation;
-formApi.fields.errors.current.fieldNode;
+formApi.fields.shape[fnConfigKey].pathSegments;
+formApi.fields.shape.bar[fnConfigKey].pathSegments;
+formApi.fields.shape.foo[fnConfigKey].pathSegments;
+formApi.fields.errors.current["moo.bar"]?.pathIssuerSegments;
 formApi.values.current.foo;

@@ -1,6 +1,8 @@
+import { fnConfigKey } from "#constants.js";
 import type {
 	AnyRecord,
 	FieldNodeConfigPresence,
+	FieldNodeConfigTokenEnum,
 	FieldNodeConfigUserMetadata,
 	FieldNodeConfigValidateOptions,
 	FieldNodeConfigValidationEvent,
@@ -12,31 +14,54 @@ import type {
 } from "../../shared/types.ts";
 import type { ValidationResult } from "../errors/types.ts";
 
+// export type FieldNode<
+// 	InputValue = unknown,
+// 	OutputValue = InputValue,
+// 	Config extends FieldNodeConfig = FieldNodeConfig,
+// 	T = {
+// 		[Key in PathSegmentItem]: FieldNode<any, any, any, any>;
+// 	},
+// > = Omit<T, FnConfigKey> & {
+// 	[fnIOValueToInfer]?: {
+// 		$input: InputValue;
+// 		$output: OutputValue;
+// 	};
+// 	[fnConfigKey]: Config;
+// };
 export type FieldNode<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	Config extends FieldNodeConfig = FieldNodeConfig,
-	T = Record<string | number, FieldNode<any, any, any, any>>,
+	T extends
+		| Record<PathSegmentItem, InternalFieldNode<any, any, any, any>>
+		| never =
+		| Record<PathSegmentItem, InternalFieldNode<any, any, any, any>>
+		| never,
 > = T & {
-	[Key in FnConfigKey]: Config;
-} & {
 	[Key in FnIOValueToInfer]?: {
 		$input: InputValue;
 		$output: OutputValue;
 	};
+} & {
+	[Key in FnConfigKey]: Config;
 };
+
 export type InternalFieldNode<
 	InputValue = unknown,
 	OutputValue = InputValue,
 	Config extends InternalFieldNodeConfig = InternalFieldNodeConfig,
-	T = Record<string | number, InternalFieldNode<any, any, any, any>>,
+	T extends
+		| Record<PathSegmentItem, InternalFieldNode<any, any, any, any>>
+		| never =
+		| Record<string | number, InternalFieldNode<any, any, any, any>>
+		| never,
 > = T & {
-	[Key in FnConfigKey]: Config;
-} & {
 	[Key in FnIOValueToInfer]?: {
 		$input: InputValue;
 		$output: OutputValue;
 	};
+} & {
+	[Key in FnConfigKey]: Config;
 };
 
 export type InferFieldNodeInputValue<T> = T extends FieldNode<
@@ -55,6 +80,66 @@ export type InferFieldNodeOutputValue<T> = T extends FieldNode<
 >
 	? OutputValue
 	: never;
+
+export type NormalizePathSegments<
+	PathSegments extends (PathSegmentItem | never)[],
+	Acc extends PathSegmentItem[] = [],
+> = PathSegments extends [
+	infer First extends PathSegmentItem,
+	...infer Rest extends (PathSegmentItem | never)[],
+]
+	? First extends FieldNodeConfigTokenEnum["arrayItem"]
+		? NormalizePathSegments<Rest, [...Acc, number]>
+		: First extends FieldNodeConfigTokenEnum["recordProperty"]
+			? NormalizePathSegments<Rest, [...Acc, string | number]>
+			: First extends FieldNodeConfigTokenEnum["unionOptionOn"]
+				? Rest extends [
+						infer PotentialOptionIndex extends number,
+						...infer Rest2 extends (PathSegmentItem | never)[],
+					]
+					? NormalizePathSegments<Rest2, [...Acc]>
+					: NormalizePathSegments<Rest, [...Acc]>
+				: NormalizePathSegments<Rest, [...Acc, First]>
+	: Acc;
+export type NormalizePathSegmentsToString<
+	PathSegments extends (PathSegmentItem | never)[],
+	Acc extends string = "",
+> = PathSegments extends [
+	infer First extends PathSegmentItem,
+	...infer Rest extends (PathSegmentItem | never)[],
+]
+	? First extends FieldNodeConfigTokenEnum["arrayItem"]
+		? NormalizePathSegmentsToString<
+				Rest,
+				Acc extends "" ? `${number}` : `${Acc}.${number}`
+			>
+		: First extends FieldNodeConfigTokenEnum["recordProperty"]
+			? NormalizePathSegmentsToString<
+					Rest,
+					Acc extends "" ? `${string | number}` : `${Acc}.${string | number}`
+				>
+			: First extends FieldNodeConfigTokenEnum["unionOptionOn"]
+				? Rest extends [
+						infer PotentialOptionIndex extends number,
+						...infer Rest2 extends (PathSegmentItem | never)[],
+					]
+					? NormalizePathSegmentsToString<Rest2, Acc>
+					: NormalizePathSegmentsToString<Rest, Acc>
+				: NormalizePathSegmentsToString<
+						Rest,
+						Acc extends "" ? `${First}` : `${Acc}.${First}`
+					>
+	: Acc;
+
+const test1 = [] as unknown as NormalizePathSegments<
+	["addresses", FieldNodeConfigTokenEnum["arrayItem"], "street"]
+>;
+const test2 = [] as unknown as NormalizePathSegments<
+	["social", FieldNodeConfigTokenEnum["recordProperty"], "link"]
+>;
+const test3 = [] as unknown as NormalizePathSegments<
+	["social", FieldNodeConfigTokenEnum["unionOptionOn"], 0, "link"]
+>;
 
 export type FieldNodeConfigMetadata = {
 	[key in
@@ -89,6 +174,7 @@ export interface FieldNodeConfigBase<
 	level: LevelName;
 	pathString: string; // NOTE: Can't use `PathSegmentsToString<PathSegments>` easily without TS complaining
 	pathSegments: PathSegments;
+	normalizedPathSegments?: NormalizePathSegments<PathSegments>;
 
 	// default value if applicable
 	default?: InputValue;
@@ -140,19 +226,25 @@ export interface FieldNodeConfigBase<
 	// debounceMs?: number;
 }
 export interface FieldNodeConfigTempRootLevel
-	extends FieldNodeConfigBase<"temp-root", string[], never, never, AnyRecord> {}
+	extends FieldNodeConfigBase<
+		"temp-root",
+		never,
+		never,
+		string[],
+		NeverRecord
+	> {}
 export interface FieldNodeConfigTempParentLevel
 	extends FieldNodeConfigBase<
 		"temp-parent",
+		never,
+		never,
 		string[],
-		never,
-		never,
 		AnyRecord
 	> {}
 export interface FieldNodeConfigUnknownLevel<
-	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	InputValue = unknown,
 	OutputValue = InputValue,
+	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
 	Rules extends Record<string, any> = {
 		presence: FieldNodeConfigPresence;
 		readonly: boolean | undefined;

@@ -77,6 +77,7 @@ import type {
  */
 function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 	pathString: string;
+	pathSegments: PathSegmentItem[];
 	acc: InternalResolverAcc;
 	node: InternalFieldNode;
 	currentAttributes: CurrentAttributes | undefined;
@@ -197,10 +198,16 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 									issues: [
 										{
 											message: "No union option matched",
-											pathString: config.pathString as PathSegmentsToString<
-												typeof config.pathSegments
-											>,
-											pathSegments: config.pathSegments,
+											// pathString: config.pathString as PathSegmentsToString<
+											// 	typeof config.pathSegments
+											// >,
+											// pathSegments: config.pathSegments,
+											pathIssuerSegments: props.pathSegments as any,
+											// TODO: Q: How to get/build the `normalizedPathSegments` here
+											// Maybe we can pass to the levels info about divergent/tokenized paths location?
+											// @ts-expect-error
+											normalizedPathSegments: "",
+											event: options.validationEvent,
 										},
 									],
 								},
@@ -460,6 +467,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node,
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -522,6 +530,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node,
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -587,6 +596,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node,
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -648,6 +658,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node,
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -699,6 +710,7 @@ export function resolverBuilder<
 			acc: ctx.acc,
 			node: { [fnConfigKey]: config },
 			pathString: currentParentPathString,
+			pathSegments: currentParentPathSegments,
 			currentAttributes: ctx.currentAttributes,
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentParentNode: ctx.currentParentNode,
@@ -1150,6 +1162,7 @@ export function resolverBuilder<
 			node: pushToAcc({
 				acc: ctx.acc,
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				node: { [fnConfigKey]: config },
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
@@ -1189,6 +1202,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1227,6 +1241,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1265,6 +1280,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1301,6 +1317,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1338,6 +1355,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1375,6 +1393,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1412,6 +1431,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1449,6 +1469,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1486,6 +1507,7 @@ export function resolverBuilder<
 				acc: ctx.acc,
 				node: { [fnConfigKey]: config },
 				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
 				currentAttributes: ctx.currentAttributes,
 				inheritedMetadata: ctx.inheritedMetadata,
 				currentParentNode: ctx.currentParentNode,
@@ -1524,6 +1546,7 @@ export function resolverBuilder<
 			},
 			inheritedMetadata: ctx.inheritedMetadata,
 			pathString: currentParentPathString,
+			pathSegments: currentParentPathSegments,
 			currentAttributes: ctx.currentAttributes,
 			currentParentNode: ctx.currentParentNode,
 			childKey: ctx.childKey,
