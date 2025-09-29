@@ -1,8 +1,8 @@
 // form-manger/index.ts
 
-import type { FormApiFields } from "#fields/types.ts";
 import type { FieldError, FieldPathToError } from "./fields/errors/types.ts";
 import type { FieldNode } from "./fields/shape/types.ts";
+import type { FormApiFields } from "./fields/types.ts";
 import type {
 	DeepFieldNodePath,
 	DeepFieldNodePathEntry,
@@ -162,15 +162,24 @@ export interface FormApi<
 		*/
 
 		/** Set a value by nested path */
-		set: <Name extends NestedPath<Values>>(
-			name: Name,
+		// TODO: Will need to use the field shape path instead and change the needed types accordingly
+		// To be able to the validation or logic handling correctly
+		set: <Path extends NestedPath<Values>>(
+			path: Path,
 			valueOrUpdater:
 				| ((
-						value: NestedPathValue<Values, Name>,
-				  ) => NestedPathValue<Values, Name>)
-				| NestedPathValue<Values, Name>,
-			validationName?: keyof FieldsShape,
+						value: NestedPathValue<Values, Path>,
+				  ) => NestedPathValue<Values, Path>)
+				| NestedPathValue<Values, Path>,
+			// validationName?: keyof FieldsShape,
+			options: {
+				event: FieldNodeConfigValidationEvent;
+				ensurePathExists?: boolean;
+				// fieldsShape: FieldsShape;
+			},
 		) => void;
+
+		// TODO: no need for a `get` for values for now, since the user/dev can just get the value normally
 
 		// /** Fully typed if path is literal, fallback to any if dynamic */
 		// get<P extends Path<TValues>>(path: P): PathValue<TValues, P>;

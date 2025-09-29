@@ -33,7 +33,6 @@ import type {
 	FieldNodeConfigValidateOptions,
 	Literal,
 	PathSegmentItem,
-	PathSegmentsToString,
 } from "@de100/form-manager-core/shared/types";
 import z, { unknown, ZodLiteral } from "zod";
 
@@ -1061,6 +1060,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 			resolvedPathToNode: {},
 			node: rootNode,
 			lazyPathToLazyNodesAccMap: new Map(),
+			rootNode,
 		},
 		currentParentPathString: "",
 		currentParentPathSegments: [],
@@ -1068,20 +1068,7 @@ export function zodResolver<ZodSchema extends ZodAny>(
 			isLazyEvaluated: !!options.isLazyEvaluated,
 		},
 		currentSchema: schema,
-		currentParentNode: {
-			[fnConfigKey]: {
-				level: "never",
-				pathString: "",
-				pathSegments: [],
-				constraints: { presence: "required", readonly: false },
-				validation: {
-					validate() {
-						throw new Error("Not implemented");
-					},
-				},
-				userMetadata: {},
-			},
-		},
+		currentParentNode: rootNode,
 		childKey: "",
 		resolverUtils: zodLibUtil,
 	});

@@ -4,10 +4,10 @@ import type {
 	NestedPath,
 	NestedPathValue,
 	ValuesShape,
-} from "#shared/types";
-import type { ValidationAllowedOnEvents } from "#types";
-import type { FieldPathToError } from "./errors/types";
-import type { FieldNode } from "./shape/types";
+} from "../shared/types.ts";
+import type { ValidationAllowedOnEvents } from "../types.ts";
+import type { FieldPathToError } from "./errors/types.ts";
+import type { FieldNode } from "./shape/types.ts";
 
 export interface FormApiFields<
 	FieldsShape extends FieldNode,

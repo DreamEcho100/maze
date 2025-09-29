@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { fnConfigKey } from "#constants";
-import type { FieldPathToError } from "#fields/errors/types";
-import type { FieldNode, ValidateReturnShape } from "#fields/shape/types";
+import { fnConfigKey } from "./constants.js";
+import type { FieldPathToError } from "./fields/errors/types.ts";
+import type { FieldNode, ValidateReturnShape } from "./fields/shape/types.ts";
 import type {
 	AnyRecord,
 	DeepFieldNodePath,
 	DeepFieldNodePathEntry,
 	PathSegmentItem,
 	PathSegmentsToString,
-} from "./types";
+} from "./types.ts";
 
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
 

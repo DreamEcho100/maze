@@ -51,6 +51,7 @@ export interface InternalResolverAcc {
 	resolvedPathToNode: Record<string, InternalFieldNode>;
 	lazyPathToLazyNodesAccMap: Map<PathSegmentItem, (() => FieldNode)[]>;
 	node: InternalFieldNode;
+	rootNode: InternalFieldNode;
 }
 export interface CurrentAttributes {
 	isObjectProperty?: boolean;

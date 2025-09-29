@@ -235,6 +235,12 @@ importers:
       '@de100/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@de100/form-manager-core':
+        specifier: workspace:*
+        version: link:../../packages/form-manager/core
+      '@de100/form-manager-resolver-zod':
+        specifier: workspace:*
+        version: link:../../packages/form-manager/resolvers/zod
       '@de100/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

@@ -1,17 +1,21 @@
-import { fieldNodeConfigValidationEventsEnum, fnConfigKey } from "#constants";
-import type { FieldNode, NeverFieldNode } from "#fields/shape/types";
+import {
+	fieldNodeConfigValidationEventsEnum,
+	fnConfigKey,
+} from "./constants.js";
+import type { FieldNode, NeverFieldNode } from "./fields/shape/types.ts";
 import type {
 	DeepFieldNodePathEntry,
 	FieldNodeConfigValidationEvent,
+	FormFieldNodeConfigValidationEventsEnum,
 	NeverRecord,
 	PathSegmentItem,
 	ValuesShape,
-} from "#shared/types";
+} from "./shared/types.ts";
 import type {
 	FormApi,
 	ValidationAllowedOnEventConfig,
 	ValidationAllowedOnEvents,
-} from "#types";
+} from "./types.ts";
 
 /*
 Props to consider:
@@ -172,70 +176,97 @@ const createValidationConfig = {
 	},
 };
 
-function set<T, P extends PathSegmentItem | PathSegmentItem[] | undefined | "">(
-	obj: T,
-	path: P,
-	value: any,
-	isImmutable = false,
-): void {
-	const segments = Array.isArray(path)
-		? path
-		: typeof path === "string"
-			? path.split(".")
-			: typeof path === "number"
-				? [path]
+function setValue<
+	FN extends FieldNode,
+	P extends PathSegmentItem | PathSegmentItem[] | undefined | "",
+>(props: {
+	fieldNode: FN;
+	path: P;
+	values: any;
+	newValue: any;
+	ensurePathExists?: boolean;
+	event: FieldNodeConfigValidationEvent;
+}) {
+	const segments = Array.isArray(props.path)
+		? props.path
+		: typeof props.path === "string"
+			? props.path.split(".")
+			: typeof props.path === "number"
+				? [props.path]
 				: [];
-	let current: any = obj;
 
-	for (let i = 0; i < segments.length - 1; i++) {
+	// We register the previous node to be able to:
+	let prevNode: any = null;
+	// We register the current node to be able to:
+	// - Use the field parent shape to know what to do when ensuring the path
+	// - Use the validation rules for the last segments
+	let currentNode: any = props.fieldNode;
+	const currentValue: any = props.values;
+
+	let i = 0;
+	for (; i < segments.length; i++) {
+		// Register the previous node
+		prevNode = currentNode;
+
+		// Get the current segment
 		const segment = segments[i];
-		const nextSegment = segments[i + 1];
 
-		if (current[segment] == null) {
-			// Determine if the next segment is a number to create an array
-			if (
-				typeof nextSegment === "number" ||
-				!Number.isNaN(Number(nextSegment))
-			) {
-				current[segment] = [];
-			} else {
-				current[segment] = {};
+		currentNode = currentNode?.[segment];
+
+		if (currentNode === undefined) {
+			// If the current node is undefined, we don't go further
+			// Even if we need to ensure the path, we can't go further
+			break;
+		}
+
+		// If the current value is undefined or null, we don't go further
+		if (typeof currentValue === "undefined" || currentValue === null) {
+			// But if we need to ensure the path, we create the missing parts
+			// We will use the current node config to know what to create
+			if (props.ensurePathExists) {
+				continue;
 			}
+
+			// else we stop here
+			break;
 		}
 
-		if (isImmutable) {
-			current[segment] =
-				// Array
-				Array.isArray(current[segment])
-					? [...current[segment]]
-					: // Map
-						current[segment] instanceof Map
-						? new Map(current[segment])
-						: // Set
-							current[segment] instanceof Set
-							? new Set(current[segment])
-							: // Class instance _9not only object
-								typeof current[segment] === "object";
-			// How to clone class instance properly?
-		}
-		current = current[segment];
-	}
+		// If we are at the last segment, we set the value
+		if (i === segments.length - 1) {
+			// Set the value
+			if (
+				(typeof currentValue === "object" && currentValue !== null) ||
+				Array.isArray(currentValue)
+			) {
+				currentValue[segment] = props.newValue;
+				// Do validation of needed for the current node
+				break;
+			}
 
-	const lastSegment = segments[segments.length - 1];
-	if (typeof lastSegment === "number" || !Number.isNaN(Number(lastSegment))) {
-		current[Number(lastSegment)] = value;
-	} else {
-		current[lastSegment] = value;
+			// If the current value is not an object, we can't set the value
+			// We stop here
+			break;
+		}
+
+		// If the current value is an object or array, we go deeper
+		if (
+			(typeof currentValue === "object" && currentValue !== null) ||
+			Array.isArray(currentValue)
+		) {
+			// Go deeper
+			continue;
+		}
+
+		// If the current value is not an object, we can't go deeper
+		// We stop here
+		break;
 	}
 }
 
 function getFieldNodeConfigValidationEventConfig<
-	FieldsShape extends FieldNode,
+	FN extends FieldNode,
 	Values extends ValuesShape,
->(
-	event: FieldNodeConfigValidationEvent,
-	validateOn?: ValidateOn<FieldsShape, Values>,
-) {
+>(event: FieldNodeConfigValidationEvent, validateOn?: ValidateOn<FN, Values>) {
 	if (
 		typeof validateOn === "undefined" ||
 		(typeof validateOn === "boolean" && validateOn)
@@ -258,7 +289,7 @@ function getFieldNodeConfigValidationEventConfig<
 	return createValidationConfig.fallback(validateOn);
 }
 
-interface CreateFormApiProps<
+export interface CreateFormApiProps<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
 	SubmitError = unknown,
@@ -409,11 +440,16 @@ export function initFormApi<
 			current: (props.values || {}) as NeverRecord,
 			initial: structuredClone(props.values || {}),
 			isLoading: false,
-			// get(name) {
-			// 	throw new Error("Not implemented");
-			// },
-			set(name, value) {
-				throw new Error("Not implemented");
+			set(path, value, options) {
+				const currentState = props.stateManager.getState();
+				setValue({
+					fieldNode: currentState.fields.shape,
+					values: currentState.values,
+					path,
+					ensurePathExists: options?.ensurePathExists,
+					newValue: value,
+					event: options.event,
+				});
 			},
 		},
 		fields,
@@ -443,233 +479,3 @@ export function initFormApi<
 
 	return formApi as any;
 }
-
-/**
- * Simulate a state manager with basic get and set functionality.
- * This is a placeholder and should be replaced with a proper state management solution.
- * It should be replaced with your state management solution
- */
-function stateManagerSimulator<T>(initialState: T) {
-	let state = { ...initialState };
-
-	return {
-		getState: () => state,
-		setState: (newState: Partial<T>) => {
-			state = { ...state, ...newState };
-		},
-	};
-}
-
-/**
- * @notes
- * This is more like a base approach on how the integration with other state management libs will be
- * Which means it will differ internally by you slightly based on the state management solution you use
- * As long as you can provide a `getState`, `setState` and a stable reference for the instance, it should work 😊
- *
- * @warning
- *
- * - **Serialization Problems**: this instance will have problems if you try to serialize it (e.g., for server-side rendering or saving to local storage). Consider implementing a custom serialization method if needed.
- * - **Performance**: This will mostly depend on the state management solution you use. If you notice performance issues, consider optimizing the state updates or using a more efficient state management library.
- * - **Deep Equality Checks**: If your state management solution uses deep equality checks, maybe it's better to disable it if possible to avoid unnecessary re-renders.
- */
-function createFormApi<
-	FieldsShape extends FieldNode,
-	Values extends ValuesShape,
-	SubmitError = unknown,
-	SubmitResult = unknown,
->(
-	props: Omit<
-		CreateFormApiProps<FieldsShape, Values, SubmitError, SubmitResult>,
-		"stateManager"
-	>,
-) {
-	type FormApiType = FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
-
-	// Potential other approach:
-	// To cache the initial instance on the _stalled closure_
-	// Still you will need to set the instance on the state manager
-	// Or use a stable reference for the instance, for example using `useRef` in React
-	// let instanceCache: any;
-
-	const formApi: {
-		getState: () => {
-			instance: FormApiType;
-		};
-		setState: (
-			newState: Partial<{
-				instance: FormApiType;
-			}>,
-		) => void;
-	} = stateManagerSimulator<{
-		instance: FormApiType;
-	}>({
-		get instance() {
-			try {
-				if (process.env.NODE_ENV === "development") {
-					console.log("Initializing FormApi...");
-				}
-
-				const instance = initFormApi<
-					FieldsShape,
-					Values,
-					SubmitError,
-					SubmitResult
-				>({
-					...props,
-					stateManager: {
-						getState: () => formApi.getState().instance,
-						setState: (newState) =>
-							formApi.setState({
-								instance: {
-									...formApi.getState().instance,
-									...newState,
-								},
-							}),
-					},
-				});
-
-				Object.defineProperty(this, "instance", {
-					value: instance,
-					configurable: true,
-					enumerable: true,
-				});
-				// Potential other approach:
-				// This could be nessacery
-				// instanceCache = instance
-				// formApi.setState({ instance })
-
-				return instance;
-			} catch (error) {
-				console.error("FormApi initialization failed:", error);
-				throw error;
-			}
-		},
-	});
-
-	return formApi.getState().instance;
-}
-
-const formApi = createFormApi({
-	fieldsShape: {
-		[fnConfigKey]: {
-			level: "object",
-			constraints: { presence: "required", readonly: false },
-			pathSegments: [],
-			normalizedPathSegments: [],
-			pathString: "",
-			userMetadata: {},
-			metadata: {},
-			validation: {
-				validate(value, options) {
-					if (!value || typeof value !== "object") {
-						throw new Error("Not implemented");
-					}
-					throw new Error("Not implemented");
-				},
-			},
-		},
-		foo: {
-			[fnConfigKey]: {
-				level: "string",
-				constraints: { presence: "required", readonly: false },
-				pathSegments: ["foo"] as const,
-				normalizedPathSegments: ["foo"] as const,
-				pathString: "foo",
-				userMetadata: {},
-				metadata: {},
-				validation: {
-					validate(value: unknown) {
-						if (typeof value !== "string") {
-							throw new Error("Not implemented");
-						}
-						throw new Error("Not implemented");
-					},
-				},
-			},
-		},
-		bar: {
-			[fnConfigKey]: {
-				level: "number",
-				constraints: { presence: "optional", readonly: false },
-				pathSegments: ["bar"] as const,
-				normalizedPathSegments: ["bar"] as const,
-				pathString: "bar",
-				userMetadata: {},
-				metadata: {},
-				validation: {
-					validate(value: unknown) {
-						if (typeof value !== "number") {
-							throw new Error("Not implemented");
-						}
-						throw new Error("Not implemented");
-					},
-				},
-			},
-		},
-		moo: {
-			[fnConfigKey]: {
-				level: "object",
-				constraints: { presence: "required", readonly: false },
-				pathSegments: ["moo"] as const,
-				normalizedPathSegments: ["moo"] as const,
-				pathString: "moo",
-				userMetadata: {},
-				metadata: {},
-				validation: {
-					validate(value: unknown) {
-						if (!value || typeof value !== "object") {
-							throw new Error("Not implemented");
-						}
-						throw new Error("Not implemented");
-					},
-				},
-			},
-			foo: {
-				[fnConfigKey]: {
-					level: "string",
-					constraints: { presence: "required", readonly: false },
-					pathSegments: ["moo", "foo"] as const,
-					normalizedPathSegments: ["moo", "foo"] as const,
-					pathString: "moo.foo",
-					userMetadata: {},
-					metadata: {},
-					validation: {
-						validate(value: unknown) {
-							if (typeof value !== "string") {
-								throw new Error("Not implemented");
-							}
-							throw new Error("Not implemented");
-						},
-					},
-				},
-			},
-			bar: {
-				[fnConfigKey]: {
-					level: "number",
-					constraints: { presence: "optional", readonly: false },
-					pathSegments: ["moo", "bar"] as const,
-					normalizedPathSegments: ["moo", "bar"] as const,
-					pathString: "moo.bar",
-					userMetadata: {},
-					metadata: {},
-					validation: {
-						validate(value: unknown) {
-							if (typeof value !== "number") {
-								throw new Error("Not implemented");
-							}
-							throw new Error("Not implemented");
-						},
-					},
-				},
-			},
-		},
-	} satisfies FieldNode,
-	initialValues: { foo: "initialFoo", bar: 42 },
-	baseId: "form-manager",
-});
-
-formApi.fields.shape[fnConfigKey].pathSegments;
-formApi.fields.shape.bar[fnConfigKey].pathSegments;
-formApi.fields.shape.foo[fnConfigKey].pathSegments;
-formApi.fields.errors.current["moo.bar"]?.pathIssuerSegments;
-formApi.values.current.foo;

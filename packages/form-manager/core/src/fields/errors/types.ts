@@ -1,14 +1,14 @@
 import type {
-	FieldNode,
-	NormalizePathSegments,
-	NormalizePathSegmentsToString,
-} from "#fields/shape/types.ts";
-import type {
 	DeepFieldNodePathEntry,
 	FieldNodeConfigValidationEvent,
 	FnConfigKey,
 	PathSegmentItem,
 } from "../../shared/types.ts";
+import type {
+	FieldNode,
+	NormalizePathSegments,
+	NormalizePathSegmentsToString,
+} from "../shape/types.ts";
 
 export interface FieldError<
 	PathSegments extends PathSegmentItem[] = PathSegmentItem[],
@@ -19,7 +19,11 @@ export interface FieldError<
 	// TODO: it should be inferred from the PathSegments
 	// pathString: PathSegmentsToString<PathSegments>; // ReadonlyArray<PropertyKey | PathSegment> | undefined;
 	// pathSegments: PathSegments;
+
+	/** The normalized path segments (tokens replaced with actual values) */
 	normalizedPathSegments: PathSegments;
+	/** The path segments that caused the error (from validator like Zod) */
+	// TODO: change to `issuerPathSegments` or `originPathSegments` or `sourcePathSegments`
 	pathIssuerSegments: NormalizePathSegments<PathSegments>;
 	// TODO: `fieldPath` and `fieldPathSegments`, those will be lazily computed using a getter and cached/set once accessed so we don't pay the cost if not needed, it will try to compute the actual field path by figuring any actual token through traversing the TreeNode by the pathSegments, if any token is not resolvable, it will return undefined, otherwise it will return the actual path to the field, or making a `normalizeZodPath` that the user/dev can call to get the actual field path from the issue.pathSegments
 	event: FieldNodeConfigValidationEvent;

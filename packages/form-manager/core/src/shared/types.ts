@@ -1,16 +1,15 @@
 import type {
-	FieldNode,
-	FieldNodeConfigNeverLevel,
-	FieldNodeConfigPrimitiveLevel,
-	NormalizePathSegments,
-} from "#fields/shape/types.js";
-import type {
 	fieldNodeConfigValidationEventsEnum,
 	fieldNodePresenceEnum,
 	fieldNodeTokenEnum,
 	fnConfigKey,
 	fnIOValueToInfer,
 } from "../constants.js";
+import type {
+	FieldNode,
+	FieldNodeConfigNeverLevel,
+	FieldNodeConfigPrimitiveLevel,
+} from "../fields/shape/types.ts";
 
 export type AnyRecord = Record<string, any>;
 export type NeverRecord = Record<string, never>;

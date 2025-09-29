@@ -127,6 +127,7 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 		}
 
 		return {
+			rootNode: props.acc.rootNode,
 			node: existingNode,
 			isNew,
 			resolvedPathToNode: props.acc.resolvedPathToNode,
@@ -233,9 +234,22 @@ function pushToAcc<TResolverUtilsShape extends TResolverUtilsShapeBase>(props: {
 		}
 	}
 
+	// If the current parent is a temp-root, we need to replace it with the new node
+	if (props.currentParentNode[fnConfigKey].level === "temp-root") {
+		// newNode[fnConfigKey] = newNode[fnConfigKey] as InternalFieldNodeConfig;
+		// isNew = false;
+		props.currentParentNode[fnConfigKey] = newNode[
+			fnConfigKey
+		] as InternalFieldNodeConfig;
+		newNode = props.currentParentNode;
+	} else {
+		props.currentParentNode[props.childKey] = newNode;
+	}
+
 	props.acc.resolvedPathToNode[props.pathString] = newNode;
-	props.currentParentNode[props.childKey] = newNode;
+
 	return {
+		rootNode: props.acc.rootNode,
 		node: newNode,
 		isNew,
 		resolvedPathToNode: props.acc.resolvedPathToNode,
@@ -318,7 +332,7 @@ function resolveIntersectionItemConfig<
 	resolverUtils: ResolverUtils<TResolverUtilsShape>;
 }): InternalFieldNode {
 	const existingNode = props.existingNode;
-	if (existingNode) {
+	if (existingNode && existingNode[fnConfigKey].level !== "temp-root") {
 		if (existingNode[fnConfigKey].level === props.newNode[fnConfigKey].level) {
 			const newConfig = props.newNode[fnConfigKey];
 			const existingConfig = existingNode[fnConfigKey];
@@ -449,19 +463,8 @@ export function resolverBuilder<
 			} as FieldNodeConfigArrayLevel,
 		};
 
-		resolverBuilder(result.elementSchema, {
-			acc: ctx.acc,
-			currentParentPathString: tokenNextParent,
-			currentParentPathSegments: tokenNextParentSegments,
-			currentAttributes: { isArrayTokenItem: true },
-			inheritedMetadata: ctx.inheritedMetadata,
-			currentSchema: result.elementSchema,
-			currentParentNode: node,
-			childKey: fieldNodeTokenEnum.arrayItem,
-			resolverUtils: ctx.resolverUtils,
-		}).node;
-
-		return {
+		/** @NOTE Need to resolve first, else it could cause issues in case of `temp-root`, intersection/union merging, or on needing to access the node right after from a child of this collection  */
+		const accumulatedNodeData = {
 			resolvedPathToNode: ctx.acc.resolvedPathToNode,
 			node: pushToAcc({
 				acc: ctx.acc,
@@ -475,6 +478,20 @@ export function resolverBuilder<
 				resolverUtils: ctx.resolverUtils,
 			}).node,
 		};
+
+		resolverBuilder(result.elementSchema, {
+			acc: ctx.acc,
+			currentParentPathString: tokenNextParent,
+			currentParentPathSegments: tokenNextParentSegments,
+			currentAttributes: { isArrayTokenItem: true },
+			inheritedMetadata: ctx.inheritedMetadata,
+			currentSchema: result.elementSchema,
+			currentParentNode: accumulatedNodeData.node,
+			childKey: fieldNodeTokenEnum.arrayItem,
+			resolverUtils: ctx.resolverUtils,
+		}).node;
+
+		return accumulatedNodeData;
 	}
 
 	if (ctx.resolverUtils.tuple.is(schema)) {
@@ -503,6 +520,22 @@ export function resolverBuilder<
 			} as FieldNodeConfigTupleLevel,
 		};
 
+		/** @NOTE Need to resolve first, else it could cause issues in case of `temp-root`, intersection/union merging, or on needing to access the node right after from a child of this collection  */
+		const accumulatedNodeData = {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+				resolverUtils: ctx.resolverUtils,
+			}).node,
+		};
+
 		const items = result.itemsSchema;
 		for (let index = 0; index < items.length; index++) {
 			const item = items[index];
@@ -518,27 +551,15 @@ export function resolverBuilder<
 				currentAttributes: { isTupleItem: true },
 				currentSchema: item,
 				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: node,
+				currentParentNode: accumulatedNodeData.node,
 				childKey: index,
 				resolverUtils: ctx.resolverUtils,
 			}).node;
 		}
 
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-				resolverUtils: ctx.resolverUtils,
-			}).node,
-		};
+		return accumulatedNodeData;
 	}
+
 	if (ctx.resolverUtils.record.is(schema)) {
 		const result = ctx.resolverUtils.record.build(schema, {
 			optional: ctx.optional,
@@ -566,6 +587,22 @@ export function resolverBuilder<
 			} as FieldNodeConfigRecordLevel,
 		};
 
+		/** @NOTE Need to resolve first, else it could cause issues in case of `temp-root`, intersection/union merging, or on needing to access the node right after from a child of this collection  */
+		const accumulatedNodeData = {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+				resolverUtils: ctx.resolverUtils,
+			}).node,
+		};
+
 		// TODO:
 		// Use `result.keySchema` to make a `FieldNode` that you can add to the `"record"` level config constraints as `key` _(will think of better name)`
 
@@ -585,25 +622,12 @@ export function resolverBuilder<
 			currentAttributes: { isRecordProperty: true },
 			inheritedMetadata: ctx.inheritedMetadata,
 			currentSchema: result.valueSchema,
-			currentParentNode: node,
+			currentParentNode: accumulatedNodeData.node,
 			childKey: fieldNodeTokenEnum.recordProperty,
 			resolverUtils: ctx.resolverUtils,
 		}).node;
 
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-				resolverUtils: ctx.resolverUtils,
-			}).node,
-		};
+		return accumulatedNodeData;
 	}
 	if (ctx.resolverUtils.object.is(schema)) {
 		const result = ctx.resolverUtils.object.build(schema, {
@@ -632,6 +656,22 @@ export function resolverBuilder<
 			} as FieldNodeConfigObjectLevel,
 		};
 
+		/** @NOTE Need to resolve first, else it could cause issues in case of `temp-root`, intersection/union merging, or on needing to access the node right after from a child of this collection  */
+		const accumulatedNodeData = {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node: pushToAcc({
+				acc: ctx.acc,
+				node,
+				pathString: currentParentPathString,
+				pathSegments: currentParentPathSegments,
+				currentAttributes: ctx.currentAttributes,
+				inheritedMetadata: ctx.inheritedMetadata,
+				currentParentNode: ctx.currentParentNode,
+				childKey: ctx.childKey,
+				resolverUtils: ctx.resolverUtils,
+			}).node,
+		};
+
 		const shape = result.shapeSchema;
 		for (const key in shape) {
 			const nextParent = currentParentPathString
@@ -646,26 +686,13 @@ export function resolverBuilder<
 				currentAttributes: { isObjectProperty: true },
 				currentSchema: shape[key],
 				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: node,
+				currentParentNode: accumulatedNodeData.node,
 				childKey: key,
 				resolverUtils: ctx.resolverUtils,
 			}).node;
 		}
 
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node: pushToAcc({
-				acc: ctx.acc,
-				node,
-				pathString: currentParentPathString,
-				pathSegments: currentParentPathSegments,
-				currentAttributes: ctx.currentAttributes,
-				inheritedMetadata: ctx.inheritedMetadata,
-				currentParentNode: ctx.currentParentNode,
-				childKey: ctx.childKey,
-				resolverUtils: ctx.resolverUtils,
-			}).node,
-		};
+		return accumulatedNodeData;
 	}
 
 	/** Q: How should the `currentAttributes` be handled for union-root and intersectionItem? and should they be passed down to their children/resulting branches? */
@@ -718,6 +745,12 @@ export function resolverBuilder<
 			resolverUtils: ctx.resolverUtils,
 		}).node;
 
+		/** @NOTE Need to resolve first, else it could cause issues in case of `temp-root`, intersection/union merging, or on needing to access the node right after from a child of this collection  */
+		const accumulatedNodeData = {
+			resolvedPathToNode: ctx.acc.resolvedPathToNode,
+			node,
+		};
+
 		for (let index = 0; index < result.optionsSchema.length; index++) {
 			const opt = result.optionsSchema[index];
 			if (opt) {
@@ -761,6 +794,9 @@ export function resolverBuilder<
 						unionRootDescendant: { rootPathToInfo },
 					},
 					currentAttributes: { ...ctx.currentAttributes },
+					// Pass the same `currentParentNode` since the actual parent is the union-root node itself not the `accumulatedNodeData.node`
+					// since the union options are not direct children of the union-root node
+					// they are just referenced in the `options` array
 					currentParentNode: ctx.currentParentNode,
 					currentSchema: opt,
 					childKey: ctx.childKey,
@@ -775,10 +811,7 @@ export function resolverBuilder<
 			}
 		}
 
-		return {
-			resolvedPathToNode: ctx.acc.resolvedPathToNode,
-			node,
-		};
+		return accumulatedNodeData;
 	}
 
 	if (ctx.resolverUtils.intersection.is(schema)) {
@@ -1018,10 +1051,6 @@ export function resolverBuilder<
 	}
 	/* End unwrap **/
 
-	if (ctx.currentParentNode[fnConfigKey].level !== "temp-root") {
-		throw new Error("Primitives cannot be the root schema");
-	}
-
 	/** Handle lazy evaluation */
 	/**
 	 *  If it's lazy evaluated, and it's here at this point, then it's likely a descendant/child of a collectable type _(object, array, tuple, record)_
@@ -1132,6 +1161,10 @@ export function resolverBuilder<
 		}
 	}
 	/* End lazy evaluation */
+
+	if (ctx.currentParentNode[fnConfigKey].level === "temp-root") {
+		throw new Error("Primitives cannot be at the root level");
+	}
 
 	if (ctx.resolverUtils.string.is(schema)) {
 		const result = ctx.resolverUtils.string.build(schema, {
