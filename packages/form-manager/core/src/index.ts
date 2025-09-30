@@ -13,6 +13,7 @@ import type {
 } from "./shared/types.ts";
 import type {
 	FormApi,
+	FormValuesQuery,
 	ValidationAllowedOnEventConfig,
 	ValidationAllowedOnEvents,
 } from "./types.ts";
@@ -176,14 +177,11 @@ const createValidationConfig = {
 	},
 };
 
-function setValue<
-	FN extends FieldNode,
-	P extends PathSegmentItem | PathSegmentItem[] | undefined | "",
->(props: {
-	fieldNode: FN;
-	path: P;
-	values: any;
-	newValue: any;
+function setValue<Value = unknown>(props: {
+	fieldNode: FieldNode;
+	path?: PathSegmentItem | PathSegmentItem[] | undefined | "";
+	values: ValuesShape;
+	valueOrUpdater: Value | ((value: Value) => any);
 	ensurePathExists?: boolean;
 	event: FieldNodeConfigValidationEvent;
 }) {
@@ -196,9 +194,12 @@ function setValue<
 				: [];
 
 	// We register the previous node to be able to:
+	// - Use the field parent shape to know what to do when ensuring the path when needed
+	// - Use the parent validation rules when needed
+	//	 (like when the current node is undefined)
 	let prevNode: any = null;
 	// We register the current node to be able to:
-	// - Use the field parent shape to know what to do when ensuring the path
+	// - Use the field current shape to know what to do when ensuring the path
 	// - Use the validation rules for the last segments
 	let currentNode: any = props.fieldNode;
 	const currentValue: any = props.values;
@@ -211,9 +212,9 @@ function setValue<
 		// Get the current segment
 		const segment = segments[i];
 
-		currentNode = currentNode?.[segment];
+		currentNode = typeof segment !== "undefined" && currentNode?.[segment];
 
-		if (currentNode === undefined) {
+		if (typeof segment === "undefined" || currentNode === undefined) {
 			// If the current node is undefined, we don't go further
 			// Even if we need to ensure the path, we can't go further
 			break;
@@ -238,7 +239,12 @@ function setValue<
 				(typeof currentValue === "object" && currentValue !== null) ||
 				Array.isArray(currentValue)
 			) {
-				currentValue[segment] = props.newValue;
+				currentValue[segment] =
+					typeof props.valueOrUpdater === "function"
+						? // biome-ignore lint/suspicious/noTsIgnore: <explanation>
+							// @ts-ignore
+							props.valueOrUpdater(currentValue[segment])
+						: props.valueOrUpdater;
 				// Do validation of needed for the current node
 				break;
 			}
@@ -289,6 +295,202 @@ function getFieldNodeConfigValidationEventConfig<
 	return createValidationConfig.fallback(validateOn);
 }
 
+interface ValuesQueryProps<
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
+	SubmitError = unknown,
+	SubmitResult = unknown,
+> {
+	fn: (props: {
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => Values;
+	onSuccess?: (props: {
+		values: Values;
+		prevValues: Values | undefined;
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => {
+		shouldSetInitialValues?: boolean;
+		shouldSetValues?: boolean;
+	};
+	onError?: (props: {
+		error: Error;
+		prevValues: Values | undefined;
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => void;
+	onSettled?: (props: {
+		values: Values | undefined;
+		error: Error | null;
+		prevValues: Values | undefined;
+		status: "success" | "error";
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => void;
+}
+
+function handleValuesQuery<
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
+	SubmitError = unknown,
+	SubmitResult = unknown,
+>(
+	valuesQuery: ValuesQueryProps<FieldsShape, Values, SubmitError, SubmitResult>,
+	props: {
+		stateManager: {
+			getState: () => FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+			setState: (
+				newState: Partial<
+					FormApi<FieldsShape, Values, SubmitError, SubmitResult>
+				>,
+				cb?: (state: {
+					instance: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+				}) => void,
+			) => void;
+		};
+		registerCleanup: (cleanup: () => any) => {
+			// dispose: () => void;
+			id: number;
+			cleanup: () => any;
+		};
+	},
+): FormValuesQuery<FieldsShape, Values, SubmitError, SubmitResult> {
+	let successTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	let isCancelled = false;
+	const timeoutId = setTimeout(async () => {
+		const currentState = props.stateManager.getState();
+		try {
+			// TODO: Should pass a signal for cancelling
+			const newValues = await valuesQuery.fn({
+				formApi: props.stateManager.getState(),
+			});
+
+			if (isCancelled) return;
+
+			const onSuccessResult = valuesQuery.onSuccess?.({
+				values: newValues,
+				prevValues: currentState.values.initial,
+				formApi: props.stateManager.getState(),
+			}) ?? {
+				shouldSetInitialValues: true,
+				shouldSetValues: true,
+			};
+
+			props.stateManager.setState({
+				values: {
+					...currentState.values,
+					state: "success",
+					current: onSuccessResult.shouldSetValues
+						? newValues
+						: currentState.values.current,
+					initial: onSuccessResult.shouldSetInitialValues
+						? structuredClone(newValues)
+						: currentState.values.initial,
+					isLoading: false,
+				},
+			});
+
+			successTimeoutId = setTimeout(() => {
+				props.stateManager.setState({
+					values: {
+						...props.stateManager.getState().values,
+						state: "idle",
+					},
+				});
+			}, 50);
+		} catch (error) {
+			if (isCancelled) return;
+			valuesQuery.onError?.({
+				error: error instanceof Error ? error : new Error(String(error)),
+				prevValues: currentState.values.initial,
+				formApi: props.stateManager.getState(),
+			});
+
+			props.stateManager.setState({
+				values: {
+					...currentState.values,
+					state: "error",
+					error: error instanceof Error ? error : new Error(String(error)),
+					isLoading: false,
+				},
+			});
+		} finally {
+			if (!isCancelled) {
+				valuesQuery.onSettled?.({
+					values: props.stateManager.getState().values.current as Values,
+					error:
+						props.stateManager.getState().values.error ??
+						(null as Error | null),
+					prevValues: currentState.values.initial,
+					status:
+						props.stateManager.getState().values.error === null
+							? "success"
+							: "error",
+					formApi: props.stateManager.getState(),
+				});
+			}
+		}
+	}, 0);
+
+	const { cleanup } = registerCleanup(() => {
+		isCancelled = true;
+		clearTimeout(timeoutId);
+		successTimeoutId && clearTimeout(successTimeoutId);
+	});
+
+	return {
+		// isLoading: true,
+		// values: undefined as Values | undefined,
+		// cleanup: () => {
+		// 	clearTimeout(timeoutId);
+		// 	successTimeoutId && clearTimeout(successTimeoutId);
+		// },
+		onSuccess: valuesQuery.onSuccess,
+		onError: valuesQuery.onError,
+		onSettled: valuesQuery.onSettled,
+		refetch: async (refetchProps: {
+			onSuccess?: (ctx: {
+				values: Values;
+				prevValues: Values | undefined;
+				formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+			}) => {
+				shouldSetInitialValues?: boolean;
+				shouldSetValues?: boolean;
+			};
+			onError?: (ctx: {
+				error: Error;
+				prevValues: Values | undefined;
+				formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+			}) => void;
+			onSettled?: (ctx: {
+				values: Values | undefined;
+				error: Error | null;
+				prevValues: Values | undefined;
+				status: "success" | "error";
+				formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+			}) => void;
+		}) => {
+			cleanup();
+			handleValuesQuery(
+				{
+					...valuesQuery,
+					onSuccess: refetchProps.onSuccess ?? valuesQuery.onSuccess,
+					onError: refetchProps.onError ?? valuesQuery.onError,
+					onSettled: refetchProps.onSettled ?? valuesQuery.onSettled,
+				},
+				{
+					stateManager: props.stateManager,
+					registerCleanup: props.registerCleanup,
+				},
+			);
+			return props.stateManager.getState().values.current as Values;
+		},
+		lastUpdatedAt: isCancelled ? Date.now() : null,
+		isLoading: !isCancelled,
+		state: isCancelled ? "idle" : "loading",
+		isSuccess: false,
+		isError: false,
+		error: null,
+	};
+}
+
 export interface CreateFormApiProps<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
@@ -297,7 +499,13 @@ export interface CreateFormApiProps<
 > {
 	fieldsShape: FieldsShape;
 	initialValues?: Partial<Values>;
-	values?: Partial<Values>;
+	values?: Values;
+	valuesQuery?: ValuesQueryProps<
+		FieldsShape,
+		Values,
+		SubmitError,
+		SubmitResult
+	>;
 	validateOn?:
 		| boolean
 		| "smart"
@@ -434,20 +642,58 @@ export function initFormApi<
 		// reset
 	} satisfies FormApiType["fields"];
 
+	const cleanups: ((() => any) | null)[] = [];
+
+	let values: Values | undefined;
+	let valuesQuery: FormValuesQuery<
+		NeverFieldNode,
+		NeverRecord,
+		SubmitError,
+		SubmitResult
+	> | null | null = null;
+	if (typeof props.valuesQuery === "function") {
+		valuesQuery = handleValuesQuery(props.valuesQuery, {
+			stateManager: props.stateManager,
+			registerCleanup: (cleanup) => {
+				cleanups.push(cleanup);
+				return {
+					id: cleanups.push(cleanup),
+					cleanup,
+				};
+			},
+		}) as unknown as FormValuesQuery<
+			NeverFieldNode,
+			NeverRecord,
+			SubmitError,
+			SubmitResult
+		>;
+	} else if (props.values !== undefined && props.values !== null) {
+		values = props.values;
+	} else if (
+		props.initialValues !== undefined &&
+		props.initialValues !== null
+	) {
+		values = props.initialValues as Values;
+	}
+
+	const initialValues = props.initialValues ?? values;
+
 	const formApi = {
 		baseId: props.baseId,
 		values: {
-			current: (props.values || {}) as NeverRecord,
-			initial: structuredClone(props.values || {}),
-			isLoading: false,
-			set(path, value, options) {
+			current: values as NeverRecord,
+			initial: (initialValues
+				? structuredClone(initialValues)
+				: undefined) as NeverRecord,
+			query: valuesQuery,
+			set(path, valueOrUpdater, options) {
 				const currentState = props.stateManager.getState();
 				setValue({
 					fieldNode: currentState.fields.shape,
 					values: currentState.values,
 					path,
 					ensurePathExists: options?.ensurePathExists,
-					newValue: value,
+					valueOrUpdater,
 					event: options.event,
 				});
 			},
@@ -474,6 +720,14 @@ export function initFormApi<
 			retry() {
 				throw new Error("Not implemented");
 			},
+		},
+		cleanup() {
+			for (let i = 0; i < cleanups.length; i++) {
+				const cleanup = cleanups[i];
+				cleanup?.();
+				cleanups[i] = null;
+			}
+			cleanups.length = 0;
 		},
 	} satisfies FormApiType;
 

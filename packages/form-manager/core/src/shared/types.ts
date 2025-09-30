@@ -28,7 +28,7 @@ export type FieldNodeConfigToken =
 	FieldNodeConfigTokenEnum[keyof FieldNodeConfigTokenEnum];
 
 // form-manger/shared.ts
-export type ValuesShape = Record<string, any>;
+export type ValuesShape = Record<string, any> | any[] | null | undefined;
 // export type ValidationEvents = "input" | "blur" | "touch" | "submit";
 /** Validation triggers */
 export type FormFieldNodeConfigValidationEventsEnum =

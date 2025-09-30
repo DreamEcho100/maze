@@ -101,6 +101,68 @@ export type ValidationAllowedOnEvents<
 	>;
 };
 
+export type FormValuesQuery<
+	FieldsShape extends FieldNode,
+	Values extends ValuesShape,
+	SubmitError = unknown,
+	SubmitResult = unknown,
+> = {
+	onSuccess?: (props: {
+		values: Values;
+		prevValues: Values | undefined;
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => {
+		shouldSetInitialValues?: boolean;
+		shouldSetValues?: boolean;
+	};
+	onError?: (props: {
+		error: Error;
+		prevValues: Values | undefined;
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => void;
+	onSettled?: (props: {
+		values: Values | undefined;
+		error: Error | null;
+		prevValues: Values | undefined;
+		status: "success" | "error";
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => void;
+	// Internal states
+	refetch: (props: {
+		formApi: FormApi<FieldsShape, Values, SubmitError, SubmitResult>;
+	}) => Promise<Values>;
+	lastUpdatedAt: number | null;
+} & (
+	| {
+			state: "idle";
+			isLoading: false;
+			isSuccess: false;
+			isError: false;
+			error: null;
+	  }
+	| {
+			state: "loading";
+			isLoading: true;
+			isSuccess: false;
+			isError: false;
+			error: null;
+	  }
+	| {
+			state: "success";
+			isLoading: false;
+			isSuccess: true;
+			isError: false;
+			error: null;
+	  }
+	| {
+			state: "error";
+			isLoading: false;
+			isSuccess: false;
+			isError: true;
+			error: Error;
+	  }
+);
+
 export interface FormApi<
 	FieldsShape extends FieldNode,
 	Values extends ValuesShape,
@@ -118,8 +180,15 @@ export interface FormApi<
 		/** The initial values of the form */
 		initial: Values;
 
-		/** Whether values are still being loaded (e.g. async defaults) */
-		isLoading: boolean;
+		// /** Whether values are still being loaded (e.g. async defaults) */
+		// isLoading: boolean;
+		// error: Error | null;
+		query: FormValuesQuery<
+			FieldsShape,
+			Values,
+			SubmitError,
+			SubmitResult
+		> | null;
 
 		// /** Get a value by nested path */
 		// get: <T extends NestedPath<Values>>(name: T) => NestedPathValue<Values, T>;
@@ -224,4 +293,5 @@ export interface FormApi<
 	// 	<T extends NestedPath<Values>[]>(names: T): { [K in T[number]]: NestedPathValue<Values, K> };
 	// 	(): Values;
 	// };
+	cleanup: () => void;
 }
